@@ -3,12 +3,57 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\WarehouseController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\ShippingController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// API routes for Vue app
+// Product API Routes
+Route::prefix('products')->group(function () {
+    Route::get('/', [ProductController::class, 'index']);
+    Route::get('/featured', [ProductController::class, 'featured']);
+    Route::get('/{product}', [ProductController::class, 'show']);
+    Route::get('/{product}/inventory', [ProductController::class, 'inventory']);
+});
+
+// Warehouse API Routes
+Route::prefix('warehouses')->group(function () {
+    Route::get('/', [WarehouseController::class, 'index']);
+    Route::get('/{warehouse}', [WarehouseController::class, 'show']);
+    Route::get('/{warehouse}/products', [WarehouseController::class, 'products']);
+    Route::get('/{warehouse}/stats', [WarehouseController::class, 'stats']);
+});
+
+// Order API Routes
+Route::prefix('orders')->group(function () {
+    Route::get('/', [OrderController::class, 'index']);
+    Route::get('/stats', [OrderController::class, 'stats']);
+    Route::get('/{order}', [OrderController::class, 'show']);
+    Route::get('/{order}/status-history', [OrderController::class, 'statusHistory']);
+});
+
+// User API Routes
+Route::prefix('users')->group(function () {
+    Route::get('/', [UserController::class, 'index']);
+    Route::get('/{user}', [UserController::class, 'show']);
+    Route::get('/{user}/orders', [UserController::class, 'orders']);
+    Route::get('/{user}/stats', [UserController::class, 'stats']);
+});
+
+// Shipping API Routes
+Route::prefix('shipping')->group(function () {
+    Route::get('/zones', [ShippingController::class, 'index']);
+    Route::get('/zones/{shippingZone}', [ShippingController::class, 'show']);
+    Route::post('/calculate', [ShippingController::class, 'calculateShipping']);
+    Route::get('/available-zones', [ShippingController::class, 'availableZones']);
+});
+
+// Legacy routes (for backward compatibility)
 Route::get('/users', function () {
     return User::all();
 });

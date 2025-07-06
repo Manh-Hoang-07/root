@@ -19,4 +19,18 @@ export default defineConfig({
             },
         }),
     ],
+    server: {
+        host: '127.0.0.1',
+        port: 5173,
+        hmr: {
+            host: '127.0.0.1',
+        },
+        cors: true,
+        origin: 'http://127.0.0.1:8000',
+    },
+    resolve: {
+        alias: {
+            '@': '/resources/js',
+        },
+    },
 });

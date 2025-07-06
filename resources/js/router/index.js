@@ -1,29 +1,140 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Home from '../views/home/Home.vue';
-import Users from '../views/admin/Users.vue';
-import About from '../views/home/About.vue';
+import { useAuthStore } from '../stores/auth';
+
+// Import components
+import Home from '../views/Home.vue';
+import Login from '../views/Login.vue';
+import Register from '../views/Register.vue';
+import AdminLayout from '../layouts/AdminLayout.vue';
+import AdminDashboard from '../views/admin/Dashboard.vue';
+import AdminProducts from '../views/admin/Products.vue';
+import AdminPosts from '../views/admin/Posts.vue';
+import AdminOrders from '../views/admin/Orders.vue';
+import AdminUsers from '../views/admin/Users.vue';
+import AdminWarehouses from '../views/admin/Warehouses.vue';
+import AdminShipping from '../views/admin/Shipping.vue';
+import AdminReports from '../views/admin/Reports.vue';
+import AdminSettings from '../views/admin/Settings.vue';
+
+// User routes
+import UserDashboard from '../views/user/Dashboard.vue';
+import UserProfile from '../views/user/Profile.vue';
+import UserOrders from '../views/user/Orders.vue';
 
 const routes = [
+  // Public routes
   {
     path: '/',
     name: 'Home',
     component: Home
   },
   {
-    path: '/users',
-    name: 'Users',
-    component: Users
+    path: '/login',
+    name: 'Login',
+    component: Login
   },
   {
-    path: '/about',
-    name: 'About',
-    component: About
+    path: '/register',
+    name: 'Register',
+    component: Register
+  },
+
+  // Admin routes (dùng layout riêng)
+  {
+    path: '/admin',
+    component: AdminLayout,
+    children: [
+      {
+        path: '',
+        name: 'AdminDashboard',
+        component: AdminDashboard
+      },
+      {
+        path: 'products',
+        name: 'AdminProducts',
+        component: AdminProducts
+      },
+      {
+        path: 'posts',
+        name: 'AdminPosts',
+        component: AdminPosts
+      },
+      {
+        path: 'orders',
+        name: 'AdminOrders',
+        component: AdminOrders
+      },
+      {
+        path: 'users',
+        name: 'AdminUsers',
+        component: AdminUsers
+      },
+      {
+        path: 'warehouses',
+        name: 'AdminWarehouses',
+        component: AdminWarehouses
+      },
+      {
+        path: 'shipping',
+        name: 'AdminShipping',
+        component: AdminShipping
+      },
+      {
+        path: 'reports',
+        name: 'AdminReports',
+        component: AdminReports
+      },
+      {
+        path: 'settings',
+        name: 'AdminSettings',
+        component: AdminSettings
+      }
+    ]
+  },
+
+  // User routes
+  {
+    path: '/user',
+    name: 'UserDashboard',
+    component: UserDashboard,
+    meta: { requiresAuth: true, role: 'user' }
+  },
+  {
+    path: '/user/profile',
+    name: 'UserProfile',
+    component: UserProfile,
+    meta: { requiresAuth: true, role: 'user' }
+  },
+  {
+    path: '/user/orders',
+    name: 'UserOrders',
+    component: UserOrders,
+    meta: { requiresAuth: true, role: 'user' }
+  },
+
+  // Legacy route (redirect to admin)
+  {
+    path: '/users',
+    redirect: '/admin/users'
   }
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes
+});
+
+// Navigation guard
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  
+  // Check if route requires authentication (chỉ áp dụng cho user)
+  if (to.meta.requiresAuth && to.meta.role === 'user' && !authStore.isAuthenticated) {
+    next('/login');
+    return;
+  }
+  
+  next();
 });
 
 export default router; 
