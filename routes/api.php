@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\WarehouseController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ShippingController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\User\UserController as UserProfileController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -90,4 +92,17 @@ Route::delete('/users/{id}', function ($id) {
     $user = User::findOrFail($id);
     $user->delete();
     return response()->json(['message' => 'User deleted successfully']);
+});
+
+// Admin User API
+Route::prefix('admin')->group(function () {
+    Route::apiResource('users', AdminUserController::class);
+    Route::patch('users/{id}/toggle-status', [AdminUserController::class, 'toggleStatus']);
+});
+
+// User (profile) API
+Route::prefix('user')->group(function () {
+    Route::get('profile', [UserProfileController::class, 'profile']);
+    Route::put('profile', [UserProfileController::class, 'updateProfile']);
+    Route::post('change-password', [UserProfileController::class, 'changePassword']);
 }); 

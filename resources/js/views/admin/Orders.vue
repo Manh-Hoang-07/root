@@ -252,6 +252,14 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showAddModal || showEditModal" class="fixed inset-0 flex items-center justify-center">
+      <div class="fixed inset-0 z-40 bg-white bg-opacity-10 backdrop-blur-md"></div>
+      <div class="relative z-50 bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+        <!-- Nội dung form thêm/sửa -->
+        <!-- ... giữ nguyên phần form ... -->
+      </div>
+    </div>
   </div>
 </template>
 

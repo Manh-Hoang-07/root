@@ -62,13 +62,10 @@
           <thead class="bg-gray-50">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tài khoản
+                Họ tên
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Thông tin liên hệ
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Vai trò
+                Email
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Trạng thái
@@ -83,50 +80,18 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="user in users" :key="user.id">
+              <td class="px-6 py-4 whitespace-nowrap">{{ user.name }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">{{ user.email }}</td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0 h-10 w-10">
-                    <img 
-                      :src="user.avatar || 'https://via.placeholder.com/40'" 
-                      :alt="user.name"
-                      class="h-10 w-10 rounded-full object-cover"
-                    >
-                  </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
-                    <div class="text-sm text-gray-500">ID: {{ user.id }}</div>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ user.email }}</div>
-                <div class="text-sm text-gray-500">{{ user.phone || 'Chưa có' }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span 
-                  :class="{
-                    'px-2 py-1 text-xs font-semibold rounded-full': true,
-                    'bg-purple-100 text-purple-800': user.role === 'admin',
-                    'bg-blue-100 text-blue-800': user.role === 'user'
-                  }"
-                >
-                  {{ user.role === 'admin' ? 'Admin' : 'User' }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span 
-                  :class="{
-                    'px-2 py-1 text-xs font-semibold rounded-full': true,
-                    'bg-green-100 text-green-800': user.status === 'active',
-                    'bg-red-100 text-red-800': user.status === 'inactive'
-                  }"
-                >
+                <span :class="{
+                  'px-2 py-1 text-xs font-semibold rounded-full': true,
+                  'bg-green-100 text-green-800': user.status === 'active',
+                  'bg-red-100 text-red-800': user.status !== 'active'
+                }">
                   {{ user.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(user.created_at) }}
-              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(user.created_at) }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex space-x-2">
                   <button 
@@ -145,7 +110,7 @@
                     @click="toggleUserStatus(user)"
                     :class="{
                       'text-yellow-600 hover:text-yellow-900': user.status === 'active',
-                      'text-green-600 hover:text-green-900': user.status === 'inactive'
+                      'text-green-600 hover:text-green-900': user.status !== 'active'
                     }"
                   >
                     {{ user.status === 'active' ? 'Khóa' : 'Mở khóa' }}
@@ -224,8 +189,9 @@
     </div>
 
     <!-- Add/Edit Modal -->
-    <div v-if="showAddModal || showEditModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div v-if="showAddModal || showEditModal" class="fixed inset-0 flex items-center justify-center">
+      <div class="fixed inset-0 z-40 bg-white bg-opacity-10 backdrop-blur-md"></div>
+      <div class="relative z-50 bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
         <div class="mt-3">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             {{ showEditModal ? 'Sửa tài khoản' : 'Thêm tài khoản' }}
@@ -234,74 +200,27 @@
             <div class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700">Họ tên</label>
-                <input 
-                  v-model="form.name"
-                  type="text" 
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
+                <input v-model="form.name" type="text" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Email</label>
-                <input 
-                  v-model="form.email"
-                  type="email" 
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
+                <input v-model="form.email" type="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div v-if="!showEditModal">
                 <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                <input 
-                  v-model="form.password"
-                  type="password" 
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                <input 
-                  v-model="form.phone"
-                  type="text" 
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Vai trò</label>
-                <select 
-                  v-model="form.role"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
+                <input v-model="form.password" type="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Trạng thái</label>
-                <select 
-                  v-model="form.status"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
+                <select v-model="form.status" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="active">Hoạt động</option>
                   <option value="inactive">Không hoạt động</option>
                 </select>
               </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
-              <button 
-                type="button"
-                @click="closeModal"
-                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                Hủy
-              </button>
-              <button 
-                type="submit"
-                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                {{ showEditModal ? 'Cập nhật' : 'Thêm' }}
-              </button>
+              <button type="button" @click="closeModal" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Hủy</button>
+              <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">{{ showEditModal ? 'Cập nhật' : 'Thêm' }}</button>
             </div>
           </form>
         </div>
@@ -328,8 +247,6 @@ const form = ref({
   name: '',
   email: '',
   password: '',
-  phone: '',
-  role: 'user',
   status: 'active'
 });
 
@@ -339,10 +256,8 @@ const loadUsers = async () => {
       page: currentPage.value,
       per_page: perPage.value,
       search: searchQuery.value,
-      role: roleFilter.value,
       status: statusFilter.value
     });
-    
     const response = await fetch(`/api/admin/users?${params}`);
     const data = await response.json();
     users.value = data.data.data || [];
@@ -354,11 +269,9 @@ const loadUsers = async () => {
 
 const editUser = (user) => {
   editingUser.value = user;
-  form.value = { 
+  form.value = {
     name: user.name,
     email: user.email,
-    phone: user.phone || '',
-    role: user.role,
     status: user.status
   };
   showEditModal.value = true;
@@ -432,8 +345,6 @@ const closeModal = () => {
     name: '',
     email: '',
     password: '',
-    phone: '',
-    role: 'user',
     status: 'active'
   };
 };
