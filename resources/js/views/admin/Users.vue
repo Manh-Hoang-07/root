@@ -1,228 +1,318 @@
 <template>
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
   <div>
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Quản lý tài khoản</h1>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">Quản lý người dùng</h1>
+          <p class="text-gray-600">Quản lý tài khoản người dùng trong hệ thống</p>
+        </div>
       <button 
         @click="showAddModal = true"
-        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-      >
-        Thêm tài khoản
-      </button>
+          class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center space-x-2"
+        >
+          <PlusIcon class="w-5 h-5" />
+          <span>Thêm người dùng</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Search and Filter -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm</label>
-          <input 
-            v-model="searchQuery"
-            type="text" 
-            placeholder="Tên, email, số điện thoại..."
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div 
+        v-for="stat in stats" 
+        :key="stat.title"
+        class="bg-white rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 border border-gray-100"
+      >
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">{{ stat.title }}</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">{{ stat.value }}</p>
+            <div class="flex items-center mt-2">
+              <span 
+                :class="[
+                  'text-sm font-medium',
+                  stat.change >= 0 ? 'text-green-600' : 'text-red-600'
+                ]"
+              >
+                {{ stat.change >= 0 ? '+' : '' }}{{ stat.change }}%
+              </span>
+              <span class="text-gray-500 text-sm ml-1">so với tháng trước</span>
+            </div>
+          </div>
+          <div 
+            class="w-12 h-12 rounded-xl flex items-center justify-center"
+            :class="stat.bgColor"
           >
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Vai trò</label>
-          <select 
-            v-model="roleFilter"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Tất cả</option>
-            <option value="admin">Admin</option>
-            <option value="user">User</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
-          <select 
-            v-model="statusFilter"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Tất cả</option>
-            <option value="active">Hoạt động</option>
-            <option value="inactive">Không hoạt động</option>
-          </select>
-        </div>
-        <div class="flex items-end">
-          <button 
-            @click="loadUsers"
-            class="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-          >
-            Lọc
-          </button>
+            <component :is="stat.icon" class="w-6 h-6 text-white" />
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Search -->
+        <div class="relative">
+          <MagnifyingGlassIcon class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+          <input 
+            v-model="filters.search"
+            type="text" 
+            placeholder="Tìm kiếm người dùng..."
+            class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+          />
+        </div>
+
+        <!-- Role Filter -->
+          <select 
+          v-model="filters.role"
+          class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+          >
+          <option value="">Tất cả vai trò</option>
+            <option value="admin">Admin</option>
+            <option value="user">User</option>
+          <option value="moderator">Moderator</option>
+          </select>
+
+        <!-- Status Filter -->
+          <select 
+          v-model="filters.status"
+          class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+          >
+          <option value="">Tất cả trạng thái</option>
+            <option value="active">Hoạt động</option>
+            <option value="inactive">Không hoạt động</option>
+          <option value="suspended">Tạm khóa</option>
+          </select>
+
+        <!-- Clear Filters -->
+          <button 
+          @click="clearFilters"
+          class="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium"
+          >
+          Xóa bộ lọc
+          </button>
+      </div>
+    </div>
+
     <!-- Users Table -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table class="w-full">
+          <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Họ tên
+              <th 
+                v-for="column in columns" 
+                :key="column.key"
+                @click="sortBy(column.key)"
+                class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors duration-200"
+              >
+                <div class="flex items-center space-x-1">
+                  <span>{{ column.label }}</span>
+                  <ChevronUpIcon v-if="sortKey === column.key && sortOrder === 'asc'" class="w-4 h-4" />
+                  <ChevronDownIcon v-else-if="sortKey === column.key && sortOrder === 'desc'" class="w-4 h-4" />
+                </div>
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Trạng thái
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ngày tạo
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Thao tác
               </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="user in users" :key="user.id">
-              <td class="px-6 py-4 whitespace-nowrap">{{ user.name }}</td>
-              <td class="px-6 py-4 whitespace-nowrap">{{ user.email }}</td>
+            <tr 
+              v-for="user in paginatedUsers" 
+              :key="user.id"
+              class="hover:bg-gray-50 transition-colors duration-200"
+            >
               <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="{
-                  'px-2 py-1 text-xs font-semibold rounded-full': true,
-                  'bg-green-100 text-green-800': user.status === 'active',
-                  'bg-red-100 text-red-800': user.status !== 'active'
-                }">
-                  {{ user.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
+                <div class="flex items-center">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold mr-4">
+                    {{ user.name.charAt(0) }}
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
+                    <div class="text-sm text-gray-500">{{ user.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span 
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  :class="getRoleClass(user.role)"
+                >
+                  {{ getRoleLabel(user.role) }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(user.created_at) }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div class="flex space-x-2">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span 
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  :class="getStatusClass(user.status)"
+                >
+                  {{ getStatusLabel(user.status) }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ formatDate(user.created_at) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ formatDate(user.last_login) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div class="flex items-center space-x-2">
                   <button 
                     @click="viewUser(user)"
-                    class="text-blue-600 hover:text-blue-900"
+                    class="text-indigo-600 hover:text-indigo-900 p-2 rounded-lg hover:bg-indigo-50 transition-all duration-200"
+                    title="Xem chi tiết"
                   >
-                    Xem
+                    <EyeIcon class="w-4 h-4" />
                   </button>
                   <button 
                     @click="editUser(user)"
-                    class="text-green-600 hover:text-green-900"
+                    class="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
+                    title="Chỉnh sửa"
                   >
-                    Sửa
+                    <PencilIcon class="w-4 h-4" />
                   </button>
                   <button 
-                    @click="toggleUserStatus(user)"
-                    :class="{
-                      'text-yellow-600 hover:text-yellow-900': user.status === 'active',
-                      'text-green-600 hover:text-green-900': user.status !== 'active'
-                    }"
+                    @click="deleteUser(user)"
+                    class="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-all duration-200"
+                    title="Xóa"
                   >
-                    {{ user.status === 'active' ? 'Khóa' : 'Mở khóa' }}
-                  </button>
-                  <button 
-                    @click="deleteUser(user.id)"
-                    class="text-red-600 hover:text-red-900"
-                  >
-                    Xóa
+                    <TrashIcon class="w-4 h-4" />
                   </button>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
-      </div>
     </div>
 
     <!-- Pagination -->
-    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4">
-      <div class="flex-1 flex justify-between sm:hidden">
-        <button 
-          @click="previousPage"
-          :disabled="currentPage === 1"
-          class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-        >
-          Trước
-        </button>
-        <button 
-          @click="nextPage"
-          :disabled="currentPage === totalPages"
-          class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-        >
-          Sau
-        </button>
+      <div class="bg-white px-6 py-4 border-t border-gray-200">
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-gray-700">
+            Hiển thị {{ startIndex + 1 }} đến {{ endIndex }} trong tổng số {{ filteredUsers.length }} người dùng
       </div>
-      <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-        <div>
-          <p class="text-sm text-gray-700">
-            Hiển thị <span class="font-medium">{{ (currentPage - 1) * perPage + 1 }}</span> đến 
-            <span class="font-medium">{{ Math.min(currentPage * perPage, total) }}</span> trong tổng số 
-            <span class="font-medium">{{ total }}</span> kết quả
-          </p>
-        </div>
-        <div>
-          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+          <div class="flex items-center space-x-2">
             <button 
-              @click="previousPage"
+              @click="prevPage"
               :disabled="currentPage === 1"
-              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               Trước
             </button>
+            <div class="flex items-center space-x-1">
             <button 
               v-for="page in visiblePages"
               :key="page"
               @click="goToPage(page)"
-              :class="{
-                'relative inline-flex items-center px-4 py-2 border text-sm font-medium': true,
-                'z-10 bg-blue-50 border-blue-500 text-blue-600': page === currentPage,
-                'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': page !== currentPage
-              }"
+                :class="[
+                  'px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
+                  page === currentPage 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                ]"
             >
               {{ page }}
             </button>
+            </div>
             <button 
               @click="nextPage"
               :disabled="currentPage === totalPages"
-              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               Sau
             </button>
-          </nav>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Add/Edit Modal -->
-    <div v-if="showAddModal || showEditModal" class="fixed inset-0 flex items-center justify-center">
-      <div class="fixed inset-0 z-40 bg-white bg-opacity-10 backdrop-blur-md"></div>
-      <div class="relative z-50 bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">
-            {{ showEditModal ? 'Sửa tài khoản' : 'Thêm tài khoản' }}
+    <!-- Add/Edit User Modal -->
+    <div 
+      v-if="showAddModal || showEditModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      @click.self="closeModal"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900">
+            {{ showEditModal ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới' }}
           </h3>
-          <form @submit.prevent="saveUser">
-            <div class="space-y-4">
+        </div>
+        
+        <form @submit.prevent="saveUser" class="p-6 space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700">Họ tên</label>
-                <input v-model="form.name" type="text" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label class="block text-sm font-medium text-gray-700 mb-2">Họ tên</label>
+            <input 
+              v-model="userForm.name"
+              type="text"
+              required
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+            />
               </div>
+          
               <div>
-                <label class="block text-sm font-medium text-gray-700">Email</label>
-                <input v-model="form.email" type="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input 
+              v-model="userForm.email"
+              type="email"
+              required
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+            />
               </div>
-              <div v-if="!showEditModal">
-                <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                <input v-model="form.password" type="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Vai trò</label>
+            <select 
+              v-model="userForm.role"
+              required
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="user">User</option>
+              <option value="moderator">Moderator</option>
+              <option value="admin">Admin</option>
+            </select>
               </div>
+          
               <div>
-                <label class="block text-sm font-medium text-gray-700">Trạng thái</label>
-                <select v-model="form.status" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+            <select 
+              v-model="userForm.status"
+              required
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+            >
                   <option value="active">Hoạt động</option>
                   <option value="inactive">Không hoạt động</option>
+              <option value="suspended">Tạm khóa</option>
                 </select>
               </div>
-            </div>
-            <div class="flex justify-end space-x-3 mt-6">
-              <button type="button" @click="closeModal" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Hủy</button>
-              <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">{{ showEditModal ? 'Cập nhật' : 'Thêm' }}</button>
+          
+          <div v-if="!showEditModal">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+            <input 
+              v-model="userForm.password"
+              type="password"
+              required
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+            />
             </div>
           </form>
+        
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+          <button 
+            @click="closeModal"
+            class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200"
+          >
+            Hủy
+          </button>
+          <button 
+            @click="saveUser"
+            class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
+          >
+            {{ showEditModal ? 'Cập nhật' : 'Thêm' }}
+          </button>
         </div>
       </div>
     </div>
@@ -230,163 +320,372 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue'
+import { 
+  PlusIcon, 
+  MagnifyingGlassIcon, 
+  ChevronUpIcon, 
+  ChevronDownIcon,
+  EyeIcon,
+  PencilIcon,
+  TrashIcon,
+  UsersIcon,
+  UserGroupIcon,
+  UserMinusIcon,
+  UserPlusIcon
+} from '@heroicons/vue/24/outline'
 
-const users = ref([]);
-const searchQuery = ref('');
-const roleFilter = ref('');
-const statusFilter = ref('');
-const showAddModal = ref(false);
-const showEditModal = ref(false);
-const editingUser = ref(null);
-const currentPage = ref(1);
-const perPage = ref(10);
-const total = ref(0);
+// Stats data
+const stats = ref([
+  {
+    title: 'Tổng người dùng',
+    value: '1,234',
+    change: 12.5,
+    icon: UsersIcon,
+    bgColor: 'bg-gradient-to-br from-blue-500 to-blue-600'
+  },
+  {
+    title: 'Hoạt động',
+    value: '1,089',
+    change: 8.2,
+    icon: UserGroupIcon,
+    bgColor: 'bg-gradient-to-br from-green-500 to-green-600'
+  },
+  {
+    title: 'Không hoạt động',
+    value: '145',
+    change: -2.1,
+    icon: UserMinusIcon,
+    bgColor: 'bg-gradient-to-br from-gray-500 to-gray-600'
+  },
+  {
+    title: 'Mới tháng này',
+    value: '89',
+    change: 15.8,
+    icon: UserPlusIcon,
+    bgColor: 'bg-gradient-to-br from-purple-500 to-purple-600'
+  }
+])
 
-const form = ref({
+// Table columns
+const columns = ref([
+  { key: 'name', label: 'Người dùng' },
+  { key: 'role', label: 'Vai trò' },
+  { key: 'status', label: 'Trạng thái' },
+  { key: 'created_at', label: 'Ngày tạo' },
+  { key: 'last_login', label: 'Đăng nhập cuối' }
+])
+
+// Mock users data
+const users = ref([
+  {
+    id: 1,
+    name: 'Nguyễn Văn A',
+    email: 'nguyenvana@example.com',
+    role: 'admin',
+    status: 'active',
+    created_at: '2024-01-15T10:30:00Z',
+    last_login: '2024-12-20T14:25:00Z'
+  },
+  {
+    id: 2,
+    name: 'Trần Thị B',
+    email: 'tranthib@example.com',
+    role: 'user',
+    status: 'active',
+    created_at: '2024-02-20T09:15:00Z',
+    last_login: '2024-12-19T16:45:00Z'
+  },
+  {
+    id: 3,
+    name: 'Lê Văn C',
+    email: 'levanc@example.com',
+    role: 'moderator',
+    status: 'inactive',
+    created_at: '2024-03-10T11:20:00Z',
+    last_login: '2024-12-15T08:30:00Z'
+  },
+  {
+    id: 4,
+    name: 'Phạm Thị D',
+    email: 'phamthid@example.com',
+    role: 'user',
+    status: 'active',
+    created_at: '2024-04-05T13:45:00Z',
+    last_login: '2024-12-20T10:15:00Z'
+  },
+  {
+    id: 5,
+    name: 'Hoàng Văn E',
+    email: 'hoangvane@example.com',
+    role: 'user',
+    status: 'suspended',
+    created_at: '2024-05-12T15:30:00Z',
+    last_login: '2024-12-10T12:00:00Z'
+  }
+])
+
+// Filters
+const filters = ref({
+  search: '',
+  role: '',
+  status: ''
+})
+
+// Sorting
+const sortKey = ref('name')
+const sortOrder = ref('asc')
+
+// Pagination
+const currentPage = ref(1)
+const itemsPerPage = ref(10)
+
+// Modal states
+const showAddModal = ref(false)
+const showEditModal = ref(false)
+const editingUser = ref(null)
+
+// Form data
+const userForm = ref({
   name: '',
   email: '',
-  password: '',
-  status: 'active'
-});
+  role: 'user',
+  status: 'active',
+  password: ''
+})
 
-const loadUsers = async () => {
-  try {
-    const params = new URLSearchParams({
-      page: currentPage.value,
-      per_page: perPage.value,
-      search: searchQuery.value,
-      status: statusFilter.value
-    });
-    const response = await fetch(`/api/admin/users?${params}`);
-    const data = await response.json();
-    users.value = data.data.data || [];
-    total.value = data.data.total || 0;
-  } catch (error) {
-    console.error('Error loading users:', error);
+// Computed properties
+const filteredUsers = computed(() => {
+  let filtered = users.value
+
+  if (filters.value.search) {
+    const search = filters.value.search.toLowerCase()
+    filtered = filtered.filter(user => 
+      user.name.toLowerCase().includes(search) ||
+      user.email.toLowerCase().includes(search)
+    )
   }
-};
 
-const editUser = (user) => {
-  editingUser.value = user;
-  form.value = {
-    name: user.name,
-    email: user.email,
-    status: user.status
-  };
-  showEditModal.value = true;
-};
+  if (filters.value.role) {
+    filtered = filtered.filter(user => user.role === filters.value.role)
+  }
 
-const viewUser = (user) => {
-  // Implement user detail view
-  alert(`Xem chi tiết user: ${user.name}`);
-};
+  if (filters.value.status) {
+    filtered = filtered.filter(user => user.status === filters.value.status)
+  }
 
-const toggleUserStatus = async (user) => {
-  try {
-    const response = await fetch(`/api/admin/users/${user.id}/toggle-status`, {
-      method: 'PATCH'
-    });
-    
-    if (response.ok) {
-      loadUsers();
+  // Sort
+  filtered.sort((a, b) => {
+    let aVal = a[sortKey.value]
+    let bVal = b[sortKey.value]
+
+    if (sortKey.value === 'created_at' || sortKey.value === 'last_login') {
+      aVal = new Date(aVal)
+      bVal = new Date(bVal)
     }
-  } catch (error) {
-    console.error('Error toggling user status:', error);
-  }
-};
 
-const saveUser = async () => {
-  try {
-    const url = showEditModal.value 
-      ? `/api/admin/users/${editingUser.value.id}` 
-      : '/api/admin/users';
-    
-    const method = showEditModal.value ? 'PUT' : 'POST';
-    
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.value)
-    });
-    
-    if (response.ok) {
-      closeModal();
-      loadUsers();
+    if (sortOrder.value === 'asc') {
+      return aVal > bVal ? 1 : -1
+    } else {
+      return aVal < bVal ? 1 : -1
     }
-  } catch (error) {
-    console.error('Error saving user:', error);
-  }
-};
+  })
 
-const deleteUser = async (id) => {
-  if (!confirm('Bạn có chắc muốn xóa tài khoản này?')) return;
-  
-  try {
-    const response = await fetch(`/api/admin/users/${id}`, {
-      method: 'DELETE'
-    });
-    
-    if (response.ok) {
-      loadUsers();
-    }
-  } catch (error) {
-    console.error('Error deleting user:', error);
-  }
-};
+  return filtered
+})
 
-const closeModal = () => {
-  showAddModal.value = false;
-  showEditModal.value = false;
-  editingUser.value = null;
-  form.value = {
-    name: '',
-    email: '',
-    password: '',
-    status: 'active'
-  };
-};
+const totalPages = computed(() => Math.ceil(filteredUsers.value.length / itemsPerPage.value))
 
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('vi-VN');
-};
+const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
+const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, filteredUsers.value.length))
 
-const totalPages = computed(() => Math.ceil(total.value / perPage.value));
+const paginatedUsers = computed(() => {
+  return filteredUsers.value.slice(startIndex.value, endIndex.value)
+})
 
 const visiblePages = computed(() => {
-  const pages = [];
-  const start = Math.max(1, currentPage.value - 2);
-  const end = Math.min(totalPages.value, currentPage.value + 2);
+  const pages = []
+  const maxVisible = 5
+  let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2))
+  let end = Math.min(totalPages.value, start + maxVisible - 1)
+
+  if (end - start + 1 < maxVisible) {
+    start = Math.max(1, end - maxVisible + 1)
+  }
   
   for (let i = start; i <= end; i++) {
-    pages.push(i);
+    pages.push(i)
   }
-  
-  return pages;
-});
 
-const previousPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-    loadUsers();
+  return pages
+})
+
+// Methods
+const formatDate = (dateString) => {
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(dateString))
+}
+
+const getRoleLabel = (role) => {
+  const labels = {
+    admin: 'Admin',
+    moderator: 'Moderator',
+    user: 'User'
   }
-};
+  return labels[role] || role
+}
+
+const getRoleClass = (role) => {
+  const classes = {
+    admin: 'bg-red-100 text-red-800',
+    moderator: 'bg-yellow-100 text-yellow-800',
+    user: 'bg-blue-100 text-blue-800'
+  }
+  return classes[role] || 'bg-gray-100 text-gray-800'
+}
+
+const getStatusLabel = (status) => {
+  const labels = {
+    active: 'Hoạt động',
+    inactive: 'Không hoạt động',
+    suspended: 'Tạm khóa'
+  }
+  return labels[status] || status
+}
+
+const getStatusClass = (status) => {
+  const classes = {
+    active: 'bg-green-100 text-green-800',
+    inactive: 'bg-gray-100 text-gray-800',
+    suspended: 'bg-red-100 text-red-800'
+  }
+  return classes[status] || 'bg-gray-100 text-gray-800'
+}
+
+const sortBy = (key) => {
+  if (sortKey.value === key) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortKey.value = key
+    sortOrder.value = 'asc'
+  }
+}
+
+const clearFilters = () => {
+  filters.value = {
+    search: '',
+    role: '',
+    status: ''
+  }
+  currentPage.value = 1
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
 
 const nextPage = () => {
   if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-    loadUsers();
+    currentPage.value++
   }
-};
+}
 
 const goToPage = (page) => {
-  currentPage.value = page;
-  loadUsers();
-};
+  currentPage.value = page
+}
+
+const viewUser = (user) => {
+  console.log('View user:', user)
+  // Implement view user logic
+}
+
+const editUser = (user) => {
+  editingUser.value = user
+  userForm.value = {
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    status: user.status,
+    password: ''
+  }
+  showEditModal.value = true
+}
+
+const deleteUser = (user) => {
+  if (confirm(`Bạn có chắc chắn muốn xóa người dùng "${user.name}"?`)) {
+    console.log('Delete user:', user)
+    const index = users.value.findIndex(u => u.id === user.id)
+    if (index > -1) {
+      users.value.splice(index, 1)
+    }
+  }
+}
+
+const saveUser = () => {
+  if (showEditModal.value) {
+    // Update existing user
+    const index = users.value.findIndex(u => u.id === editingUser.value.id)
+    if (index > -1) {
+      users.value[index] = {
+        ...users.value[index],
+        ...userForm.value
+      }
+    }
+    console.log('Updated user:', userForm.value)
+  } else {
+    // Add new user
+    const newUser = {
+      id: users.value.length + 1,
+      ...userForm.value,
+      created_at: new Date().toISOString(),
+      last_login: null
+    }
+    users.value.push(newUser)
+    console.log('Added user:', newUser)
+  }
+  
+  closeModal()
+}
+
+const closeModal = () => {
+  showAddModal.value = false
+  showEditModal.value = false
+  editingUser.value = null
+  userForm.value = {
+    name: '',
+    email: '',
+    role: 'user',
+    status: 'active',
+    password: ''
+  }
+}
 
 onMounted(() => {
-  loadUsers();
-});
+  console.log('Users page mounted')
+})
 </script> 
+
+<style scoped>
+/* Custom animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+</style> 

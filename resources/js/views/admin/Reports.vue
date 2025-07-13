@@ -1,53 +1,108 @@
 <template>
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
   <div>
-    <h1 class="text-2xl font-bold mb-6">Báo cáo thống kê</h1>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">Báo cáo & Thống kê</h1>
+          <p class="text-gray-600">Phân tích dữ liệu và báo cáo chi tiết</p>
+          </div>
+        <div class="flex items-center space-x-3">
+          <button 
+            @click="refreshData"
+            class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center space-x-2"
+          >
+            <ArrowPathIcon class="w-5 h-5" />
+            <span>Làm mới</span>
+          </button>
+          <button 
+            @click="exportReport"
+            class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center space-x-2"
+          >
+            <ArrowDownTrayIcon class="w-5 h-5" />
+            <span>Xuất báo cáo</span>
+          </button>
+        </div>
+      </div>
+          </div>
 
-    <!-- Stats Cards -->
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Date From -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Từ ngày</label>
+          <input 
+            v-model="filters.dateFrom"
+            type="date"
+            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+          />
+          </div>
+
+        <!-- Date To -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Đến ngày</label>
+          <input 
+            v-model="filters.dateTo"
+            type="date"
+            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+          />
+        </div>
+
+        <!-- Report Type -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Loại báo cáo</label>
+          <select 
+            v-model="filters.reportType"
+            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+          >
+            <option value="sales">Báo cáo doanh thu</option>
+            <option value="orders">Báo cáo đơn hàng</option>
+            <option value="products">Báo cáo sản phẩm</option>
+            <option value="customers">Báo cáo khách hàng</option>
+          </select>
+      </div>
+
+        <!-- Generate Report -->
+        <div class="flex items-end">
+          <button 
+            @click="generateReport"
+            class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
+          >
+            Tạo báo cáo
+          </button>
+        </div>
+        </div>
+      </div>
+
+    <!-- Key Metrics -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center">
-          <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-            <span class="text-2xl">💰</span>
+      <div 
+        v-for="metric in keyMetrics" 
+        :key="metric.title"
+        class="bg-white rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 border border-gray-100"
+      >
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">{{ metric.title }}</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">{{ metric.value }}</p>
+            <div class="flex items-center mt-2">
+              <span 
+                :class="[
+                  'text-sm font-medium',
+                  metric.change >= 0 ? 'text-green-600' : 'text-red-600'
+                ]"
+              >
+                {{ metric.change >= 0 ? '+' : '' }}{{ metric.change }}%
+              </span>
+              <span class="text-gray-500 text-sm ml-1">so với tháng trước</span>
+            </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Doanh thu tháng</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ formatPrice(stats.monthlyRevenue) }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center">
-          <div class="p-3 rounded-full bg-green-100 text-green-600">
-            <span class="text-2xl">📦</span>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Đơn hàng mới</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ stats.newOrders }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center">
-          <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-            <span class="text-2xl">👥</span>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Khách hàng mới</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ stats.newCustomers }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center">
-          <div class="p-3 rounded-full bg-purple-100 text-purple-600">
-            <span class="text-2xl">📈</span>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Tăng trưởng</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ stats.growth }}%</p>
+          <div 
+            class="w-12 h-12 rounded-xl flex items-center justify-center"
+            :class="metric.bgColor"
+          >
+            <component :is="metric.icon" class="w-6 h-6 text-white" />
           </div>
         </div>
       </div>
@@ -56,106 +111,189 @@
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <!-- Revenue Chart -->
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Doanh thu theo tháng</h3>
-        <div class="space-y-3">
+      <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">Doanh thu theo thời gian</h3>
+          <div class="flex items-center space-x-2">
+            <button 
+              v-for="period in chartPeriods" 
+              :key="period.value"
+              @click="selectedPeriod = period.value"
+              :class="[
+                'px-3 py-1 text-sm rounded-lg transition-all duration-200',
+                selectedPeriod === period.value 
+                  ? 'bg-indigo-100 text-indigo-700' 
+                  : 'text-gray-500 hover:bg-gray-100'
+              ]"
+            >
+              {{ period.label }}
+            </button>
+          </div>
+        </div>
+        <div class="h-64 flex items-end justify-between space-x-2">
           <div 
-            v-for="(revenue, month) in revenueData" 
-            :key="month"
+            v-for="(item, index) in revenueData" 
+            :key="index"
+            class="flex-1 flex flex-col items-center"
+          >
+            <div 
+              class="w-full bg-gradient-to-t from-indigo-500 to-indigo-300 rounded-t-lg transition-all duration-300 hover:from-indigo-600 hover:to-indigo-400"
+              :style="{ height: `${(item.value / maxRevenue) * 200}px` }"
+            ></div>
+            <p class="text-xs text-gray-600 mt-2">{{ item.label }}</p>
+            <p class="text-xs font-medium text-gray-900">{{ formatCurrency(item.value) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders Chart -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">Đơn hàng theo trạng thái</h3>
+          <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+            Xem chi tiết
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div 
+            v-for="order in orderStatusData" 
+            :key="order.status"
             class="flex items-center justify-between"
           >
-            <span class="text-sm text-gray-600">{{ month }}</span>
-            <div class="flex items-center space-x-2">
-              <div class="w-32 bg-gray-200 rounded-full h-2">
+            <div class="flex items-center">
+              <div 
+                class="w-3 h-3 rounded-full mr-3"
+                :class="order.color"
+              ></div>
+              <span class="text-sm text-gray-700">{{ order.status }}</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
                 <div 
-                  class="bg-blue-600 h-2 rounded-full"
-                  :style="{ width: `${(revenue / maxRevenue) * 100}%` }"
+                  class="h-2 rounded-full transition-all duration-500"
+                  :class="order.color"
+                  :style="{ width: `${order.percentage}%` }"
                 ></div>
               </div>
-              <span class="text-sm font-medium text-gray-900">{{ formatPrice(revenue) }}</span>
+              <span class="text-sm font-medium text-gray-900">{{ order.count }}</span>
+            </div>
             </div>
           </div>
         </div>
       </div>
 
+    <!-- Top Products & Recent Orders -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <!-- Top Products -->
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Sản phẩm bán chạy</h3>
-        <div class="space-y-3">
+      <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">Sản phẩm bán chạy</h3>
+          <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+            Xem tất cả
+          </button>
+        </div>
+        <div class="space-y-4">
           <div 
             v-for="product in topProducts" 
             :key="product.id"
-            class="flex items-center justify-between"
+            class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200"
           >
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center">
               <img 
                 :src="product.image" 
                 :alt="product.name"
-                class="w-10 h-10 rounded-lg object-cover"
-              >
+                class="w-12 h-12 rounded-lg object-cover mr-4"
+              />
               <div>
-                <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
-                <p class="text-xs text-gray-500">{{ product.category }}</p>
+                <p class="font-medium text-gray-900">{{ product.name }}</p>
+                <p class="text-sm text-gray-600">{{ product.category }}</p>
               </div>
             </div>
             <div class="text-right">
-              <p class="text-sm font-medium text-gray-900">{{ product.sales }}</p>
-              <p class="text-xs text-gray-500">đã bán</p>
+              <p class="font-medium text-gray-900">{{ formatCurrency(product.revenue) }}</p>
+              <p class="text-sm text-gray-600">{{ product.sold }} đã bán</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">Đơn hàng gần đây</h3>
+          <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+            Xem tất cả
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div 
+            v-for="order in recentOrders" 
+            :key="order.id"
+            class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200"
+          >
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-4">
+                <ShoppingBagIcon class="w-5 h-5 text-indigo-600" />
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">#{{ order.order_number }}</p>
+                <p class="text-sm text-gray-600">{{ order.customer }}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="font-medium text-gray-900">{{ formatCurrency(order.amount) }}</p>
+              <span 
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                :class="getStatusClass(order.status)"
+              >
+                {{ order.status }}
+              </span>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Recent Orders -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Đơn hàng gần đây</h3>
+    <!-- Detailed Report Table -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Báo cáo chi tiết theo ngày</h3>
+      </div>
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table class="w-full">
+          <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Mã đơn hàng
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Khách hàng
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tổng tiền
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Trạng thái
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ngày tạo
-              </th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đơn hàng</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doanh thu</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Khách hàng mới</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tỷ lệ chuyển đổi</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trung bình/đơn</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="order in recentOrders" :key="order.id">
+            <tr 
+              v-for="report in dailyReports" 
+              :key="report.date"
+              class="hover:bg-gray-50 transition-colors duration-200"
+            >
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ formatDate(report.date) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ report.orders }}
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                #{{ order.order_number }}
+                {{ formatCurrency(report.revenue) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ order.customer_name }}
+                {{ report.newCustomers }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ formatPrice(order.total_amount) }}
+                {{ report.conversionRate }}%
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span 
-                  :class="{
-                    'px-2 py-1 text-xs font-semibold rounded-full': true,
-                    'bg-green-100 text-green-800': order.status === 'completed',
-                    'bg-yellow-100 text-yellow-800': order.status === 'processing',
-                    'bg-red-100 text-red-800': order.status === 'cancelled'
-                  }"
-                >
-                  {{ getStatusText(order.status) }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(order.created_at) }}
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ formatCurrency(report.averageOrder) }}
               </td>
             </tr>
           </tbody>
@@ -166,111 +304,244 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue'
+import { 
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  CurrencyDollarIcon,
+  ShoppingBagIcon,
+  UsersIcon,
+  ChartBarIcon
+} from '@heroicons/vue/24/outline'
 
-const stats = ref({
-  monthlyRevenue: 0,
-  newOrders: 0,
-  newCustomers: 0,
-  growth: 0
-});
+// Filters
+const filters = ref({
+  dateFrom: '',
+  dateTo: '',
+  reportType: 'sales'
+})
 
-const revenueData = ref({});
-const topProducts = ref([]);
-const recentOrders = ref([]);
+// Chart periods
+const chartPeriods = ref([
+  { label: '7 ngày', value: '7d' },
+  { label: '30 ngày', value: '30d' },
+  { label: '90 ngày', value: '90d' }
+])
+const selectedPeriod = ref('30d')
 
-const loadStats = async () => {
-  try {
-    const response = await fetch('/api/admin/stats');
-    const data = await response.json();
-    stats.value = data.data.stats || {};
-    revenueData.value = data.data.revenue || {};
-    topProducts.value = data.data.topProducts || [];
-    recentOrders.value = data.data.recentOrders || [];
-  } catch (error) {
-    console.error('Error loading stats:', error);
-    // Mock data for demo
-    stats.value = {
-      monthlyRevenue: 15000000,
-      newOrders: 45,
-      newCustomers: 23,
-      growth: 12.5
-    };
-    revenueData.value = {
-      'Tháng 1': 12000000,
-      'Tháng 2': 13500000,
-      'Tháng 3': 14200000,
-      'Tháng 4': 15000000
-    };
-    topProducts.value = [
+// Key metrics
+const keyMetrics = ref([
+  {
+    title: 'Tổng doanh thu',
+    value: '2.5 tỷ VNĐ',
+    change: 12.5,
+    icon: CurrencyDollarIcon,
+    bgColor: 'bg-gradient-to-br from-green-500 to-green-600'
+  },
+  {
+    title: 'Đơn hàng',
+    value: '1,234',
+    change: 8.2,
+    icon: ShoppingBagIcon,
+    bgColor: 'bg-gradient-to-br from-blue-500 to-blue-600'
+  },
+  {
+    title: 'Khách hàng mới',
+    value: '89',
+    change: 15.8,
+    icon: UsersIcon,
+    bgColor: 'bg-gradient-to-br from-purple-500 to-purple-600'
+  },
+  {
+    title: 'Tỷ lệ chuyển đổi',
+    value: '3.2%',
+    change: 5.4,
+    icon: ChartBarIcon,
+    bgColor: 'bg-gradient-to-br from-orange-500 to-orange-600'
+  }
+])
+
+// Revenue chart data
+const revenueData = ref([
+  { label: 'T1', value: 150000000 },
+  { label: 'T2', value: 180000000 },
+  { label: 'T3', value: 220000000 },
+  { label: 'T4', value: 190000000 },
+  { label: 'T5', value: 250000000 },
+  { label: 'T6', value: 280000000 },
+  { label: 'T7', value: 320000000 },
+  { label: 'T8', value: 300000000 },
+  { label: 'T9', value: 350000000 },
+  { label: 'T10', value: 380000000 },
+  { label: 'T11', value: 420000000 },
+  { label: 'T12', value: 450000000 }
+])
+
+const maxRevenue = Math.max(...revenueData.value.map(item => item.value))
+
+// Order status data
+const orderStatusData = ref([
+  { status: 'Đã hoàn thành', count: 456, percentage: 65, color: 'bg-green-500' },
+  { status: 'Đang xử lý', count: 234, percentage: 33, color: 'bg-blue-500' },
+  { status: 'Đã hủy', count: 23, percentage: 3, color: 'bg-red-500' },
+  { status: 'Chờ xác nhận', count: 12, percentage: 2, color: 'bg-yellow-500' }
+])
+
+// Top products
+const topProducts = ref([
       {
         id: 1,
-        name: 'iPhone 15 Pro',
+    name: 'iPhone 15 Pro Max 256GB',
         category: 'Điện thoại',
-        image: 'https://via.placeholder.com/40',
-        sales: 156
+    image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=100',
+    revenue: 450000000,
+    sold: 15
       },
       {
         id: 2,
-        name: 'MacBook Air M2',
-        category: 'Laptop',
-        image: 'https://via.placeholder.com/40',
-        sales: 89
+    name: 'Samsung Galaxy S24 Ultra',
+    category: 'Điện thoại',
+    image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=100',
+    revenue: 380000000,
+    sold: 12
       },
       {
         id: 3,
-        name: 'AirPods Pro',
+    name: 'MacBook Pro 14" M3 Pro',
+    category: 'Laptop',
+    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=100',
+    revenue: 320000000,
+    sold: 8
+  },
+  {
+    id: 4,
+    name: 'AirPods Pro 2nd Gen',
         category: 'Phụ kiện',
-        image: 'https://via.placeholder.com/40',
-        sales: 234
-      }
-    ];
-    recentOrders.value = [
-      {
-        id: 1,
-        order_number: 'ORD001',
-        customer_name: 'Nguyễn Văn A',
-        total_amount: 25000000,
-        status: 'completed',
-        created_at: '2024-01-15'
-      },
-      {
-        id: 2,
-        order_number: 'ORD002',
-        customer_name: 'Trần Thị B',
-        total_amount: 18000000,
-        status: 'processing',
-        created_at: '2024-01-14'
-      }
-    ];
+    image: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=100',
+    revenue: 280000000,
+    sold: 35
   }
-};
+])
 
-const formatPrice = (price) => {
+// Recent orders
+const recentOrders = ref([
+  { id: 1, order_number: 'ORD-2024-001', customer: 'Nguyễn Văn A', amount: 2500000, status: 'Đã hoàn thành' },
+  { id: 2, order_number: 'ORD-2024-002', customer: 'Trần Thị B', amount: 1800000, status: 'Đang xử lý' },
+  { id: 3, order_number: 'ORD-2024-003', customer: 'Lê Văn C', amount: 3200000, status: 'Chờ xác nhận' },
+  { id: 4, order_number: 'ORD-2024-004', customer: 'Phạm Thị D', amount: 1500000, status: 'Đã hoàn thành' }
+])
+
+// Daily reports
+const dailyReports = ref([
+  {
+    date: '2024-12-20',
+    orders: 45,
+    revenue: 125000000,
+    newCustomers: 12,
+    conversionRate: 3.2,
+    averageOrder: 2777778
+  },
+  {
+    date: '2024-12-19',
+    orders: 38,
+    revenue: 98000000,
+    newCustomers: 8,
+    conversionRate: 2.8,
+    averageOrder: 2578947
+  },
+  {
+    date: '2024-12-18',
+    orders: 52,
+    revenue: 145000000,
+    newCustomers: 15,
+    conversionRate: 3.5,
+    averageOrder: 2788462
+  },
+  {
+    date: '2024-12-17',
+    orders: 41,
+    revenue: 112000000,
+    newCustomers: 10,
+    conversionRate: 3.0,
+    averageOrder: 2731707
+  },
+  {
+    date: '2024-12-16',
+    orders: 47,
+    revenue: 135000000,
+    newCustomers: 13,
+    conversionRate: 3.3,
+    averageOrder: 2872340
+  }
+])
+
+// Methods
+const formatCurrency = (amount) => {
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND'
-  }).format(price);
-};
+  }).format(amount)
+}
 
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('vi-VN');
-};
+const formatDate = (dateString) => {
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(new Date(dateString))
+}
 
-const getStatusText = (status) => {
-  const statusMap = {
-    'completed': 'Hoàn thành',
-    'processing': 'Đang xử lý',
-    'cancelled': 'Đã hủy'
-  };
-  return statusMap[status] || status;
-};
+const getStatusClass = (status) => {
+  const classes = {
+    'Đã hoàn thành': 'bg-green-100 text-green-800',
+    'Đang xử lý': 'bg-blue-100 text-blue-800',
+    'Chờ xác nhận': 'bg-yellow-100 text-yellow-800',
+    'Đã hủy': 'bg-red-100 text-red-800'
+  }
+  return classes[status] || 'bg-gray-100 text-gray-800'
+}
 
-const maxRevenue = computed(() => {
-  return Math.max(...Object.values(revenueData.value));
-});
+const generateReport = () => {
+  console.log('Generating report with filters:', filters.value)
+  // Implement report generation logic
+}
+
+const refreshData = () => {
+  console.log('Refreshing data...')
+  // Implement data refresh logic
+}
+
+const exportReport = () => {
+  console.log('Exporting report...')
+  // Implement export logic
+}
 
 onMounted(() => {
-  loadStats();
-});
+  // Set default date range (last 30 days)
+  const today = new Date()
+  const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+  
+  filters.value.dateFrom = thirtyDaysAgo.toISOString().split('T')[0]
+  filters.value.dateTo = today.toISOString().split('T')[0]
+  
+  console.log('Reports page mounted')
+})
 </script> 
+
+<style scoped>
+/* Custom animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+</style> 

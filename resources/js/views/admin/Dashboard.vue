@@ -1,224 +1,293 @@
 <template>
-  <div class="space-y-6">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
     <!-- Header -->
-    <div class="flex justify-between items-center">
-      <h1 class="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-      <div class="flex items-center space-x-4">
-        <span class="text-sm text-gray-600">Xin chào, Admin!</span>
-        <button 
-          @click="logout"
-          class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
-        >
-          Đăng xuất
-        </button>
-      </div>
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+      <p class="text-gray-600">Tổng quan hệ thống quản lý</p>
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid md:grid-cols-4 gap-6">
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <div class="flex items-center">
-          <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-            </svg>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div 
+        v-for="stat in stats" 
+        :key="stat.title"
+        class="bg-white rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 border border-gray-100"
+      >
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">{{ stat.title }}</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">{{ stat.value }}</p>
+            <div class="flex items-center mt-2">
+              <span 
+                :class="[
+                  'text-sm font-medium',
+                  stat.change >= 0 ? 'text-green-600' : 'text-red-600'
+                ]"
+              >
+                {{ stat.change >= 0 ? '+' : '' }}{{ stat.change }}%
+              </span>
+              <span class="text-gray-500 text-sm ml-1">so với tháng trước</span>
+            </div>
           </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Tổng người dùng</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ stats.totalUsers }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <div class="flex items-center">
-          <div class="p-3 rounded-full bg-green-100 text-green-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Người dùng hoạt động</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ stats.activeUsers }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <div class="flex items-center">
-          <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Người dùng mới (tháng)</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ stats.newUsers }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <div class="flex items-center">
-          <div class="p-3 rounded-full bg-purple-100 text-purple-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Tăng trưởng</p>
-            <p class="text-2xl font-semibold text-gray-900">+{{ stats.growth }}%</p>
+          <div 
+            class="w-12 h-12 rounded-xl flex items-center justify-center"
+            :class="stat.bgColor"
+          >
+            <component :is="stat.icon" class="w-6 h-6 text-white" />
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-semibold mb-4">Thao tác nhanh</h2>
-      <div class="grid md:grid-cols-3 gap-4">
-        <button 
-          @click="$router.push('/admin/users')"
-          class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <div class="p-2 bg-blue-100 rounded-lg">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-            </svg>
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Revenue Chart -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">Doanh thu theo tháng</h3>
+          <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+            Xem chi tiết
+          </button>
+        </div>
+        <div class="h-64 flex items-end justify-between space-x-2">
+          <div 
+            v-for="(item, index) in revenueData" 
+            :key="index"
+            class="flex-1 flex flex-col items-center"
+          >
+            <div 
+              class="w-full bg-gradient-to-t from-indigo-500 to-indigo-300 rounded-t-lg transition-all duration-300 hover:from-indigo-600 hover:to-indigo-400"
+              :style="{ height: `${(item.value / maxRevenue) * 200}px` }"
+            ></div>
+            <p class="text-xs text-gray-600 mt-2">{{ item.month }}</p>
+            <p class="text-xs font-medium text-gray-900">{{ formatCurrency(item.value) }}</p>
           </div>
-          <div class="ml-3">
-            <h3 class="font-medium">Quản lý người dùng</h3>
-            <p class="text-sm text-gray-600">Thêm, sửa, xóa người dùng</p>
-          </div>
-        </button>
+        </div>
+      </div>
 
-        <button 
-          @click="$router.push('/admin/settings')"
-          class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <div class="p-2 bg-green-100 rounded-lg">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
+      <!-- Orders Chart -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">Đơn hàng theo trạng thái</h3>
+          <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+            Xem chi tiết
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div 
+            v-for="order in orderStatusData" 
+            :key="order.status"
+            class="flex items-center justify-between"
+          >
+            <div class="flex items-center">
+              <div 
+                class="w-3 h-3 rounded-full mr-3"
+                :class="order.color"
+              ></div>
+              <span class="text-sm text-gray-700">{{ order.status }}</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
+                <div 
+                  class="h-2 rounded-full transition-all duration-500"
+                  :class="order.color"
+                  :style="{ width: `${order.percentage}%` }"
+                ></div>
+              </div>
+              <span class="text-sm font-medium text-gray-900">{{ order.count }}</span>
+            </div>
           </div>
-          <div class="ml-3">
-            <h3 class="font-medium">Cài đặt hệ thống</h3>
-            <p class="text-sm text-gray-600">Cấu hình ứng dụng</p>
-          </div>
-        </button>
-
-        <button 
-          @click="$router.push('/admin/reports')"
-          class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <div class="p-2 bg-purple-100 rounded-lg">
-            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
-          </div>
-          <div class="ml-3">
-            <h3 class="font-medium">Báo cáo</h3>
-            <p class="text-sm text-gray-600">Xem thống kê chi tiết</p>
-          </div>
-        </button>
+        </div>
       </div>
     </div>
 
-    <!-- Recent Users -->
-    <div class="bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-semibold mb-4">Người dùng gần đây</h2>
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tên</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày tạo</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="user in recentUsers" :key="user.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {{ user.name }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ user.email }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(user.created_at) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                  {{ user.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- Recent Activity & Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Recent Orders -->
+      <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">Đơn hàng gần đây</h3>
+          <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+            Xem tất cả
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div 
+            v-for="order in recentOrders" 
+            :key="order.id"
+            class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200"
+          >
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-4">
+                <ShoppingBagIcon class="w-5 h-5 text-indigo-600" />
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">#{{ order.id }}</p>
+                <p class="text-sm text-gray-600">{{ order.customer }}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="font-medium text-gray-900">{{ formatCurrency(order.amount) }}</p>
+              <span 
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                :class="getStatusClass(order.status)"
+              >
+                {{ order.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">Thao tác nhanh</h3>
+        <div class="space-y-3">
+          <button 
+            v-for="action in quickActions" 
+            :key="action.title"
+            @click="handleQuickAction(action.action)"
+            class="w-full flex items-center p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl hover:from-indigo-100 hover:to-purple-100 transition-all duration-300 transform hover:scale-105 border border-indigo-100"
+          >
+            <component :is="action.icon" class="w-5 h-5 text-indigo-600 mr-3" />
+            <span class="font-medium text-gray-900">{{ action.title }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue'
+import { 
+  UsersIcon, 
+  ShoppingBagIcon, 
+  CurrencyDollarIcon, 
+  ChartBarIcon,
+  PlusIcon,
+  CogIcon,
+  DocumentTextIcon,
+  BellIcon
+} from '@heroicons/vue/24/outline'
 
-const router = useRouter();
+// Stats data
+const stats = ref([
+  {
+    title: 'Tổng doanh thu',
+    value: '2.5 tỷ VNĐ',
+    change: 12.5,
+    icon: CurrencyDollarIcon,
+    bgColor: 'bg-gradient-to-br from-green-500 to-green-600'
+  },
+  {
+    title: 'Đơn hàng',
+    value: '1,234',
+    change: 8.2,
+    icon: ShoppingBagIcon,
+    bgColor: 'bg-gradient-to-br from-blue-500 to-blue-600'
+  },
+  {
+    title: 'Khách hàng',
+    value: '856',
+    change: -2.1,
+    icon: UsersIcon,
+    bgColor: 'bg-gradient-to-br from-purple-500 to-purple-600'
+  },
+  {
+    title: 'Tỷ lệ chuyển đổi',
+    value: '3.2%',
+    change: 15.8,
+    icon: ChartBarIcon,
+    bgColor: 'bg-gradient-to-br from-orange-500 to-orange-600'
+  }
+])
 
-// State
-const stats = ref({
-  totalUsers: 0,
-  activeUsers: 0,
-  newUsers: 0,
-  growth: 0
-});
+// Revenue chart data
+const revenueData = ref([
+  { month: 'T1', value: 150000000 },
+  { month: 'T2', value: 180000000 },
+  { month: 'T3', value: 220000000 },
+  { month: 'T4', value: 190000000 },
+  { month: 'T5', value: 250000000 },
+  { month: 'T6', value: 280000000 },
+  { month: 'T7', value: 320000000 },
+  { month: 'T8', value: 300000000 },
+  { month: 'T9', value: 350000000 },
+  { month: 'T10', value: 380000000 },
+  { month: 'T11', value: 420000000 },
+  { month: 'T12', value: 450000000 }
+])
 
-const recentUsers = ref([]);
+const maxRevenue = Math.max(...revenueData.value.map(item => item.value))
+
+// Order status data
+const orderStatusData = ref([
+  { status: 'Đã hoàn thành', count: 456, percentage: 65, color: 'bg-green-500' },
+  { status: 'Đang xử lý', count: 234, percentage: 33, color: 'bg-blue-500' },
+  { status: 'Đã hủy', count: 23, percentage: 3, color: 'bg-red-500' },
+  { status: 'Chờ xác nhận', count: 12, percentage: 2, color: 'bg-yellow-500' }
+])
+
+// Recent orders
+const recentOrders = ref([
+  { id: 'ORD-001', customer: 'Nguyễn Văn A', amount: 2500000, status: 'Đã hoàn thành' },
+  { id: 'ORD-002', customer: 'Trần Thị B', amount: 1800000, status: 'Đang xử lý' },
+  { id: 'ORD-003', customer: 'Lê Văn C', amount: 3200000, status: 'Chờ xác nhận' },
+  { id: 'ORD-004', customer: 'Phạm Thị D', amount: 1500000, status: 'Đã hoàn thành' },
+  { id: 'ORD-005', customer: 'Hoàng Văn E', amount: 2800000, status: 'Đang xử lý' }
+])
+
+// Quick actions
+const quickActions = ref([
+  { title: 'Thêm sản phẩm mới', action: 'add-product', icon: PlusIcon },
+  { title: 'Tạo đơn hàng', action: 'create-order', icon: ShoppingBagIcon },
+  { title: 'Cài đặt hệ thống', action: 'settings', icon: CogIcon },
+  { title: 'Xem báo cáo', action: 'reports', icon: DocumentTextIcon }
+])
 
 // Methods
-const fetchStats = async () => {
-  try {
-    // Simulate API call
-    stats.value = {
-      totalUsers: 1250,
-      activeUsers: 1180,
-      newUsers: 45,
-      growth: 12
-    };
-  } catch (error) {
-    console.error('Error fetching stats:', error);
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(amount)
+}
+
+const getStatusClass = (status) => {
+  const classes = {
+    'Đã hoàn thành': 'bg-green-100 text-green-800',
+    'Đang xử lý': 'bg-blue-100 text-blue-800',
+    'Chờ xác nhận': 'bg-yellow-100 text-yellow-800',
+    'Đã hủy': 'bg-red-100 text-red-800'
   }
-};
+  return classes[status] || 'bg-gray-100 text-gray-800'
+}
 
-const fetchRecentUsers = async () => {
-  try {
-    // Simulate API call
-    recentUsers.value = [
-      { id: 1, name: 'Nguyễn Văn A', email: 'nguyenvana@example.com', created_at: '2024-01-15', status: 'active' },
-      { id: 2, name: 'Trần Thị B', email: 'tranthib@example.com', created_at: '2024-01-16', status: 'active' },
-      { id: 3, name: 'Lê Văn C', email: 'levanc@example.com', created_at: '2024-01-17', status: 'inactive' },
-      { id: 4, name: 'Phạm Thị D', email: 'phamthid@example.com', created_at: '2024-01-18', status: 'active' }
-    ];
-  } catch (error) {
-    console.error('Error fetching recent users:', error);
-  }
-};
+const handleQuickAction = (action) => {
+  console.log('Quick action:', action)
+  // Implement quick action logic here
+}
 
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('vi-VN');
-};
-
-const logout = () => {
-  // Simulate logout
-  router.push('/login');
-};
-
-// Lifecycle
 onMounted(() => {
-  fetchStats();
-  fetchRecentUsers();
-});
-</script> 
+  console.log('Dashboard mounted')
+})
+</script>
+
+<style scoped>
+/* Custom animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+</style> 
