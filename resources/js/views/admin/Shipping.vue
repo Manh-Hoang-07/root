@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Quản lý vận chuyển</h1>
       <button 
@@ -213,9 +213,37 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 
-const shippingZones = ref([]);
+const shippingZones = ref([
+  {
+    id: 1,
+    name: 'Hà Nội',
+    base_fee: 20000,
+    weight_fee: 5000,
+    estimated_days: 2,
+    status: 'active',
+    provinces: ['Ba Đình', 'Cầu Giấy', 'Đống Đa']
+  },
+  {
+    id: 2,
+    name: 'TP.HCM',
+    base_fee: 25000,
+    weight_fee: 6000,
+    estimated_days: 3,
+    status: 'active',
+    provinces: ['Quận 1', 'Quận 3', 'Quận 7']
+  },
+  {
+    id: 3,
+    name: 'Đà Nẵng',
+    base_fee: 30000,
+    weight_fee: 7000,
+    estimated_days: 4,
+    status: 'inactive',
+    provinces: ['Hải Châu', 'Thanh Khê']
+  }
+]);
 const showAddModal = ref(false);
 const showEditModal = ref(false);
 const showCalculateModal = ref(false);
@@ -356,7 +384,7 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-onMounted(() => {
-  loadShippingZones();
-});
+// onMounted(() => {
+//   loadShippingZones();
+// });
 </script> 

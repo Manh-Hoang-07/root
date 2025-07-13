@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Quản lý kho hàng</h1>
       <button 
@@ -160,9 +160,40 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 
-const warehouses = ref([]);
+const warehouses = ref([
+  {
+    id: 1,
+    name: 'Kho Hà Nội',
+    address: '123 Đường Láng',
+    city: 'Hà Nội',
+    province: 'Hà Nội',
+    phone: '0123456789',
+    email: 'hanoi@warehouse.vn',
+    status: 'active'
+  },
+  {
+    id: 2,
+    name: 'Kho Sài Gòn',
+    address: '456 Nguyễn Trãi',
+    city: 'TP.HCM',
+    province: 'TP.HCM',
+    phone: '0987654321',
+    email: 'saigon@warehouse.vn',
+    status: 'active'
+  },
+  {
+    id: 3,
+    name: 'Kho Đà Nẵng',
+    address: '789 Lê Duẩn',
+    city: 'Đà Nẵng',
+    province: 'Đà Nẵng',
+    phone: '02363778899',
+    email: 'danang@warehouse.vn',
+    status: 'inactive'
+  }
+]);
 const showAddModal = ref(false);
 const showEditModal = ref(false);
 const editingWarehouse = ref(null);
@@ -254,7 +285,7 @@ const closeModal = () => {
   };
 };
 
-onMounted(() => {
-  loadWarehouses();
-});
+// onMounted(() => {
+//   loadWarehouses();
+// });
 </script> 
