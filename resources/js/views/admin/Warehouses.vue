@@ -236,8 +236,58 @@
       </div>
     </div>
 
-    <!-- Add/Edit Modal giữ nguyên như cũ -->
-    <slot />
+    <!-- Modal Thêm/Sửa Kho Hàng -->
+    <div v-if="showAddModal || showEditModal" class="fixed inset-0 flex items-center justify-center z-50">
+      <div class="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm"></div>
+      <div class="relative z-50 bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+        <div class="mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">
+            {{ showEditModal ? 'Sửa kho hàng' : 'Thêm kho hàng' }}
+          </h3>
+        </div>
+        <form @submit.prevent="saveWarehouse">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tên kho hàng</label>
+              <input v-model="form.name" type="text" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Địa chỉ</label>
+              <textarea v-model="form.address" rows="2" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Thành phố</label>
+                <input v-model="form.city" type="text" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tỉnh/Thành</label>
+                <input v-model="form.province" type="text" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+              <input v-model="form.phone" type="text" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input v-model="form.email" type="email" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+              <select v-model="form.status" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Không hoạt động</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-end space-x-3 mt-6">
+            <button type="button" @click="closeModal" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Hủy</button>
+            <button type="submit" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700">{{ showEditModal ? 'Cập nhật' : 'Thêm' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
