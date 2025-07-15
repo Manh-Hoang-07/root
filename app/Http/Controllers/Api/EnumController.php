@@ -16,8 +16,8 @@ class EnumController extends Controller
             return response()->json(['error' => 'Enum not found'], 404);
         }
         $data = collect($enumClass::cases())->map(fn($case) => [
-            'value' => $case->value,
-            'label' => $case->name
+            'name' => Str::headline(strtolower($case->name)),
+            'value' => $case->value
         ])->values();
         return response()->json(['data' => $data]);
     }

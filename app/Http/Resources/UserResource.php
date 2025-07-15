@@ -16,11 +16,19 @@ class UserResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->profile ? $this->profile->name : null,
+            'username' => $this->username,
             'email' => $this->email,
+            'phone' => $this->phone,
             'status' => $this->status,
-            'created_at' => $this->created_at ? $this->created_at->toDateTimeString() : null,
+            'email_verified_at' => $this->email_verified_at ? $this->email_verified_at->toDateTimeString() : null,
+            'phone_verified_at' => $this->phone_verified_at ? $this->phone_verified_at->toDateTimeString() : null,
             'last_login_at' => $this->last_login_at ? $this->last_login_at->toDateTimeString() : null,
+            'created_at' => $this->created_at ? $this->created_at->toDateTimeString() : null,
+            // Profile fields
+            'name' => $this->profile ? $this->profile->name : null,
+            'gender' => $this->profile ? $this->profile->gender : null,
+            'address' => $this->profile ? $this->profile->address : null,
+            'avatar' => $this->profile ? $this->profile->avatar : null,
         ];
     }
 }

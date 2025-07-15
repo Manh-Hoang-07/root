@@ -31,34 +31,62 @@ class UserController extends BaseController
     // Tạo mới tài khoản
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-            'role' => 'required|string',
-            'status' => 'required|string',
+        // Lấy đúng các trường cho user
+        $userData = $request->only([
+            'username', 'email', 'phone', 'password', 'status', 'email_verified_at', 'phone_verified_at', 'last_login_at'
         ]);
-        $data['password'] = bcrypt($data['password']);
-        $user = $this->service->create($data);
+        $validated = $request->validate([
+            'username' => 'nullable|string|max:50|unique:users,username',
+            'email' => 'nullable|email|unique:users,email',
+            'phone' => 'nullable|string|max:20|unique:users,phone',
+            'password' => 'required|string|min:6',
+            'status' => 'required|string',
+            'email_verified_at' => 'nullable|date',
+            'phone_verified_at' => 'nullable|date',
+            'last_login_at' => 'nullable|date',
+        ]);
+        $userData['password'] = bcrypt($userData['password']);
+        $user = $this->service->create($userData);
+        // Luôn tạo profile, kể cả khi không có trường nào
+        $profileData = $request->only(['name', 'gender', 'address', 'avatar']);
+        $user->profile()->create($profileData);
         return new UserResource($user);
     }
 
     // Cập nhật tài khoản
     public function update(Request $request, $id)
     {
-        $data = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,'.$id,
+        // Validate tất cả các trường thuộc bảng users
+        $request->validate([
+            'username' => 'nullable|string|max:50|unique:users,username,'.$id,
+            'email' => 'nullable|email|unique:users,email,'.$id,
+            'phone' => 'nullable|string|max:20|unique:users,phone,'.$id,
             'password' => 'nullable|string|min:6',
-            'role' => 'sometimes|string',
             'status' => 'sometimes|string',
+            'email_verified_at' => 'nullable|date',
+            'phone_verified_at' => 'nullable|date',
+            'last_login_at' => 'nullable|date',
         ]);
-        if (!empty($data['password'])) {
-            $data['password'] = bcrypt($data['password']);
+        // Lấy đúng các trường cho user
+        $userData = $request->only([
+            'username', 'email', 'phone', 'password', 'status', 'email_verified_at', 'phone_verified_at', 'last_login_at'
+        ]);
+        // Không xử lý password ở controller nữa, chỉ truyền sang service
+        $user = $this->service->update($id, $userData);
+        // Lấy đúng các trường cho profile
+        $profileData = $request->only(['name', 'gender', 'address', 'avatar']);
+        // Đảm bảo luôn truyền đủ key khi tạo profile mới
+        $defaultProfile = [
+            'name' => null,
+            'gender' => null,
+            'address' => null,
+            'avatar' => null,
+        ];
+        if ($user->profile) {
+            $user->profile->update($profileData);
         } else {
-            unset($data['password']);
+            $user->profile()->create(array_merge($defaultProfile, $profileData));
         }
-        $user = $this->service->update($id, $data);
         return new UserResource($user);
     }
 
