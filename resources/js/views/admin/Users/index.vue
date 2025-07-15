@@ -20,32 +20,26 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="relative">
           <MagnifyingGlassIcon class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-          <input
+          <input 
             v-model="filters.search"
-            type="text"
+            type="text" 
             placeholder="Tìm kiếm người dùng..."
             class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            @input="fetchUsers"
           />
         </div>
 
-        <select v-model="filters.role" class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
-          <option value="">Tất cả vai trò</option>
-          <option value="admin">Admin</option>
-          <option value="user">User</option>
-          <option value="moderator">Moderator</option>
-        </select>
+          <!-- Bỏ bộ lọc role -->
 
-        <select v-model="filters.status" class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
-          <option value="">Tất cả trạng thái</option>
-          <option value="active">Hoạt động</option>
-          <option value="inactive">Không hoạt động</option>
-          <option value="suspended">Tạm khóa</option>
-        </select>
+          <select v-model="filters.status" @change="fetchUsers" class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+            <option value="">Tất cả trạng thái</option>
+            <option v-for="s in statusEnums" :key="s.value" :value="s.value">{{ s.name }}</option>
+          </select>
 
-        <button @click="clearFilters" class="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200">
-          Xóa bộ lọc
-        </button>
-      </div>
+          <button @click="clearFilters" class="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200">
+            Xóa bộ lọc
+          </button>
+        </div>
     </div>
 
     <!-- Users Table -->
@@ -174,7 +168,8 @@ const userForm = ref({
 
 const fetchUsers = async () => {
   try {
-    const res = await axios.get(endpoints.users)
+    const params = { ...filters.value }
+    const res = await axios.get(endpoints.users, { params })
     users.value = res.data.data || []
   } catch (e) {
     console.error('Lỗi khi lấy người dùng:', e)
