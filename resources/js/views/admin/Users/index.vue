@@ -16,31 +16,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="relative">
-          <MagnifyingGlassIcon class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-          <input 
-            v-model="filters.search"
-            type="text" 
-            placeholder="Tìm kiếm người dùng..."
-            class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            @input="fetchUsers"
-          />
-        </div>
-
-          <!-- Bỏ bộ lọc role -->
-
-          <select v-model="filters.status" @change="fetchUsers" class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
-            <option value="">Tất cả trạng thái</option>
-            <option v-for="s in statusEnums" :key="s.value" :value="s.value">{{ s.name }}</option>
-          </select>
-
-          <button @click="clearFilters" class="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200">
-            Xóa bộ lọc
-          </button>
-        </div>
-    </div>
+    <Filter :filters="filters" @update:filters="onUpdateFilters" @clear="clearFilters" :status-enums="statusEnums" />
 
     <!-- Users Table -->
     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 mb-8 overflow-auto">
@@ -95,52 +71,14 @@
           </h3>
         </div>
         <div class="p-6 max-h-[80vh] overflow-y-auto">
-          <form @submit.prevent="saveUser" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-1">Họ tên</label>
-              <input v-model="userForm.name" required type="text" class="w-full px-4 py-2 border rounded-xl" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Email</label>
-              <input v-model="userForm.email" required type="email" class="w-full px-4 py-2 border rounded-xl" />
-            </div>
-            <div v-if="!showEditModal">
-              <label class="block text-sm font-medium mb-1">Mật khẩu</label>
-              <input v-model="userForm.password" required type="password" class="w-full px-4 py-2 border rounded-xl" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Trạng thái</label>
-              <select v-model="userForm.status" required class="w-full px-4 py-2 border rounded-xl">
-                <option value="">Chọn trạng thái</option>
-                <option v-for="s in statusEnums" :key="s.value" :value="s.value">{{ s.name }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Giới tính</label>
-              <select v-model="userForm.gender" class="w-full px-4 py-2 border rounded-xl">
-                <option value="">Chọn giới tính</option>
-                <option v-for="g in genderEnums" :key="g.value" :value="g.value">{{ g.name }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Số điện thoại</label>
-              <input v-model="userForm.phone" type="text" class="w-full px-4 py-2 border rounded-xl" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Địa chỉ</label>
-              <input v-model="userForm.address" type="text" class="w-full px-4 py-2 border rounded-xl" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Ảnh đại diện</label>
-              <input type="file" @change="onAvatarChange" accept="image/*" />
-            </div>
-            <div class="flex justify-end gap-2 pt-4">
-              <button type="button" @click="closeModal" class="px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200">Hủy</button>
-              <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">
-                {{ showEditModal ? 'Cập nhật' : 'Thêm' }}
-              </button>
-            </div>
-          </form>
+          <Form
+            :user="showEditModal ? editingUser : null"
+            :mode="showEditModal ? 'edit' : 'create'"
+            :status-enums="statusEnums"
+            :gender-enums="genderEnums"
+            @submit="saveUser"
+            @cancel="closeModal"
+          />
         </div>
       </div>
     </div>
@@ -153,6 +91,8 @@ import axios from 'axios'
 import endpoints from '@/api/endpoints'
 import useApiOptions from '@/composables/useApiOptions'
 import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import Filter from './filter.vue'
+import Form from './form.vue'
 
 const users = ref([])
 const filters = ref({ search: '', role: '', status: '' })
@@ -177,13 +117,12 @@ const fetchUsers = async () => {
   }
 }
 
-const saveUser = async () => {
-  const formData = new FormData()
-  Object.entries(userForm.value).forEach(([key, value]) => {
-    if (key === 'avatar' && !value) return
-    formData.append(key, value)
-  })
+const onUpdateFilters = (newFilters) => {
+  filters.value = newFilters
+  fetchUsers()
+}
 
+const saveUser = async (formData) => {
   try {
     if (showEditModal.value) {
       await axios.post(`/api/admin/users/${editingUser.value.id}?_method=PUT`, formData)
