@@ -2,24 +2,24 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 
 // Import components
-import Home from '../views/Home.vue';
+import Home from '../views/home/Home/index.vue';
 import Login from '../views/Login.vue';
 import Register from '../views/Register.vue';
 import AdminLayout from '../layouts/AdminLayout.vue';
-import AdminDashboard from '../views/admin/Dashboard.vue';
-import AdminProducts from '../views/admin/Products.vue';
-import AdminPosts from '../views/admin/Posts.vue';
-import AdminOrders from '../views/admin/Orders.vue';
-import AdminUsers from '../views/admin/Users.vue';
-import AdminWarehouses from '../views/admin/Warehouses.vue';
-import AdminShipping from '../views/admin/Shipping.vue';
-import AdminReports from '../views/admin/Reports.vue';
-import AdminSettings from '../views/admin/Settings.vue';
+import AdminDashboard from '../views/admin/Dashboard/index.vue';
+import AdminProducts from '../views/admin/Products/index.vue';
+import AdminPosts from '../views/admin/Posts/index.vue';
+import AdminOrders from '../views/admin/Orders/index.vue';
+import AdminUsers from '../views/admin/Users/index.vue';
+import AdminWarehouses from '../views/admin/Warehouses/index.vue';
+import AdminShipping from '../views/admin/Shipping/index.vue';
+import AdminReports from '../views/admin/Reports/index.vue';
+import AdminSettings from '../views/admin/Settings/index.vue';
 
 // User routes
-import UserDashboard from '../views/user/Dashboard.vue';
-import UserProfile from '../views/user/Profile.vue';
-import UserOrders from '../views/user/Orders.vue';
+import UserDashboard from '../views/user/Dashboard/index.vue';
+import UserProfile from '../views/user/Profile/index.vue';
+import UserOrders from '../views/user/Orders/index.vue';
 
 const routes = [
   // Public routes

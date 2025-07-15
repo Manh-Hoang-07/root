@@ -323,8 +323,7 @@ import {
   ShoppingBagIcon,
   UsersIcon,
   ChartBarIcon,
-  TrendingUpIcon,
-  StarIcon
+  ArrowTrendingUpIcon
 } from '@heroicons/vue/24/outline'
 
 // Filters

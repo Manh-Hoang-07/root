@@ -2,32 +2,30 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseController;
 use App\Services\Admin\UserService;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
+use App\Enums\UserStatus;
 
-class UserController extends Controller
+class UserController extends BaseController
 {
-    protected $userService;
-
     public function __construct(UserService $userService)
     {
-        $this->userService = $userService;
+        parent::__construct($userService, UserResource::class);
     }
 
     // Danh sách tài khoản
     public function index(Request $request)
     {
-        $users = $this->userService->list($request->all());
+        $users = $this->service->list($request->all());
         return UserResource::collection($users);
     }
 
     // Xem chi tiết tài khoản
-    public function show($id)
+    public function show($id, Request $request = null)
     {
-        $user = $this->userService->find($id);
-        return new UserResource($user);
+        return parent::show($id, $request);
     }
 
     // Tạo mới tài khoản
@@ -41,7 +39,7 @@ class UserController extends Controller
             'status' => 'required|string',
         ]);
         $data['password'] = bcrypt($data['password']);
-        $user = $this->userService->create($data);
+        $user = $this->service->create($data);
         return new UserResource($user);
     }
 
@@ -60,21 +58,33 @@ class UserController extends Controller
         } else {
             unset($data['password']);
         }
-        $user = $this->userService->update($id, $data);
+        $user = $this->service->update($id, $data);
         return new UserResource($user);
     }
 
     // Xóa tài khoản
     public function destroy($id)
     {
-        $this->userService->delete($id);
+        $this->service->delete($id);
         return response()->json(['success' => true]);
     }
 
     // Đổi trạng thái hoạt động
     public function toggleStatus($id)
     {
-        $user = $this->userService->toggleStatus($id);
+        $user = $this->service->toggleStatus($id);
         return new UserResource($user);
+    }
+
+    // API trả về enum status cho frontend
+    public function statuses()
+    {
+        $statuses = collect(UserStatus::cases())->map(function($case) {
+            return [
+                'value' => $case->value,
+                'label' => $case->name
+            ];
+        })->values();
+        return response()->json(['data' => $statuses]);
     }
 }

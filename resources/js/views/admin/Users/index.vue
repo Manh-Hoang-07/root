@@ -102,83 +102,58 @@
         <table class="w-full">
           <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
             <tr>
-              <th 
-                v-for="column in columns" 
-                :key="column.key"
-                @click="sortBy(column.key)"
-                class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors duration-200"
-              >
-                <div class="flex items-center space-x-1">
-                  <span>{{ column.label }}</span>
-                  <ChevronUpIcon v-if="sortKey === column.key && sortOrder === 'asc'" class="w-4 h-4" />
-                  <ChevronDownIcon v-else-if="sortKey === column.key && sortOrder === 'desc'" class="w-4 h-4" />
-                </div>
-              </th>
-              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Thao tác
-              </th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ tên</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giới tính</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số điện thoại</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Địa chỉ</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đăng nhập cuối</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tài khoản liên kết</th>
+              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr 
-              v-for="user in paginatedUsers" 
-              :key="user.id"
-              class="hover:bg-gray-50 transition-colors duration-200"
-            >
+            <tr v-if="loading" class="animate-pulse">
+              <td colspan="10" class="px-6 py-4 whitespace-nowrap text-center">Đang tải dữ liệu...</td>
+            </tr>
+            <tr v-else-if="error" class="bg-red-50 text-red-800">
+              <td colspan="10" class="px-6 py-4 whitespace-nowrap text-center">{{ error }}</td>
+            </tr>
+            <tr v-else-if="users.length === 0" class="bg-yellow-50 text-yellow-800">
+              <td colspan="10" class="px-6 py-4 whitespace-nowrap text-center">Không có dữ liệu</td>
+            </tr>
+            <tr v-for="user in paginatedUsers" :key="user.id" class="hover:bg-gray-50 transition-colors duration-200">
+              <td class="px-6 py-4 whitespace-nowrap">{{ user.name }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">{{ user.email }}</td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold mr-4">
-                    {{ user.name.charAt(0) }}
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
-                    <div class="text-sm text-gray-500">{{ user.email }}</div>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span 
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                  :class="getRoleClass(user.role)"
-                >
-                  {{ getRoleLabel(user.role) }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span 
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                  :class="getStatusClass(user.status)"
-                >
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="getStatusClass(user.status)">
                   {{ getStatusLabel(user.status) }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ formatDate(user.created_at) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ formatDate(user.last_login) }}
+              <td class="px-6 py-4 whitespace-nowrap">{{ getGenderLabel(user.profile?.gender) }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">{{ user.profile?.phone || '—' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">{{ user.profile?.address || '—' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(user.created_at) }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">{{ formatDate(user.last_login) }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex flex-col space-y-1">
+                  <span v-for="sa in user.social_accounts" :key="sa.id" class="text-xs bg-gray-50 rounded px-2 py-1 inline-block">
+                    {{ sa.provider }} <span class="text-gray-400">({{ sa.provider_id }})</span>
+                  </span>
+                  <span v-if="!user.social_accounts || user.social_accounts.length === 0" class="text-gray-400">Không có</span>
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex items-center space-x-2">
-                  <button 
-                    @click="viewUser(user)"
-                    class="text-indigo-600 hover:text-indigo-900 p-2 rounded-lg hover:bg-indigo-50 transition-all duration-200"
-                    title="Xem chi tiết"
-                  >
+                  <button @click="viewUser(user)" class="text-indigo-600 hover:text-indigo-900 p-2 rounded-lg hover:bg-indigo-50 transition-all duration-200" title="Xem chi tiết">
                     <EyeIcon class="w-4 h-4" />
                   </button>
-                  <button 
-                    @click="editUser(user)"
-                    class="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
-                    title="Chỉnh sửa"
-                  >
+                  <button @click="editUser(user)" class="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-all duration-200" title="Chỉnh sửa">
                     <PencilIcon class="w-4 h-4" />
                   </button>
-                  <button 
-                    @click="deleteUser(user)"
-                    class="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-all duration-200"
-                    title="Xóa"
-                  >
+                  <button @click="deleteUser(user)" class="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-all duration-200" title="Xóa">
                     <TrashIcon class="w-4 h-4" />
                   </button>
                 </div>
@@ -186,6 +161,7 @@
             </tr>
           </tbody>
         </table>
+      </div>
     </div>
 
     <!-- Pagination -->
@@ -241,78 +217,49 @@
             {{ showEditModal ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới' }}
           </h3>
         </div>
-        
-        <form @submit.prevent="saveUser" class="p-6 space-y-4">
-              <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Họ tên</label>
-            <input 
-              v-model="userForm.name"
-              type="text"
-              required
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-            />
+        <div class="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+          <form @submit.prevent="saveUser" class="space-y-6">
+          <div class="grid grid-cols-1 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Họ tên</label>
+              <input v-model="userForm.name" type="text" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <input v-model="userForm.email" type="email" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div v-if="!showEditModal">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+              <input v-model="userForm.password" type="password" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+              <select v-model="userForm.status" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+                <option v-for="s in statusEnums" :key="s.value" :value="s.value">{{ s.label }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Giới tính</label>
+              <select v-model="userForm.gender" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+                <option v-for="g in genderEnums" :key="g.value" :value="g.value">{{ g.label }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại</label>
+              <input v-model="userForm.phone" type="text" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ</label>
+              <input v-model="userForm.address" type="text" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Ảnh đại diện</label>
+              <input type="file" @change="onAvatarChange" accept="image/*" />
+            </div>
           </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-            <input 
-              v-model="userForm.email"
-              type="email"
-              required
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-            />
-          </div>
-          
-          <div v-if="!showEditModal">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
-            <input 
-              v-model="userForm.password"
-              type="password"
-              required
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-            />
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Vai trò</label>
-            <select 
-              v-model="userForm.role"
-              required
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-            >
-              <option value="user">User</option>
-              <option value="moderator">Moderator</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
-            <select 
-              v-model="userForm.status"
-              required
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-            >
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Không hoạt động</option>
-              <option value="suspended">Tạm khóa</option>
-            </select>
-          </div>
-          
           <div class="flex justify-end space-x-3 pt-4">
-            <button 
-              type="button"
-              @click="closeModal"
-              class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200"
-            >
-              Hủy
-            </button>
-            <button 
-              type="submit"
-              class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
-            >
-              {{ showEditModal ? 'Cập nhật' : 'Thêm' }}
-            </button>
+            <button type="button" @click="closeModal" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200">Hủy</button>
+            <button type="submit" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200">{{ showEditModal ? 'Cập nhật' : 'Thêm' }}</button>
           </div>
         </form>
       </div>
@@ -335,6 +282,8 @@ import {
   ChevronUpIcon,
   ChevronDownIcon
 } from '@heroicons/vue/24/outline'
+import endpoints from '@/api/endpoints'
+import axios from 'axios'
 
 // Stats data
 const stats = ref([
@@ -377,54 +326,23 @@ const columns = ref([
   { key: 'last_login', label: 'Đăng nhập cuối' }
 ])
 
-// Mock users data
-const users = ref([
-  {
-    id: 1,
-    name: 'Nguyễn Văn A',
-    email: 'nguyenvana@example.com',
-    role: 'admin',
-    status: 'active',
-    created_at: '2024-01-15T10:30:00Z',
-    last_login: '2024-12-20T14:25:00Z'
-  },
-  {
-    id: 2,
-    name: 'Trần Thị B',
-    email: 'tranthib@example.com',
-    role: 'user',
-    status: 'active',
-    created_at: '2024-02-20T09:15:00Z',
-    last_login: '2024-12-19T16:45:00Z'
-  },
-  {
-    id: 3,
-    name: 'Lê Văn C',
-    email: 'levanc@example.com',
-    role: 'moderator',
-    status: 'active',
-    created_at: '2024-03-10T11:20:00Z',
-    last_login: '2024-12-18T12:30:00Z'
-  },
-  {
-    id: 4,
-    name: 'Phạm Thị D',
-    email: 'phamthid@example.com',
-    role: 'user',
-    status: 'inactive',
-    created_at: '2024-04-05T14:45:00Z',
-    last_login: '2024-12-10T08:20:00Z'
-  },
-  {
-    id: 5,
-    name: 'Hoàng Văn E',
-    email: 'hoangvane@example.com',
-    role: 'user',
-    status: 'suspended',
-    created_at: '2024-05-12T16:30:00Z',
-    last_login: '2024-12-15T10:15:00Z'
+const users = ref([])
+const loading = ref(false)
+const error = ref(null)
+
+const fetchUsers = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const response = await axios.get(endpoints.users)
+    users.value = response.data.data || []
+  } catch (err) {
+    error.value = 'Không thể tải dữ liệu người dùng'
+    users.value = []
+  } finally {
+    loading.value = false
   }
-])
+}
 
 // Filters
 const filters = ref({
@@ -447,13 +365,34 @@ const showEditModal = ref(false)
 const editingUser = ref(null)
 
 // User form
+const statusEnums = ref([])
+const genderEnums = ref([])
 const userForm = ref({
   name: '',
   email: '',
   password: '',
-  role: 'user',
-  status: 'active'
+  status: '',
+  gender: '',
+  phone: '',
+  address: '',
+  avatar: null
 })
+const onAvatarChange = (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    userForm.value.avatar = file
+  }
+}
+const fetchEnums = async () => {
+  try {
+    const [statusRes, genderRes] = await Promise.all([
+      axios.get('/api/enums/user-status'),
+      axios.get('/api/enums/gender')
+    ])
+    statusEnums.value = statusRes.data
+    genderEnums.value = genderRes.data
+  } catch (e) {}
+}
 
 // Computed properties
 const filteredUsers = computed(() => {
@@ -563,6 +502,15 @@ const getStatusClass = (status) => {
   return classes[status] || 'bg-gray-100 text-gray-800'
 }
 
+const getGenderLabel = (gender) => {
+  const labels = {
+    male: 'Nam',
+    female: 'Nữ',
+    other: 'Khác'
+  }
+  return labels[gender] || gender
+}
+
 const clearFilters = () => {
   filters.value = {
     search: '',
@@ -608,8 +556,11 @@ const editUser = (user) => {
     name: user.name,
     email: user.email,
     password: '',
-    role: user.role,
-    status: user.status
+    status: user.status,
+    gender: user.profile?.gender,
+    phone: user.profile?.phone,
+    address: user.profile?.address,
+    avatar: null // No avatar editing in this modal
   }
   showEditModal.value = true
 }
@@ -624,33 +575,25 @@ const deleteUser = (user) => {
   }
 }
 
-const saveUser = () => {
-  if (showEditModal.value) {
-    // Update existing user
-    const user = users.value.find(u => u.id === editingUser.value.id)
-    if (user) {
-      user.name = userForm.value.name
-      user.email = userForm.value.email
-      user.role = userForm.value.role
-      user.status = userForm.value.status
-      console.log('Updated user:', user)
+const saveUser = async () => {
+  const formData = new FormData()
+  formData.append('name', userForm.value.name)
+  formData.append('email', userForm.value.email)
+  if (!showEditModal.value) formData.append('password', userForm.value.password)
+  formData.append('status', userForm.value.status)
+  formData.append('gender', userForm.value.gender)
+  formData.append('phone', userForm.value.phone)
+  formData.append('address', userForm.value.address)
+  if (userForm.value.avatar) formData.append('avatar', userForm.value.avatar)
+  try {
+    if (showEditModal.value) {
+      await axios.post(`/api/users/${editingUser.value.id}`, formData)
+    } else {
+      await axios.post('/api/users', formData)
     }
-  } else {
-    // Add new user
-    const newUser = {
-      id: Date.now(),
-      name: userForm.value.name,
-      email: userForm.value.email,
-      role: userForm.value.role,
-      status: userForm.value.status,
-      created_at: new Date().toISOString(),
-      last_login: null
-    }
-    users.value.unshift(newUser)
-    console.log('Added new user:', newUser)
-  }
-  
-  closeModal()
+    await fetchUsers()
+    closeModal()
+  } catch (e) {}
 }
 
 const closeModal = () => {
@@ -661,13 +604,17 @@ const closeModal = () => {
     name: '',
     email: '',
     password: '',
-    role: 'user',
-    status: 'active'
+    status: '',
+    gender: '',
+    phone: '',
+    address: '',
+    avatar: null
   }
 }
 
 onMounted(() => {
-  console.log('Users page mounted')
+  fetchUsers()
+  fetchEnums()
 })
 </script>
 

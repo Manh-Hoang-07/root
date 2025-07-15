@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\WarehouseController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ShippingController;
+use App\Http\Controllers\Api\EnumController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\User\UserController as UserProfileController;
 
@@ -97,7 +98,8 @@ Route::delete('/users/{id}', function ($id) {
 // Admin User API
 Route::prefix('admin')->group(function () {
     Route::apiResource('users', AdminUserController::class);
-    Route::patch('users/{id}/toggle-status', [AdminUserController::class, 'toggleStatus']);
+    Route::patch('users/toggle-status/{id}', [AdminUserController::class, 'toggleStatus']);
+    Route::get('users/statuses', [AdminUserController::class, 'statuses']);
 });
 
 // User (profile) API
@@ -106,3 +108,5 @@ Route::prefix('user')->group(function () {
     Route::put('profile', [UserProfileController::class, 'updateProfile']);
     Route::post('change-password', [UserProfileController::class, 'changePassword']);
 }); 
+
+Route::get('/enums/{type}', [EnumController::class, 'get']); 

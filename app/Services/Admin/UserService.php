@@ -3,43 +3,17 @@
 namespace App\Services\Admin;
 
 use App\Repositories\Admin\UserRepository;
+use App\Services\BaseService;
 
-class UserService
+class UserService extends BaseService
 {
-    protected $userRepo;
-
     public function __construct(UserRepository $userRepo)
     {
-        $this->userRepo = $userRepo;
-    }
-
-    public function list($filters = [])
-    {
-        return $this->userRepo->all($filters);
-    }
-
-    public function find($id)
-    {
-        return $this->userRepo->find($id);
-    }
-
-    public function create($data)
-    {
-        return $this->userRepo->create($data);
-    }
-
-    public function update($id, $data)
-    {
-        return $this->userRepo->update($id, $data);
-    }
-
-    public function delete($id)
-    {
-        return $this->userRepo->delete($id);
+        parent::__construct($userRepo);
     }
 
     public function toggleStatus($id)
     {
-        return $this->userRepo->toggleStatus($id);
+        return $this->repo->toggleStatus($id);
     }
 } 

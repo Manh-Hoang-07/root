@@ -3,49 +3,13 @@
 namespace App\Repositories\Admin;
 
 use App\Models\User;
+use App\Repositories\BaseRepository;
 
-class UserRepository
+class UserRepository extends BaseRepository
 {
-    public function all($filters = [])
+    public function __construct()
     {
-        $query = User::query();
-        // Thêm filter cho admin nếu cần
-        if (!empty($filters['role'])) {
-            $query->where('role', $filters['role']);
-        }
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-        if (!empty($filters['search'])) {
-            $query->where(function($q) use ($filters) {
-                $q->where('name', 'like', '%'.$filters['search'].'%')
-                  ->orWhere('email', 'like', '%'.$filters['search'].'%');
-            });
-        }
-        return $query->orderByDesc('id')->paginate($filters['per_page'] ?? 20);
-    }
-
-    public function find($id)
-    {
-        return User::findOrFail($id);
-    }
-
-    public function create(array $data)
-    {
-        return User::create($data);
-    }
-
-    public function update($id, array $data)
-    {
-        $user = $this->find($id);
-        $user->update($data);
-        return $user;
-    }
-
-    public function delete($id)
-    {
-        $user = $this->find($id);
-        return $user->delete();
+        parent::__construct(new User());
     }
 
     public function toggleStatus($id)

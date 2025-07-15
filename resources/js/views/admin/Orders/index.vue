@@ -70,12 +70,9 @@
           class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
         >
           <option value="">Tất cả trạng thái</option>
-          <option value="pending">Chờ xác nhận</option>
-          <option value="confirmed">Đã xác nhận</option>
-          <option value="processing">Đang xử lý</option>
-          <option value="shipped">Đã gửi hàng</option>
-          <option value="delivered">Đã giao hàng</option>
-          <option value="cancelled">Đã hủy</option>
+          <option v-for="status in statusEnums" :key="status.value" :value="status.value">
+            {{ status.label }}
+          </option>
         </select>
 
         <!-- Date From -->
@@ -286,12 +283,9 @@
               v-model="newStatus"
               class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
             >
-              <option value="pending">Chờ xác nhận</option>
-              <option value="confirmed">Đã xác nhận</option>
-              <option value="processing">Đang xử lý</option>
-              <option value="shipped">Đã gửi hàng</option>
-              <option value="delivered">Đã giao hàng</option>
-              <option value="cancelled">Đã hủy</option>
+              <option v-for="status in statusEnums" :key="status.value" :value="status.value">
+                {{ status.label }}
+              </option>
             </select>
                   </div>
           
@@ -327,6 +321,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
 import { 
   ArrowDownTrayIcon,
   MagnifyingGlassIcon,
@@ -339,7 +334,7 @@ import {
   CurrencyDollarIcon
 } from '@heroicons/vue/24/outline'
 
-// Stats data
+// Stats data giữ nguyên hoặc có thể lấy từ API nếu backend hỗ trợ
 const stats = ref([
   {
     title: 'Tổng đơn hàng',
@@ -371,143 +366,9 @@ const stats = ref([
   }
 ])
 
-// Mock orders data
-const orders = ref([
-  {
-    id: 1,
-    order_number: 'ORD-2024-001',
-    customer: {
-      name: 'Nguyễn Văn A',
-      email: 'nguyenvana@example.com',
-      phone: '0123456789'
-    },
-    items: [
-      {
-        id: 1,
-        product: {
-          name: 'iPhone 15 Pro Max 256GB',
-          image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=100'
-        },
-        quantity: 1,
-        price: 29990000
-      }
-    ],
-    total_amount: 29990000,
-    payment_method: 'Chuyển khoản',
-    status: 'delivered',
-    created_at: '2024-12-20T10:30:00Z',
-    updated_at: '2024-12-22T14:25:00Z'
-  },
-  {
-    id: 2,
-    order_number: 'ORD-2024-002',
-    customer: {
-      name: 'Trần Thị B',
-      email: 'tranthib@example.com',
-      phone: '0987654321'
-    },
-    items: [
-      {
-        id: 2,
-        product: {
-          name: 'Samsung Galaxy S24 Ultra',
-          image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=100'
-        },
-        quantity: 1,
-        price: 24990000
-      },
-      {
-        id: 3,
-        product: {
-          name: 'AirPods Pro 2nd Gen',
-          image: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=100'
-        },
-        quantity: 1,
-        price: 5990000
-      }
-    ],
-    total_amount: 30980000,
-    payment_method: 'Tiền mặt',
-    status: 'processing',
-    created_at: '2024-12-19T15:45:00Z',
-    updated_at: '2024-12-21T09:15:00Z'
-  },
-  {
-    id: 3,
-    order_number: 'ORD-2024-003',
-    customer: {
-      name: 'Lê Văn C',
-      email: 'levanc@example.com',
-      phone: '0369852147'
-    },
-    items: [
-      {
-        id: 4,
-        product: {
-          name: 'MacBook Pro 14" M3 Pro',
-          image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=100'
-        },
-        quantity: 1,
-        price: 45990000
-      }
-    ],
-    total_amount: 45990000,
-    payment_method: 'Chuyển khoản',
-    status: 'confirmed',
-    created_at: '2024-12-18T11:20:00Z',
-    updated_at: '2024-12-20T16:30:00Z'
-  },
-  {
-    id: 4,
-    order_number: 'ORD-2024-004',
-    customer: {
-      name: 'Phạm Thị D',
-      email: 'phamthid@example.com',
-      phone: '0523698741'
-    },
-    items: [
-      {
-        id: 5,
-        product: {
-          name: 'iPad Pro 12.9" M2',
-          image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=100'
-        },
-        quantity: 1,
-        price: 28990000
-      }
-    ],
-    total_amount: 28990000,
-    payment_method: 'Tiền mặt',
-    status: 'pending',
-    created_at: '2024-12-20T08:15:00Z',
-    updated_at: '2024-12-20T08:15:00Z'
-  },
-  {
-    id: 5,
-    order_number: 'ORD-2024-005',
-    customer: {
-      name: 'Hoàng Văn E',
-      email: 'hoangvane@example.com',
-      phone: '0147852369'
-    },
-    items: [
-      {
-        id: 6,
-        product: {
-          name: 'Xiaomi 14 Ultra',
-          image: 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=100'
-        },
-        quantity: 1,
-        price: 19990000
-      }
-    ],
-    total_amount: 19990000,
-    payment_method: 'Chuyển khoản',
-    status: 'cancelled',
-    created_at: '2024-12-17T14:30:00Z',
-    updated_at: '2024-12-18T10:45:00Z'
-  }
-])
+// Orders và status enums từ API
+const orders = ref([])
+const statusEnums = ref([]) // [{ value: 'pending', label: 'Chờ xác nhận' }, ...]
 
 // Filters
 const filters = ref({
@@ -527,64 +388,64 @@ const selectedOrder = ref(null)
 const newStatus = ref('')
 const statusNote = ref('')
 
+// Fetch orders from API
+const fetchOrders = async () => {
+  try {
+    const response = await axios.get('/api/orders', {
+      params: {
+        search: filters.value.search,
+        status: filters.value.status,
+        date_from: filters.value.dateFrom,
+        date_to: filters.value.dateTo,
+        per_page: itemsPerPage.value,
+        page: currentPage.value
+      }
+    })
+    orders.value = response.data.data || response.data // tuỳ format API
+  } catch (e) {
+    console.error('Lỗi lấy danh sách đơn hàng:', e)
+  }
+}
+
+// Fetch status enums from API
+const fetchStatusEnums = async () => {
+  try {
+    const response = await axios.get('/api/enums/order-status')
+    statusEnums.value = response.data // [{ value, label }]
+  } catch (e) {
+    // fallback nếu API không có, có thể lấy từ order đầu tiên
+    if (orders.value.length > 0 && orders.value[0].status_label) {
+      statusEnums.value = [...new Set(orders.value.map(o => ({ value: o.status, label: o.status_label })))]
+    }
+  }
+}
+
+onMounted(async () => {
+  await fetchOrders()
+  await fetchStatusEnums()
+})
+
+// Watch filter & pagination để fetch lại
+import { watch } from 'vue'
+watch([filters, itemsPerPage, currentPage], fetchOrders)
+
 // Computed properties
-const filteredOrders = computed(() => {
-  let filtered = orders.value
-
-  if (filters.value.search) {
-    const search = filters.value.search.toLowerCase()
-    filtered = filtered.filter(order => 
-      order.order_number.toLowerCase().includes(search) ||
-      order.customer.name.toLowerCase().includes(search) ||
-      order.customer.email.toLowerCase().includes(search)
-    )
-  }
-
-  if (filters.value.status) {
-    filtered = filtered.filter(order => order.status === filters.value.status)
-  }
-
-  if (filters.value.dateFrom) {
-    filtered = filtered.filter(order => 
-      new Date(order.created_at) >= new Date(filters.value.dateFrom)
-    )
-  }
-
-  if (filters.value.dateTo) {
-    filtered = filtered.filter(order => 
-      new Date(order.created_at) <= new Date(filters.value.dateTo)
-    )
-  }
-
-  // Sort by created_at descending
-  filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-
-  return filtered
-})
-
-const totalPages = computed(() => Math.ceil(filteredOrders.value.length / itemsPerPage.value))
-
+const filteredOrders = computed(() => orders.value) // đã filter từ API
+const totalPages = computed(() => Math.ceil((orders.value.meta?.total || orders.value.length) / itemsPerPage.value))
 const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
-const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, filteredOrders.value.length))
-
-const paginatedOrders = computed(() => {
-  return filteredOrders.value.slice(startIndex.value, endIndex.value)
-})
-
+const endIndex = computed(() => Math.min(startIndex.value + itemsPerPage.value, orders.value.meta?.total || orders.value.length))
+const paginatedOrders = computed(() => orders.value.data || orders.value)
 const visiblePages = computed(() => {
   const pages = []
   const maxVisible = 5
   let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2))
   let end = Math.min(totalPages.value, start + maxVisible - 1)
-
   if (end - start + 1 < maxVisible) {
     start = Math.max(1, end - maxVisible + 1)
   }
-
   for (let i = start; i <= end; i++) {
     pages.push(i)
   }
-
   return pages
 })
 
@@ -607,18 +468,12 @@ const formatDate = (dateString) => {
 }
 
 const getStatusLabel = (status) => {
-  const labels = {
-    pending: 'Chờ xác nhận',
-    confirmed: 'Đã xác nhận',
-    processing: 'Đang xử lý',
-    shipped: 'Đã gửi hàng',
-    delivered: 'Đã giao hàng',
-    cancelled: 'Đã hủy'
-  }
-  return labels[status] || status
+  const found = statusEnums.value.find(s => s.value === status)
+  return found ? found.label : status
 }
 
 const getStatusClass = (status) => {
+  // Có thể lấy từ backend hoặc định nghĩa mapping ở đây
   const classes = {
     pending: 'bg-yellow-100 text-yellow-800',
     confirmed: 'bg-blue-100 text-blue-800',
@@ -668,17 +523,16 @@ const updateStatus = (order) => {
   showStatusModal.value = true
 }
 
-const saveStatus = () => {
+const saveStatus = async () => {
   if (selectedOrder.value && newStatus.value) {
-    const order = orders.value.find(o => o.id === selectedOrder.value.id)
-    if (order) {
-      order.status = newStatus.value
-      order.updated_at = new Date().toISOString()
-      console.log('Updated order status:', {
-        orderId: order.id,
-        newStatus: newStatus.value,
+    try {
+      await axios.put(`/api/orders/${selectedOrder.value.id}/status`, {
+        status: newStatus.value,
         note: statusNote.value
       })
+      await fetchOrders()
+    } catch (e) {
+      console.error('Lỗi cập nhật trạng thái:', e)
     }
   }
   closeStatusModal()
@@ -700,10 +554,6 @@ const exportOrders = () => {
   console.log('Export orders:', filteredOrders.value)
   // Implement export logic
 }
-
-onMounted(() => {
-  console.log('Orders page mounted')
-})
 </script> 
 
 <style scoped>
