@@ -41,7 +41,38 @@
           <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50">
             <td class="px-4 py-3 whitespace-nowrap">{{ user.name || '—' }}</td>
             <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">{{ user.email || '—' }}</td>
-            <td class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">{{ user.status || '—' }}</td>
+            <td class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
+              <div class="relative inline-block text-left">
+                <button
+                  @click="toggleStatusMenu(user.id)"
+                  :class="[
+                    'px-2 py-1 rounded-full text-xs font-semibold focus:outline-none',
+                    user.status === 'active' ? 'bg-green-100 text-green-700' :
+                    user.status === 'inactive' ? 'bg-gray-100 text-gray-700' :
+                    'bg-yellow-100 text-yellow-700'
+                  ]"
+                >
+                  {{ statusEnums.find(s => s.value === user.status)?.name || user.status }}
+                  <svg class="inline w-3 h-3 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div v-if="openStatusMenuId === user.id" class="absolute z-20 right-0 mt-1 w-32 bg-white border rounded shadow">
+                  <div
+                    v-for="s in statusEnums"
+                    :key="s.value"
+                    @click="setStatus(user, s.value)"
+                    class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-xs"
+                    :class="{
+                      'text-green-600': s.value === 'active',
+                      'text-gray-500': s.value === 'inactive',
+                      'text-yellow-500': s.value === 'suspended',
+                      'font-bold': user.status === s.value
+                    }"
+                  >
+                    {{ s.name }}
+                  </div>
+                </div>
+              </div>
+            </td>
             <td class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">{{ user.gender || '—' }}</td>
             <td class="px-4 py-3 whitespace-nowrap hidden xl:table-cell">{{ user.phone || '—' }}</td>
             <td class="px-4 py-3 whitespace-nowrap hidden xl:table-cell">{{ user.address || '—' }}</td>
@@ -51,8 +82,13 @@
               <button @click="editUser(user)" class="text-blue-600 hover:text-blue-800 mr-2" title="Sửa">
                 <PencilIcon class="w-5 h-5 inline" />
               </button>
-              <button @click="deleteUser(user)" class="text-red-600 hover:text-red-800" title="Xóa">
+              <button @click="deleteUser(user)" class="text-red-600 hover:text-red-800 mr-2" title="Xóa">
                 <TrashIcon class="w-5 h-5 inline" />
+              </button>
+              <button @click="openChangePassword(user)" class="text-yellow-600 hover:text-yellow-800 mr-2" title="Đổi mật khẩu">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75A4.5 4.5 0 008 6.75v3.75m8.25 0h-8.5m8.5 0a2.25 2.25 0 01-2.25 2.25h-4.5A2.25 2.25 0 017.25 10.5m8.5 0v3.75A4.5 4.5 0 018 14.25v-3.75" />
+                </svg>
               </button>
             </td>
           </tr>
@@ -82,6 +118,7 @@
         </div>
       </div>
     </div>
+    <ChangePassword :show="showChangePassword" :user="changingUser" :onClose="closeChangePassword" @changed="fetchUsers" />
   </div>
 </template>
 
@@ -93,12 +130,15 @@ import useApiOptions from '@/composables/useApiOptions'
 import { PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import Filter from './filter.vue'
 import Form from './form.vue'
+import ChangePassword from './changePassword.vue'
 
 const users = ref([])
 const filters = ref({ search: '', role: '', status: '' })
 const showAddModal = ref(false)
 const showEditModal = ref(false)
 const editingUser = ref(null)
+const showChangePassword = ref(false)
+const changingUser = ref(null)
 const { options: statusEnums } = useApiOptions(endpoints.enums('userStatus'))
 const { options: genderEnums } = useApiOptions(endpoints.enums('gender'))
 
@@ -183,6 +223,46 @@ const deleteUser = async (user) => {
     }
   }
 }
+
+function openChangePassword(user) {
+  changingUser.value = user
+  showChangePassword.value = true
+}
+function closeChangePassword() {
+  showChangePassword.value = false
+  changingUser.value = null
+}
+async function changeStatus(user) {
+  try {
+    await axios.patch(`/api/admin/users/toggle-status/${user.id}`, { status: user.status })
+    await fetchUsers()
+  } catch (e) {
+    alert('Đổi trạng thái thất bại!')
+  }
+}
+
+const openStatusMenuId = ref(null)
+function toggleStatusMenu(userId) {
+  openStatusMenuId.value = openStatusMenuId.value === userId ? null : userId
+}
+async function setStatus(user, status) {
+  if (user.status === status) {
+    openStatusMenuId.value = null
+    return
+  }
+  try {
+    await axios.patch(`/api/admin/users/toggle-status/${user.id}`, { status })
+    await fetchUsers()
+  } catch (e) {
+    alert('Đổi trạng thái thất bại!')
+  }
+  openStatusMenuId.value = null
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.inline-block.text-left')) {
+    openStatusMenuId.value = null
+  }
+})
 
 onMounted(fetchUsers)
 </script>

@@ -100,6 +100,7 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('users', AdminUserController::class);
     Route::patch('users/toggle-status/{id}', [AdminUserController::class, 'toggleStatus']);
     Route::get('users/statuses', [AdminUserController::class, 'statuses']);
+    Route::post('users/{id}/change-password', [AdminUserController::class, 'changePassword']);
 });
 
 // User (profile) API

@@ -98,10 +98,30 @@ class UserController extends BaseController
     }
 
     // Đổi trạng thái hoạt động
-    public function toggleStatus($id)
+    public function toggleStatus(Request $request, $id)
     {
-        $user = $this->service->toggleStatus($id);
-        return new UserResource($user);
+        $user = $this->service->find($id);
+        $status = $request->input('status');
+        $allowed = ['active', 'inactive', 'suspended'];
+        if ($status && in_array($status, $allowed)) {
+            $user->status = $status;
+            $user->save();
+            return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái thành công']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Trạng thái không hợp lệ'], 400);
+        }
+    }
+
+    // Đổi mật khẩu tài khoản
+    public function changePassword(Request $request, $id)
+    {
+        $request->validate([
+            'password' => 'required|string|min:6',
+        ]);
+        $user = $this->service->find($id);
+        $user->password = bcrypt($request->password);
+        $user->save();
+        return response()->json(['success' => true, 'message' => 'Đổi mật khẩu thành công']);
     }
 
     // API trả về enum status cho frontend
