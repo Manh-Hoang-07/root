@@ -102,6 +102,7 @@ watch(() => props.user, (val) => {
       phone: val.phone || '',
       address: val.address || '',
       avatar: null,
+      name: val.name || '',
       email_verified_at: val.email_verified_at || null,
       phone_verified_at: val.phone_verified_at || null,
       last_login_at: val.last_login_at || null,

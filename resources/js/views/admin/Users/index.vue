@@ -187,7 +187,7 @@ const saveUser = async (formData) => {
     if (showEditModal.value) {
       await axios.post(`${endpoints.users.update(editingUser.value.id)}?_method=PUT`, formData)
     } else {
-      await axios.post(endpoints.users, formData)
+      await axios.post(endpoints.users.create, formData)
     }
     await fetchUsers()
     closeModal()

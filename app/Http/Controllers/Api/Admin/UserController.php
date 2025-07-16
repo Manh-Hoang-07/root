@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\BaseController;
 use App\Services\Admin\UserService;
@@ -143,4 +143,4 @@ class UserController extends BaseController
         })->values();
         return response()->json(['data' => $statuses]);
     }
-}
+} 

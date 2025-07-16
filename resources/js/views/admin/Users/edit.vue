@@ -23,7 +23,7 @@ const props = defineProps({
 const emit = defineEmits(['updated'])
 async function handleSubmit(formData) {
   try {
-    await axios.post(endpoints.user.update(props.user.id), formData)
+    await axios.post(endpoints.users.update(props.user.id), formData)
     emit('updated')
     props.onClose()
   } catch (e) {

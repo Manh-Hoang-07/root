@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ShippingController;
 use App\Http\Controllers\Api\EnumController;
 use App\Http\Controllers\Api\Admin\PermissionController as AdminPermissionController;
-use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\User\UserController as UserProfileController;
 
 Route::get('/user', function (Request $request) {

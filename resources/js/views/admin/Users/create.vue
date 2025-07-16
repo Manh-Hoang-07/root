@@ -22,7 +22,7 @@ const props = defineProps({
 const emit = defineEmits(['created'])
 async function handleSubmit(formData) {
   try {
-    await axios.post(endpoints.user.create, formData)
+    await axios.post(endpoints.users.create, formData)
     emit('created')
     props.onClose()
   } catch (e) {
