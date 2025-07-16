@@ -98,8 +98,7 @@
 
     <!-- Modal -->
     <div v-if="showAddModal || showEditModal"
-         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-         @click.self="closeModal">
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
         <div class="px-6 py-4 border-b border-gray-200">
           <h3 class="text-lg font-semibold">
@@ -143,7 +142,8 @@ const { options: statusEnums } = useApiOptions(endpoints.enums('userStatus'))
 const { options: genderEnums } = useApiOptions(endpoints.enums('gender'))
 
 const userForm = ref({
-  name: '', email: '', password: '', status: '', gender: '', phone: '', address: '', avatar: null
+  username: '', email: '', phone: '', password: '', status: '', email_verified_at: null, phone_verified_at: null, last_login_at: null,
+  name: '', avatar: null, birthday: null, gender: '', address: '', about: ''
 })
 
 const fetchUsers = async () => {
@@ -165,7 +165,7 @@ const onUpdateFilters = (newFilters) => {
 const saveUser = async (formData) => {
   try {
     if (showEditModal.value) {
-      await axios.post(`${endpoints.user(editingUser.value.id)}?_method=PUT`, formData)
+      await axios.post(`${endpoints.users.update(editingUser.value.id)}?_method=PUT`, formData)
     } else {
       await axios.post(endpoints.users, formData)
     }
@@ -179,14 +179,20 @@ const saveUser = async (formData) => {
 const openAddModal = () => {
   showAddModal.value = true
   showEditModal.value = false
-  userForm.value = { name: '', email: '', password: '', status: '', gender: '', phone: '', address: '', avatar: null }
+  userForm.value = {
+    username: '', email: '', phone: '', password: '', status: '', email_verified_at: null, phone_verified_at: null, last_login_at: null,
+    name: '', avatar: null, birthday: null, gender: '', address: '', about: ''
+  }
 }
 
 const closeModal = () => {
   showAddModal.value = false
   showEditModal.value = false
   editingUser.value = null
-  userForm.value = { name: '', email: '', password: '', status: '', gender: '', phone: '', address: '', avatar: null }
+  userForm.value = {
+    username: '', email: '', phone: '', password: '', status: '', email_verified_at: null, phone_verified_at: null, last_login_at: null,
+    name: '', avatar: null, birthday: null, gender: '', address: '', about: ''
+  }
 }
 
 const onAvatarChange = (e) => {
@@ -203,14 +209,20 @@ const editUser = (user) => {
   showAddModal.value = false
   editingUser.value = user
   userForm.value = {
-    name: user.name || '',
+    username: user.username || '',
     email: user.email || '',
+    phone: user.phone || '',
     password: '',
     status: user.status || '',
-    gender: user.gender || '',
-    phone: user.phone || '',
-    address: user.address || '',
-    avatar: null
+    email_verified_at: user.email_verified_at || null,
+    phone_verified_at: user.phone_verified_at || null,
+    last_login_at: user.last_login_at || null,
+    name: user.profile?.name || '',
+    avatar: null,
+    birthday: user.profile?.birthday || null,
+    gender: user.profile?.gender || '',
+    address: user.profile?.address || '',
+    about: user.profile?.about || ''
   }
 }
 const deleteUser = async (user) => {

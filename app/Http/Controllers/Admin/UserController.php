@@ -47,8 +47,11 @@ class UserController extends BaseController
         ]);
         $userData['password'] = bcrypt($userData['password']);
         $user = $this->service->create($userData);
-        // Luôn tạo profile, kể cả khi không có trường nào
-        $profileData = $request->only(['name', 'gender', 'address', 'avatar']);
+        // Nhận đủ các trường cho profile
+        $profileData = $request->only(['name', 'gender', 'address', 'avatar', 'birthday', 'about']);
+        if ($request->hasFile('avatar')) {
+            $profileData['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
         $user->profile()->create($profileData);
         return new UserResource($user);
     }
@@ -73,14 +76,19 @@ class UserController extends BaseController
         ]);
         // Không xử lý password ở controller nữa, chỉ truyền sang service
         $user = $this->service->update($id, $userData);
-        // Lấy đúng các trường cho profile
-        $profileData = $request->only(['name', 'gender', 'address', 'avatar']);
+        // Nhận đủ các trường cho profile
+        $profileData = $request->only(['name', 'gender', 'address', 'avatar', 'birthday', 'about']);
+        if ($request->hasFile('avatar')) {
+            $profileData['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
         // Đảm bảo luôn truyền đủ key khi tạo profile mới
         $defaultProfile = [
             'name' => null,
             'gender' => null,
             'address' => null,
             'avatar' => null,
+            'birthday' => null,
+            'about' => null,
         ];
         if ($user->profile) {
             $user->profile->update($profileData);
