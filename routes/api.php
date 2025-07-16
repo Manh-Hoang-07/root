@@ -98,6 +98,7 @@ Route::delete('/users/{id}', function ($id) {
 // Admin User API
 Route::prefix('admin')->group(function () {
     Route::apiResource('users', AdminUserController::class);
+    Route::apiResource('permissions', \App\Http\Controllers\Api\PermissionController::class);
     Route::patch('users/toggle-status/{id}', [AdminUserController::class, 'toggleStatus']);
     Route::get('users/statuses', [AdminUserController::class, 'statuses']);
     Route::post('users/{id}/change-password', [AdminUserController::class, 'changePassword']);

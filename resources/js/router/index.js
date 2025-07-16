@@ -11,6 +11,7 @@ import AdminProducts from '../views/admin/Products/index.vue';
 import AdminPosts from '../views/admin/Posts/index.vue';
 import AdminOrders from '../views/admin/Orders/index.vue';
 import AdminUsers from '../views/admin/Users/index.vue';
+import AdminPermissions from '../views/admin/Permissions/index.vue';
 import AdminWarehouses from '../views/admin/Warehouses/index.vue';
 import AdminShipping from '../views/admin/Shipping/index.vue';
 import AdminReports from '../views/admin/Reports/index.vue';
@@ -68,6 +69,11 @@ const routes = [
         path: 'users',
         name: 'AdminUsers',
         component: AdminUsers
+      },
+      {
+        path: 'permissions',
+        name: 'AdminPermissions',
+        component: AdminPermissions
       },
       {
         path: 'warehouses',

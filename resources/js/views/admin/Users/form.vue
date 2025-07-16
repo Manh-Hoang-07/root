@@ -1,7 +1,9 @@
 <template>
-  <form @submit.prevent="onSubmit" class="space-y-4">
-    <!-- Thông tin tài khoản -->
-    <div class="font-semibold text-base mb-2">Thông tin tài khoản</div>
+  <FormLayout @submit="onSubmit" @cancel="$emit('cancel')">
+    <template #title>
+      <h2 class="text-lg font-semibold mb-4">{{ mode === 'edit' ? 'Chỉnh sửa tài khoản' : 'Thêm tài khoản mới' }}</h2>
+    </template>
+    <!-- Các trường nhập liệu -->
     <div>
       <label class="block text-sm font-medium mb-1">Tên đăng nhập</label>
       <input v-model="form.username" type="text" class="w-full px-4 py-2 border rounded-xl" maxlength="50" />
@@ -9,6 +11,10 @@
     <div>
       <label class="block text-sm font-medium mb-1">Email</label>
       <input v-model="form.email" type="email" class="w-full px-4 py-2 border rounded-xl" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">Số điện thoại</label>
+      <input v-model="form.phone" type="text" class="w-full px-4 py-2 border rounded-xl" maxlength="20" />
     </div>
     <div v-if="mode === 'create'">
       <label class="block text-sm font-medium mb-1">Mật khẩu</label>
@@ -25,8 +31,6 @@
         <option v-for="s in statusEnums" :key="s.value" :value="s.value">{{ s.name }}</option>
       </select>
     </div>
-
-    <!-- Thông tin xác thực -->
     <div class="font-semibold text-base mt-6 mb-2">Thông tin xác thực</div>
     <div>
       <label class="block text-sm font-medium mb-1">Email xác thực lúc</label>
@@ -40,16 +44,10 @@
       <label class="block text-sm font-medium mb-1">Đăng nhập cuối</label>
       <input v-model="form.last_login_at" type="datetime-local" class="w-full px-4 py-2 border rounded-xl" />
     </div>
-
-    <!-- Thông tin cá nhân -->
     <div class="font-semibold text-base mt-6 mb-2">Thông tin cá nhân</div>
     <div>
       <label class="block text-sm font-medium mb-1">Họ tên</label>
       <input v-model="form.name" type="text" class="w-full px-4 py-2 border rounded-xl" />
-    </div>
-    <div>
-      <label class="block text-sm font-medium mb-1">Số điện thoại</label>
-      <input v-model="form.phone" type="text" class="w-full px-4 py-2 border rounded-xl" maxlength="20" />
     </div>
     <div>
       <label class="block text-sm font-medium mb-1">Giới tính</label>
@@ -66,7 +64,6 @@
       <label class="block text-sm font-medium mb-1">Địa chỉ</label>
       <input v-model="form.address" type="text" class="w-full px-4 py-2 border rounded-xl" />
     </div>
-    <!-- Ảnh đại diện -->
     <div>
       <label class="block text-sm font-medium mb-1">Ảnh đại diện</label>
       <ImageUploader v-model="form.avatar" :default-url="avatarDefaultUrl" @remove="form.remove_avatar = true" />
@@ -75,17 +72,12 @@
       <label class="block text-sm font-medium mb-1">Giới thiệu</label>
       <textarea v-model="form.about" class="w-full px-4 py-2 border rounded-xl"></textarea>
     </div>
-    <div class="flex justify-end gap-2 pt-4">
-      <button type="button" @click="$emit('cancel')" class="px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200">Hủy</button>
-      <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">
-        {{ mode === 'edit' ? 'Cập nhật' : 'Thêm' }}
-      </button>
-    </div>
-  </form>
+  </FormLayout>
 </template>
 <script setup>
 import { ref, watch } from 'vue'
-import ImageUploader from './ImageUploader.vue'
+import FormLayout from '@/components/FormLayout.vue'
+import ImageUploader from '@/components/ImageUploader.vue'
 const props = defineProps({
   user: Object,
   mode: String,
