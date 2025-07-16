@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ShippingController;
 use App\Http\Controllers\Api\EnumController;
+use App\Http\Controllers\Api\Admin\PermissionController as AdminPermissionController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\User\UserController as UserProfileController;
 
@@ -98,7 +99,7 @@ Route::delete('/users/{id}', function ($id) {
 // Admin User API
 Route::prefix('admin')->group(function () {
     Route::apiResource('users', AdminUserController::class);
-    Route::apiResource('permissions', \App\Http\Controllers\Api\PermissionController::class);
+    Route::apiResource('permissions', AdminPermissionController::class);
     Route::patch('users/toggle-status/{id}', [AdminUserController::class, 'toggleStatus']);
     Route::get('users/statuses', [AdminUserController::class, 'statuses']);
     Route::post('users/{id}/change-password', [AdminUserController::class, 'changePassword']);
