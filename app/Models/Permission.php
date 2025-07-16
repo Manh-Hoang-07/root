@@ -10,5 +10,15 @@ class Permission extends SpatiePermission
         'name',
         'display_name',
         'guard_name',
+        'parent_id',
     ];
+
+    public function parent()
+    {
+        return $this->belongsTo(Permission::class, 'parent_id');
+    }
+    public function children()
+    {
+        return $this->hasMany(Permission::class, 'parent_id');
+    }
 } 

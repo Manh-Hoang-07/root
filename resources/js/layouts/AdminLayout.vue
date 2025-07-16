@@ -190,6 +190,11 @@ const menuItems = [
     icon: 'KeyIcon'
   },
   {
+    name: 'Quản lý vai trò',
+    path: '/admin/roles',
+    icon: 'KeyIcon'
+  },
+  {
     name: 'Kho hàng',
     path: '/admin/warehouses',
     icon: 'WarehouseIcon'

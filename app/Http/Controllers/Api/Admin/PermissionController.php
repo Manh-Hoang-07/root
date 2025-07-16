@@ -31,6 +31,7 @@ class PermissionController extends BaseController
             'name' => ['required', 'string', 'max:255', 'unique:permissions,name'],
             'display_name' => ['required', 'string', 'max:255'],
             'guard_name' => ['nullable', 'string', 'max:255'],
+            'parent_id' => ['nullable', 'exists:permissions,id'],
         ]);
         $data['guard_name'] = $data['guard_name'] ?? 'web';
         $permission = $this->service->create($data);
@@ -47,6 +48,7 @@ class PermissionController extends BaseController
             ],
             'display_name' => ['required', 'string', 'max:255'],
             'guard_name' => ['nullable', 'string', 'max:255'],
+            'parent_id' => ['nullable', 'exists:permissions,id'],
         ]);
         $permission = $this->service->update($id, $data);
         return response()->json(['message' => 'Cập nhật quyền thành công', 'data' => new PermissionResource($permission)]);

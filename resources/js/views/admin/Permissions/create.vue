@@ -17,6 +17,15 @@
           <label class="block text-sm font-medium mb-1">Guard</label>
           <input v-model="form.guard_name" class="w-full px-3 py-2 border rounded-lg" placeholder="Guard (mặc định: web)" />
         </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Quyền cha</label>
+          <select v-model="form.parent_id" class="w-full px-3 py-2 border rounded-lg">
+            <option value="">-- Không có --</option>
+            <option v-for="p in parentOptions" :key="p.id" :value="p.id">
+              {{ p.display_name || p.name }}
+            </option>
+          </select>
+        </div>
         <div class="flex justify-end space-x-2">
           <button type="button" @click="$emit('close')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Hủy</button>
           <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Lưu</button>
@@ -26,10 +35,19 @@
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 const emit = defineEmits(['close', 'saved'])
-const form = ref({ name: '', display_name: '', guard_name: '' })
+const form = ref({ name: '', display_name: '', guard_name: '', parent_id: '' })
+const parentOptions = ref([])
+
+const fetchParentOptions = async () => {
+  const res = await axios.get('/api/admin/permissions', { params: { per_page: 1000 } })
+  parentOptions.value = res.data.data
+}
+
+onMounted(fetchParentOptions)
+
 const submit = async () => {
   try {
     await axios.post('/api/admin/permissions', form.value)

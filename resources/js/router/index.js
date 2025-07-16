@@ -76,6 +76,11 @@ const routes = [
         component: AdminPermissions
       },
       {
+        path: 'roles',
+        name: 'AdminRoles',
+        component: () => import('../views/admin/Roles/index.vue')
+      },
+      {
         path: 'warehouses',
         name: 'AdminWarehouses',
         component: AdminWarehouses

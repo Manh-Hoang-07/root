@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ShippingController;
 use App\Http\Controllers\Api\EnumController;
 use App\Http\Controllers\Api\Admin\PermissionController as AdminPermissionController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\User\UserController as UserProfileController;
 
 Route::get('/user', function (Request $request) {
@@ -100,6 +101,7 @@ Route::delete('/users/{id}', function ($id) {
 Route::prefix('admin')->group(function () {
     Route::apiResource('users', AdminUserController::class);
     Route::apiResource('permissions', AdminPermissionController::class);
+    Route::apiResource('roles', RoleController::class);
     Route::patch('users/toggle-status/{id}', [AdminUserController::class, 'toggleStatus']);
     Route::get('users/statuses', [AdminUserController::class, 'statuses']);
     Route::post('users/{id}/change-password', [AdminUserController::class, 'changePassword']);
