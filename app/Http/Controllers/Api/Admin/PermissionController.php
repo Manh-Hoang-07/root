@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Controllers\BaseController;
+use App\Http\Resources\PermissionResource;
 use App\Services\PermissionService;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-class PermissionController extends Controller
+class PermissionController extends BaseController
 {
-    protected $permissionService;
-
     public function __construct(PermissionService $permissionService)
     {
-        $this->permissionService = $permissionService;
+        parent::__construct($permissionService, PermissionResource::class);
     }
 
     // Lấy danh sách quyền (có phân trang)
@@ -21,8 +20,8 @@ class PermissionController extends Controller
     {
         $perPage = $request->input('per_page', 15);
         $filters = $request->only(['search']);
-        $permissions = $this->permissionService->list($filters, $perPage);
-        return response()->json($permissions);
+        $permissions = $this->service->list($filters, $perPage);
+        return PermissionResource::collection($permissions);
     }
 
     // Tạo quyền mới
@@ -34,8 +33,8 @@ class PermissionController extends Controller
             'guard_name' => ['nullable', 'string', 'max:255'],
         ]);
         $data['guard_name'] = $data['guard_name'] ?? 'web';
-        $permission = $this->permissionService->create($data);
-        return response()->json(['message' => 'Tạo quyền thành công', 'data' => $permission], 201);
+        $permission = $this->service->create($data);
+        return response()->json(['message' => 'Tạo quyền thành công', 'data' => new PermissionResource($permission)], 201);
     }
 
     // Cập nhật quyền
@@ -49,14 +48,14 @@ class PermissionController extends Controller
             'display_name' => ['required', 'string', 'max:255'],
             'guard_name' => ['nullable', 'string', 'max:255'],
         ]);
-        $permission = $this->permissionService->update($id, $data);
-        return response()->json(['message' => 'Cập nhật quyền thành công', 'data' => $permission]);
+        $permission = $this->service->update($id, $data);
+        return response()->json(['message' => 'Cập nhật quyền thành công', 'data' => new PermissionResource($permission)]);
     }
 
     // Xóa quyền
     public function destroy($id)
     {
-        $this->permissionService->delete($id);
+        $this->service->delete($id);
         return response()->json(['message' => 'Xóa quyền thành công']);
     }
 } 
