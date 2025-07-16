@@ -12,6 +12,7 @@
 </template>
 <script setup>
 import Form from './form.vue'
+import endpoints from '@/api/endpoints'
 const props = defineProps({
   show: Boolean,
   user: Object,
@@ -22,7 +23,7 @@ const props = defineProps({
 const emit = defineEmits(['updated'])
 async function handleSubmit(formData) {
   try {
-    await axios.post(`/api/admin/users/${props.user.id}?_method=PUT`, formData)
+    await axios.post(endpoints.user.update(props.user.id), formData)
     emit('updated')
     props.onClose()
   } catch (e) {

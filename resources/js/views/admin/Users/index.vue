@@ -149,7 +149,7 @@ const userForm = ref({
 const fetchUsers = async () => {
   try {
     const params = { ...filters.value }
-    const res = await axios.get(endpoints.users, { params })
+    const res = await axios.get(endpoints.users.list, { params })
     users.value = res.data.data || []
   } catch (e) {
     console.error('Lỗi khi lấy người dùng:', e)
@@ -165,9 +165,9 @@ const onUpdateFilters = (newFilters) => {
 const saveUser = async (formData) => {
   try {
     if (showEditModal.value) {
-      await axios.post(`/api/admin/users/${editingUser.value.id}?_method=PUT`, formData)
+      await axios.post(`${endpoints.user(editingUser.value.id)}?_method=PUT`, formData)
     } else {
-      await axios.post('/api/admin/users', formData)
+      await axios.post(endpoints.users, formData)
     }
     await fetchUsers()
     closeModal()
@@ -216,7 +216,7 @@ const editUser = (user) => {
 const deleteUser = async (user) => {
   if (confirm(`Bạn có chắc chắn muốn xóa người dùng ${user.name}?`)) {
     try {
-      await axios.delete(`/api/admin/users/${user.id}`)
+      await axios.delete(endpoints.users.delete(user.id))
       await fetchUsers()
     } catch (e) {
       alert('Xóa thất bại!')
@@ -234,7 +234,7 @@ function closeChangePassword() {
 }
 async function changeStatus(user) {
   try {
-    await axios.patch(`/api/admin/users/toggle-status/${user.id}`, { status: user.status })
+    await axios.patch(endpoints.users.changeStatus(user.id), { status: user.status })
     await fetchUsers()
   } catch (e) {
     alert('Đổi trạng thái thất bại!')
@@ -251,7 +251,7 @@ async function setStatus(user, status) {
     return
   }
   try {
-    await axios.patch(`/api/admin/users/toggle-status/${user.id}`, { status })
+    await axios.patch(endpoints.users.changeStatus(user.id), { status })
     await fetchUsers()
   } catch (e) {
     alert('Đổi trạng thái thất bại!')

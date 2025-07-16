@@ -12,6 +12,7 @@
 </template>
 <script setup>
 import Form from './form.vue'
+import endpoints from '@/api/endpoints'
 const props = defineProps({
   show: Boolean,
   statusEnums: Array,
@@ -21,7 +22,7 @@ const props = defineProps({
 const emit = defineEmits(['created'])
 async function handleSubmit(formData) {
   try {
-    await axios.post('/api/admin/users', formData)
+    await axios.post(endpoints.user.create, formData)
     emit('created')
     props.onClose()
   } catch (e) {

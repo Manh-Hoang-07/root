@@ -28,6 +28,7 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
+import endpoints from '@/api/endpoints'
 const props = defineProps({
   show: Boolean,
   user: Object,
@@ -46,7 +47,7 @@ async function handleSubmit() {
     return
   }
   try {
-    await axios.post(`/api/admin/users/${props.user.id}/change-password`, { password: password.value })
+    await axios.post(endpoints.users.changePassword(props.user.id), { password: password.value })
     success.value = true
     emit('changed')
     setTimeout(() => props.onClose(), 1000)
