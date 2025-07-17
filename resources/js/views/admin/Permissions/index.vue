@@ -59,11 +59,14 @@
     </template>
     <!-- Pagination -->
     <template #pagination>
-      <div class="flex items-center gap-2">
-        <button @click="prevPage" :disabled="pagination.current_page === 1" class="px-3 py-1 rounded bg-gray-200">&lt;</button>
-        <span>Trang {{ pagination.current_page }}</span>
-        <button @click="nextPage" :disabled="pagination.current_page * pagination.per_page >= pagination.total" class="px-3 py-1 rounded bg-gray-200">&gt;</button>
-      </div>
+      <Pagination
+        :current-page="pagination.currentPage"
+        :total-pages="pagination.totalPages"
+        :page-size="pagination.itemsPerPage"
+        :total-items="pagination.totalItems"
+        :loading="loading"
+        @page-change="onPageChange"
+      />
     </template>
   </DataTable>
 
@@ -82,14 +85,16 @@ import PermissionCreate from './create.vue'
 import PermissionEdit from './edit.vue'
 import { PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import axios from 'axios'
+import Pagination from '@/components/Pagination.vue'
 
 const permissions = ref([])
 const filters = ref({ search: '' })
 const loading = ref(false)
 const pagination = ref({
-  current_page: 1,
-  total: 0,
-  per_page: 10
+  currentPage: 1,
+  totalPages: 1,
+  totalItems: 0,
+  itemsPerPage: 10
 })
 const showAddModal = ref(false)
 const showEditModal = ref(false)
@@ -100,16 +105,19 @@ const { selected, isAllSelected, toggleSelectAll, toggleSelect } = useTableSelec
 const fetchPermissions = async () => {
   loading.value = true
   try {
-    const params = { ...filters.value, page: pagination.value.current_page, per_page: pagination.value.per_page }
+    const params = { ...filters.value, page: pagination.value.currentPage, per_page: pagination.value.itemsPerPage }
     const res = await axios.get('/api/admin/permissions', { params })
     permissions.value = res.data.data || []
-    pagination.value.total = res.data.meta?.total || 0
-    pagination.value.per_page = res.data.meta?.per_page || 10
-    pagination.value.current_page = res.data.meta?.current_page || 1
+    pagination.value.totalItems = res.data.meta?.total || 0
+    pagination.value.itemsPerPage = res.data.meta?.per_page || 10
+    pagination.value.currentPage = res.data.meta?.current_page || 1
+    pagination.value.totalPages = Math.ceil(pagination.value.totalItems / pagination.value.itemsPerPage) || 1
   } catch (e) {
     permissions.value = []
-    pagination.value.total = 0
-    pagination.value.current_page = 1
+    pagination.value.totalItems = 0
+    pagination.value.itemsPerPage = 10
+    pagination.value.currentPage = 1
+    pagination.value.totalPages = 1
   } finally {
     loading.value = false
   }
@@ -151,7 +159,7 @@ const deleteSelected = async () => {
 }
 const onUpdateFilters = (newFilters) => {
   filters.value = newFilters
-  pagination.value.current_page = 1
+  pagination.value.currentPage = 1
   fetchPermissions()
 }
 
@@ -167,18 +175,14 @@ function getParentName(parent_id) {
   return p ? (p.display_name || p.name) : parent_id
 }
 
-const prevPage = () => {
-  if (pagination.value.current_page > 1) {
-    pagination.value.current_page--
-  }
-}
-const nextPage = () => {
-  if (pagination.value.current_page * pagination.value.per_page < pagination.value.total) {
-    pagination.value.current_page++
+function onPageChange(page) {
+  if (page !== pagination.value.currentPage) {
+    pagination.value.currentPage = page
+    fetchPermissions()
   }
 }
 
-watch(() => pagination.value.current_page, () => {
+watch(() => pagination.value.currentPage, () => {
   fetchPermissions()
 })
 

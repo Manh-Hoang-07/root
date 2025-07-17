@@ -104,11 +104,14 @@
     </template>
     <!-- Pagination -->
     <template #pagination>
-      <div class="flex items-center gap-2">
-        <button @click="prevPage" :disabled="pagination.currentPage === 1" class="px-3 py-1 rounded bg-gray-200">&lt;</button>
-        <span>Trang {{ pagination.currentPage }} / {{ pagination.totalPages }}</span>
-        <button @click="nextPage" :disabled="pagination.currentPage === pagination.totalPages" class="px-3 py-1 rounded bg-gray-200">&gt;</button>
-      </div>
+      <Pagination
+        :current-page="pagination.currentPage"
+        :total-pages="pagination.totalPages"
+        :page-size="pagination.itemsPerPage"
+        :total-items="pagination.totalItems"
+        :loading="loading"
+        @page-change="onPageChange"
+      />
     </template>
   </DataTable>
 
@@ -149,6 +152,7 @@ import ChangePassword from './changePassword.vue'
 import axios from 'axios'
 import endpoints from '@/api/endpoints'
 import useApiOptions from '@/composables/useApiOptions'
+import Pagination from '@/components/Pagination.vue'
 
 const users = ref([])
 const filters = ref({ search: '', role: '', status: '' })
@@ -261,14 +265,10 @@ const setStatus = async (user, status) => {
   } catch (e) {}
 }
 
-const prevPage = () => {
-  if (pagination.value.currentPage > 1) {
-    pagination.value.currentPage--
-  }
-}
-const nextPage = () => {
-  if (pagination.value.currentPage < pagination.value.totalPages) {
-    pagination.value.currentPage++
+function onPageChange(page) {
+  if (page !== pagination.value.currentPage) {
+    pagination.value.currentPage = page
+    fetchUsers()
   }
 }
 
