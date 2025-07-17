@@ -86,6 +86,7 @@ import PermissionEdit from './edit.vue'
 import { PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import axios from 'axios'
 import Pagination from '@/components/Pagination.vue'
+import useSyncQueryPagination from '@/composables/useSyncQueryPagination'
 
 const permissions = ref([])
 const filters = ref({ search: '' })
@@ -123,6 +124,8 @@ const fetchPermissions = async () => {
   }
 }
 
+const { onPageChange, onUpdateFilters } = useSyncQueryPagination(filters, pagination, fetchPermissions, ['search'])
+
 const clearFilters = () => {
   filters.value = { search: '' }
   fetchPermissions()
@@ -157,11 +160,6 @@ const deleteSelected = async () => {
     } catch (e) {}
   }
 }
-const onUpdateFilters = (newFilters) => {
-  filters.value = newFilters
-  pagination.value.currentPage = 1
-  fetchPermissions()
-}
 
 // Map id -> quyền để tra nhanh tên quyền cha
 const permissionMap = computed(() => {
@@ -173,13 +171,6 @@ function getParentName(parent_id) {
   if (!parent_id) return '—'
   const p = permissionMap.value[parent_id]
   return p ? (p.display_name || p.name) : parent_id
-}
-
-function onPageChange(page) {
-  if (page !== pagination.value.currentPage) {
-    pagination.value.currentPage = page
-    fetchPermissions()
-  }
 }
 
 watch(() => pagination.value.currentPage, () => {

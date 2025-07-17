@@ -22,7 +22,7 @@
     </template>
     <!-- Filter bar -->
     <template #filter>
-      <Filter :filters="filters" @update:filters="onUpdateFilters" @clear="clearFilters" />
+      <Filter :filters="filters" @update:filters="onUpdateFilters" @clear="clearFilters" :status-enums="statusEnums" />
     </template>
     <!-- Table head -->
     <template #thead>
@@ -153,6 +153,7 @@ import axios from 'axios'
 import endpoints from '@/api/endpoints'
 import useApiOptions from '@/composables/useApiOptions'
 import Pagination from '@/components/Pagination.vue'
+import useSyncQueryPagination from '@/composables/useSyncQueryPagination'
 
 const users = ref([])
 const filters = ref({ search: '', role: '', status: '' })
@@ -193,11 +194,7 @@ const fetchUsers = async () => {
   }
 }
 
-const onUpdateFilters = (newFilters) => {
-  filters.value = newFilters
-  pagination.value.currentPage = 1
-  fetchUsers()
-}
+const { onPageChange, onUpdateFilters } = useSyncQueryPagination(filters, pagination, fetchUsers, ['search', 'role', 'status'])
 
 const clearFilters = () => {
   filters.value = { search: '', role: '', status: '' }
@@ -263,13 +260,6 @@ const setStatus = async (user, status) => {
     fetchUsers()
     openStatusMenuId.value = null
   } catch (e) {}
-}
-
-function onPageChange(page) {
-  if (page !== pagination.value.currentPage) {
-    pagination.value.currentPage = page
-    fetchUsers()
-  }
 }
 
 watch(() => pagination.value.currentPage, () => {

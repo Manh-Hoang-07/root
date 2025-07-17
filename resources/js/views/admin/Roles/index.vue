@@ -88,6 +88,8 @@ import RoleEdit from './edit.vue'
 import { PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import axios from 'axios'
 import Pagination from '@/components/Pagination.vue'
+import { useRoute, useRouter } from 'vue-router'
+import useSyncQueryPagination from '@/composables/useSyncQueryPagination'
 
 const roles = ref([])
 const filters = ref({ search: '' })
@@ -103,6 +105,9 @@ const showEditModal = ref(false)
 const editingRole = ref(null)
 
 const { selected, isAllSelected, toggleSelectAll, toggleSelect } = useTableSelection(roles)
+
+const route = useRoute()
+const router = useRouter()
 
 const fetchRoles = async () => {
   loading.value = true
@@ -165,11 +170,8 @@ const deleteSelected = async () => {
     } catch (e) {}
   }
 }
-const onUpdateFilters = (newFilters) => {
-  filters.value = newFilters
-  pagination.value.currentPage = 1
-  fetchRoles()
-}
+
+const { onPageChange, onUpdateFilters } = useSyncQueryPagination(filters, pagination, fetchRoles, ['search'])
 
 // Map id -> vai trò để tra nhanh tên vai trò cha
 const roleMap = computed(() => {
@@ -183,14 +185,16 @@ function getParentName(parent_id) {
   return r ? (r.display_name || r.name) : parent_id
 }
 
-function onPageChange(page) {
-  if (page !== pagination.value.currentPage) {
-    pagination.value.currentPage = page
-    fetchRoles()
+onMounted(() => {
+  // Đọc lại query khi vào trang
+  if (route.query.page) {
+    pagination.value.currentPage = parseInt(route.query.page)
   }
-}
-
-onMounted(fetchRoles)
+  if (route.query.search) {
+    filters.value.search = route.query.search
+  }
+  fetchRoles()
+})
 </script>
 
 <style>
