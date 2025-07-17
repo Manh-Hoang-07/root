@@ -22,7 +22,7 @@
     </template>
     <!-- Filter bar -->
     <template #filter>
-      <Filter :filters="filters" @update:filters="onUpdateFilters" @clear="clearFilters" :status-enums="statusEnums" />
+      <Filter :filters="filters" @update:filters="onUpdateFilters" @clear="clearFilters" />
     </template>
     <!-- Table head -->
     <template #thead>
