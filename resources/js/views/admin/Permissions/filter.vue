@@ -1,23 +1,21 @@
 <template>
-  <div class="mb-4 flex items-center space-x-2">
-    <input v-model="localFilters.search" @keyup.enter="emitUpdate" type="text" placeholder="Tìm kiếm quyền..." class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-    <button @click="emitUpdate" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Lọc</button>
-    <button @click="emitClear" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Xóa lọc</button>
+  <div class="flex flex-wrap items-center gap-1 bg-white border border-gray-200 rounded px-2 py-1">
+    <div class="flex items-center">
+      <MagnifyingGlassIcon class="w-3 h-3 text-gray-400 mr-1" />
+      <input
+        v-model="filters.search"
+        @input="$emit('update:filters', { ...filters })"
+        class="h-6 px-1 text-xs border-none focus:ring-0 outline-none bg-transparent"
+        placeholder="Tìm kiếm quyền"
+      />
+    </div>
+    <button @click="$emit('clear')" class="h-6 px-2 text-xs rounded bg-gray-100 hover:bg-gray-200">Xóa lọc</button>
   </div>
 </template>
+
 <script setup>
-import { ref, watch, toRefs } from 'vue'
-const emit = defineEmits(['update:filters', 'clear'])
-const props = defineProps({ filters: Object })
-const localFilters = ref({ search: '' })
-watch(() => props.filters, (val) => {
-  localFilters.value = { ...val }
-}, { immediate: true })
-const emitUpdate = () => {
-  emit('update:filters', { ...localFilters.value })
-}
-const emitClear = () => {
-  localFilters.value = { search: '' }
-  emit('clear')
-}
+import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+const props = defineProps({
+  filters: Object
+})
 </script> 

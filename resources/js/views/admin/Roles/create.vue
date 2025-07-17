@@ -1,6 +1,6 @@
 <template>
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-y-auto max-h-screen" style="touch-action: pan-y; -webkit-overflow-scrolling: touch;">
       <div class="px-6 py-4 border-b border-gray-200">
         <h3 class="text-lg font-semibold">Thêm vai trò mới</h3>
       </div>
@@ -28,11 +28,16 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Phân quyền</label>
-          <select v-model="form.permissions" multiple class="w-full px-3 py-2 border rounded-lg h-32">
-            <option v-for="p in permissionOptions" :key="p.id" :value="p.id">
-              {{ p.display_name || p.name }}
-            </option>
-          </select>
+          <Multiselect
+            v-model="form.permissions"
+            :options="permissionOptions"
+            :multiple="true"
+            :searchable="true"
+            :close-on-select="false"
+            placeholder="Chọn quyền"
+            :label="permissionLabel"
+            track-by="id"
+          ></Multiselect>
         </div>
         <div class="flex justify-end space-x-2">
           <button type="button" @click="$emit('close')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Hủy</button>
@@ -45,6 +50,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import Multiselect from 'vue-multiselect'
 const emit = defineEmits(['close', 'saved'])
 const form = ref({ name: '', display_name: '', guard_name: '', parent_id: '', permissions: [] })
 const parentOptions = ref([])
@@ -74,4 +80,24 @@ const submit = async () => {
     alert('Tạo vai trò thất bại!')
   }
 }
-</script> 
+
+// Hàm lấy label cho permission
+const permissionLabel = (p) => p.display_name || p.name || `#${p.id}`;
+</script>
+
+<style src="vue-multiselect/dist/vue-multiselect.css"></style>
+<style>
+.multiselect__tag, .multiselect__single, .multiselect__option {
+  color: #222 !important;
+  font-size: 14px !important;
+  min-width: 40px;
+}
+/* Thêm scroll cho vùng tag khi tràn */
+.multiselect__tags {
+  max-height: 90px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+</style> 
