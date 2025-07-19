@@ -12,6 +12,8 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->string('type'); // text, select, color, ...
+            $table->text('description')->nullable();
+            $table->string('status')->default('active');
             $table->timestamps();
         });
     }

@@ -110,6 +110,8 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('shipping-infos', \App\Http\Controllers\Api\Admin\ShippingInfoController::class);
     Route::apiResource('categories', \App\Http\Controllers\Api\Admin\CategoryController::class); // Thêm dòng này
     Route::apiResource('brands', \App\Http\Controllers\Api\Admin\BrandController::class); // Thêm dòng này
+    Route::apiResource('attributes', \App\Http\Controllers\Api\Admin\AttributeController::class); // Thêm dòng này
+    Route::apiResource('attribute-values', \App\Http\Controllers\Api\Admin\AttributeValueController::class); // Thêm dòng này
     Route::patch('users/toggle-status/{id}', [AdminUserController::class, 'toggleStatus']);
     Route::get('users/statuses', [AdminUserController::class, 'statuses']);
     Route::post('users/{id}/change-password', [AdminUserController::class, 'changePassword']);

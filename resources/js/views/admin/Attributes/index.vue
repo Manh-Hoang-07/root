@@ -34,6 +34,9 @@
         <td colspan="10" class="text-center py-6 text-gray-400">Không có dữ liệu</td>
       </tr>
       <tr v-for="attr in attributes" :key="attr.id" class="hover:bg-gray-50">
+        <td class="w-6 px-1 py-1 text-center align-middle">
+          <input type="checkbox" :checked="selected.includes(attr.id)" @change="toggleSelect(attr.id)" class="accent-indigo-500 w-5 h-5 rounded border-gray-300 focus:ring-indigo-500" />
+        </td>
         <td class="px-4 py-3 whitespace-nowrap">{{ attr.id }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ attr.name }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ attr.type }}</td>

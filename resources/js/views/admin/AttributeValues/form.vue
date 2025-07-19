@@ -2,7 +2,9 @@
   <FormLayout @submit="onSubmit" @cancel="$emit('cancel')">
     <div>
       <label class="block text-sm font-medium mb-1">Thuộc tính</label>
-      <input v-model="form.attribute_name" type="text" class="w-full px-4 py-2 border rounded-xl" maxlength="100" required />
+      <select v-model="form.attribute_id" class="w-full px-4 py-2 border rounded-xl">
+        <option v-for="opt in attributeOptions" :key="opt.value" :value="opt.value">{{ opt.name }}</option>
+      </select>
     </div>
     <div>
       <label class="block text-sm font-medium mb-1">Giá trị</label>
@@ -32,17 +34,20 @@
 <script setup>
 import { ref, watch } from 'vue'
 import FormLayout from '@/components/FormLayout.vue'
+import useApiOptions from '@/composables/useApiOptions'
+import endpoints from '@/api/endpoints'
 const props = defineProps({
   attributeValue: Object,
   mode: String
 })
 const emit = defineEmits(['submit', 'cancel'])
-const form = ref({ attribute_name: '', value: '', display_value: '', sort_order: '', status: 'active', description: '' })
+const form = ref({ attribute_id: '', value: '', display_value: '', sort_order: '', status: 'active', description: '' })
+const { options: attributeOptions, loading: loadingAttributes } = useApiOptions(endpoints.attributes.list)
 watch(() => props.attributeValue, (val) => {
   if (val) {
-    form.value = { attribute_name: val.attribute_name || '', value: val.value || '', display_value: val.display_value || '', sort_order: val.sort_order || '', status: val.status || 'active', description: val.description || '' }
+    form.value = { attribute_id: val.attribute_id || '', value: val.value || '', display_value: val.display_value || '', sort_order: val.sort_order || '', status: val.status || 'active', description: val.description || '' }
   } else {
-    form.value = { attribute_name: '', value: '', display_value: '', sort_order: '', status: 'active', description: '' }
+    form.value = { attribute_id: '', value: '', display_value: '', sort_order: '', status: 'active', description: '' }
   }
 }, { immediate: true })
 function onSubmit() {

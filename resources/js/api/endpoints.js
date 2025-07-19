@@ -27,7 +27,9 @@ const endpoints = {
     customEndpoint: id => `/api/admin/warehouses/${id}/custom-action`
   }),
   categories: createResourceEndpoints('categories'),
-  brands: createResourceEndpoints('brands'), // Thêm dòng này
+  brands: createResourceEndpoints('brands'),
+  attributes: createResourceEndpoints('attributes'),
+  attributeValues: createResourceEndpoints('attribute-values'), // Thêm dòng này
   enums: type => `/api/enums/${type}`,
   // Thêm resource khác nếu cần
 };

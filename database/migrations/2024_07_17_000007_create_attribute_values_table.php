@@ -14,6 +14,8 @@ return new class extends Migration
             $table->string('value');
             $table->string('display_value')->nullable();
             $table->integer('sort_order');
+            $table->text('description')->nullable();
+            $table->string('status')->default('active');
             $table->timestamps();
 
             $table->foreign('attribute_id')->references('id')->on('attributes')->onDelete('cascade');
