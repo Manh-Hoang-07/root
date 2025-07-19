@@ -1,6 +1,5 @@
 <template>
   <form @submit.prevent="onSubmit" class="bg-white rounded-2xl shadow-lg p-6 space-y-4 min-w-[320px] max-w-md">
-    <slot name="title"></slot>
     <slot></slot>
     <div class="flex justify-end gap-2 pt-4">
       <slot name="actions">
