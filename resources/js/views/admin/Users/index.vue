@@ -116,26 +116,18 @@
   </DataTable>
 
   <!-- Modal -->
-  <div v-if="showAddModal || showEditModal"
-       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-semibold">
-          {{ showEditModal ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới' }}
-        </h3>
-      </div>
-      <div class="p-6 max-h-[80vh] overflow-y-auto">
-        <Form
-          :user="showEditModal ? editingUser : null"
-          :mode="showEditModal ? 'edit' : 'create'"
-          :status-enums="statusEnums"
-          :gender-enums="genderEnums"
-          @submit="saveUser"
-          @cancel="closeModal"
-        />
-      </div>
-    </div>
-  </div>
+  <Modal v-if="showAddModal || showEditModal"
+         v-model="modalVisible"
+         :title="showEditModal ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'">
+    <Form
+      :user="showEditModal ? editingUser : null"
+      :mode="showEditModal ? 'edit' : 'create'"
+      :status-enums="statusEnums"
+      :gender-enums="genderEnums"
+      @submit="saveUser"
+      @cancel="closeModal"
+    />
+  </Modal>
   <ChangePassword :show="showChangePassword" :user="changingUser" :onClose="closeChangePassword" @changed="fetchUsers" />
 </template>
 
@@ -154,6 +146,15 @@ import endpoints from '@/api/endpoints'
 import useApiOptions from '@/composables/useApiOptions'
 import Pagination from '@/components/Pagination.vue'
 import useSyncQueryPagination from '@/composables/useSyncQueryPagination'
+import Modal from '@/components/Modal.vue'
+// Để đồng bộ v-model cho Modal
+import { computed } from 'vue'
+const modalVisible = computed({
+  get: () => showAddModal.value || showEditModal.value,
+  set: (val) => {
+    if (!val) closeModal()
+  }
+})
 
 const users = ref([])
 const filters = ref({ search: '', role: '', status: '' })

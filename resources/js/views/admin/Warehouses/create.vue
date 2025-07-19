@@ -1,24 +1,23 @@
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-semibold">Thêm kho hàng mới</h3>
-      </div>
-      <div class="p-6 max-h-[80vh] overflow-y-auto">
-        <Form :warehouse="null" :mode="'create'" @submit="handleSubmit" @cancel="onClose" />
-      </div>
-    </div>
-  </div>
+  <Modal v-if="show" v-model="modalVisible" title="Thêm kho hàng mới">
+    <Form :warehouse="null" :mode="'create'" @submit="handleSubmit" @cancel="onClose" />
+  </Modal>
 </template>
 <script setup>
 import Form from './form.vue'
 import api from '@/api/apiClient'
 import endpoints from '@/api/endpoints'
+import Modal from '@/components/Modal.vue'
+import { computed } from 'vue'
 const props = defineProps({
   show: Boolean,
   onClose: Function
 })
 const emit = defineEmits(['created'])
+const modalVisible = computed({
+  get: () => props.show,
+  set: (val) => { if (!val) props.onClose() }
+})
 async function handleSubmit(formData) {
   try {
     await api.post(endpoints.warehouses.create, formData)

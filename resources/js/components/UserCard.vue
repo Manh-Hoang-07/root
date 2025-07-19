@@ -31,6 +31,16 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
             </svg>
           </button>
+          <button 
+            @click="showModal = true"
+            class="text-indigo-600 hover:text-indigo-800 p-1 rounded border border-indigo-200 bg-indigo-50"
+            title="Xem chi tiết"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
@@ -42,10 +52,22 @@
       </div>
     </div>
   </div>
+  <Modal v-model="showModal" :title="'Thông tin tài khoản'">
+    <div class="space-y-2">
+      <div><b>Tên:</b> {{ user.name }}</div>
+      <div><b>Email:</b> {{ user.email }}</div>
+      <div><b>ID:</b> {{ user.id }}</div>
+      <div><b>Ngày tạo:</b> {{ formatDate(user.created_at) }}</div>
+    </div>
+    <template #footer>
+      <button @click="showModal = false" class="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700">Đóng</button>
+    </template>
+  </Modal>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import Modal from './Modal.vue';
 
 // Props
 const props = defineProps({
@@ -67,6 +89,8 @@ const userInitials = computed(() => {
     .toUpperCase()
     .slice(0, 2);
 });
+
+const showModal = ref(false);
 
 // Methods
 const formatDate = (dateString) => {
