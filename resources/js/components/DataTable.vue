@@ -14,7 +14,7 @@
       <table class="min-w-full table-fixed text-sm">
         <thead>
           <tr class="bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 font-semibold text-sm uppercase tracking-wider border-b border-gray-200">
-            <th class="w-12 px-3 py-3 text-center align-middle">
+            <th class="w-6 px-1 py-1 text-center align-middle">
               <input type="checkbox" :checked="isAllSelected" @change="$emit('toggle-select-all')" class="accent-indigo-500 w-5 h-5 rounded border-gray-300 focus:ring-indigo-500" />
             </th>
             <slot name="thead"></slot>

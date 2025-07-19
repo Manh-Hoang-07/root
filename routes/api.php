@@ -102,9 +102,30 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('users', AdminUserController::class);
     Route::apiResource('permissions', AdminPermissionController::class);
     Route::apiResource('roles', RoleController::class);
+    Route::apiResource('products', \App\Http\Controllers\Api\Admin\ProductController::class);
+    Route::apiResource('warehouses', \App\Http\Controllers\Api\Admin\WarehouseController::class);
+    Route::apiResource('orders', \App\Http\Controllers\Api\Admin\OrderController::class);
+    Route::apiResource('promotions', \App\Http\Controllers\Api\Admin\PromotionController::class);
+    Route::apiResource('shipping-promotions', \App\Http\Controllers\Api\Admin\ShippingPromotionController::class);
+    Route::apiResource('shipping-infos', \App\Http\Controllers\Api\Admin\ShippingInfoController::class);
     Route::patch('users/toggle-status/{id}', [AdminUserController::class, 'toggleStatus']);
     Route::get('users/statuses', [AdminUserController::class, 'statuses']);
     Route::post('users/{id}/change-password', [AdminUserController::class, 'changePassword']);
+    Route::get('products/{product}/variants', [\App\Http\Controllers\Api\Admin\ProductController::class, 'variants']);
+    Route::post('products/{product}/variants', [\App\Http\Controllers\Api\Admin\ProductController::class, 'storeVariant']);
+    Route::put('products/{product}/variants/{variant}', [\App\Http\Controllers\Api\Admin\ProductController::class, 'updateVariant']);
+    Route::delete('products/{product}/variants/{variant}', [\App\Http\Controllers\Api\Admin\ProductController::class, 'destroyVariant']);
+    Route::get('products/{product}/gallery', [\App\Http\Controllers\Api\Admin\ProductController::class, 'gallery']);
+    Route::post('products/{product}/gallery', [\App\Http\Controllers\Api\Admin\ProductController::class, 'addGalleryImage']);
+    Route::delete('products/{product}/gallery/{image}', [\App\Http\Controllers\Api\Admin\ProductController::class, 'deleteGalleryImage']);
+    Route::get('inventory/product/{product}', [\App\Http\Controllers\Api\Admin\InventoryController::class, 'productInventory']);
+    Route::get('inventory/warehouse/{warehouse}', [\App\Http\Controllers\Api\Admin\InventoryController::class, 'warehouseInventory']);
+    Route::post('inventory/adjust', [\App\Http\Controllers\Api\Admin\InventoryController::class, 'adjust']);
+    Route::post('orders/{order}/update-status', [\App\Http\Controllers\Api\Admin\OrderController::class, 'updateStatus']);
+    Route::get('orders/{order}/items', [\App\Http\Controllers\Api\Admin\OrderController::class, 'orderItems']);
+    Route::post('promotions/{promotion}/assign-products', [\App\Http\Controllers\Api\Admin\PromotionController::class, 'assignProducts']);
+    Route::post('shipping-infos/{shippingInfo}/update-status', [\App\Http\Controllers\Api\Admin\ShippingInfoController::class, 'updateStatus']);
+    Route::get('shipping-infos/{shippingInfo}/history', [\App\Http\Controllers\Api\Admin\ShippingInfoController::class, 'history']);
 });
 
 // User (profile) API

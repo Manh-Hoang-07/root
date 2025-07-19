@@ -1,370 +1,170 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Quản lý vận chuyển</h1>
-      <button 
-        @click="showAddModal = true"
-        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+  <DataTable :is-all-selected="isAllSelected" @toggle-select-all="toggleSelectAll" class="w-full min-w-full table-fixed">
+    <!-- Action bar -->
+    <template #actions>
+      <button
+        @click="openAddModal"
+        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 rounded font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow flex items-center space-x-1.5 text-sm"
       >
-        Thêm khu vực vận chuyển
+        <span>Thêm khu vực vận chuyển</span>
       </button>
-    </div>
-
-    <!-- Shipping Zones -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div 
-        v-for="zone in shippingZones" 
-        :key="zone.id"
-        class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+      <button
+        @click="deleteSelected"
+        :disabled="!selected.length"
+        class="ml-1 px-3 py-1.5 rounded bg-red-500 text-white font-medium disabled:opacity-50 text-sm"
       >
-        <div class="flex justify-between items-start mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">{{ zone.name }}</h3>
-          <span 
-            :class="{
-              'px-2 py-1 text-xs font-semibold rounded-full': true,
-              'bg-green-100 text-green-800': zone.status === 'active',
-              'bg-red-100 text-red-800': zone.status === 'inactive'
-            }"
-          >
+        Xóa đã chọn
+      </button>
+    </template>
+    <!-- Filter bar -->
+    <template #filter>
+      <Filter :filters="filters" @update:filters="onUpdateFilters" @clear="clearFilters" />
+    </template>
+    <!-- Table head -->
+    <template #thead>
+      <th class="px-4 py-3 whitespace-nowrap">ID</th>
+      <th class="px-4 py-3 whitespace-nowrap">Tên khu vực</th>
+      <th class="px-4 py-3 whitespace-nowrap">Thời gian (ngày)</th>
+      <th class="px-4 py-3 whitespace-nowrap">Tỉnh/Thành</th>
+      <th class="px-4 py-3 whitespace-nowrap">Trạng thái</th>
+      <th class="px-4 py-3 whitespace-nowrap">Ngày tạo</th>
+      <th class="px-4 py-3 whitespace-nowrap">Ngày cập nhật</th>
+    </template>
+    <!-- Table body -->
+    <template #tbody>
+      <tr v-if="shippingZones.length === 0">
+        <td colspan="12" class="text-center py-6 text-gray-400">Không có dữ liệu</td>
+      </tr>
+      <tr v-for="zone in shippingZones" :key="zone.id" class="hover:bg-gray-50">
+        <td class="px-4 py-3 whitespace-nowrap">{{ zone.id }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">{{ zone.name }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">{{ zone.estimated_days }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">{{ zone.provinces?.join(', ') }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">
+          <span :class="zone.status === 'active' ? 'bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs' : 'bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs'">
             {{ zone.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
           </span>
-        </div>
-        
-        <div class="space-y-2 text-sm text-gray-600 mb-4">
-          <div>💰 Phí cơ bản: {{ formatPrice(zone.base_fee) }}</div>
-          <div>⚖️ Phí theo kg: {{ formatPrice(zone.weight_fee) }}/kg</div>
-          <div>📅 Thời gian: {{ zone.estimated_days }} ngày</div>
-          <div v-if="zone.provinces?.length">
-            <div class="font-medium">Tỉnh/Thành:</div>
-            <div class="text-xs">{{ zone.provinces.join(', ') }}</div>
-          </div>
-        </div>
-
-        <div class="flex justify-between items-center">
-          <button 
-            @click="calculateShipping(zone)"
-            class="text-blue-600 hover:text-blue-900 text-sm font-medium"
-          >
-            Tính phí
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(zone.created_at) }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(zone.updated_at) }}</td>
+        <!-- Thao tác -->
+        <td class="text-center">
+          <button @click="editShippingZone(zone)" class="p-2 rounded-full hover:bg-indigo-100 transition" title="Sửa">
+            <PencilIcon class="w-5 h-5 text-indigo-600" />
           </button>
-          <div class="flex space-x-2">
-            <button 
-              @click="editZone(zone)"
-              class="text-green-600 hover:text-green-900 text-sm"
-            >
-              Sửa
-            </button>
-            <button 
-              @click="deleteZone(zone.id)"
-              class="text-red-600 hover:text-red-900 text-sm"
-            >
-              Xóa
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Calculate Shipping Modal -->
-    <div v-if="showCalculateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Tính phí vận chuyển</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Tỉnh/Thành</label>
-              <select 
-                v-model="calculateForm.province"
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Chọn tỉnh/thành</option>
-                <option value="Hà Nội">Hà Nội</option>
-                <option value="TP.HCM">TP.HCM</option>
-                <option value="Đà Nẵng">Đà Nẵng</option>
-                <option value="Cần Thơ">Cần Thơ</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Quận/Huyện</label>
-              <select 
-                v-model="calculateForm.district"
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Chọn quận/huyện</option>
-                <option value="Cầu Giấy">Cầu Giấy</option>
-                <option value="Đống Đa">Đống Đa</option>
-                <option value="Quận 1">Quận 1</option>
-                <option value="Quận 3">Quận 3</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Trọng lượng (kg)</label>
-              <input 
-                v-model="calculateForm.weight"
-                type="number" 
-                step="0.1"
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-            </div>
-            <div v-if="shippingResult" class="bg-blue-50 p-4 rounded-lg">
-              <div class="text-lg font-semibold text-blue-900">
-                Phí vận chuyển: {{ formatPrice(shippingResult.shipping_fee) }}
-              </div>
-              <div class="text-sm text-blue-700">
-                Thời gian: {{ shippingResult.estimated_days }} ngày
-              </div>
-            </div>
-          </div>
-          <div class="flex justify-end space-x-3 mt-6">
-            <button 
-              @click="showCalculateModal = false"
-              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-            >
-              Đóng
-            </button>
-            <button 
-              @click="calculateShippingFee"
-              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              Tính phí
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add/Edit Modal -->
-    <div v-if="showAddModal || showEditModal" class="fixed inset-0 flex items-center justify-center">
-      <div class="fixed inset-0 z-40 bg-white bg-opacity-10 backdrop-blur-md"></div>
-      <div class="relative z-50 bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">
-            {{ showEditModal ? 'Sửa khu vực vận chuyển' : 'Thêm khu vực vận chuyển' }}
-          </h3>
-          <form @submit.prevent="saveZone">
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Tên khu vực</label>
-                <input 
-                  v-model="form.name"
-                  type="text" 
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Phí cơ bản</label>
-                <input 
-                  v-model="form.base_fee"
-                  type="number" 
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Phí theo kg</label>
-                <input 
-                  v-model="form.weight_fee"
-                  type="number" 
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Thời gian vận chuyển (ngày)</label>
-                <input 
-                  v-model="form.estimated_days"
-                  type="number" 
-                  required
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">Trạng thái</label>
-                <select 
-                  v-model="form.status"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="active">Hoạt động</option>
-                  <option value="inactive">Không hoạt động</option>
-                </select>
-              </div>
-            </div>
-            <div class="flex justify-end space-x-3 mt-6">
-              <button 
-                type="button"
-                @click="closeModal"
-                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                Hủy
-              </button>
-              <button 
-                type="submit"
-                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                {{ showEditModal ? 'Cập nhật' : 'Thêm' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
+          <button @click="deleteShippingZone(zone)" class="p-2 rounded-full hover:bg-red-100 transition" title="Xóa">
+            <TrashIcon class="w-5 h-5 text-red-500" />
+          </button>
+        </td>
+      </tr>
+    </template>
+    <!-- Pagination -->
+    <template #pagination>
+      <Pagination
+        :current-page="pagination.currentPage"
+        :total-pages="pagination.totalPages"
+        :page-size="pagination.itemsPerPage"
+        :total-items="pagination.totalItems"
+        :loading="loading"
+        @page-change="onPageChange"
+      />
+    </template>
+  </DataTable>
+  <!-- Modal -->
+  <Create v-if="showAddModal" :show="showAddModal" :onClose="closeModal" @created="fetchShippingZones" />
+  <Edit v-if="showEditModal" :show="showEditModal" :shipping-zone="editingShippingZone" :onClose="closeModal" @updated="fetchShippingZones" />
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue'
+import { PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import DataTable from '@/components/DataTable.vue'
+import Pagination from '@/components/Pagination.vue'
+import Filter from './filter.vue'
+import Create from './create.vue'
+import Edit from './edit.vue'
+import api from '@/api/apiClient'
+import endpoints from '@/api/endpoints'
+import useTableSelection from '@/composables/useTableSelection'
+import usePagination from '@/composables/usePagination'
+import useSyncQueryPagination from '@/composables/useSyncQueryPagination'
+import { formatDate } from '@/utils/formatDate'
 
-const shippingZones = ref([
-  {
-    id: 1,
-    name: 'Hà Nội',
-    base_fee: 20000,
-    weight_fee: 5000,
-    estimated_days: 2,
-    status: 'active',
-    provinces: ['Ba Đình', 'Cầu Giấy', 'Đống Đa']
-  },
-  {
-    id: 2,
-    name: 'TP.HCM',
-    base_fee: 25000,
-    weight_fee: 6000,
-    estimated_days: 3,
-    status: 'active',
-    provinces: ['Quận 1', 'Quận 3', 'Quận 7']
-  },
-  {
-    id: 3,
-    name: 'Đà Nẵng',
-    base_fee: 30000,
-    weight_fee: 7000,
-    estimated_days: 4,
-    status: 'inactive',
-    provinces: ['Hải Châu', 'Thanh Khê']
-  }
-]);
-const showAddModal = ref(false);
-const showEditModal = ref(false);
-const showCalculateModal = ref(false);
-const editingZone = ref(null);
+const shippingZones = ref([])
+const filters = ref({ search: '' })
+const showAddModal = ref(false)
+const showEditModal = ref(false)
+const editingShippingZone = ref(null)
+const loading = ref(false)
+const pagination = ref({
+  currentPage: 1,
+  totalPages: 0,
+  totalItems: 0,
+  itemsPerPage: 10
+})
+const { selected, isAllSelected, toggleSelectAll, toggleSelect } = useTableSelection(shippingZones)
 
-const form = ref({
-  name: '',
-  base_fee: '',
-  weight_fee: '',
-  estimated_days: '',
-  status: 'active'
-});
-
-const calculateForm = ref({
-  province: '',
-  district: '',
-  weight: ''
-});
-
-const shippingResult = ref(null);
-
-const loadShippingZones = async () => {
+const fetchShippingZones = async () => {
+  loading.value = true
   try {
-    const response = await fetch('/api/shipping-zones');
-    const data = await response.json();
-    shippingZones.value = data.data.data || [];
-  } catch (error) {
-    console.error('Error loading shipping zones:', error);
+    const params = { ...filters.value, page: pagination.value.currentPage, per_page: pagination.value.itemsPerPage }
+    const res = await api.get(endpoints.shipping.list, { params })
+    shippingZones.value = res.data.data || []
+    pagination.value.totalItems = res.data.meta?.total || 0
+    pagination.value.totalPages = res.data.meta?.last_page || 1
+    pagination.value.currentPage = res.data.meta?.current_page || 1
+  } catch (e) {
+    shippingZones.value = []
+    pagination.value.totalItems = 0
+    pagination.value.totalPages = 1
+    pagination.value.currentPage = 1
+  } finally {
+    loading.value = false
   }
-};
+}
 
-const editZone = (zone) => {
-  editingZone.value = zone;
-  form.value = { ...zone };
-  showEditModal.value = true;
-};
+const { onPageChange, onUpdateFilters } = useSyncQueryPagination(filters, pagination, fetchShippingZones, ['search'])
 
-const calculateShipping = (zone) => {
-  editingZone.value = zone;
-  showCalculateModal.value = true;
-};
+const clearFilters = () => {
+  filters.value = { search: '' }
+  fetchShippingZones()
+}
 
-const calculateShippingFee = () => {
-  if (calculateForm.value.weight && editingZone.value) {
-    const weight = parseFloat(calculateForm.value.weight);
-    const shippingFee = editingZone.value.base_fee + (weight * editingZone.value.weight_fee);
-    
-    shippingResult.value = {
-      shipping_fee: shippingFee,
-      estimated_days: editingZone.value.estimated_days
-    };
-  }
-};
-
-const saveZone = async () => {
-  try {
-    const url = showEditModal.value 
-      ? `/api/shipping-zones/${editingZone.value.id}` 
-      : '/api/shipping-zones';
-    
-    const method = showEditModal.value ? 'PUT' : 'POST';
-    
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.value)
-    });
-    
-    if (response.ok) {
-      closeModal();
-      loadShippingZones();
-    }
-  } catch (error) {
-    console.error('Error saving shipping zone:', error);
-  }
-};
-
-const deleteZone = async (id) => {
-  if (confirm('Bạn có chắc chắn muốn xóa khu vực vận chuyển này?')) {
-    try {
-      const response = await fetch(`/api/shipping-zones/${id}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-        loadShippingZones();
-      }
-    } catch (error) {
-      console.error('Error deleting shipping zone:', error);
-    }
-  }
-};
-
+const openAddModal = () => {
+  showAddModal.value = true
+}
 const closeModal = () => {
-  showAddModal.value = false;
-  showEditModal.value = false;
-  showCalculateModal.value = false;
-  editingZone.value = null;
-  form.value = {
-    name: '',
-    base_fee: '',
-    weight_fee: '',
-    estimated_days: '',
-    status: 'active'
-  };
-  calculateForm.value = {
-    province: '',
-    district: '',
-    weight: ''
-  };
-  shippingResult.value = null;
-};
+  showAddModal.value = false
+  showEditModal.value = false
+  editingShippingZone.value = null
+}
+const editShippingZone = (zone) => {
+  editingShippingZone.value = zone
+  showEditModal.value = true
+}
+const deleteShippingZone = async (zone) => {
+  if (confirm(`Bạn có chắc chắn muốn xóa khu vực "${zone.name}"?`)) {
+    try {
+      await api.delete(endpoints.shipping.delete(zone.id))
+      fetchShippingZones()
+    } catch (e) {}
+  }
+}
+const deleteSelected = async () => {
+  if (!selected.length) return
+  if (confirm('Bạn có chắc chắn muốn xóa các khu vực đã chọn?')) {
+    try {
+      await Promise.all(selected.map(id => api.delete(endpoints.shipping.delete(id))))
+      fetchShippingZones()
+    } catch (e) {}
+  }
+}
+onMounted(fetchShippingZones)
 
-const formatPrice = (price) => {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND'
-  }).format(price);
-};
+function formatPrice(val) {
+  if (val == null) return ''
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
+}
 </script>
 
 <style scoped>

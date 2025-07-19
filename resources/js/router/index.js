@@ -99,7 +99,27 @@ const routes = [
         path: 'settings',
         name: 'AdminSettings',
         component: AdminSettings
-      }
+      },
+      {
+        path: 'categories',
+        name: 'AdminCategories',
+        component: () => import('../views/admin/Categories/index.vue')
+      },
+      {
+        path: 'brands',
+        name: 'AdminBrands',
+        component: () => import('../views/admin/Brands/index.vue')
+      },
+      {
+        path: 'attributes',
+        name: 'AdminAttributes',
+        component: () => import('../views/admin/Attributes/index.vue')
+      },
+      {
+        path: 'attribute-values',
+        name: 'AdminAttributeValues',
+        component: () => import('../views/admin/AttributeValues/index.vue')
+      },
     ]
   },
 

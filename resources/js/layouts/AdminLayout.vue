@@ -85,6 +85,26 @@ const menuItems = [
     icon: 'ProductIcon'
   },
   {
+    name: 'Danh mục',
+    path: '/admin/categories',
+    icon: 'CategoryIcon'
+  },
+  {
+    name: 'Thương hiệu',
+    path: '/admin/brands',
+    icon: 'BrandIcon'
+  },
+  {
+    name: 'Thuộc tính',
+    path: '/admin/attributes',
+    icon: 'AttributeIcon'
+  },
+  {
+    name: 'Giá trị thuộc tính',
+    path: '/admin/attribute-values',
+    icon: 'AttributeValueIcon'
+  },
+  {
     name: 'Đơn hàng',
     path: '/admin/orders',
     icon: 'OrderIcon'
@@ -188,6 +208,11 @@ const SettingIcon = {
 const KeyIcon = {
   template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 11-4 0 2 2 0 014 0zM15 7v10a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2z"/></svg>`
 };
+
+const CategoryIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8"/></svg>` };
+const BrandIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8v8H8z"/></svg>` };
+const AttributeIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8M8 12h8M8 16h8"/></svg>` };
+const AttributeValueIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/></svg>` };
 
 const logout = () => {
   localStorage.removeItem('isAuthenticated');

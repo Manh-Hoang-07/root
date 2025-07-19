@@ -7,14 +7,14 @@
     <template #actions>
       <button
         @click="openAddModal"
-        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg flex items-center space-x-2"
+        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 rounded font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow flex items-center space-x-1.5 text-sm"
       >
         <span>Thêm quyền</span>
       </button>
       <button
         @click="deleteSelected"
         :disabled="!selected.length"
-        class="ml-2 px-4 py-2 rounded-lg bg-red-500 text-white font-medium disabled:opacity-50"
+        class="ml-1 px-3 py-1.5 rounded bg-red-500 text-white font-medium disabled:opacity-50 text-sm"
       >
         Xóa đã chọn
       </button>

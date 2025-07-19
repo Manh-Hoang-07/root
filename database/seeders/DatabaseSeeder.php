@@ -11,12 +11,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            WarehouseSeeder::class,
-            ShippingZoneSeeder::class,
-            ProductSeeder::class,
-            OrderSeeder::class,
-        ]);
+        // $this->call([
+        //     WarehouseSeeder::class,
+        //     ShippingZoneSeeder::class,
+        //     ProductSeeder::class,
+        //     OrderSeeder::class,
+        // ]);
 
         // Seeder cho 100 role, 100 permission, 100 user
         \App\Models\Permission::factory()->count(100)->create([
