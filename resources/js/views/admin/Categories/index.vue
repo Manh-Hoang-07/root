@@ -37,12 +37,15 @@
         <td colspan="10" class="text-center py-6 text-gray-400">Không có dữ liệu</td>
       </tr>
       <tr v-for="cat in categories" :key="cat.id" class="hover:bg-gray-50">
+        <td class="w-6 px-1 py-1 text-center align-middle">
+          <input type="checkbox" :checked="selected.includes(cat.id)" @change="toggleSelect(cat.id)" class="accent-indigo-500 w-5 h-5 rounded border-gray-300 focus:ring-indigo-500" />
+        </td>
         <td class="px-4 py-3 whitespace-nowrap">{{ cat.id }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ cat.name }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ cat.parent_name }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ cat.description }}</td>
         <td class="px-4 py-3 whitespace-nowrap">
-          <img v-if="cat.image" :src="cat.image.startsWith('http') ? cat.image : '/storage/' + cat.image" alt="ảnh" class="w-10 h-10 rounded object-contain bg-gray-50 border" />
+          <img v-if="cat.image" :src="getImageUrl(cat.image)" alt="ảnh" class="w-10 h-10 rounded object-contain bg-gray-50 border" />
         </td>
         <td class="px-4 py-3 whitespace-nowrap">
           <span :class="cat.status === 'active' ? 'bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs' : 'bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs'">
@@ -94,6 +97,13 @@ import useTableSelection from '@/composables/useTableSelection'
 import usePagination from '@/composables/usePagination'
 import useSyncQueryPagination from '@/composables/useSyncQueryPagination'
 import { formatDate } from '@/utils/formatDate'
+
+function getImageUrl(url) {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  if (url.startsWith('/storage/')) return url
+  return '/storage/' + url.replace(/^\/+/,'')
+}
 
 const categories = ref([])
 const filters = ref({ search: '' })

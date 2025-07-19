@@ -14,23 +14,30 @@
         style="transform: translate(40%, -40%);"
         title="Xóa ảnh"
       >
-        <!-- Icon X -->
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
     </div>
+    <div v-else class="w-20 h-20 flex items-center justify-center bg-gray-100 rounded-full border text-gray-400">
+      <span>No Image</span>
+    </div>
     <input type="file" @change="onFileChange" accept="image/*" />
+    <div v-if="uploading" class="text-xs text-gray-500 mt-1">Đang upload ảnh...</div>
+    <div v-if="error" class="text-xs text-red-500 mt-1">{{ error }}</div>
   </div>
 </template>
 <script setup>
 import { ref, watch } from 'vue'
+import api from '@/api/apiClient'
 const props = defineProps({
   modelValue: File || String || null,
   defaultUrl: String || null
 })
 const emit = defineEmits(['update:modelValue', 'remove'])
 const previewUrl = ref(null)
+const uploading = ref(false)
+const error = ref('')
 
 watch(() => props.modelValue, (val) => {
   if (val instanceof File) {
@@ -48,11 +55,29 @@ function getImageUrl(url) {
   return `/storage/${url.replace(/^\\|^\//, '')}`
 }
 
-function onFileChange(e) {
+async function onFileChange(e) {
   const file = e.target.files[0]
   if (file) {
-    emit('update:modelValue', file)
-    previewUrl.value = URL.createObjectURL(file)
+    uploading.value = true
+    error.value = ''
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await api.post('/api/upload-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      const url = res.data.url || res.data.path || res.data.image
+      if (url) {
+        emit('update:modelValue', url)
+        previewUrl.value = getImageUrl(url)
+      } else {
+        error.value = 'Upload thất bại!'
+      }
+    } catch (err) {
+      error.value = 'Upload thất bại!'
+    } finally {
+      uploading.value = false
+    }
   }
 }
 function removeImage() {
@@ -61,6 +86,7 @@ function removeImage() {
   previewUrl.value = null
 }
 function onImgError(e) {
-  e.target.src = 'https://via.placeholder.com/80?text=No+Image'
+  e.target.onerror = null; // Ngăn vòng lặp lỗi
+  previewUrl.value = null; // Không set src về placeholder nữa
 }
 </script> 

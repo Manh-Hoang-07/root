@@ -35,6 +35,9 @@
         <td colspan="10" class="text-center py-6 text-gray-400">Không có dữ liệu</td>
       </tr>
       <tr v-for="brand in brands" :key="brand.id" class="hover:bg-gray-50">
+        <td class="w-6 px-1 py-1 text-center align-middle">
+          <input type="checkbox" :checked="selected.includes(brand.id)" @change="toggleSelect(brand.id)" class="accent-indigo-500 w-5 h-5 rounded border-gray-300 focus:ring-indigo-500" />
+        </td>
         <td class="px-4 py-3 whitespace-nowrap">{{ brand.name }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ brand.description }}</td>
         <td class="px-4 py-3 whitespace-nowrap">
@@ -43,7 +46,7 @@
           </span>
         </td>
         <td class="px-4 py-3 whitespace-nowrap">
-          <img v-if="brand.logo" :src="brand.logo.startsWith('http') ? brand.logo : '/storage/' + brand.logo" alt="logo" class="w-10 h-10 rounded object-contain bg-gray-50 border" />
+          <img v-if="brand.image" :src="getImageUrl(brand.image)" alt="logo" class="w-10 h-10 rounded object-contain bg-gray-50 border" />
         </td>
         <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(brand.created_at) }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(brand.updated_at) }}</td>
@@ -104,6 +107,13 @@ const pagination = ref({
   itemsPerPage: 10
 })
 const { selected, isAllSelected, toggleSelectAll, toggleSelect } = useTableSelection(brands)
+
+function getImageUrl(url) {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  if (url.startsWith('/storage/')) return url
+  return '/storage/' + url.replace(/^\/+/,'')
+}
 
 const fetchBrands = async () => {
   loading.value = true

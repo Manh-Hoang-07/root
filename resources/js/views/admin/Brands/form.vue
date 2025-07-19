@@ -17,7 +17,7 @@
     </div>
     <div>
       <label class="block text-sm font-medium mb-1">Logo</label>
-      <ImageUploader v-model="form.logo" :default-url="logoDefaultUrl" @remove="form.remove_logo = true" />
+      <ImageUploader v-model="form.image" :default-url="imageDefaultUrl" @remove="form.remove_image = true" />
     </div>
   </FormLayout>
 </template>
@@ -30,22 +30,25 @@ const props = defineProps({
   mode: String
 })
 const emit = defineEmits(['submit', 'cancel'])
-const form = ref({ name: '', description: '', status: 'active', logo: null, remove_logo: false })
-const logoDefaultUrl = ref(null)
+const form = ref({ name: '', description: '', status: 'active', image: null, remove_image: false })
+const imageDefaultUrl = ref(null)
 watch(() => props.brand, (val) => {
   if (val) {
-    form.value = { name: val.name || '', description: val.description || '', status: val.status || 'active', logo: null, remove_logo: false }
-    if (val.logo) logoDefaultUrl.value = val.logo.startsWith('http') ? val.logo : `/storage/${val.logo}`
-    else logoDefaultUrl.value = null
+    form.value = { name: val.name || '', description: val.description || '', status: val.status || 'active', image: null, remove_image: false }
+    imageDefaultUrl.value = val.image
+      ? (val.image.startsWith('http') || val.image.startsWith('/storage/') ? val.image : `/storage/${val.image}`)
+      : null
+    console.log('Edit brand:', val)
+    console.log('imageDefaultUrl:', imageDefaultUrl.value)
   } else {
-    form.value = { name: '', description: '', status: 'active', logo: null, remove_logo: false }
-    logoDefaultUrl.value = null
+    form.value = { name: '', description: '', status: 'active', image: null, remove_image: false }
+    imageDefaultUrl.value = null
   }
 }, { immediate: true })
 function onSubmit() {
   const formData = new FormData()
   Object.entries(form.value).forEach(([key, value]) => {
-    if (key === 'logo' && !value) return
+    if (key === 'image' && !value) return
     if (value !== null && value !== undefined && value !== '') {
       formData.append(key, value)
     }

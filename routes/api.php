@@ -108,6 +108,8 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('promotions', \App\Http\Controllers\Api\Admin\PromotionController::class);
     Route::apiResource('shipping-promotions', \App\Http\Controllers\Api\Admin\ShippingPromotionController::class);
     Route::apiResource('shipping-infos', \App\Http\Controllers\Api\Admin\ShippingInfoController::class);
+    Route::apiResource('categories', \App\Http\Controllers\Api\Admin\CategoryController::class); // Thêm dòng này
+    Route::apiResource('brands', \App\Http\Controllers\Api\Admin\BrandController::class); // Thêm dòng này
     Route::patch('users/toggle-status/{id}', [AdminUserController::class, 'toggleStatus']);
     Route::get('users/statuses', [AdminUserController::class, 'statuses']);
     Route::post('users/{id}/change-password', [AdminUserController::class, 'changePassword']);
@@ -136,3 +138,4 @@ Route::prefix('user')->group(function () {
 }); 
 
 Route::get('/enums/{type}', [EnumController::class, 'get']); 
+Route::post('/upload-image', [\App\Http\Controllers\Api\ImageController::class, 'upload']); 

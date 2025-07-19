@@ -10,7 +10,10 @@
     </div>
     <div>
       <label class="block text-sm font-medium mb-1">Danh mục cha</label>
-      <input v-model="form.parent_name" type="text" class="w-full px-4 py-2 border rounded-xl" />
+      <select v-model="form.parent_id" class="w-full px-4 py-2 border rounded-xl">
+        <option :value="null">-- Không có --</option>
+        <option v-for="opt in parentOptions" :key="opt.value" :value="opt.value">{{ opt.name }}</option>
+      </select>
     </div>
     <div>
       <label class="block text-sm font-medium mb-1">Trạng thái</label>
@@ -20,34 +23,43 @@
       </select>
     </div>
     <div>
-      <label class="block text-sm font-medium mb-1">Ảnh (URL)</label>
-      <input v-model="form.image" type="text" class="w-full px-4 py-2 border rounded-xl" />
+      <label class="block text-sm font-medium mb-1">Ảnh</label>
+      <ImageUploader v-model="form.image" />
     </div>
   </FormLayout>
 </template>
 <script setup>
 import { ref, watch } from 'vue'
 import FormLayout from '@/components/FormLayout.vue'
+import useApiOptions from '@/composables/useApiOptions'
+import ImageUploader from '@/components/ImageUploader.vue'
 const props = defineProps({
   category: Object,
   mode: String
 })
 const emit = defineEmits(['submit', 'cancel'])
-const form = ref({ name: '', description: '', parent_name: '', status: 'active', image: '' })
+const form = ref({ name: '', description: '', parent_id: null, status: 'active', image: '' })
+const imageDefaultUrl = ref(null)
+const { options: parentOptions } = useApiOptions('/api/admin/categories')
 watch(() => props.category, (val) => {
   if (val) {
-    form.value = { name: val.name || '', description: val.description || '', parent_name: val.parent_name || '', status: val.status || 'active', image: val.image || '' }
+    form.value = { name: val.name || '', description: val.description || '', parent_id: val.parent_id || null, status: val.status || 'active', image: null }
+    imageDefaultUrl.value = val.image ? (val.image.startsWith('http') ? val.image : `/storage/${val.image}`) : null
   } else {
-    form.value = { name: '', description: '', parent_name: '', status: 'active', image: '' }
+    form.value = { name: '', description: '', parent_id: null, status: 'active', image: null }
+    imageDefaultUrl.value = null
   }
 }, { immediate: true })
 function onSubmit() {
-  const formData = new FormData()
-  Object.entries(form.value).forEach(([key, value]) => {
-    if (value !== null && value !== undefined && value !== '') {
-      formData.append(key, value)
-    }
-  })
-  emit('submit', formData)
+  console.log('Form submit:', form.value)
+  if (typeof form.value.image === 'string') {
+    emit('submit', { ...form.value })
+  } else {
+    const formData = new FormData()
+    Object.entries(form.value).forEach(([key, value]) => {
+      formData.append(key, value ?? '')
+    })
+    emit('submit', formData)
+  }
 }
 </script> 

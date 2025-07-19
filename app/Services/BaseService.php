@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Http\UploadedFile;
+
 abstract class BaseService
 {
     protected $repo;
@@ -23,16 +25,28 @@ abstract class BaseService
 
     public function create($data)
     {
+        $data = $this->handleImageUpload($data);
         return $this->repo->create($data);
     }
 
     public function update($id, $data)
     {
+        $data = $this->handleImageUpload($data);
         return $this->repo->update($id, $data);
     }
 
     public function delete($id)
     {
+        $item = $this->find($id);
         return $this->repo->delete($id);
+    }
+
+    protected function handleImageUpload($data)
+    {
+        // Xử lý tự động cho trường image nếu là file upload
+        if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
+            $data['image'] = $data['image']->store('categories', 'public');
+        }
+        return $data;
     }
 } 
