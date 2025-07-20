@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Admin\Role;
 
 use App\Http\Controllers\BaseController;
 use App\Services\Role\RoleService;
-use App\Http\Resources\Admin\RoleResource;
+use App\Http\Resources\Admin\Role\RoleResource;
 
 class RoleController extends BaseController
 {

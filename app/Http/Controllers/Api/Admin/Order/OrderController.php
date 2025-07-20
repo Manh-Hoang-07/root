@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Admin\Order;
 
 use App\Http\Controllers\BaseController;
 use App\Services\Order\OrderService;
-use App\Http\Resources\Admin\OrderResource;
+use App\Http\Resources\Admin\Order\OrderResource;
 
 class OrderController extends BaseController
 {

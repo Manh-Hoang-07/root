@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Admin\Product;
 
 use App\Http\Controllers\BaseController;
 use App\Services\Product\ProductService;
-use App\Http\Resources\Admin\ProductResource;
+use App\Http\Resources\Admin\Product\ProductResource;
 
 class ProductController extends BaseController
 {

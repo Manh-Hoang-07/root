@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Admin\Shipping;
 
 use App\Http\Controllers\BaseController;
 use App\Services\Shipping\ShippingInfoService;
-use App\Http\Resources\ShippingInfoResource;
+use App\Http\Resources\Admin\Shipping\ShippingInfoResource;
 
 class ShippingInfoController extends BaseController
 {
