@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Admin;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class InventoryResource extends JsonResource
+class ImageResource extends JsonResource
 {
     public function toArray($request)
     {
@@ -12,9 +12,10 @@ class InventoryResource extends JsonResource
             'id' => $this->id,
             'product_id' => $this->product_id,
             'variant_id' => $this->variant_id,
-            'warehouse_id' => $this->warehouse_id,
-            'quantity' => $this->quantity,
-            'updated_at' => $this->updated_at,
+            'url' => $this->url,
+            'alt' => $this->alt,
+            'sort_order' => $this->sort_order,
+            'created_at' => $this->created_at,
         ];
     }
 } 

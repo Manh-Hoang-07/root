@@ -1,27 +1,25 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Admin;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ProductResource extends JsonResource
+class VariantResource extends JsonResource
 {
     public function toArray($request)
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'slug' => $this->slug,
-            'description' => $this->description,
-            'short_description' => $this->short_description,
+            'product_id' => $this->product_id,
+            'sku' => $this->sku,
+            'barcode' => $this->barcode,
             'price' => $this->price,
             'sale_price' => $this->sale_price,
+            'quantity' => $this->quantity,
             'image' => $this->image,
-            'brand_id' => $this->brand_id,
             'status' => $this->status,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            // Có thể bổ sung các trường khác nếu cần
         ];
     }
 } 
