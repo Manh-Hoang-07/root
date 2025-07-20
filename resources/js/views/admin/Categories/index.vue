@@ -174,7 +174,7 @@ const deleteSelected = async () => {
     } catch (e) {}
   }
 }
-onMounted(fetchCategories)
+// Bỏ onMounted vì useSyncQueryPagination đã xử lý
 </script>
 
 <style scoped>

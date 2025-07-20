@@ -170,5 +170,5 @@ const deleteSelected = async () => {
     } catch (e) {}
   }
 }
-onMounted(fetchBrands)
+// Bỏ onMounted vì useSyncQueryPagination đã xử lý
 </script> 

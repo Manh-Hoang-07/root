@@ -167,7 +167,7 @@ function formatCurrency(val) {
   if (val == null) return ''
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
 }
-onMounted(fetchProducts)
+// Bỏ onMounted vì useSyncQueryPagination đã xử lý
 </script>
 
 <style scoped>

@@ -167,7 +167,6 @@ const deleteSelected = async () => {
     } catch (e) {}
   }
 }
-onMounted(fetchWarehouses)
 </script>
 
 <style scoped>

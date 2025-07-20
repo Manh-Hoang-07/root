@@ -267,7 +267,7 @@ watch(() => pagination.value.currentPage, () => {
   fetchUsers()
 })
 
-onMounted(fetchUsers)
+// Bỏ onMounted vì useSyncQueryPagination đã xử lý
 </script>
 
 <style scoped>

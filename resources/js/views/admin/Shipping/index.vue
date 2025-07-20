@@ -159,7 +159,7 @@ const deleteSelected = async () => {
     } catch (e) {}
   }
 }
-onMounted(fetchShippingZones)
+// Bỏ onMounted vì useSyncQueryPagination đã xử lý
 
 function formatPrice(val) {
   if (val == null) return ''

@@ -177,7 +177,7 @@ watch(() => pagination.value.currentPage, () => {
   fetchPermissions()
 })
 
-onMounted(fetchPermissions)
+// Bỏ onMounted vì useSyncQueryPagination đã xử lý
 </script>
 
 <style>

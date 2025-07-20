@@ -166,7 +166,7 @@ const deleteSelected = async () => {
     } catch (e) {}
   }
 }
-onMounted(fetchPromotions)
+// Bỏ onMounted vì useSyncQueryPagination đã xử lý
 </script>
 
 <style scoped>
