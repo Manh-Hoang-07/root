@@ -90,6 +90,42 @@ const routes = [
         name: 'AdminShipping',
         component: AdminShipping
       },
+      // Shipping Configuration Routes
+      {
+        path: 'shipping/api',
+        name: 'AdminShippingApi',
+        component: () => import('../views/admin/Shipping/API/index.vue')
+      },
+      {
+        path: 'shipping/services',
+        name: 'AdminShippingServices',
+        component: () => import('../views/admin/Shipping/Services/index.vue')
+      },
+      {
+        path: 'shipping/zones',
+        name: 'AdminShippingZones',
+        component: () => import('../views/admin/Shipping/Zones/index.vue')
+      },
+      {
+        path: 'shipping/pricing',
+        name: 'AdminShippingPricing',
+        component: () => import('../views/admin/Shipping/Pricing/index.vue')
+      },
+      {
+        path: 'shipping/promotions',
+        name: 'AdminShippingPromotions',
+        component: () => import('../views/admin/Shipping/Promotions/index.vue')
+      },
+      {
+        path: 'shipping/delivery',
+        name: 'AdminShippingDelivery',
+        component: () => import('../views/admin/Shipping/Delivery/index.vue')
+      },
+      {
+        path: 'shipping/advanced',
+        name: 'AdminShippingAdvanced',
+        component: () => import('../views/admin/Shipping/Advanced/index.vue')
+      },
       {
         path: 'reports',
         name: 'AdminReports',

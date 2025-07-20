@@ -130,9 +130,45 @@ const menuItems = [
     icon: 'WarehouseIcon'
   },
   {
-    name: 'Vận chuyển',
-    path: '/admin/shipping',
-    icon: 'ShippingIcon'
+    name: 'Shipping Configuration',
+    icon: 'ShippingIcon',
+    children: [
+      {
+        name: 'API Integration',
+        path: '/admin/shipping/api',
+        icon: 'ApiIcon'
+      },
+      {
+        name: 'Service Management',
+        path: '/admin/shipping/services',
+        icon: 'ServiceIcon'
+      },
+      {
+        name: 'Zone Mapping',
+        path: '/admin/shipping/zones',
+        icon: 'ZoneIcon'
+      },
+      {
+        name: 'Pricing Rules',
+        path: '/admin/shipping/pricing',
+        icon: 'PricingIcon'
+      },
+      {
+        name: 'Shipping Promotions',
+        path: '/admin/shipping/promotions',
+        icon: 'PromotionIcon'
+      },
+      {
+        name: 'Delivery Settings',
+        path: '/admin/shipping/delivery',
+        icon: 'DeliveryIcon'
+      },
+      {
+        name: 'Advanced Settings',
+        path: '/admin/shipping/advanced',
+        icon: 'AdvancedIcon'
+      }
+    ]
   },
   {
     name: 'Báo cáo',
@@ -213,6 +249,15 @@ const CategoryIcon = { template: `<svg fill="none" stroke="currentColor" viewBox
 const BrandIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8v8H8z"/></svg>` };
 const AttributeIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h8M8 12h8M8 16h8"/></svg>` };
 const AttributeValueIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/></svg>` };
+
+// Shipping Configuration Icons
+const ApiIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>` };
+const ServiceIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>` };
+const ZoneIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"/></svg>` };
+const PricingIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>` };
+const PromotionIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>` };
+const DeliveryIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>` };
+const AdvancedIcon = { template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>` };
 
 const logout = () => {
   localStorage.removeItem('isAuthenticated');

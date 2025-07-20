@@ -141,3 +141,15 @@ Route::prefix('user')->group(function () {
 
 Route::get('/enums/{type}', [EnumController::class, 'get']); 
 Route::post('/upload-image', [\App\Http\Controllers\Api\ImageController::class, 'upload']); 
+
+Route::prefix('admin')->middleware(['auth:api', 'is_admin'])->group(function () {
+    Route::prefix('shipping')->group(function () {
+        Route::apiResource('api', App\Http\Controllers\Api\Admin\Shipping\ApiController::class);
+        Route::apiResource('services', App\Http\Controllers\Api\Admin\Shipping\ServiceController::class);
+        Route::apiResource('zones', App\Http\Controllers\Api\Admin\Shipping\ZoneController::class);
+        Route::apiResource('pricing', App\Http\Controllers\Api\Admin\Shipping\PricingController::class);
+        Route::apiResource('promotions', App\Http\Controllers\Api\Admin\Shipping\PromotionController::class);
+        Route::apiResource('delivery', App\Http\Controllers\Api\Admin\Shipping\DeliveryController::class);
+        Route::apiResource('advanced', App\Http\Controllers\Api\Admin\Shipping\AdvancedController::class);
+    });
+}); 
