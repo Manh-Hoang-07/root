@@ -20,6 +20,7 @@ return new class extends Migration
             $table->decimal('weight_fee', 12, 2)->nullable();
             $table->integer('estimated_days')->nullable();
             $table->string('status')->default('active');
+            $table->string('image')->nullable();
             $table->timestamps();
 
             $table->foreign('provider_id')->references('id')->on('shipping_api_configs')->onDelete('cascade');

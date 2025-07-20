@@ -1,97 +1,30 @@
 <template>
   <CustomSection title="API Integration" description="Cấu hình tích hợp với các đơn vị vận chuyển">
-    <button class="mb-4 px-4 py-2 bg-gray-600 text-white rounded-lg" @click="openEdit">Sửa cấu hình API</button>
     <!-- Provider Status Overview -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      <!-- GHTK Card -->
-      <div class="bg-white rounded-xl shadow-sm border p-6">
+      <div v-for="provider in providers" :key="provider.id" class="bg-white rounded-xl shadow-sm border p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">GHTK</h3>
-          <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-            Đang hoạt động
+          <h3 class="text-lg font-semibold text-gray-900">{{ provider.name }}</h3>
+          <span class="px-3 py-1 rounded-full text-xs font-medium"
+            :class="provider.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
+            {{ provider.status === 'active' ? 'Đang hoạt động' : 'Không hoạt động' }}
           </span>
         </div>
         <div class="space-y-2 text-sm text-gray-600">
           <div class="flex justify-between">
-            <span>API Status:</span>
-            <span class="text-green-600">✅ Connected</span>
+            <span>API Key:</span>
+            <span>{{ provider.api_key }}</span>
           </div>
           <div class="flex justify-between">
-            <span>Last Test:</span>
-            <span>2 phút trước</span>
-          </div>
-          <div class="flex justify-between">
-            <span>Services:</span>
-            <span>3 active</span>
+            <span>Môi trường:</span>
+            <span>{{ provider.env }}</span>
           </div>
         </div>
         <div class="mt-4 flex space-x-2">
-          <button class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition" @click="openTestModal('GHTK')">
+          <button class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition" @click="openTestModal(provider.name)">
             Test
           </button>
-          <button class="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 transition" @click="openConfigModal('GHTK')">
-            Cấu hình
-          </button>
-        </div>
-      </div>
-      <!-- GHN Card -->
-      <div class="bg-white rounded-xl shadow-sm border p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Giao Hàng Nhanh</h3>
-          <span class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
-            Cần cấu hình
-          </span>
-        </div>
-        <div class="space-y-2 text-sm text-gray-600">
-          <div class="flex justify-between">
-            <span>API Status:</span>
-            <span class="text-red-600">❌ Not Connected</span>
-          </div>
-          <div class="flex justify-between">
-            <span>Last Test:</span>
-            <span>Chưa test</span>
-          </div>
-          <div class="flex justify-between">
-            <span>Services:</span>
-            <span>0 active</span>
-          </div>
-        </div>
-        <div class="mt-4 flex space-x-2">
-          <button class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition" @click="openTestModal('GHN')">
-            Test
-          </button>
-          <button class="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 transition" @click="openConfigModal('GHN')">
-            Cấu hình
-          </button>
-        </div>
-      </div>
-      <!-- ViettelPost Card -->
-      <div class="bg-white rounded-xl shadow-sm border p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">ViettelPost</h3>
-          <span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-            Chưa kích hoạt
-          </span>
-        </div>
-        <div class="space-y-2 text-sm text-gray-600">
-          <div class="flex justify-between">
-            <span>API Status:</span>
-            <span class="text-gray-600">⚪ Disabled</span>
-          </div>
-          <div class="flex justify-between">
-            <span>Last Test:</span>
-            <span>Chưa test</span>
-          </div>
-          <div class="flex justify-between">
-            <span>Services:</span>
-            <span>0 active</span>
-          </div>
-        </div>
-        <div class="mt-4 flex space-x-2">
-          <button class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition" @click="openConfigModal('ViettelPost')">
-            Kích hoạt
-          </button>
-          <button class="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 transition" @click="openConfigModal('ViettelPost')">
+          <button class="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 transition" @click="openConfigModal(provider.name)">
             Cấu hình
           </button>
         </div>
@@ -142,39 +75,6 @@
           </div>
           <p class="text-sm font-medium text-gray-900">Custom</p>
           <p class="text-xs text-gray-500">Tùy chỉnh</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- API Logs -->
-    <div class="bg-white rounded-xl shadow-sm border p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">API Logs</h3>
-        <button class="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 transition">
-          Xem tất cả
-        </button>
-      </div>
-      <div class="space-y-3">
-        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-          <div class="flex items-center space-x-3">
-            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span class="text-sm text-gray-900">GHTK API test successful</span>
-          </div>
-          <span class="text-xs text-gray-500">2 phút trước</span>
-        </div>
-        <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-          <div class="flex items-center space-x-3">
-            <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
-            <span class="text-sm text-gray-900">GHN API key expired</span>
-          </div>
-          <span class="text-xs text-gray-500">1 giờ trước</span>
-        </div>
-        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-          <div class="flex items-center space-x-3">
-            <div class="w-2 h-2 bg-red-500 rounded-full"></div>
-            <span class="text-sm text-gray-900">ViettelPost connection failed</span>
-          </div>
-          <span class="text-xs text-gray-500">3 giờ trước</span>
         </div>
       </div>
     </div>
@@ -266,7 +166,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import api from '@/api/apiClient'
+import endpoints from '@/api/endpoints'
 import CustomSection from '@/components/CustomSection.vue'
 import Modal from '@/components/Modal.vue'
 import EditApiModal from './edit.vue'
@@ -283,28 +185,86 @@ const env = ref('production')
 const newProviderName = ref('')
 const newProviderApiKey = ref('')
 const newProviderSecretKey = ref('')
+const newProviderEnv = ref('production')
+const newProviderStatus = ref('active')
 const providerName = ref('')
 const status = ref('active')
+const providers = ref([])
+const loading = ref(false)
+const error = ref('')
+
+async function fetchProviders() {
+  loading.value = true
+  error.value = ''
+  try {
+    const res = await api.get(endpoints.shippingApi.list)
+    providers.value = res.data.data
+  } catch (e) {
+    error.value = 'Không lấy được danh sách provider!'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchProviders)
 
 function openConfigModal(provider) {
   configProvider.value = provider
+  // Tìm provider trong danh sách để fill form
+  const found = providers.value.find(p => p.name === provider)
+  if (found) {
+    providerName.value = found.name
+    apiKey.value = found.api_key
+    secretKey.value = found.secret_key
+    env.value = found.env
+    status.value = found.status
+  }
   showConfig.value = true
 }
 function openTestModal(provider) {
   testProvider.value = provider
   showTest.value = true
 }
-function submitConfig() {
-  // Xử lý lưu cấu hình API
-  showConfig.value = false
+async function submitConfig() {
+  // Nếu provider đã tồn tại thì update, chưa có thì tạo mới
+  const found = providers.value.find(p => p.name === providerName.value)
+  const data = {
+    name: providerName.value,
+    api_key: apiKey.value,
+    secret_key: secretKey.value,
+    env: env.value,
+    status: status.value
+  }
+  try {
+    if (found) {
+      await api.put(endpoints.shippingApi.update(found.id), data)
+    } else {
+      await api.post(endpoints.shippingApi.create, data)
+    }
+    await fetchProviders()
+    showConfig.value = false
+  } catch (e) {
+    error.value = 'Lưu cấu hình thất bại!'
+  }
 }
-function submitTest() {
-  // Xử lý test API
+async function submitAddProvider() {
+  try {
+    await api.post(endpoints.shippingApi.create, {
+      name: newProviderName.value,
+      api_key: newProviderApiKey.value,
+      secret_key: newProviderSecretKey.value,
+      env: newProviderEnv.value,
+      status: newProviderStatus.value
+    })
+    await fetchProviders()
+    showAddProvider.value = false
+  } catch (e) {
+    error.value = 'Thêm provider thất bại!'
+  }
+}
+async function submitTest() {
+  // Nếu backend có API test thì gọi ở đây, tạm thời chỉ đóng modal
   showTest.value = false
-}
-function submitAddProvider() {
-  // Xử lý thêm provider mới
-  showAddProvider.value = false
 }
 function openEdit() { showEdit.value = true }
 </script> 

@@ -111,7 +111,9 @@
   </CustomSection>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import api from '@/api/apiClient'
+import endpoints from '@/api/endpoints'
 import CustomSection from '@/components/CustomSection.vue'
 import Modal from '@/components/Modal.vue'
 import CreatePromotionModal from './create.vue'
@@ -126,11 +128,30 @@ const promotionValidUntil = ref('')
 const showToggle = ref(false)
 const togglePromotionName = ref('')
 const toggleEnable = ref(false)
+const promotions = ref([])
+const loading = ref(false)
+const error = ref('')
+
+async function fetchPromotions() {
+  loading.value = true
+  error.value = ''
+  try {
+    const res = await api.get(endpoints.shippingPromotions.list)
+    promotions.value = res.data.data
+  } catch (e) {
+    error.value = 'Không lấy được danh sách khuyến mãi!'
+  } finally {
+    loading.value = false
+  }
+}
+onMounted(fetchPromotions)
+
 function openEditPromotion(name) {
+  const found = promotions.value.find(p => p.name === name)
   editPromotionName.value = name
-  promotionName.value = name
-  promotionDiscount.value = ''
-  promotionValidUntil.value = ''
+  promotionName.value = found ? found.name : name
+  promotionDiscount.value = found ? found.discount : ''
+  promotionValidUntil.value = found ? found.valid_until : ''
   showAddPromotion.value = true
 }
 function openTogglePromotion(name, disable) {
@@ -143,18 +164,39 @@ function closePromotionModal() {
   showEditPromotion.value = false
   editPromotionName.value = ''
 }
-function submitPromotion() {
-  // Xử lý thêm/sửa khuyến mãi
-  closePromotionModal()
+async function submitPromotion() {
+  const found = promotions.value.find(p => p.name === promotionName.value)
+  const data = {
+    name: promotionName.value,
+    discount: promotionDiscount.value,
+    valid_until: promotionValidUntil.value,
+    status: 'active'
+  }
+  try {
+    if (found) {
+      await api.put(endpoints.shippingPromotions.update(found.id), data)
+    } else {
+      await api.post(endpoints.shippingPromotions.create, data)
+    }
+    await fetchPromotions()
+    closePromotionModal()
+  } catch (e) {
+    error.value = 'Lưu khuyến mãi thất bại!'
+  }
 }
-function submitTogglePromotion() {
-  // Xử lý bật/tắt khuyến mãi
-  showToggle.value = false
+async function submitTogglePromotion() {
+  const found = promotions.value.find(p => p.name === togglePromotionName.value)
+  if (!found) return
+  try {
+    await api.put(endpoints.shippingPromotions.update(found.id), { ...found, status: toggleEnable.value ? 'active' : 'inactive' })
+    await fetchPromotions()
+    showToggle.value = false
+  } catch (e) {
+    error.value = 'Cập nhật trạng thái thất bại!'
+  }
 }
-
 const showCreate = ref(false)
 const showEdit = ref(false)
-
 function openCreate() { showCreate.value = true }
 function openEdit() { showEdit.value = true }
 </script> 

@@ -200,15 +200,67 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import api from '@/api/apiClient'
+import endpoints from '@/api/endpoints'
 import CustomSection from '@/components/CustomSection.vue'
 import Modal from '@/components/Modal.vue'
+
 const showEditPricing = ref(false)
-const markupPercent = ref(10)
-const markupFixed = ref(5000)
-const markupMin = ref(15000)
-function submitPricing() {
-  // Xử lý lưu quy tắc
-  showEditPricing.value = false
+const serviceId = ref('')
+const zoneId = ref('')
+const minWeight = ref('')
+const maxWeight = ref('')
+const markupPercent = ref('')
+const markupFixed = ref('')
+const minFee = ref('')
+const status = ref('active')
+const pricingRules = ref([])
+const loading = ref(false)
+const error = ref('')
+const services = ref([])
+const zones = ref([])
+
+async function fetchPricing() {
+  loading.value = true
+  error.value = ''
+  try {
+    const res = await api.get(endpoints.shippingPricing.list)
+    pricingRules.value = res.data.data
+  } catch (e) {
+    error.value = 'Không lấy được danh sách quy tắc!'
+  } finally {
+    loading.value = false
+  }
+}
+async function fetchServicesZones() {
+  try {
+    const res1 = await api.get(endpoints.shippingServices.list)
+    services.value = res1.data.data
+    const res2 = await api.get(endpoints.shippingZones.list)
+    zones.value = res2.data.data
+  } catch {}
+}
+onMounted(() => { fetchPricing(); fetchServicesZones(); })
+
+function closeModal() { showEditPricing.value = false }
+async function handleSubmit() {
+  const data = {
+    service_id: serviceId.value,
+    zone_id: zoneId.value,
+    min_weight: minWeight.value,
+    max_weight: maxWeight.value,
+    markup_percent: markupPercent.value,
+    markup_fixed: markupFixed.value,
+    min_fee: minFee.value,
+    status: status.value
+  }
+  try {
+    await api.post(endpoints.shippingPricing.create, data)
+    await fetchPricing()
+    closeModal()
+  } catch (e) {
+    error.value = 'Lưu quy tắc thất bại!'
+  }
 }
 </script> 

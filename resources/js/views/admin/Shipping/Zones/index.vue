@@ -145,7 +145,9 @@
   </CustomSection>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import api from '@/api/apiClient'
+import endpoints from '@/api/endpoints'
 import CustomSection from '@/components/CustomSection.vue'
 import Modal from '@/components/Modal.vue'
 import CreateZoneModal from './create.vue'
@@ -164,13 +166,31 @@ const showDeleteZone = ref(false)
 const deleteZoneName = ref('')
 const showCreate = ref(false)
 const showEdit = ref(false)
+const zones = ref([])
+const loading = ref(false)
+const error = ref('')
+
+async function fetchZones() {
+  loading.value = true
+  error.value = ''
+  try {
+    const res = await api.get(endpoints.shippingZones.list)
+    zones.value = res.data.data
+  } catch (e) {
+    error.value = 'Không lấy được danh sách zone!'
+  } finally {
+    loading.value = false
+  }
+}
+onMounted(fetchZones)
 
 function openEditZone(name) {
+  const found = zones.value.find(z => z.name === name)
   editZoneName.value = name
-  zoneName.value = name
-  zoneProvinces.value = ''
-  zoneBaseFee.value = ''
-  zoneDeliveryTime.value = ''
+  zoneName.value = found ? found.name : name
+  zoneProvinces.value = found ? found.provinces : ''
+  zoneBaseFee.value = found ? found.base_fee : ''
+  zoneDeliveryTime.value = found ? found.delivery_time : ''
   showAddZone.value = true
 }
 function openViewZone(name) {
@@ -186,13 +206,37 @@ function closeZoneModal() {
   showEditZone.value = false
   editZoneName.value = ''
 }
-function submitZone() {
-  // Xử lý thêm/sửa zone
-  closeZoneModal()
+async function submitZone() {
+  const found = zones.value.find(z => z.name === zoneName.value)
+  const data = {
+    name: zoneName.value,
+    provinces: zoneProvinces.value,
+    base_fee: zoneBaseFee.value,
+    delivery_time: zoneDeliveryTime.value,
+    status: 'active'
+  }
+  try {
+    if (found) {
+      await api.put(endpoints.shippingZones.update(found.id), data)
+    } else {
+      await api.post(endpoints.shippingZones.create, data)
+    }
+    await fetchZones()
+    closeZoneModal()
+  } catch (e) {
+    error.value = 'Lưu zone thất bại!'
+  }
 }
-function submitDeleteZone() {
-  // Xử lý xóa zone
-  showDeleteZone.value = false
+async function submitDeleteZone() {
+  const found = zones.value.find(z => z.name === deleteZoneName.value)
+  if (!found) return
+  try {
+    await api.delete(endpoints.shippingZones.delete(found.id))
+    await fetchZones()
+    showDeleteZone.value = false
+  } catch (e) {
+    error.value = 'Xóa zone thất bại!'
+  }
 }
 function openCreate() { showCreate.value = true }
 function openEdit() { showEdit.value = true }

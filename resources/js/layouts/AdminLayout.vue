@@ -130,16 +130,16 @@ const menuItems = [
     icon: 'WarehouseIcon'
   },
   {
-    name: 'Shipping Configuration',
+    name: 'Vận chuyển',
     icon: 'ShippingIcon',
     children: [
       {
-        name: 'API Integration',
+        name: 'Tích hợp api',
         path: '/admin/shipping/api',
         icon: 'ApiIcon'
       },
       {
-        name: 'Service Management',
+        name: 'Dịch vụ vận chuyển',
         path: '/admin/shipping/services',
         icon: 'ServiceIcon'
       },
@@ -149,22 +149,22 @@ const menuItems = [
         icon: 'ZoneIcon'
       },
       {
-        name: 'Pricing Rules',
+        name: 'Quy tắc giá',
         path: '/admin/shipping/pricing',
         icon: 'PricingIcon'
       },
       {
-        name: 'Shipping Promotions',
+        name: 'Khuyến mãi',
         path: '/admin/shipping/promotions',
         icon: 'PromotionIcon'
       },
       {
-        name: 'Delivery Settings',
+        name: 'Giao hàng',
         path: '/admin/shipping/delivery',
         icon: 'DeliveryIcon'
       },
       {
-        name: 'Advanced Settings',
+        name: 'Nâng cao',
         path: '/admin/shipping/advanced',
         icon: 'AdvancedIcon'
       }

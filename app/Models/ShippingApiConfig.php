@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 class ShippingApiConfig extends Model
 {
     protected $table = 'shipping_api_configs';
-    protected $fillable = ['provider', 'api_key', 'secret_key', 'env'];
+    protected $fillable = ['name', 'api_key', 'secret_key', 'env', 'status'];
 } 

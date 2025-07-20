@@ -23,6 +23,7 @@ class ShippingServiceResource extends JsonResource
             'weight_fee' => $this->weight_fee,
             'estimated_days' => $this->estimated_days,
             'status' => $this->status,
+            'image' => $this->image,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

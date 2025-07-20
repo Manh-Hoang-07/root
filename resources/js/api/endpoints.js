@@ -32,6 +32,16 @@ const endpoints = {
   attributeValues: createResourceEndpoints('attribute-values'), // Thêm dòng này
   enums: type => `/api/enums/${type}`,
   // Thêm resource khác nếu cần
+  // Thêm resource shipping
+  shippingApi: createResourceEndpoints('shipping/api'),
+  shippingServices: createResourceEndpoints('shipping/services', {
+    changeStatus: id => `/api/admin/shipping/services/${id}/toggle-status`
+  }),
+  shippingZones: createResourceEndpoints('shipping/zones'),
+  shippingPricing: createResourceEndpoints('shipping/pricing'),
+  shippingPromotions: createResourceEndpoints('shipping/promotions'),
+  shippingDelivery: createResourceEndpoints('shipping/delivery'),
+  shippingAdvanced: createResourceEndpoints('shipping/advanced'),
 };
 
 export default endpoints; 
