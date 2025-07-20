@@ -2,10 +2,10 @@
 namespace App\Http\Controllers\Api\Admin\Shipping;
 
 use App\Http\Controllers\BaseController;
-use App\Services\ShippingAdvancedSettingService;
-use App\Http\Resources\Admin\Shipping\ShippingAdvancedSettingResource;
+use App\Services\Shipping\ShippingAdvancedSettingService;
+use App\Http\Resources\ShippingAdvancedSettingResource;
 
-class AdvancedController extends BaseController
+class ShippingAdvancedSettingController extends BaseController
 {
     public function __construct(ShippingAdvancedSettingService $service)
     {

@@ -2,10 +2,10 @@
 namespace App\Http\Controllers\Api\Admin\Shipping;
 
 use App\Http\Controllers\BaseController;
-use App\Services\ShippingDeliverySettingService;
-use App\Http\Resources\Admin\Shipping\ShippingDeliverySettingResource;
+use App\Services\Shipping\ShippingDeliverySettingService;
+use App\Http\Resources\ShippingDeliverySettingResource;
 
-class DeliveryController extends BaseController
+class ShippingDeliverySettingController extends BaseController
 {
     public function __construct(ShippingDeliverySettingService $service)
     {

@@ -2,10 +2,10 @@
 namespace App\Http\Controllers\Api\Admin\Shipping;
 
 use App\Http\Controllers\BaseController;
-use App\Services\ShippingPricingRuleService;
-use App\Http\Resources\Admin\Shipping\ShippingPricingRuleResource;
+use App\Services\Shipping\ShippingPricingRuleService;
+use App\Http\Resources\ShippingPricingRuleResource;
 
-class PricingController extends BaseController
+class ShippingPricingRuleController extends BaseController
 {
     public function __construct(ShippingPricingRuleService $service)
     {
