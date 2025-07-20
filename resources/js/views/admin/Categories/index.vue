@@ -121,6 +121,7 @@ const { selected, isAllSelected, toggleSelectAll, toggleSelect } = useTableSelec
 
 const fetchCategories = async () => {
   loading.value = true
+  const start = performance.now()
   try {
     const params = { ...filters.value, page: pagination.value.currentPage, per_page: pagination.value.itemsPerPage }
     const res = await api.get(endpoints.categories.list, { params })
@@ -135,6 +136,7 @@ const fetchCategories = async () => {
     pagination.value.currentPage = 1
   } finally {
     loading.value = false
+    console.log('Fetch categories time:', (performance.now() - start).toFixed(2), 'ms')
   }
 }
 

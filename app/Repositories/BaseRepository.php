@@ -6,10 +6,12 @@ abstract class BaseRepository
 {
     protected $model;
 
-    public function __construct($model)
+    public function __construct()
     {
-        $this->model = $model;
+        $this->model = app($this->model());
     }
+
+    abstract public function model();
 
     public function all($filters = [], $perPage = 20, $relations = [], $fields = ['*'])
     {
