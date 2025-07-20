@@ -39,7 +39,7 @@ class ProductController extends BaseController
         return new ProductResource($product);
     }
 
-    public function show($id)
+    public function show($id, Request $request = null)
     {
         $product = $this->service->find($id);
         return new ProductResource($product);

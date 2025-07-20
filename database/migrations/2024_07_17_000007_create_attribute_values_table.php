@@ -12,7 +12,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('attribute_id');
             $table->string('value');
-            $table->string('display_value')->nullable();
+            $table->string('name')->nullable();
             $table->integer('sort_order');
             $table->text('description')->nullable();
             $table->string('status')->default('active');

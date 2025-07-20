@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\AttributeValue;
+use Illuminate\Support\Facades\Log;
 
 class AttributeValueRepository extends BaseRepository
 {
@@ -16,5 +17,22 @@ class AttributeValueRepository extends BaseRepository
         $relations = array_unique(array_merge($relations, ['attribute']));
         return parent::all($filters, $perPage, $relations, $fields);
     }
-    // Có thể bổ sung các hàm filter, search... nếu cần
+
+    public function update($id, array $data)
+    {
+        Log::info('AttributeValueRepository::update', [
+            'id' => $id,
+            'data' => $data
+        ]);
+        
+        $item = $this->find($id);
+        $result = $item->update($data);
+        
+        Log::info('AttributeValueRepository::update result', [
+            'result' => $result,
+            'updated_item' => $item->fresh()->toArray()
+        ]);
+        
+        return $item;
+    }
 } 

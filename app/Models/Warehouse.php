@@ -14,6 +14,7 @@ class Warehouse extends Model
         'address',
         'city',
         'province',
+        'manager_id',
         'phone',
         'email',
         'status',

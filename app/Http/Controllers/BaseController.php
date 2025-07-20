@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 abstract class BaseController extends Controller
 {
@@ -33,13 +34,30 @@ abstract class BaseController extends Controller
 
     public function store(Request $request)
     {
-        $item = $this->service->create($request->all());
+        $data = $this->parseRequestData($request);
+        $item = $this->service->create($data);
         return new $this->resource($item);
     }
 
     public function update(Request $request, $id)
     {
-        $item = $this->service->update($id, $request->all());
+        Log::info('BaseController::update', [
+            'id' => $id,
+            'request_data' => $request->all(),
+            'request_method' => $request->method(),
+            'content_type' => $request->header('Content-Type'),
+            'form_data' => $request->input(),
+            'files' => $request->allFiles()
+        ]);
+        
+        $data = $this->parseRequestData($request);
+        
+        $item = $this->service->update($id, $data);
+        
+        Log::info('BaseController::update result', [
+            'updated_item' => $item->toArray()
+        ]);
+        
         return new $this->resource($item);
     }
 
@@ -65,5 +83,26 @@ abstract class BaseController extends Controller
             return array_filter(array_map('trim', explode(',', $fields)));
         }
         return ['*'];
+    }
+
+    /**
+     * Parse request data to handle both FormData and JSON
+     */
+    protected function parseRequestData(Request $request)
+    {
+        $data = $request->all();
+        
+        // Nếu data rỗng và là FormData, thử parse lại
+        if (empty($data) && $request->header('Content-Type') && str_contains($request->header('Content-Type'), 'multipart/form-data')) {
+            $data = $request->input();
+            Log::info('BaseController::parseRequestData - parsed FormData', ['data' => $data]);
+        }
+        
+        // Loại bỏ các trường rỗng
+        $data = array_filter($data, function($value) {
+            return $value !== null && $value !== '' && $value !== [];
+        });
+        
+        return $data;
     }
 } 

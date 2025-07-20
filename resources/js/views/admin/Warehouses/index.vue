@@ -35,9 +35,12 @@
     <!-- Table body -->
     <template #tbody>
       <tr v-if="warehouses.length === 0">
-        <td colspan="10" class="text-center py-6 text-gray-400">Không có dữ liệu</td>
+        <td colspan="11" class="text-center py-6 text-gray-400">Không có dữ liệu</td>
       </tr>
       <tr v-for="warehouse in warehouses" :key="warehouse.id" class="hover:bg-gray-50">
+        <td class="w-6 px-1 py-1 text-center align-middle">
+          <input type="checkbox" :checked="selected.includes(warehouse.id)" @change="toggleSelect(warehouse.id)" class="accent-indigo-500 w-5 h-5 rounded border-gray-300 focus:ring-indigo-500" />
+        </td>
         <td class="px-4 py-3 whitespace-nowrap">{{ warehouse.name }}</td>
         <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">{{ warehouse.address }}</td>
         <td class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">{{ warehouse.city }}</td>

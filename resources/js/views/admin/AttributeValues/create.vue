@@ -18,9 +18,9 @@ const modalVisible = computed({
   get: () => props.show,
   set: (val) => { if (!val) props.onClose() }
 })
-async function handleSubmit(formData) {
+async function handleSubmit(data) {
   try {
-    await api.post(endpoints.attributeValues.create, formData)
+    await api.post(endpoints.attributeValues.create, data)
     emit('created')
     props.onClose()
   } catch (e) {

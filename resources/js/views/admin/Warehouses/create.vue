@@ -18,12 +18,19 @@ const modalVisible = computed({
   get: () => props.show,
   set: (val) => { if (!val) props.onClose() }
 })
-async function handleSubmit(formData) {
+async function handleSubmit(data) {
+  console.log('Warehouse create: handleSubmit called', {
+    endpoint: endpoints.warehouses.create,
+    data: data
+  })
+  
   try {
-    await api.post(endpoints.warehouses.create, formData)
+    const response = await api.post(endpoints.warehouses.create, data)
+    console.log('Warehouse create: Success', response)
     emit('created')
     props.onClose()
   } catch (e) {
+    console.error('Warehouse create: Error', e)
     // handle error
   }
 }

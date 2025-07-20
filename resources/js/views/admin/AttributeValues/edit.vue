@@ -19,12 +19,22 @@ const modalVisible = computed({
   get: () => props.show,
   set: (val) => { if (!val) props.onClose() }
 })
-async function handleSubmit(formData) {
+async function handleSubmit(data) {
+  console.log('Frontend: handleSubmit called', {
+    id: props.attributeValue.id,
+    endpoint: endpoints.attributeValues.update(props.attributeValue.id),
+    data: data
+  })
+  
   try {
-    await api.post(endpoints.attributeValues.update(props.attributeValue.id), formData)
+    const response = await api.put(endpoints.attributeValues.update(props.attributeValue.id), data)
+    console.log('Frontend: Update successful', response)
+    console.log('Frontend: Response data', response.data)
+    console.log('Frontend: Response data.data', response.data.data)
     emit('updated')
     props.onClose()
   } catch (e) {
+    console.error('Frontend: Update failed', e)
     // handle error
   }
 }

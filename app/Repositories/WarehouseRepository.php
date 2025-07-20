@@ -6,8 +6,8 @@ use App\Models\Warehouse;
 
 class WarehouseRepository extends BaseRepository
 {
-    public function model()
+    public function __construct(Warehouse $model)
     {
-        return Warehouse::class;
+        parent::__construct($model);
     }
 } 

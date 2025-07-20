@@ -43,7 +43,7 @@ class OrderController extends BaseController
         return \App\Http\Resources\OrderResource::collection($orders);
     }
 
-    public function show($id)
+    public function show($id, Request $request = null)
     {
         $order = $this->service->find($id);
         return new \App\Http\Resources\OrderResource($order);

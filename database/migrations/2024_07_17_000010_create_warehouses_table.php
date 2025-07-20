@@ -12,9 +12,12 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->string('address');
+            $table->string('city')->nullable();
+            $table->string('province')->nullable();
             $table->unsignedBigInteger('manager_id')->nullable();
             $table->string('phone')->nullable();
-            $table->enum('status', ['active', 'inactive']);
+            $table->string('email')->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });
     }

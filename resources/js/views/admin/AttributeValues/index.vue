@@ -42,7 +42,7 @@
         <td class="px-4 py-3 whitespace-nowrap">{{ val.id }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ val.attribute_name }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ val.value }}</td>
-        <td class="px-4 py-3 whitespace-nowrap">{{ val.display_value }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">{{ val.name }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ val.sort_order }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(val.created_at) }}</td>
         <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(val.updated_at) }}</td>

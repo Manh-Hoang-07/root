@@ -21,7 +21,7 @@ const modalVisible = computed({
 })
 async function handleSubmit(formData) {
   try {
-    await api.post(endpoints.shipping.update(props.shippingZone.id), formData)
+    await api.put(endpoints.shipping.update(props.shippingZone.id), formData)
     emit('updated')
     props.onClose()
   } catch (e) {
