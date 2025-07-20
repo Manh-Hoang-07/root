@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Admin\Brand;
 
 use App\Http\Controllers\BaseController;
 use App\Services\Brand\BrandService;
-use App\Http\Resources\BrandResource;
+use App\Http\Resources\Admin\BrandResource;
 
 class BrandController extends BaseController
 {

@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Admin\User;
 
 use App\Http\Controllers\BaseController;
 use App\Services\User\UserService;
-use App\Http\Resources\UserResource;
+use App\Http\Resources\Admin\UserResource;
 
 class UserController extends BaseController
 {

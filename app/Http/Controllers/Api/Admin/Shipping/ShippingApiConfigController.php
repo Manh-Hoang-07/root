@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Admin\Shipping;
 
 use App\Http\Controllers\BaseController;
 use App\Services\Shipping\ShippingApiConfigService;
-use App\Http\Resources\ShippingApiConfigResource;
+use App\Http\Resources\Admin\ShippingApiConfigResource;
 
 class ShippingApiConfigController extends BaseController
 {

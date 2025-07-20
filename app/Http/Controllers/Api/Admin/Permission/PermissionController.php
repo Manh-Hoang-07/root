@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Admin\Permission;
 
 use App\Http\Controllers\BaseController;
 use App\Services\Permission\PermissionService;
-use App\Http\Resources\PermissionResource;
+use App\Http\Resources\Admin\PermissionResource;
 
 class PermissionController extends BaseController
 {

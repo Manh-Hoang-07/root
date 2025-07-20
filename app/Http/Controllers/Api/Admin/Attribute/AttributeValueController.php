@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Admin\Attribute;
 
 use App\Http\Controllers\BaseController;
 use App\Services\Attribute\AttributeValueService;
-use App\Http\Resources\AttributeValueResource;
+use App\Http\Resources\Admin\AttributeValueResource;
 
 class AttributeValueController extends BaseController
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Resources\Admin;
+namespace App\Http\Resources\Admin\Attribut;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class PromotionResource extends JsonResource
+class AttributeResource extends JsonResource
 {
     public function toArray($request)
     {
@@ -12,12 +12,8 @@ class PromotionResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'type' => $this->type,
-            'discount_type' => $this->discount_type,
-            'discount_value' => $this->discount_value,
-            'min_order_value' => $this->min_order_value,
-            'start_at' => $this->start_at,
-            'end_at' => $this->end_at,
             'status' => $this->status,
+            'description' => $this->description,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

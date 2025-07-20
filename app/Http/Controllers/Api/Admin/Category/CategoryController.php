@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Api\Admin\Category;
 
 use App\Http\Controllers\BaseController;
 use App\Services\Category\CategoryService;
-use App\Http\Resources\CategoryResource;
+use App\Http\Resources\Admin\CategoryResource;
 
 class CategoryController extends BaseController
 {

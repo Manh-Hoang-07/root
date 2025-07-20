@@ -1,22 +1,23 @@
 <?php
 
-namespace App\Http\Resources\Admin;
+namespace App\Http\Resources\Admin\Warehouse;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class AttributeValueResource extends JsonResource
+class WarehouseResource extends JsonResource
 {
     public function toArray($request)
     {
         return [
             'id' => $this->id,
-            'attribute_id' => $this->attribute_id,
-            'attribute_name' => $this->attribute->name ?? null,
-            'value' => $this->value,
             'name' => $this->name,
-            'sort_order' => $this->sort_order,
+            'address' => $this->address,
+            'city' => $this->city,
+            'province' => $this->province,
+            'phone' => $this->phone,
+            'email' => $this->email,
+            'manager_id' => $this->manager_id,
             'status' => $this->status,
-            'description' => $this->description,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
