@@ -1,0 +1,14 @@
+<?php
+namespace App\Http\Controllers\Permission;
+
+use App\Http\Controllers\BaseController;
+use App\Services\Permission\PermissionService;
+use App\Http\Resources\PermissionResource;
+
+class PermissionController extends BaseController
+{
+    public function __construct(PermissionService $service)
+    {
+        parent::__construct($service, PermissionResource::class);
+    }
+} 

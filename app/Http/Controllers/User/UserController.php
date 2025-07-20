@@ -2,25 +2,23 @@
 
 namespace App\Http\Controllers\User;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseController;
 use App\Services\User\UserService;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 
-class UserController extends Controller
+class UserController extends BaseController
 {
-    protected $userService;
-
-    public function __construct(UserService $userService)
+    public function __construct(UserService $service)
     {
-        $this->userService = $userService;
+        parent::__construct($service, UserResource::class);
     }
 
     // Lấy thông tin cá nhân
     public function profile(Request $request)
     {
         $user = $request->user();
-        return new UserResource($this->userService->profile($user->id));
+        return new UserResource($this->service->profile($user->id));
     }
 
     // Cập nhật thông tin cá nhân
@@ -31,7 +29,7 @@ class UserController extends Controller
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,'.$user->id,
         ]);
-        $user = $this->userService->updateProfile($user->id, $data);
+        $user = $this->service->updateProfile($user->id, $data);
         return new UserResource($user);
     }
 
@@ -42,7 +40,7 @@ class UserController extends Controller
         $data = $request->validate([
             'password' => 'required|string|min:6|confirmed',
         ]);
-        $user = $this->userService->changePassword($user->id, $data['password']);
+        $user = $this->service->changePassword($user->id, $data['password']);
         return response()->json(['success' => true]);
     }
 }
