@@ -9,11 +9,23 @@ abstract class BaseController extends Controller
 {
     protected $service;
     protected $resource;
+    protected $storeRequestClass = Request::class;
+    protected $updateRequestClass = Request::class;
 
     public function __construct($service, $resource)
     {
         $this->service = $service;
         $this->resource = $resource;
+    }
+
+    protected function getStoreRequestClass()
+    {
+        return $this->storeRequestClass;
+    }
+
+    protected function getUpdateRequestClass()
+    {
+        return $this->updateRequestClass;
     }
 
     public function index(Request $request)
@@ -32,15 +44,17 @@ abstract class BaseController extends Controller
         return new $this->resource($item);
     }
 
-    public function store(Request $request)
+    public function store()
     {
+        $request = app($this->getStoreRequestClass());
         $data = $this->parseRequestData($request);
         $item = $this->service->create($data);
         return new $this->resource($item);
     }
 
-    public function update(Request $request, $id)
+    public function update($id)
     {
+        $request = app($this->getUpdateRequestClass());
         Log::info('BaseController::update', [
             'id' => $id,
             'request_data' => $request->all(),
@@ -90,19 +104,19 @@ abstract class BaseController extends Controller
      */
     protected function parseRequestData(Request $request)
     {
-        $data = $request->all();
-        
-        // Nếu data rỗng và là FormData, thử parse lại
+        if ($request instanceof \Illuminate\Foundation\Http\FormRequest) {
+            $data = $request->validated();
+        } else {
+            $data = $request->all();
+        }
+
         if (empty($data) && $request->header('Content-Type') && str_contains($request->header('Content-Type'), 'multipart/form-data')) {
             $data = $request->input();
             Log::info('BaseController::parseRequestData - parsed FormData', ['data' => $data]);
         }
         
-        // Loại bỏ các trường rỗng
-        $data = array_filter($data, function($value) {
+        return array_filter($data, function($value) {
             return $value !== null && $value !== '' && $value !== [];
         });
-        
-        return $data;
     }
 } 

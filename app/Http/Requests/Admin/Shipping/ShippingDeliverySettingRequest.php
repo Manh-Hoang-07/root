@@ -21,10 +21,23 @@ class ShippingDeliverySettingRequest extends FormRequest
      */
     public function rules(): array
     {
+        $settingId = $this->route('delivery') ? $this->route('delivery')->id : null;
+
         return [
-            'key' => 'required|string|max:255',
-            'value' => 'required|string|max:255',
-            'description' => 'nullable|string|max:255',
+            'key' => 'required|string|max:255|unique:shipping_delivery_settings,key,' . $settingId,
+            'value' => 'required|string',
+            'description' => 'nullable|string',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'key.required' => 'Key không được để trống.',
+            'key.max' => 'Key không được vượt quá :max ký tự.',
+            'key.unique' => 'Key đã tồn tại.',
+            'value.required' => 'Giá trị không được để trống.',
+            'description.string' => 'Mô tả phải là chuỗi.',
         ];
     }
 }
