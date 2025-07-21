@@ -25,7 +25,7 @@ async function handleSubmit(formData) {
     emit('created')
     props.onClose()
   } catch (e) {
-    // handle error
+    // handle error (nếu muốn show lỗi từ server thì có thể truyền xuống form qua props)
   }
 }
 </script> 

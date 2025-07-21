@@ -44,7 +44,6 @@ watch(() => props.initialData, () => {
 }, { immediate: true, deep: true })
 
 const handleSubmit = () => {
-  const data = prepareData(form.value, props.useFormData)
-  emit('submit', data)
+  emit('submit', form.value)
 }
 </script> 
