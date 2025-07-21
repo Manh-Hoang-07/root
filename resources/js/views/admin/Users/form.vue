@@ -107,6 +107,7 @@ import BaseForm from '@/components/BaseForm.vue'
 import ImageUploader from '@/components/ImageUploader.vue'
 import ErrorMessage from '@/components/ErrorMessage.vue'
 import useFormErrors from '@/composables/useFormErrors.js'
+import validateForm from '@/utils/validateForm.js'
 import { computed, ref } from 'vue'
 
 const props = defineProps({
@@ -147,17 +148,24 @@ const avatarDefaultUrl = computed(() => {
   return null
 })
 
-// Validate cơ bản
+const rules = {
+  username: [{ required: 'Tên đăng nhập là bắt buộc.' }],
+  email: [
+    { required: 'Email là bắt buộc.' },
+    { email: 'Email không hợp lệ.' }
+  ],
+  password: [
+    { required: 'Mật khẩu là bắt buộc.' },
+    { min: [6, 'Mật khẩu tối thiểu 6 ký tự.'] }
+  ],
+  password_confirmation: [
+    { required: 'Vui lòng xác nhận mật khẩu.' },
+    { match: ['password', 'Mật khẩu xác nhận không khớp.'] }
+  ]
+}
+
 function validate(form) {
-  const newErrors = {}
-  if (!form.username || !form.username.trim()) newErrors.username = 'Tên đăng nhập là bắt buộc.'
-  if (!form.email || !form.email.trim()) newErrors.email = 'Email là bắt buộc.'
-  else if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) newErrors.email = 'Email không hợp lệ.'
-  if (props.mode === 'create' && (!form.password || !form.password.trim())) newErrors.password = 'Mật khẩu là bắt buộc.'
-  if (form.password && form.password.length > 0 && form.password.length < 6) newErrors.password = 'Mật khẩu tối thiểu 6 ký tự.'
-  if (props.mode === 'create' && (!form.password_confirmation || !form.password_confirmation.trim())) newErrors.password_confirmation = 'Vui lòng xác nhận mật khẩu.'
-  if (props.mode === 'create' && form.password && form.password_confirmation && form.password !== form.password_confirmation) newErrors.password_confirmation = 'Mật khẩu xác nhận không khớp.'
-  return newErrors
+  return validateForm(form, rules)
 }
 
 // Custom submit handler
