@@ -30,6 +30,8 @@ const endpoints = {
   brands: createResourceEndpoints('brands'),
   attributes: createResourceEndpoints('attributes'),
   attributeValues: createResourceEndpoints('attribute-values'), // Thêm dòng này
+  permissions: createResourceEndpoints('permissions'),
+  roles: createResourceEndpoints('roles'),
   enums: type => `/api/enums/${type}`,
   // Thêm resource khác nếu cần
   // Thêm resource shipping

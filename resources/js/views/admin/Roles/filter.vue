@@ -6,7 +6,7 @@
       label="Tìm kiếm"
       type="text"
       v-model="filters.search"
-      placeholder="Tìm theo tên quyền"
+      placeholder="Tìm theo tên vai trò"
     />
     <!-- Lọc theo trạng thái -->
     <AdminFilterItem
