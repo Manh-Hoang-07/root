@@ -138,8 +138,7 @@ const props = defineProps({
   apiErrors: {
     type: Object,
     default: () => ({})
-  },
-  loading: Boolean
+  }
 })
 
 const emit = defineEmits(['submit', 'cancel'])

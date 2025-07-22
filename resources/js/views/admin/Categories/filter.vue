@@ -8,17 +8,6 @@
       v-model="filters.search"
       placeholder="Tìm theo tên danh mục"
     />
-    
-    <!-- Lọc theo danh mục cha -->
-    <AdminFilterItem
-      id="parent_id"
-      label="Danh mục cha"
-      type="select"
-      v-model="filters.parent_id"
-      placeholder="Tất cả danh mục"
-      :options="parentCategoryOptions"
-    />
-    
     <!-- Lọc theo trạng thái -->
     <AdminFilterItem
       id="status"
@@ -28,7 +17,6 @@
       placeholder="Tất cả trạng thái"
       :options="statusOptions"
     />
-    
     <!-- Sắp xếp theo -->
     <AdminFilterItem
       id="sort_by"
@@ -41,7 +29,7 @@
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
+import { reactive } from 'vue'
 import AdminFilter from '@/components/AdminFilter.vue'
 import AdminFilterItem from '@/components/AdminFilterItem.vue'
 
@@ -49,10 +37,6 @@ const props = defineProps({
   initialFilters: {
     type: Object,
     default: () => ({})
-  },
-  parentCategories: {
-    type: Array,
-    default: () => []
   }
 })
 
@@ -60,22 +44,11 @@ const emit = defineEmits(['update:filters'])
 
 const filters = reactive({
   search: props.initialFilters.search || '',
-  parent_id: props.initialFilters.parent_id || '',
   status: props.initialFilters.status || '',
   sort_by: props.initialFilters.sort_by || 'created_at_desc',
 })
 
 // Các tùy chọn cho select
-const parentCategoryOptions = computed(() => {
-  return [
-    { value: '0', label: 'Danh mục gốc' },
-    ...props.parentCategories.map(category => ({
-      value: String(category.id),
-      label: category.name
-    }))
-  ]
-})
-
 const statusOptions = [
   { value: '1', label: 'Hoạt động' },
   { value: '0', label: 'Không hoạt động' }

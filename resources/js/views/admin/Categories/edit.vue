@@ -1,35 +1,73 @@
 <template>
-  <Modal v-if="show" v-model="modalVisible" title="Chỉnh sửa danh mục">
-    <Form :category="category" :mode="'edit'" @submit="handleSubmit" @cancel="onClose" />
-  </Modal>
+  <div>
+    <CategoryForm 
+      v-if="showModal"
+      :show="showModal"
+      :category="category"
+      :parent-categories="parentCategories"
+      :api-errors="apiErrors"
+      @submit="handleSubmit" 
+      @cancel="onClose" 
+    />
+  </div>
 </template>
 <script setup>
-import Form from './form.vue'
-import api from '@/api/apiClient'
+import CategoryForm from './form.vue'
 import endpoints from '@/api/endpoints'
-import Modal from '@/components/Modal.vue'
-import { computed } from 'vue'
+import { ref, reactive, watch } from 'vue'
+import axios from 'axios'
+
 const props = defineProps({
   show: Boolean,
   category: Object,
   onClose: Function
 })
 const emit = defineEmits(['updated'])
-const modalVisible = computed({
-  get: () => props.show,
-  set: (val) => { if (!val) props.onClose() }
-})
-async function handleSubmit(data) {
+
+const showModal = ref(false)
+const apiErrors = reactive({})
+const parentCategories = ref([])
+
+watch(() => props.show, (newValue) => {
+  showModal.value = newValue
+  if (newValue) fetchParentCategories()
+}, { immediate: true })
+
+async function fetchParentCategories() {
   try {
-    if (data instanceof FormData) {
-      await api.put(endpoints.categories.update(props.category.id), data)
-    } else {
-      await api.put(endpoints.categories.update(props.category.id), data)
-    }
+    const response = await axios.get(endpoints.categories.list, {
+      params: { per_page: 100 }
+    })
+    parentCategories.value = response.data.data || []
+  } catch (error) {
+    parentCategories.value = []
+  }
+}
+
+async function handleSubmit(formData) {
+  try {
+    if (!props.category) return;
+    Object.keys(apiErrors).forEach(key => delete apiErrors[key])
+    const response = await axios.post(endpoints.categories.update(props.category.id), formData)
     emit('updated')
     props.onClose()
-  } catch (e) {
-    // handle error
+  } catch (error) {
+    if (error.response?.status === 422 && error.response?.data?.errors) {
+      const errors = error.response.data.errors
+      for (const field in errors) {
+        if (Array.isArray(errors[field])) {
+          apiErrors[field] = errors[field][0]
+        } else {
+          apiErrors[field] = errors[field]
+        }
+      }
+    }
+  }
+}
+
+function onClose() {
+  if (props.onClose) {
+    props.onClose()
   }
 }
 </script> 
