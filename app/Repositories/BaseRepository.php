@@ -42,6 +42,18 @@ abstract class BaseRepository
                         $q->orWhere('phone', 'like', "%$value%") ;
                     }
                 });
+            } elseif ($key === 'sort_by') {
+                // Xử lý sort_by: format là field_direction (e.g., created_at_desc)
+                $parts = explode('_', $value);
+                if (count($parts) >= 2) {
+                    $direction = array_pop($parts); // Lấy phần tử cuối (asc/desc)
+                    $field = implode('_', $parts); // Kết hợp các phần còn lại
+                    
+                    if (in_array($direction, ['asc', 'desc']) && 
+                        (in_array($field, $this->model->getFillable()) || $field === 'id' || $field === 'created_at' || $field === 'updated_at')) {
+                        $query->orderBy($field, $direction);
+                    }
+                }
             } elseif (in_array($key, ['page', 'per_page', 'sort', 'order'])) {
                 continue;
             } else {
