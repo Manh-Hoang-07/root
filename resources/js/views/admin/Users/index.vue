@@ -1,288 +1,286 @@
 <template>
-  <DataTable
-    :is-all-selected="isAllSelected"
-    @toggle-select-all="toggleSelectAll"
-  >
-    <!-- Action bar -->
-    <template #actions>
-      <button
-        @click="openAddModal"
-        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 rounded font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow flex items-center space-x-1.5 text-sm"
+  <div class="container mx-auto p-4">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Quản lý người dùng</h1>
+      <button 
+        @click="openCreateModal" 
+        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
       >
-        <PlusIcon class="w-4 h-4" />
-        <span>Thêm người dùng</span>
+        Thêm người dùng mới
       </button>
-      <button
-        @click="deleteSelected"
-        :disabled="!selected.length"
-        class="ml-1 px-3 py-1.5 rounded bg-red-500 text-white font-medium disabled:opacity-50 text-sm"
-      >
-        Xóa đã chọn
-      </button>
-    </template>
-    <!-- Filter bar -->
-    <template #filter>
-      <Filter :filters="filters" @update:filters="onUpdateFilters" @clear="clearFilters" :status-enums="statusEnums" />
-    </template>
-    <!-- Table head -->
-    <template #thead>
-      <th class="px-4 py-3 whitespace-nowrap">Họ tên</th>
-      <th class="px-4 py-3 whitespace-nowrap hidden md:table-cell">Email</th>
-      <th class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">Trạng thái</th>
-      <th class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">Giới tính</th>
-      <th class="px-4 py-3 whitespace-nowrap hidden xl:table-cell">Số điện thoại</th>
-      <th class="px-4 py-3 whitespace-nowrap hidden xl:table-cell">Địa chỉ</th>
-      <th class="px-4 py-3 whitespace-nowrap hidden 2xl:table-cell">Ngày tạo</th>
-      <th class="px-4 py-3 whitespace-nowrap hidden 2xl:table-cell">Đăng nhập cuối</th>
-    </template>
-    <!-- Table body -->
-    <template #tbody>
-      <tr v-if="users.length === 0">
-        <td colspan="10" class="text-center py-6 text-gray-400">Không có dữ liệu</td>
-      </tr>
-      <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50">
-        <!-- Checkbox -->
-        <td class="text-center">
-          <input type="checkbox" :checked="selected.includes(user.id)" @change="toggleSelect(user.id)" />
-        </td>
-        <td class="px-4 py-3 whitespace-nowrap">{{ user.name || '—' }}</td>
-        <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">{{ user.email || '—' }}</td>
-        <td class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
-          <div class="relative inline-block text-left">
-            <button
-              @click="toggleStatusMenu(user.id)"
-              :class="[
-                'px-2 py-1 rounded-full text-xs font-semibold focus:outline-none',
-                user.status === 'active' ? 'bg-green-100 text-green-700' :
-                user.status === 'inactive' ? 'bg-gray-100 text-gray-700' :
-                'bg-yellow-100 text-yellow-700'
-              ]"
-            >
-              {{ statusEnums.find(s => s.value === user.status)?.name || user.status }}
-              <svg class="inline w-3 h-3 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
-            </button>
-            <div v-if="openStatusMenuId === user.id" class="absolute z-20 right-0 mt-1 w-32 bg-white border rounded shadow">
-              <div
-                v-for="s in statusEnums"
-                :key="s.value"
-                @click="setStatus(user, s.value)"
-                class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-xs"
-                :class="{
-                  'text-green-600': s.value === 'active',
-                  'text-gray-500': s.value === 'inactive',
-                  'text-yellow-500': s.value === 'suspended',
-                  'font-bold': user.status === s.value
-                }"
-              >
-                {{ s.name }}
-              </div>
-            </div>
-          </div>
-        </td>
-        <td class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
-          {{ genderEnums.find(g => g.value === user.gender)?.name || user.gender || '—' }}
-        </td>
-        <td class="px-4 py-3 whitespace-nowrap hidden xl:table-cell">{{ user.phone || '—' }}</td>
-        <td class="px-4 py-3 whitespace-nowrap hidden xl:table-cell">{{ user.address || '—' }}</td>
-        <td class="px-4 py-3 whitespace-nowrap hidden 2xl:table-cell">{{ user.created_at || '—' }}</td>
-        <td class="px-4 py-3 whitespace-nowrap hidden 2xl:table-cell">{{ user.last_login || '—' }}</td>
-        <!-- Thao tác -->
-        <td class="text-center">
-          <button @click="editUser(user)" class="p-2 rounded-full hover:bg-indigo-100 transition" title="Sửa">
-            <PencilIcon class="w-5 h-5 text-indigo-600" />
-          </button>
-          <button @click="deleteUser(user)" class="p-2 rounded-full hover:bg-red-100 transition" title="Xóa">
-            <TrashIcon class="w-5 h-5 text-red-500" />
-          </button>
-          <button @click="openChangePassword(user)" class="p-2 rounded-full hover:bg-yellow-100 transition" title="Đổi mật khẩu">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-yellow-500">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75A4.5 4.5 0 008 6.75v3.75m8.25 0h-8.5m8.5 0a2.25 2.25 0 01-2.25 2.25h-4.5A2.25 2.25 0 017.25 10.5m8.5 0v3.75A4.5 4.5 0 018 14.25v-3.75" />
-            </svg>
-          </button>
-        </td>
-      </tr>
-    </template>
-    <!-- Pagination -->
-    <template #pagination>
-      <Pagination
-        :current-page="pagination.currentPage"
-        :total-pages="pagination.totalPages"
-        :page-size="pagination.itemsPerPage"
-        :total-items="pagination.totalItems"
-        :loading="loading"
-        @page-change="onPageChange"
-      />
-    </template>
-  </DataTable>
+    </div>
 
-  <!-- Modal -->
-  <Modal v-if="showAddModal || showEditModal"
-         v-model="modalVisible"
-         :title="showEditModal ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'">
-    <Form
-      :user="showEditModal ? editingUser : null"
-      :mode="showEditModal ? 'edit' : 'create'"
+    <!-- Bảng dữ liệu -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên đăng nhập</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ tên</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr v-for="user in users" :key="user.id">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ user.username }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.email }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span 
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
+                :class="getStatusClass(user.status)"
+              >
+                {{ getStatusName(user.status) }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <button 
+                @click="openEditModal(user)" 
+                class="text-indigo-600 hover:text-indigo-900 mr-3"
+              >
+                Sửa
+              </button>
+              <button 
+                @click="confirmDelete(user)" 
+                class="text-red-600 hover:text-red-900"
+              >
+                Xóa
+              </button>
+            </td>
+          </tr>
+          <tr v-if="users.length === 0">
+            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+              Không có dữ liệu
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Phân trang -->
+    <div class="mt-4 flex justify-between items-center">
+      <div class="text-sm text-gray-700">
+        Hiển thị {{ pagination.from }} đến {{ pagination.to }} trên tổng số {{ pagination.total }} bản ghi
+      </div>
+      <div class="flex space-x-1">
+        <button 
+          v-for="page in pagination.links" 
+          :key="page.label"
+          @click="changePage(page.url)"
+          :disabled="!page.url"
+          :class="[
+            'px-3 py-1 border rounded',
+            page.active 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-white text-gray-700 hover:bg-gray-50',
+            !page.url && 'opacity-50 cursor-not-allowed'
+          ]"
+          v-html="page.label"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Modal thêm mới -->
+    <CreateUser
+      v-if="showCreateModal"
+      :show="showCreateModal"
       :status-enums="statusEnums"
       :gender-enums="genderEnums"
-      @submit="saveUser"
-      @cancel="closeModal"
+      :on-close="closeCreateModal"
+      @created="handleUserCreated"
     />
-  </Modal>
-  <ChangePassword :show="showChangePassword" :user="changingUser" :onClose="closeChangePassword" @changed="fetchUsers" />
+
+    <!-- Modal chỉnh sửa -->
+    <EditUser
+      v-if="showEditModal"
+      :show="showEditModal"
+      :user="selectedUser"
+      :status-enums="statusEnums"
+      :gender-enums="genderEnums"
+      :on-close="closeEditModal"
+      @updated="handleUserUpdated"
+    />
+
+    <!-- Modal xác nhận xóa -->
+    <ConfirmModal
+      v-if="showDeleteModal"
+      :show="showDeleteModal"
+      title="Xác nhận xóa"
+      :message="`Bạn có chắc chắn muốn xóa người dùng ${selectedUser?.username || ''}?`"
+      :on-close="closeDeleteModal"
+      @confirm="deleteUser"
+    />
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
-import AdminLayout from '@/layouts/AdminLayout.vue'
-import DataTable from '@/components/DataTable.vue'
-import useTableSelection from '@/composables/useTableSelection'
-import usePagination from '@/composables/usePagination'
-import Filter from './filter.vue'
-import Form from './form.vue'
-import ChangePassword from './changePassword.vue'
-import axios from 'axios'
+import { ref, onMounted, reactive } from 'vue'
+import CreateUser from './create-new.vue'
+import EditUser from './edit-new.vue'
+import ConfirmModal from '@/components/ConfirmModal.vue'
 import endpoints from '@/api/endpoints'
-import useApiOptions from '@/composables/useApiOptions'
-import Pagination from '@/components/Pagination.vue'
-import useSyncQueryPagination from '@/composables/useSyncQueryPagination'
-import Modal from '@/components/Modal.vue'
-// Để đồng bộ v-model cho Modal
-import { computed } from 'vue'
-const modalVisible = computed({
-  get: () => showAddModal.value || showEditModal.value,
-  set: (val) => {
-    if (!val) closeModal()
-  }
-})
 
+// State
 const users = ref([])
-const filters = ref({ search: '', role: '', status: '' })
-const showAddModal = ref(false)
-const showEditModal = ref(false)
-const editingUser = ref(null)
-const showChangePassword = ref(false)
-const changingUser = ref(null)
-const { options: statusEnums } = useApiOptions(endpoints.enums('userStatus'))
-const { options: genderEnums } = useApiOptions(endpoints.enums('gender'))
-
-const loading = ref(false)
-const pagination = ref({
-  currentPage: 1,
-  totalPages: 0,
-  totalItems: 0,
-  itemsPerPage: 10
+const selectedUser = ref(null)
+const statusEnums = ref([
+  { value: 1, name: 'Hoạt động' },
+  { value: 2, name: 'Chờ xác nhận' },
+  { value: 3, name: 'Đã khóa' }
+])
+const genderEnums = ref([
+  { value: 1, name: 'Nam' },
+  { value: 2, name: 'Nữ' },
+  { value: 3, name: 'Khác' }
+])
+const pagination = reactive({
+  current_page: 1,
+  from: 0,
+  to: 0,
+  total: 0,
+  per_page: 10,
+  links: []
 })
 
-const { selected, isAllSelected, toggleSelectAll, toggleSelect } = useTableSelection(users)
+// Modal state
+const showCreateModal = ref(false)
+const showEditModal = ref(false)
+const showDeleteModal = ref(false)
 
-const fetchUsers = async () => {
-  loading.value = true
+// Fetch data
+onMounted(async () => {
+  await Promise.all([
+    fetchUsers(),
+    fetchEnums()
+  ])
+})
+
+async function fetchUsers(page = 1) {
   try {
-    const params = { ...filters.value, page: pagination.value.currentPage, per_page: pagination.value.itemsPerPage }
-    const res = await axios.get(endpoints.users.list, { params })
-    users.value = res.data.data || []
-    pagination.value.totalItems = res.data.meta?.total || 0
-    pagination.value.totalPages = res.data.meta?.last_page || 1
-    pagination.value.currentPage = res.data.meta?.current_page || 1
-  } catch (e) {
-    users.value = []
-    pagination.value.totalItems = 0
-    pagination.value.totalPages = 1
-    pagination.value.currentPage = 1
-  } finally {
-    loading.value = false
+    const response = await axios.get(endpoints.users.list, {
+      params: { page }
+    })
+    users.value = response.data.data
+    
+    // Update pagination
+    const meta = response.data.meta
+    pagination.current_page = meta.current_page
+    pagination.from = meta.from
+    pagination.to = meta.to
+    pagination.total = meta.total
+    pagination.per_page = meta.per_page
+    pagination.links = meta.links
+  } catch (error) {
+    console.error('Error fetching users:', error)
   }
 }
 
-const { onPageChange, onUpdateFilters } = useSyncQueryPagination(filters, pagination, fetchUsers, ['search', 'role', 'status'])
-
-const clearFilters = () => {
-  filters.value = { search: '', role: '', status: '' }
-  fetchUsers()
-}
-
-const saveUser = async (formData) => {
+async function fetchEnums() {
   try {
-    if (showEditModal.value) {
-      await axios.post(`${endpoints.users.update(editingUser.value.id)}?_method=PUT`, formData)
-    } else {
-      await axios.post(endpoints.users.create, formData)
-    }
-    await fetchUsers()
-    closeModal()
-  } catch (e) {}
+    // Sửa lại tên enum cho phù hợp với API
+    const [statusResponse, genderResponse] = await Promise.all([
+      axios.get(endpoints.enums('UserStatus')), // Sửa từ user_status thành UserStatus
+      axios.get(endpoints.enums('Gender'))
+    ])
+    
+    // Kiểm tra và đảm bảo dữ liệu là mảng
+    statusEnums.value = Array.isArray(statusResponse.data) ? statusResponse.data : 
+                       (statusResponse.data && typeof statusResponse.data === 'object') ? 
+                       Object.entries(statusResponse.data).map(([key, value]) => ({ value: parseInt(key), name: value })) : [];
+                       
+    genderEnums.value = Array.isArray(genderResponse.data) ? genderResponse.data : 
+                      (genderResponse.data && typeof genderResponse.data === 'object') ? 
+                      Object.entries(genderResponse.data).map(([key, value]) => ({ value: parseInt(key), name: value })) : [];
+    
+    console.log('Status enums:', statusEnums.value)
+    console.log('Gender enums:', genderEnums.value)
+  } catch (error) {
+    console.error('Error fetching enums:', error)
+    statusEnums.value = []
+    genderEnums.value = []
+  }
 }
 
-const openAddModal = () => {
-  showAddModal.value = true
+// Modal handlers
+function openCreateModal() {
+  showCreateModal.value = true
 }
-const closeModal = () => {
-  showAddModal.value = false
-  showEditModal.value = false
-  editingUser.value = null
+
+function closeCreateModal() {
+  showCreateModal.value = false
 }
-const editUser = (user) => {
-  editingUser.value = user
+
+function openEditModal(user) {
+  selectedUser.value = user
   showEditModal.value = true
 }
-const deleteUser = async (user) => {
-  if (confirm(`Bạn có chắc chắn muốn xóa người dùng "${user.name}"?`)) {
-    try {
-      await axios.delete(`${endpoints.users.delete(user.id)}`)
-      fetchUsers()
-    } catch (e) {}
-  }
+
+function closeEditModal() {
+  showEditModal.value = false
+  selectedUser.value = null
 }
-const deleteSelected = async () => {
-  if (!selected.length) return
-  if (confirm('Bạn có chắc chắn muốn xóa các người dùng đã chọn?')) {
-    try {
-      await Promise.all(selected.map(id => axios.delete(endpoints.users.delete(id))))
-      fetchUsers()
-    } catch (e) {}
-  }
+
+function confirmDelete(user) {
+  selectedUser.value = user
+  showDeleteModal.value = true
 }
-const openChangePassword = (user) => {
-  changingUser.value = user
-  showChangePassword.value = true
+
+function closeDeleteModal() {
+  showDeleteModal.value = false
+  selectedUser.value = null
 }
-const closeChangePassword = () => {
-  showChangePassword.value = false
-  changingUser.value = null
+
+// Action handlers
+async function handleUserCreated() {
+  await fetchUsers()
+  closeCreateModal()
 }
-const openStatusMenuId = ref(null)
-const toggleStatusMenu = (id) => {
-  openStatusMenuId.value = openStatusMenuId.value === id ? null : id
+
+async function handleUserUpdated() {
+  await fetchUsers()
+  closeEditModal()
 }
-const setStatus = async (user, status) => {
+
+async function deleteUser() {
   try {
-    await axios.post(`${endpoints.users.update(user.id)}?_method=PUT`, { status })
-    fetchUsers()
-    openStatusMenuId.value = null
-  } catch (e) {}
+    await axios.delete(endpoints.users.delete(selectedUser.value.id))
+    await fetchUsers()
+    closeDeleteModal()
+  } catch (error) {
+    console.error('Error deleting user:', error)
+  }
 }
 
-watch(() => pagination.value.currentPage, () => {
-  fetchUsers()
-})
+function changePage(url) {
+  if (!url) return
+  
+  const urlObj = new URL(url)
+  const page = urlObj.searchParams.get('page')
+  fetchUsers(page)
+}
 
-// Bỏ onMounted vì useSyncQueryPagination đã xử lý
+// Helper functions
+function getStatusName(status) {
+  if (!Array.isArray(statusEnums.value)) {
+    return status;
+  }
+  const statusObj = statusEnums.value.find(s => s.value === status)
+  return statusObj ? statusObj.name : status
+}
+
+function getStatusClass(status) {
+  // Chuyển đổi status về dạng số nếu có thể
+  const statusValue = parseInt(status);
+  
+  switch (statusValue) {
+    case 1: return 'bg-green-100 text-green-800' // Active
+    case 2: return 'bg-yellow-100 text-yellow-800' // Pending
+    case 3: return 'bg-red-100 text-red-800' // Inactive
+    default: return 'bg-gray-100 text-gray-800'
+  }
+}
 </script>
-
-<style scoped>
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
-}
-</style>

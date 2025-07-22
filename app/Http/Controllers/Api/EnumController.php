@@ -2,23 +2,27 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use App\Enums\BasicStatus;
+use App\Enums\Gender;
+use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
 class EnumController extends Controller
 {
-    public function get($type)
+    public function get(string $type)
     {
-        $className = Str::studly($type);
-        $enumClass = "App\\Enums\\$className";
-        if (!class_exists($enumClass) || !method_exists($enumClass, 'cases')) {
+        $data = match ($type) {
+            'UserStatus' => UserStatus::toArray(),
+            'Gender' => Gender::toArray(),
+            'BasicStatus' => BasicStatus::toArray(),
+            default => null,
+        };
+
+        if ($data === null) {
             return response()->json(['error' => 'Enum not found'], 404);
         }
-        $data = collect($enumClass::cases())->map(fn($case) => [
-            'name' => Str::headline(strtolower($case->name)),
-            'value' => $case->value
-        ])->values();
-        return response()->json(['data' => $data]);
+
+        return response()->json($data);
     }
 } 

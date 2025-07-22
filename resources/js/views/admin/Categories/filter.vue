@@ -1,21 +1,104 @@
 <template>
-  <div class="flex flex-wrap items-center gap-1 bg-white border border-gray-200 rounded px-2 py-1">
-    <div class="flex items-center">
-      <MagnifyingGlassIcon class="w-3 h-3 text-gray-400 mr-1" />
-      <input
-        v-model="filters.search"
-        @input="$emit('update:filters', { ...filters })"
-        class="h-6 px-1 text-xs border-none focus:ring-0 outline-none bg-transparent"
-        placeholder="Tìm kiếm danh mục"
-      />
-    </div>
-    <button @click="$emit('clear')" class="h-6 px-2 text-xs rounded bg-gray-100 hover:bg-gray-200">Xóa lọc</button>
-  </div>
+  <AdminFilter @apply="applyFilters" @reset="resetFilters">
+    <!-- Tìm kiếm theo tên -->
+    <AdminFilterItem
+      id="search"
+      label="Tìm kiếm"
+      type="text"
+      v-model="filters.search"
+      placeholder="Tìm theo tên danh mục"
+    />
+    
+    <!-- Lọc theo danh mục cha -->
+    <AdminFilterItem
+      id="parent_id"
+      label="Danh mục cha"
+      type="select"
+      v-model="filters.parent_id"
+      placeholder="Tất cả danh mục"
+      :options="parentCategoryOptions"
+    />
+    
+    <!-- Lọc theo trạng thái -->
+    <AdminFilterItem
+      id="status"
+      label="Trạng thái"
+      type="select"
+      v-model="filters.status"
+      placeholder="Tất cả trạng thái"
+      :options="statusOptions"
+    />
+    
+    <!-- Sắp xếp theo -->
+    <AdminFilterItem
+      id="sort_by"
+      label="Sắp xếp theo"
+      type="select"
+      v-model="filters.sort_by"
+      :options="sortOptions"
+    />
+  </AdminFilter>
 </template>
 
 <script setup>
-import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { reactive, computed } from 'vue'
+import AdminFilter from '@/components/AdminFilter.vue'
+import AdminFilterItem from '@/components/AdminFilterItem.vue'
+
 const props = defineProps({
-  filters: Object
+  initialFilters: {
+    type: Object,
+    default: () => ({})
+  },
+  parentCategories: {
+    type: Array,
+    default: () => []
+  }
 })
+
+const emit = defineEmits(['update:filters'])
+
+const filters = reactive({
+  search: props.initialFilters.search || '',
+  parent_id: props.initialFilters.parent_id || '',
+  status: props.initialFilters.status || '',
+  sort_by: props.initialFilters.sort_by || 'created_at_desc',
+})
+
+// Các tùy chọn cho select
+const parentCategoryOptions = computed(() => {
+  return [
+    { value: '0', label: 'Danh mục gốc' },
+    ...props.parentCategories.map(category => ({
+      value: String(category.id),
+      label: category.name
+    }))
+  ]
+})
+
+const statusOptions = [
+  { value: '1', label: 'Hoạt động' },
+  { value: '0', label: 'Không hoạt động' }
+]
+
+const sortOptions = [
+  { value: 'created_at_desc', label: 'Mới nhất' },
+  { value: 'created_at_asc', label: 'Cũ nhất' },
+  { value: 'name_asc', label: 'Tên (A-Z)' },
+  { value: 'name_desc', label: 'Tên (Z-A)' }
+]
+
+// Áp dụng bộ lọc
+function applyFilters() {
+  emit('update:filters', { ...filters })
+}
+
+// Đặt lại bộ lọc
+function resetFilters() {
+  Object.keys(filters).forEach(key => {
+    filters[key] = ''
+  })
+  filters.sort_by = 'created_at_desc'
+  emit('update:filters', { ...filters })
+}
 </script> 

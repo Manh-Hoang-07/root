@@ -1,45 +1,55 @@
 <template>
-  <div>
-    <BrandForm 
-      v-if="showModal"
-      :show="showModal"
-      :brand="brand"
+  <Modal v-if="show" v-model="modalVisible" title="Chỉnh sửa người dùng">
+    <UserForm
+      ref="userForm"
+      mode="edit"
+      :user="user"
+      :status-enums="statusEnums"
+      :gender-enums="genderEnums"
       :api-errors="apiErrors"
-      @submit="handleSubmit" 
-      @cancel="onClose" 
+      @submit="handleSubmit"
+      @cancel="onClose"
     />
-  </div>
+  </Modal>
 </template>
+
 <script setup>
-import BrandForm from './form.vue'
+import UserForm from './UserForm.vue'
 import endpoints from '@/api/endpoints'
-import { ref, reactive, watch } from 'vue'
-import axios from 'axios'
+import Modal from '@/components/Modal.vue'
+import { computed, reactive, ref } from 'vue'
 
 const props = defineProps({
   show: Boolean,
-  brand: Object,
+  user: Object,
+  statusEnums: {
+    type: Array,
+    default: () => []
+  },
+  genderEnums: {
+    type: Array,
+    default: () => []
+  },
   onClose: Function
 })
+
 const emit = defineEmits(['updated'])
 
-const showModal = ref(false)
-const apiErrors = reactive({})
+const modalVisible = computed({
+  get: () => props.show,
+  set: (val) => { if (!val) props.onClose() }
+})
 
-// Watch show prop để cập nhật showModal
-watch(() => props.show, (newValue) => {
-  showModal.value = newValue
-}, { immediate: true })
+const userForm = ref(null)
+const apiErrors = reactive({})
 
 async function handleSubmit(formData) {
   try {
-    if (!props.brand) return;
-    
     // Xóa lỗi cũ
     Object.keys(apiErrors).forEach(key => delete apiErrors[key])
     
     console.log('Submitting form data:', formData)
-    const response = await axios.post(endpoints.brands.update(props.brand.id), formData)
+    const response = await axios.post(endpoints.users.update(props.user.id), formData)
     console.log('API response success:', response)
     emit('updated')
     props.onClose()
@@ -62,12 +72,6 @@ async function handleSubmit(formData) {
       
       console.log('API errors set:', apiErrors)
     }
-  }
-}
-
-function onClose() {
-  if (props.onClose) {
-    props.onClose()
   }
 }
 </script> 

@@ -1,8 +1,44 @@
 <template>
-  <div v-if="error" class="text-red-500 text-sm mt-1">{{ error }}</div>
+  <transition name="fade">
+    <div v-if="displayError" class="text-red-500 text-sm mt-1">{{ displayError }}</div>
+  </transition>
 </template>
+
 <script setup>
+import { computed, watch } from 'vue'
+
 const props = defineProps({
-  error: String
+  error: [String, Array, null]
 })
-</script> 
+
+// Watch để debug nếu cần
+if (process.env.NODE_ENV !== 'production') {
+  watch(() => props.error, (newVal) => {
+    if (newVal) {
+      console.log('ErrorMessage received:', newVal)
+    }
+  })
+}
+
+const displayError = computed(() => {
+  if (!props.error) return null
+  
+  if (Array.isArray(props.error)) {
+    return props.error[0]
+  }
+  
+  return props.error
+})
+</script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style> 

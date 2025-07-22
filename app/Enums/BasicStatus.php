@@ -2,11 +2,10 @@
 
 namespace App\Enums;
 
-enum UserStatus: int
+enum BasicStatus: int
 {
     case Active = 1;
-    case Pending = 2;
-    case Inactive = 3;
+    case Inactive = 0;
 
     /**
      * Lấy tên hiển thị của trạng thái
@@ -15,8 +14,7 @@ enum UserStatus: int
     {
         return match($this) {
             self::Active => 'Hoạt động',
-            self::Pending => 'Chờ xác nhận',
-            self::Inactive => 'Đã khóa',
+            self::Inactive => 'Không hoạt động',
         };
     }
 
@@ -27,7 +25,6 @@ enum UserStatus: int
     {
         return [
             self::Active->value => self::Active->label(),
-            self::Pending->value => self::Pending->label(),
             self::Inactive->value => self::Inactive->label(),
         ];
     }

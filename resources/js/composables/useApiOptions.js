@@ -11,16 +11,25 @@ export default function useApiOptions(endpoint) {
     try {
       const res = await fetch(endpoint);
       const json = await res.json();
-      // Chuẩn hóa: nếu có data thì lấy data, không thì lấy luôn json
-      const data = json.data || json;
-      // Đảm bảo mỗi option có name và value
-      options.value = Array.isArray(data)
-        ? data.map(item => ({
-            name: item.name ?? item.label ?? String(item.value),
-            value: item.value ?? item.id ?? item,
-          }))
-        : [];
+      
+      // Xử lý dữ liệu enum trả về
+      if (typeof json === 'object' && !Array.isArray(json)) {
+        // Nếu là object (key-value pairs), chuyển đổi thành mảng options
+        options.value = Object.entries(json).map(([value, name]) => ({
+          name,
+          value: parseInt(value, 10) || value,
+        }));
+      } else if (Array.isArray(json)) {
+        // Nếu là mảng, đảm bảo mỗi phần tử có name và value
+        options.value = json.map(item => ({
+          name: item.name ?? item.label ?? String(item.value),
+          value: item.value ?? item.id ?? item,
+        }));
+      } else {
+        options.value = [];
+      }
     } catch (e) {
+      console.error('Error fetching options:', e);
       error.value = e;
     } finally {
       loading.value = false;
