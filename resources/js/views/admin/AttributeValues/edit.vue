@@ -1,41 +1,59 @@
 <template>
-  <Modal v-if="show" v-model="modalVisible" title="Chỉnh sửa giá trị thuộc tính">
-    <Form :attributeValue="attributeValue" :mode="'edit'" @submit="handleSubmit" @cancel="onClose" />
-  </Modal>
+  <div>
+    <AttributeValueForm 
+      v-if="showModal"
+      :show="showModal"
+      :attribute-value="attributeValue"
+      :api-errors="apiErrors"
+      @submit="handleSubmit" 
+      @cancel="onClose" 
+    />
+  </div>
 </template>
 <script setup>
-import Form from './form.vue'
-import api from '@/api/apiClient'
+import AttributeValueForm from './form.vue'
 import endpoints from '@/api/endpoints'
-import Modal from '@/components/Modal.vue'
-import { computed } from 'vue'
+import { ref, reactive, watch } from 'vue'
+import axios from 'axios'
+
 const props = defineProps({
   show: Boolean,
   attributeValue: Object,
   onClose: Function
 })
 const emit = defineEmits(['updated'])
-const modalVisible = computed({
-  get: () => props.show,
-  set: (val) => { if (!val) props.onClose() }
-})
-async function handleSubmit(data) {
-  console.log('Frontend: handleSubmit called', {
-    id: props.attributeValue.id,
-    endpoint: endpoints.attributeValues.update(props.attributeValue.id),
-    data: data
-  })
-  
+
+const showModal = ref(false)
+const apiErrors = reactive({})
+
+watch(() => props.show, (newValue) => {
+  showModal.value = newValue
+}, { immediate: true })
+
+async function handleSubmit(formData) {
   try {
-    const response = await api.put(endpoints.attributeValues.update(props.attributeValue.id), data)
-    console.log('Frontend: Update successful', response)
-    console.log('Frontend: Response data', response.data)
-    console.log('Frontend: Response data.data', response.data.data)
+    if (!props.attributeValue) return;
+    Object.keys(apiErrors).forEach(key => delete apiErrors[key])
+    const response = await axios.post(endpoints.attributeValues.update(props.attributeValue.id), formData)
     emit('updated')
     props.onClose()
-  } catch (e) {
-    console.error('Frontend: Update failed', e)
-    // handle error
+  } catch (error) {
+    if (error.response?.status === 422 && error.response?.data?.errors) {
+      const errors = error.response.data.errors
+      for (const field in errors) {
+        if (Array.isArray(errors[field])) {
+          apiErrors[field] = errors[field][0]
+        } else {
+          apiErrors[field] = errors[field]
+        }
+      }
+    }
+  }
+}
+
+function onClose() {
+  if (props.onClose) {
+    props.onClose()
   }
 }
 </script> 

@@ -2,10 +2,10 @@
 
 namespace App\Enums;
 
-enum BasicStatus: int
+enum BasicStatus: string
 {
-    case Active = 1;
-    case Inactive = 0;
+    case Active = 'active';
+    case Inactive = 'inactive';
 
     /**
      * Lấy tên hiển thị của trạng thái

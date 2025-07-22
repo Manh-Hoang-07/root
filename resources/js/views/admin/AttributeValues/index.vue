@@ -1,165 +1,254 @@
 <template>
-  <DataTable :is-all-selected="isAllSelected" @toggle-select-all="toggleSelectAll">
-    <!-- Action bar -->
-    <template #actions>
-      <button
-        @click="openAddModal"
-        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 rounded font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow flex items-center space-x-1.5 text-sm"
+  <div class="container mx-auto p-4">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Quản lý giá trị thuộc tính</h1>
+      <button 
+        @click="openCreateModal" 
+        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
       >
-        <span>Thêm giá trị</span>
+        Thêm giá trị
       </button>
-      <button
-        @click="deleteSelected"
-        :disabled="!selected.length"
-        class="ml-1 px-3 py-1.5 rounded bg-red-500 text-white font-medium disabled:opacity-50 text-sm"
-      >
-        Xóa đã chọn
-      </button>
-    </template>
-    <!-- Filter bar -->
-    <template #filter>
-      <Filter :filters="filters" @update:filters="onUpdateFilters" @clear="clearFilters" />
-    </template>
-    <!-- Table head -->
-    <template #thead>
-      <th class="px-4 py-3 whitespace-nowrap">ID</th>
-      <th class="px-4 py-3 whitespace-nowrap">Thuộc tính</th>
-      <th class="px-4 py-3 whitespace-nowrap">Giá trị</th>
-      <th class="px-4 py-3 whitespace-nowrap">Hiển thị</th>
-      <th class="px-4 py-3 whitespace-nowrap">Thứ tự</th>
-      <th class="px-4 py-3 whitespace-nowrap">Ngày tạo</th>
-      <th class="px-4 py-3 whitespace-nowrap">Ngày cập nhật</th>
-    </template>
-    <!-- Table body -->
-    <template #tbody>
-      <tr v-if="attributeValues.length === 0">
-        <td colspan="10" class="text-center py-6 text-gray-400">Không có dữ liệu</td>
-      </tr>
-      <tr v-for="val in attributeValues" :key="val.id" class="hover:bg-gray-50">
-        <td class="w-6 px-1 py-1 text-center align-middle">
-          <input type="checkbox" :checked="selected.includes(val.id)" @change="toggleSelect(val.id)" class="accent-indigo-500 w-5 h-5 rounded border-gray-300 focus:ring-indigo-500" />
-        </td>
-        <td class="px-4 py-3 whitespace-nowrap">{{ val.id }}</td>
-        <td class="px-4 py-3 whitespace-nowrap">{{ val.attribute_name }}</td>
-        <td class="px-4 py-3 whitespace-nowrap">{{ val.value }}</td>
-        <td class="px-4 py-3 whitespace-nowrap">{{ val.name }}</td>
-        <td class="px-4 py-3 whitespace-nowrap">{{ val.sort_order }}</td>
-        <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(val.created_at) }}</td>
-        <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(val.updated_at) }}</td>
-        <!-- Thao tác -->
-        <td class="text-center">
-          <button @click="editAttributeValue(val)" class="p-2 rounded-full hover:bg-indigo-100 transition" title="Sửa">
-            <PencilIcon class="w-5 h-5 text-indigo-600" />
-          </button>
-          <button @click="deleteAttributeValue(val)" class="p-2 rounded-full hover:bg-red-100 transition" title="Xóa">
-            <TrashIcon class="w-5 h-5 text-red-500" />
-          </button>
-        </td>
-      </tr>
-    </template>
-    <!-- Pagination -->
-    <template #pagination>
-      <Pagination
-        :current-page="pagination.currentPage"
-        :total-pages="pagination.totalPages"
-        :page-size="pagination.itemsPerPage"
-        :total-items="pagination.totalItems"
-        :loading="loading"
-        @page-change="onPageChange"
-      />
-    </template>
-  </DataTable>
+    </div>
 
-  <!-- Modal -->
-  <Create v-if="showAddModal" :show="showAddModal" :onClose="closeModal" @created="fetchAttributeValues" />
-  <Edit v-if="showEditModal" :show="showEditModal" :attribute-value="editingAttributeValue" :onClose="closeModal" @updated="fetchAttributeValues" />
+    <!-- Bộ lọc -->
+    <AttributeValueFilter
+      :initial-filters="filters"
+      @update:filters="handleFilterChange"
+    />
+
+    <!-- Bảng dữ liệu -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thuộc tính</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá trị</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hiển thị</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thứ tự</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr v-for="val in attributeValues" :key="val.id">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ val.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ val.attribute_name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ val.value }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ val.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ val.sort_order }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span 
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
+                :class="val.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+              >
+                {{ val.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <button 
+                @click="openEditModal(val)" 
+                class="text-indigo-600 hover:text-indigo-900 mr-3"
+              >
+                Sửa
+              </button>
+              <button 
+                @click="confirmDelete(val)" 
+                class="text-red-600 hover:text-red-900"
+              >
+                Xóa
+              </button>
+            </td>
+          </tr>
+          <tr v-if="attributeValues.length === 0">
+            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+              {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Phân trang -->
+    <div v-if="attributeValues.length > 0" class="mt-4 flex justify-between items-center">
+      <div class="text-sm text-gray-700">
+        Hiển thị {{ pagination.from || 0 }} đến {{ pagination.to || 0 }} trên tổng số {{ pagination.total || 0 }} bản ghi
+      </div>
+      <div class="flex space-x-1">
+        <button 
+          v-for="page in pagination.links" 
+          :key="page.label"
+          @click="changePage(page.url)"
+          :disabled="!page.url"
+          :class="[
+            'px-3 py-1 border rounded',
+            page.active 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-white text-gray-700 hover:bg-gray-50',
+            !page.url && 'opacity-50 cursor-not-allowed'
+          ]"
+          v-html="page.label"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Modal thêm mới -->
+    <CreateAttributeValue
+      v-if="showCreateModal"
+      :show="showCreateModal"
+      :on-close="closeCreateModal"
+      @created="handleAttributeValueCreated"
+    />
+
+    <!-- Modal chỉnh sửa -->
+    <EditAttributeValue
+      v-if="showEditModal"
+      :show="showEditModal"
+      :attribute-value="selectedAttributeValue"
+      :on-close="closeEditModal"
+      @updated="handleAttributeValueUpdated"
+    />
+
+    <!-- Modal xác nhận xóa -->
+    <ConfirmModal
+      v-if="showDeleteModal"
+      :show="showDeleteModal"
+      title="Xác nhận xóa"
+      :message="`Bạn có chắc chắn muốn xóa giá trị ${selectedAttributeValue?.value || ''}?`"
+      :on-close="closeDeleteModal"
+      @confirm="deleteAttributeValue"
+    />
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
-import DataTable from '@/components/DataTable.vue'
-import Pagination from '@/components/Pagination.vue'
-import Filter from './filter.vue'
-import Create from './create.vue'
-import Edit from './edit.vue'
-import api from '@/api/apiClient'
+import { ref, onMounted, reactive } from 'vue'
+import CreateAttributeValue from './create.vue'
+import EditAttributeValue from './edit.vue'
+import AttributeValueFilter from './filter.vue'
+import ConfirmModal from '@/components/ConfirmModal.vue'
 import endpoints from '@/api/endpoints'
-import useTableSelection from '@/composables/useTableSelection'
-import usePagination from '@/composables/usePagination'
-import useSyncQueryPagination from '@/composables/useSyncQueryPagination'
-import { formatDate } from '@/utils/formatDate'
+import axios from 'axios'
 
+// State
 const attributeValues = ref([])
-const filters = ref({ search: '' })
-const showAddModal = ref(false)
-const showEditModal = ref(false)
-const editingAttributeValue = ref(null)
-const loading = ref(false)
-const pagination = ref({
-  currentPage: 1,
-  totalPages: 0,
-  totalItems: 0,
-  itemsPerPage: 10
+const selectedAttributeValue = ref(null)
+const pagination = reactive({
+  current_page: 1,
+  from: 0,
+  to: 0,
+  total: 0,
+  per_page: 10,
+  links: []
 })
-const { selected, isAllSelected, toggleSelectAll, toggleSelect } = useTableSelection(attributeValues)
+const filters = reactive({
+  search: '',
+  status: '',
+  sort_by: 'created_at_desc'
+})
+const loading = ref(false)
 
-const fetchAttributeValues = async () => {
+// Modal state
+const showCreateModal = ref(false)
+const showEditModal = ref(false)
+const showDeleteModal = ref(false)
+
+// Fetch data
+onMounted(async () => {
+  await fetchAttributeValues()
+})
+
+async function fetchAttributeValues(page = 1) {
   loading.value = true
   try {
-    const params = { ...filters.value, page: pagination.value.currentPage, per_page: pagination.value.itemsPerPage }
-    const res = await api.get(endpoints.attributeValues.list, { params })
-    attributeValues.value = res.data.data || []
-    pagination.value.totalItems = res.data.meta?.total || 0
-    pagination.value.totalPages = res.data.meta?.last_page || 1
-    pagination.value.currentPage = res.data.meta?.current_page || 1
-  } catch (e) {
-    attributeValues.value = []
-    pagination.value.totalItems = 0
-    pagination.value.totalPages = 1
-    pagination.value.currentPage = 1
+    const response = await axios.get(endpoints.attributeValues.list, {
+      params: { 
+        page,
+        search: filters.search,
+        status: filters.status,
+        sort_by: filters.sort_by
+      }
+    })
+    attributeValues.value = response.data.data
+    // Update pagination
+    const meta = response.data.meta
+    if (meta) {
+      pagination.current_page = meta.current_page
+      pagination.from = meta.from
+      pagination.to = meta.to
+      pagination.total = meta.total
+      pagination.per_page = meta.per_page
+      pagination.links = meta.links
+    }
+  } catch (error) {
+    console.error('Error fetching attribute values:', error)
   } finally {
     loading.value = false
   }
 }
 
-const { onPageChange, onUpdateFilters } = useSyncQueryPagination(filters, pagination, fetchAttributeValues, ['search'])
-
-const clearFilters = () => {
-  filters.value = { search: '' }
-  fetchAttributeValues()
+// Filter handlers
+function handleFilterChange(newFilters) {
+  Object.assign(filters, newFilters)
+  fetchAttributeValues(1)
 }
 
-const openAddModal = () => {
-  showAddModal.value = true
+// Modal handlers
+function openCreateModal() {
+  showCreateModal.value = true
 }
-const closeModal = () => {
-  showAddModal.value = false
-  showEditModal.value = false
-  editingAttributeValue.value = null
+
+function closeCreateModal() {
+  showCreateModal.value = false
 }
-const editAttributeValue = (val) => {
-  editingAttributeValue.value = val
+
+function openEditModal(attributeValue) {
+  selectedAttributeValue.value = attributeValue
   showEditModal.value = true
 }
-const deleteAttributeValue = async (val) => {
-  if (confirm(`Bạn có chắc chắn muốn xóa giá trị "${val.value}"?`)) {
-    try {
-      await api.delete(endpoints.attributeValues.delete(val.id))
-      fetchAttributeValues()
-    } catch (e) {}
+
+function closeEditModal() {
+  showEditModal.value = false
+  selectedAttributeValue.value = null
+}
+
+function confirmDelete(attributeValue) {
+  selectedAttributeValue.value = attributeValue
+  showDeleteModal.value = true
+}
+
+function closeDeleteModal() {
+  showDeleteModal.value = false
+  selectedAttributeValue.value = null
+}
+
+// Action handlers
+async function handleAttributeValueCreated() {
+  await fetchAttributeValues()
+  closeCreateModal()
+}
+
+async function handleAttributeValueUpdated() {
+  await fetchAttributeValues()
+  closeEditModal()
+}
+
+async function deleteAttributeValue() {
+  try {
+    await axios.delete(endpoints.attributeValues.delete(selectedAttributeValue.value.id))
+    await fetchAttributeValues()
+    closeDeleteModal()
+  } catch (error) {
+    console.error('Error deleting attribute value:', error)
   }
 }
-const deleteSelected = async () => {
-  if (!selected.length) return
-  if (confirm('Bạn có chắc chắn muốn xóa các giá trị đã chọn?')) {
-    try {
-      await Promise.all(selected.map(id => api.delete(endpoints.attributeValues.delete(id))))
-      fetchAttributeValues()
-    } catch (e) {}
-  }
+
+function changePage(url) {
+  if (!url) return
+  const urlObj = new URL(url)
+  const page = urlObj.searchParams.get('page')
+  fetchAttributeValues(page)
 }
-// Bỏ onMounted vì useSyncQueryPagination đã xử lý
 </script>
 
 <style scoped>
