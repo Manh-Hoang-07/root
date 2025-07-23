@@ -223,6 +223,7 @@ function closeDeleteModal() {
   showDeleteModal.value = false
   selectedProduct.value = null
 }
+
 // Action handlers
 async function handleProductCreated() {
   await fetchProducts()
@@ -241,12 +242,14 @@ async function deleteProduct() {
     console.error('Error deleting product:', error)
   }
 }
+
 function changePage(url) {
   if (!url) return
   const urlObj = new URL(url)
   const page = urlObj.searchParams.get('page')
   fetchProducts(page)
 }
+
 // Helper functions
 function formatCurrency(amount) {
   if (!amount) return '0'

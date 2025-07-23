@@ -42,53 +42,17 @@
       </div>
     </div>
     <!-- Modal thêm/sửa quy tắc -->
-    <Modal v-if="showEditPricing" v-model="showEditPricing" title="Sửa quy tắc tính phí">
-      <form @submit.prevent="handleSubmit">
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Dịch vụ</label>
-          <select v-model="serviceId" class="w-full px-4 py-2 border rounded-xl" required>
-            <option v-for="service in services" :key="service.id" :value="service.id">{{ service.name }}</option>
-          </select>
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Zone</label>
-          <select v-model="zoneId" class="w-full px-4 py-2 border rounded-xl" required>
-            <option v-for="zone in zones" :key="zone.id" :value="zone.id">{{ zone.name }}</option>
-          </select>
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Khối lượng tối thiểu (kg)</label>
-          <input v-model="minWeight" type="number" class="w-full px-4 py-2 border rounded-xl" />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Khối lượng tối đa (kg)</label>
-          <input v-model="maxWeight" type="number" class="w-full px-4 py-2 border rounded-xl" />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Tăng giá theo %</label>
-          <input v-model="markupPercent" type="number" class="w-full px-4 py-2 border rounded-xl" />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Tăng giá cố định (VNĐ)</label>
-          <input v-model="markupFixed" type="number" class="w-full px-4 py-2 border rounded-xl" />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Phí tối thiểu (VNĐ)</label>
-          <input v-model="minFee" type="number" class="w-full px-4 py-2 border rounded-xl" />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Trạng thái</label>
-          <select v-model="status" class="w-full px-4 py-2 border rounded-xl" required>
-            <option value="active">Hoạt động</option>
-            <option value="inactive">Không hoạt động</option>
-          </select>
-        </div>
-        <div class="flex justify-end gap-2 mt-6">
-          <button type="button" class="px-4 py-2 bg-gray-200 rounded-lg" @click="closeModal">Hủy</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Lưu</button>
-        </div>
-      </form>
-    </Modal>
+    <PricingRuleForm
+      v-if="showEditPricing"
+      :show="showEditPricing"
+      :pricing-rule="editingPricingRule"
+      :services="services"
+      :zones="zones"
+      :api-errors="apiErrors"
+      :mode="editingPricingRule ? 'edit' : 'create'"
+      @submit="handleSubmitPricingRule"
+      @cancel="closeModal"
+    />
 
     <!-- Weight Rules -->
     <div class="bg-white rounded-xl shadow-sm border p-6 mb-8">
@@ -203,6 +167,7 @@
 import { ref, onMounted } from 'vue'
 import api from '@/api/apiClient'
 import endpoints from '@/api/endpoints'
+import PricingRuleForm from './PricingRuleForm.vue'
 import CustomSection from '@/components/CustomSection.vue'
 import Modal from '@/components/Modal.vue'
 
