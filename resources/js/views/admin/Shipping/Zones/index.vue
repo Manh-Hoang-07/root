@@ -1,134 +1,95 @@
 <template>
-  <CustomSection title="Zone Mapping" description="Quản lý bản đồ khu vực vận chuyển">
-    <button class="mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg" @click="openCreate">+ Thêm zone</button>
-    <button class="mb-4 px-4 py-2 bg-gray-600 text-white rounded-lg ml-2" @click="openEdit">Sửa zone</button>
-    <!-- Zone Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      <!-- Card zone mẫu -->
-      <div class="bg-white rounded-xl shadow-sm border p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Miền Bắc</h3>
-          <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Active</span>
-        </div>
-        <div class="space-y-2 text-sm text-gray-600">
-          <div class="flex justify-between"><span>Provinces:</span><span class="font-medium">25 tỉnh</span></div>
-          <div class="flex justify-between"><span>Base Fee:</span><span class="font-medium">15,000đ</span></div>
-          <div class="flex justify-between"><span>Delivery Time:</span><span class="font-medium">2-3 ngày</span></div>
-          <div class="flex justify-between"><span>Services:</span><span class="font-medium">3 active</span></div>
-        </div>
-        <div class="mt-4 flex space-x-2">
-          <button class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition" @click="openEditZone('Miền Bắc')">Edit</button>
-          <button class="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 transition" @click="openViewZone('Miền Bắc')">View Details</button>
-        </div>
-      </div>
-      <!-- Card zone khác ... -->
-      <div class="bg-white rounded-xl shadow-sm border p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Miền Trung</h3>
-          <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Active</span>
-        </div>
-        <div class="space-y-2 text-sm text-gray-600">
-          <div class="flex justify-between"><span>Provinces:</span><span class="font-medium">19 tỉnh</span></div>
-          <div class="flex justify-between"><span>Base Fee:</span><span class="font-medium">20,000đ</span></div>
-          <div class="flex justify-between"><span>Delivery Time:</span><span class="font-medium">3-4 ngày</span></div>
-          <div class="flex justify-between"><span>Services:</span><span class="font-medium">2 active</span></div>
-        </div>
-        <div class="mt-4 flex space-x-2">
-          <button class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition" @click="openEditZone('Miền Trung')">Edit</button>
-          <button class="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 transition" @click="openViewZone('Miền Trung')">View Details</button>
-        </div>
-      </div>
-      <div class="bg-white rounded-xl shadow-sm border p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Miền Nam</h3>
-          <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Active</span>
-        </div>
-        <div class="space-y-2 text-sm text-gray-600">
-          <div class="flex justify-between"><span>Provinces:</span><span class="font-medium">19 tỉnh</span></div>
-          <div class="flex justify-between"><span>Base Fee:</span><span class="font-medium">18,000đ</span></div>
-          <div class="flex justify-between"><span>Delivery Time:</span><span class="font-medium">2-3 ngày</span></div>
-          <div class="flex justify-between"><span>Services:</span><span class="font-medium">3 active</span></div>
-        </div>
-        <div class="mt-4 flex space-x-2">
-          <button class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition" @click="openEditZone('Miền Nam')">Edit</button>
-          <button class="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 transition" @click="openViewZone('Miền Nam')">View Details</button>
-        </div>
-      </div>
+  <div class="container mx-auto p-4">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Quản lý Zone Mapping</h1>
+      <button 
+        @click="showAddZone = true" 
+        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
+      >
+        Thêm Zone mới
+      </button>
     </div>
-    <!-- Province Mapping -->
-    <div class="bg-white rounded-xl shadow-sm border p-6 mb-8">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">Mapping tỉnh/thành phố</h3>
-        <button class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition" @click="showAddZone = true">
-          + Thêm Zone
-        </button>
-      </div>
-      <div class="overflow-x-auto">
-        <!-- ... giữ nguyên table mapping ... -->
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-4 py-3 text-left font-medium text-gray-900">Tỉnh/Thành</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-900">Zone</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-900">Base Fee</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-900">Delivery Time</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-900">Status</th>
-              <th class="px-4 py-3 text-left font-medium text-gray-900">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200">
-            <!-- ... các dòng mapping ... -->
-            <tr class="hover:bg-gray-50">
-              <td class="px-4 py-3">Hà Nội</td>
-              <td class="px-4 py-3">Miền Bắc</td>
-              <td class="px-4 py-3">15,000đ</td>
-              <td class="px-4 py-3">1-2 ngày</td>
-              <td class="px-4 py-3">
-                <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Active</span>
-              </td>
-              <td class="px-4 py-3">
-                <button class="text-blue-600 hover:text-blue-800 text-sm" @click="openEditZone('Hà Nội')">Edit</button>
-                <button class="text-red-600 hover:text-red-800 text-sm ml-2" @click="openDeleteZone('Hà Nội')">Delete</button>
-              </td>
-            </tr>
-            <!-- ... các dòng khác ... -->
-          </tbody>
-        </table>
-      </div>
+    <!-- Bảng dữ liệu -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Zone</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số tỉnh</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base Fee</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Time</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr v-for="zone in zones" :key="zone.id">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ zone.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ zone.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ Array.isArray(zone.provinces) ? zone.provinces.length : (zone.provinces || '').split(',').length }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ zone.base_fee | currency }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ zone.delivery_time }}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span 
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
+                :class="getStatusClass(zone.status)"
+              >
+                {{ getStatusName(zone.status) }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <button 
+                @click="openEditZone(zone)" 
+                class="text-indigo-600 hover:text-indigo-900 mr-3"
+              >
+                Sửa
+              </button>
+              <button 
+                @click="openDeleteZone(zone)" 
+                class="text-red-600 hover:text-red-900"
+              >
+                Xóa
+              </button>
+            </td>
+          </tr>
+          <tr v-if="zones.length === 0">
+            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+              Không có dữ liệu
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+    <!-- Phân trang (nếu có) -->
     <!-- Modal thêm/sửa zone -->
-    <Modal v-if="showAddZone || showEditZone" v-model="showAddZone" :title="editZoneName ? 'Sửa zone' : 'Thêm zone mới'">
-      <form @submit.prevent="submitZone">
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Tên zone</label>
-          <input v-model="zoneName" type="text" class="w-full px-4 py-2 border rounded-xl" required />
+    <Modal v-if="showAddZone" v-model="showAddZone" :title="editZoneName ? 'Sửa zone' : 'Thêm zone mới'">
+      <form @submit.prevent="submitZone" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tên zone <span class="text-red-500">*</span></label>
+          <input v-model="zoneName" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.name }" maxlength="100" />
+          <p v-if="validationErrors.name" class="mt-1 text-sm text-red-600">{{ validationErrors.name }}</p>
         </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Provinces</label>
-          <input v-model="zoneProvinces" type="text" class="w-full px-4 py-2 border rounded-xl" required />
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Provinces (phân cách bằng dấu phẩy) <span class="text-red-500">*</span></label>
+          <input v-model="zoneProvinces" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.provinces }" />
+          <p v-if="validationErrors.provinces" class="mt-1 text-sm text-red-600">{{ validationErrors.provinces }}</p>
         </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Base Fee</label>
-          <input v-model="zoneBaseFee" type="number" class="w-full px-4 py-2 border rounded-xl" required />
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Base Fee <span class="text-red-500">*</span></label>
+          <input v-model="zoneBaseFee" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.base_fee }" />
+          <p v-if="validationErrors.base_fee" class="mt-1 text-sm text-red-600">{{ validationErrors.base_fee }}</p>
         </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Delivery Time</label>
-          <input v-model="zoneDeliveryTime" type="text" class="w-full px-4 py-2 border rounded-xl" required />
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Delivery Time <span class="text-red-500">*</span></label>
+          <input v-model="zoneDeliveryTime" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.delivery_time }" />
+          <p v-if="validationErrors.delivery_time" class="mt-1 text-sm text-red-600">{{ validationErrors.delivery_time }}</p>
         </div>
-        <div class="flex justify-end gap-2 mt-6">
-          <button type="button" class="px-4 py-2 bg-gray-200 rounded-lg" @click="closeZoneModal">Hủy</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Lưu</button>
+        <div class="flex justify-end space-x-3 pt-4">
+          <button type="button" @click="closeZoneModal" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">Huỷ</button>
+          <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">{{ editZoneName ? 'Cập nhật' : 'Thêm mới' }}</button>
         </div>
       </form>
-    </Modal>
-    <!-- Modal xác nhận View Details -->
-    <Modal v-if="showViewZone" v-model="showViewZone" title="Chi tiết zone">
-      <div class="py-4 text-center">
-        <p>Hiển thị chi tiết zone <b>{{ viewZoneName }}</b> (demo).</p>
-        <div class="flex justify-end gap-2 mt-6">
-          <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg" @click="showViewZone = false">Đóng</button>
-        </div>
-      </div>
     </Modal>
     <!-- Modal xác nhận xóa zone -->
     <Modal v-if="showDeleteZone" v-model="showDeleteZone" title="Xóa zone">
@@ -140,35 +101,87 @@
         </div>
       </div>
     </Modal>
-    <CreateZoneModal v-if="showCreate" @close="showCreate = false" @save="showCreate = false" />
-    <EditZoneModal v-if="showEdit" @close="showEdit = false" @save="showEdit = false" />
-  </CustomSection>
+  </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, reactive } from 'vue'
 import api from '@/api/apiClient'
 import endpoints from '@/api/endpoints'
-import CustomSection from '@/components/CustomSection.vue'
 import Modal from '@/components/Modal.vue'
-import CreateZoneModal from './create.vue'
-import EditZoneModal from './edit.vue'
 
 const showAddZone = ref(false)
-const showEditZone = ref(false)
 const editZoneName = ref('')
 const zoneName = ref('')
 const zoneProvinces = ref('')
 const zoneBaseFee = ref('')
 const zoneDeliveryTime = ref('')
-const showViewZone = ref(false)
-const viewZoneName = ref('')
 const showDeleteZone = ref(false)
 const deleteZoneName = ref('')
-const showCreate = ref(false)
-const showEdit = ref(false)
 const zones = ref([])
 const loading = ref(false)
 const error = ref('')
+const validationErrors = reactive({})
+const validationRules = computed(() => ({
+  name: [
+    { required: 'Tên zone là bắt buộc.' },
+    { max: [100, 'Tên zone không được vượt quá 100 ký tự.'] }
+  ],
+  provinces: [
+    { required: 'Danh sách tỉnh là bắt buộc.' }
+  ],
+  base_fee: [
+    { required: 'Base fee là bắt buộc.' },
+    { number: 'Base fee phải là số.' }
+  ],
+  delivery_time: [
+    { required: 'Thời gian giao hàng là bắt buộc.' }
+  ]
+}))
+function clearErrors() {
+  Object.keys(validationErrors).forEach(key => delete validationErrors[key])
+}
+function validateForm() {
+  clearErrors()
+  let valid = true
+  const rules = validationRules.value
+  const formData = {
+    name: zoneName.value,
+    provinces: zoneProvinces.value,
+    base_fee: zoneBaseFee.value,
+    delivery_time: zoneDeliveryTime.value
+  }
+  for (const field in rules) {
+    for (const rule of rules[field]) {
+      if (rule.required && !formData[field]) {
+        validationErrors[field] = rule.required
+        valid = false
+        break
+      }
+      if (rule.max && formData[field] && formData[field].length > rule.max[0]) {
+        validationErrors[field] = rule.max[1]
+        valid = false
+        break
+      }
+      if (rule.number && formData[field] && isNaN(Number(formData[field]))) {
+        validationErrors[field] = rule.number
+        valid = false
+        break
+      }
+    }
+  }
+  return valid
+}
+
+function getStatusName(status) {
+  if (status === 'active' || status === 1) return 'Đang hoạt động'
+  if (status === 'inactive' || status === 0) return 'Không hoạt động'
+  return status
+}
+function getStatusClass(status) {
+  if (status === 'active' || status === 1) return 'bg-green-100 text-green-800'
+  if (status === 'inactive' || status === 0) return 'bg-gray-100 text-gray-800'
+  return 'bg-gray-100 text-gray-800'
+}
 
 async function fetchZones() {
   loading.value = true
@@ -184,29 +197,25 @@ async function fetchZones() {
 }
 onMounted(fetchZones)
 
-function openEditZone(name) {
-  const found = zones.value.find(z => z.name === name)
-  editZoneName.value = name
-  zoneName.value = found ? found.name : name
-  zoneProvinces.value = found ? found.provinces : ''
-  zoneBaseFee.value = found ? found.base_fee : ''
-  zoneDeliveryTime.value = found ? found.delivery_time : ''
+function openEditZone(zone) {
+  editZoneName.value = zone.name
+  zoneName.value = zone.name
+  zoneProvinces.value = Array.isArray(zone.provinces) ? zone.provinces.join(',') : zone.provinces
+  zoneBaseFee.value = zone.base_fee
+  zoneDeliveryTime.value = zone.delivery_time
   showAddZone.value = true
 }
-function openViewZone(name) {
-  viewZoneName.value = name
-  showViewZone.value = true
-}
-function openDeleteZone(name) {
-  deleteZoneName.value = name
+function openDeleteZone(zone) {
+  deleteZoneName.value = zone.name
   showDeleteZone.value = true
 }
 function closeZoneModal() {
   showAddZone.value = false
-  showEditZone.value = false
   editZoneName.value = ''
+  clearErrors()
 }
 async function submitZone() {
+  if (!validateForm()) return
   const found = zones.value.find(z => z.name === zoneName.value)
   const data = {
     name: zoneName.value,
@@ -238,6 +247,4 @@ async function submitDeleteZone() {
     error.value = 'Xóa zone thất bại!'
   }
 }
-function openCreate() { showCreate.value = true }
-function openEdit() { showEdit.value = true }
 </script> 
