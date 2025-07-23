@@ -1,21 +1,65 @@
 <template>
-  <div class="flex flex-wrap items-center gap-1 bg-white border border-gray-200 rounded px-2 py-1">
-    <div class="flex items-center">
-      <MagnifyingGlassIcon class="w-3 h-3 text-gray-400 mr-1" />
-      <input
-        v-model="filters.search"
-        @input="$emit('update:filters', { ...filters })"
-        class="h-6 px-1 text-xs border-none focus:ring-0 outline-none bg-transparent"
-        placeholder="Tìm kiếm đơn hàng"
-      />
-    </div>
-    <button @click="$emit('clear')" class="h-6 px-2 text-xs rounded bg-gray-100 hover:bg-gray-200">Xóa lọc</button>
-  </div>
+  <AdminFilter @apply="applyFilters" @reset="resetFilters">
+    <AdminFilterItem
+      id="search"
+      label="Tìm kiếm"
+      type="text"
+      v-model="filters.search"
+      placeholder="Tìm theo tên khách hàng"
+    />
+    <AdminFilterItem
+      id="status"
+      label="Trạng thái"
+      type="select"
+      v-model="filters.status"
+      placeholder="Tất cả trạng thái"
+      :options="statusOptions"
+    />
+    <AdminFilterItem
+      id="sort_by"
+      label="Sắp xếp theo"
+      type="select"
+      v-model="filters.sort_by"
+      :options="sortOptions"
+    />
+  </AdminFilter>
 </template>
-
 <script setup>
-import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { reactive } from 'vue'
+import AdminFilter from '@/components/AdminFilter.vue'
+import AdminFilterItem from '@/components/AdminFilterItem.vue'
+
 const props = defineProps({
-  filters: Object
+  initialFilters: {
+    type: Object,
+    default: () => ({})
+  }
 })
+const emit = defineEmits(['update:filters'])
+const filters = reactive({
+  search: props.initialFilters.search || '',
+  status: props.initialFilters.status || '',
+  sort_by: props.initialFilters.sort_by || 'created_at_desc',
+})
+const statusOptions = [
+  { value: 'pending', label: 'Chờ xử lý' },
+  { value: 'completed', label: 'Hoàn thành' },
+  { value: 'cancelled', label: 'Đã huỷ' }
+]
+const sortOptions = [
+  { value: 'created_at_desc', label: 'Mới nhất' },
+  { value: 'created_at_asc', label: 'Cũ nhất' },
+  { value: 'customer_name_asc', label: 'Khách hàng (A-Z)' },
+  { value: 'customer_name_desc', label: 'Khách hàng (Z-A)' }
+]
+function applyFilters() {
+  emit('update:filters', { ...filters })
+}
+function resetFilters() {
+  Object.keys(filters).forEach(key => {
+    filters[key] = ''
+  })
+  filters.sort_by = 'created_at_desc'
+  emit('update:filters', { ...filters })
+}
 </script> 

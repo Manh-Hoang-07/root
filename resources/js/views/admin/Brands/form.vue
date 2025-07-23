@@ -14,7 +14,6 @@
         <p v-if="validationErrors.name" class="mt-1 text-sm text-red-600">{{ validationErrors.name }}</p>
         <p v-else-if="apiErrors.name" class="mt-1 text-sm text-red-600">{{ apiErrors.name }}</p>
       </div>
-
       <!-- Slug -->
       <div>
         <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
@@ -29,7 +28,6 @@
         <p v-else-if="apiErrors.slug" class="mt-1 text-sm text-red-600">{{ apiErrors.slug }}</p>
         <p class="mt-1 text-sm text-gray-500">Để trống để tự động tạo từ tên</p>
       </div>
-
       <!-- Mô tả -->
       <div>
         <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
@@ -43,7 +41,6 @@
         <p v-if="validationErrors.description" class="mt-1 text-sm text-red-600">{{ validationErrors.description }}</p>
         <p v-else-if="apiErrors.description" class="mt-1 text-sm text-red-600">{{ apiErrors.description }}</p>
       </div>
-
       <!-- Logo -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Logo</label>
@@ -65,7 +62,6 @@
           </div>
         </div>
       </div>
-
       <!-- Trạng thái -->
       <div>
         <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
@@ -82,7 +78,6 @@
         <p v-if="validationErrors.status" class="mt-1 text-sm text-red-600">{{ validationErrors.status }}</p>
         <p v-else-if="apiErrors.status" class="mt-1 text-sm text-red-600">{{ apiErrors.status }}</p>
       </div>
-
       <!-- Buttons -->
       <div class="flex justify-end space-x-3 pt-4">
         <button
@@ -103,7 +98,6 @@
     </form>
   </Modal>
 </template>
-
 <script setup>
 import { ref, computed, reactive, watch, onMounted } from 'vue'
 import Modal from '@/components/Modal.vue'
@@ -120,8 +114,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['submit', 'cancel'])
-
-// Lấy danh sách trạng thái từ API
 const statusOptions = ref({})
 const fetchStatusOptions = async () => {
   try {
@@ -131,19 +123,12 @@ const fetchStatusOptions = async () => {
     console.error('Error fetching status options:', error)
   }
 }
-
 onMounted(fetchStatusOptions)
-
-// Form title
 const formTitle = computed(() => props.brand ? 'Chỉnh sửa thương hiệu' : 'Thêm thương hiệu mới')
-
-// Modal visibility
 const modalVisible = computed({
   get: () => props.show,
   set: () => onClose()
 })
-
-// Form data
 const formData = reactive({
   name: '',
   slug: '',
@@ -152,13 +137,8 @@ const formData = reactive({
   status: 1,
   remove_logo: false
 })
-
-// Form state
-const logoPreview = ref(null)
 const validationErrors = reactive({})
 const isSubmitting = ref(false)
-
-// Watch brand prop to update form data
 watch(() => props.brand, (newBrand) => {
   if (newBrand) {
     formData.name = newBrand.name || ''
@@ -171,8 +151,6 @@ watch(() => props.brand, (newBrand) => {
     resetForm()
   }
 }, { immediate: true })
-
-// Reset form
 function resetForm() {
   formData.name = ''
   formData.slug = ''
@@ -183,105 +161,94 @@ function resetForm() {
   logoPreview.value = null
   clearErrors()
 }
-
-// Clear errors
 function clearErrors() {
   Object.keys(validationErrors).forEach(key => delete validationErrors[key])
 }
-
-// Handle logo change
+const validationRules = computed(() => ({
+  name: [
+    { required: 'Tên thương hiệu là bắt buộc.' },
+    { max: [100, 'Tên thương hiệu không được vượt quá 100 ký tự.'] }
+  ],
+  slug: [
+    { pattern: [/^[a-z0-9-]*$/, 'Slug chỉ được chứa chữ thường, số và dấu gạch ngang.'] }
+  ],
+  description: [
+    { max: [500, 'Mô tả không được vượt quá 500 ký tự.'] }
+  ]
+}))
+function validateForm() {
+  clearErrors()
+  let valid = true
+  const rules = validationRules.value
+  for (const field in rules) {
+    for (const rule of rules[field]) {
+      if (rule.required && !formData[field]) {
+        validationErrors[field] = rule.required
+        valid = false
+        break
+      }
+      if (rule.max && formData[field] && formData[field].length > rule.max[0]) {
+        validationErrors[field] = rule.max[1]
+        valid = false
+        break
+      }
+      if (rule.pattern && formData[field] && !rule.pattern[0].test(formData[field])) {
+        validationErrors[field] = rule.pattern[1]
+        valid = false
+        break
+      }
+    }
+  }
+  return valid
+}
+function validateAndSubmit() {
+  if (!validateForm()) {
+    return
+  }
+  isSubmitting.value = true
+  try {
+    const submitData = new FormData()
+    submitData.append('name', formData.name)
+    submitData.append('slug', formData.slug)
+    submitData.append('description', formData.description)
+    submitData.append('status', formData.status)
+    if (formData.logo) {
+      submitData.append('logo', formData.logo)
+    }
+    if (formData.remove_logo) {
+      submitData.append('remove_logo', 1)
+    }
+    emit('submit', submitData)
+  } finally {
+    isSubmitting.value = false
+  }
+}
+const logoPreview = ref(null)
 function handleLogoChange(event) {
   const file = event.target.files[0]
   if (!file) return
-
-  // Validate file type
   const validTypes = ['image/jpeg', 'image/png', 'image/gif']
   if (!validTypes.includes(file.type)) {
     validationErrors.logo = 'File phải là định dạng JPG, PNG hoặc GIF'
     return
   }
-
-  // Validate file size (max 2MB)
   if (file.size > 2 * 1024 * 1024) {
     validationErrors.logo = 'Kích thước file không được vượt quá 2MB'
     return
   }
-
-  // Clear error if valid
   delete validationErrors.logo
-  
   formData.logo = file
   formData.remove_logo = false
-
-  // Create preview
   const reader = new FileReader()
   reader.onload = (e) => {
     logoPreview.value = e.target.result
   }
   reader.readAsDataURL(file)
 }
-
-// Get image URL
 function getImageUrl(logo) {
   if (!logo) return null
   return logo.startsWith('http') ? logo : `/storage/${logo}`
 }
-
-// Validate form
-function validateForm() {
-  clearErrors()
-  
-  // Validate name
-  if (!formData.name.trim()) {
-    validationErrors.name = 'Tên thương hiệu là bắt buộc'
-  } else if (formData.name.length > 100) {
-    validationErrors.name = 'Tên thương hiệu không được vượt quá 100 ký tự'
-  }
-  
-  // Validate slug if provided
-  if (formData.slug && !/^[a-z0-9-]+$/.test(formData.slug)) {
-    validationErrors.slug = 'Slug chỉ được chứa chữ thường, số và dấu gạch ngang'
-  }
-  
-  // Validate description length
-  if (formData.description && formData.description.length > 500) {
-    validationErrors.description = 'Mô tả không được vượt quá 500 ký tự'
-  }
-  
-  return Object.keys(validationErrors).length === 0
-}
-
-// Validate and submit form
-function validateAndSubmit() {
-  if (!validateForm()) {
-    return
-  }
-  
-  isSubmitting.value = true
-  
-  try {
-    // Create FormData object for file upload
-    const submitData = new FormData()
-    submitData.append('name', formData.name)
-    submitData.append('slug', formData.slug)
-    submitData.append('description', formData.description)
-    submitData.append('status', formData.status)
-    
-    if (formData.logo) {
-      submitData.append('logo', formData.logo)
-    }
-    
-    if (formData.remove_logo) {
-      submitData.append('remove_logo', 1)
-    }
-
-    emit('submit', submitData)
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-// Close modal
 function onClose() {
   emit('cancel')
 }

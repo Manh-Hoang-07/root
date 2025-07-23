@@ -79,42 +79,16 @@
       </div>
     </div>
 
-    <!-- Modal cấu hình API -->
-    <Modal v-if="showConfig" v-model="showConfig" :title="'Cấu hình API ' + configProvider">
-      <form @submit.prevent="submitConfig">
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Tên Provider</label>
-          <input v-model="providerName" type="text" class="w-full px-4 py-2 border rounded-xl" required />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">API Key</label>
-          <input v-model="apiKey" type="text" class="w-full px-4 py-2 border rounded-xl" required />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Secret Key</label>
-          <input v-model="secretKey" type="text" class="w-full px-4 py-2 border rounded-xl" required />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Môi trường</label>
-          <select v-model="env" class="w-full px-4 py-2 border rounded-xl">
-            <option value="production">Production</option>
-            <option value="test">Test</option>
-          </select>
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Trạng thái</label>
-          <select v-model="status" class="w-full px-4 py-2 border rounded-xl">
-            <option value="active">Hoạt động</option>
-            <option value="inactive">Không hoạt động</option>
-          </select>
-        </div>
-        <div class="flex justify-end gap-2 mt-6">
-          <button type="button" class="px-4 py-2 bg-gray-200 rounded-lg" @click="showConfig = false">Hủy</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Lưu</button>
-        </div>
-      </form>
-    </Modal>
-
+    <!-- Modal cấu hình API (edit) -->
+    <ApiProviderForm
+      v-if="showConfig"
+      :show="showConfig"
+      :provider="editingProvider"
+      :api-errors="apiErrors"
+      :mode="'edit'"
+      @submit="handleEditProvider"
+      @cancel="() => showConfig = false"
+    />
     <!-- Modal test API -->
     <Modal v-if="showTest" v-model="showTest" :title="'Test API ' + testProvider">
       <div class="py-4 text-center">
@@ -127,51 +101,26 @@
     </Modal>
 
     <!-- Modal thêm provider mới -->
-    <Modal v-if="showAddProvider" v-model="showAddProvider" title="Thêm đơn vị vận chuyển mới">
-      <form @submit.prevent="submitAddProvider">
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Tên Provider</label>
-          <input v-model="newProviderName" type="text" class="w-full px-4 py-2 border rounded-xl" required />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">API Key</label>
-          <input v-model="newProviderApiKey" type="text" class="w-full px-4 py-2 border rounded-xl" required />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Secret Key</label>
-          <input v-model="newProviderSecretKey" type="text" class="w-full px-4 py-2 border rounded-xl" required />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Môi trường</label>
-          <select v-model="newProviderEnv" class="w-full px-4 py-2 border rounded-xl">
-            <option value="production">Production</option>
-            <option value="test">Test</option>
-          </select>
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium mb-1">Trạng thái</label>
-          <select v-model="newProviderStatus" class="w-full px-4 py-2 border rounded-xl">
-            <option value="active">Hoạt động</option>
-            <option value="inactive">Không hoạt động</option>
-          </select>
-        </div>
-        <div class="flex justify-end gap-2 mt-6">
-          <button type="button" class="px-4 py-2 bg-gray-200 rounded-lg" @click="showAddProvider = false">Hủy</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Thêm</button>
-        </div>
-      </form>
-    </Modal>
+    <ApiProviderForm
+      v-if="showAddProvider"
+      :show="showAddProvider"
+      :api-errors="apiErrors"
+      :mode="'create'"
+      @submit="handleAddProvider"
+      @cancel="() => showAddProvider = false"
+    />
     <EditApiModal v-if="showEdit" @close="showEdit = false" @save="showEdit = false" />
   </CustomSection>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import api from '@/api/apiClient'
 import endpoints from '@/api/endpoints'
 import CustomSection from '@/components/CustomSection.vue'
 import Modal from '@/components/Modal.vue'
 import EditApiModal from './edit.vue'
+import ApiProviderForm from './ApiProviderForm.vue'
 
 const showConfig = ref(false)
 const showTest = ref(false)
@@ -192,6 +141,9 @@ const status = ref('active')
 const providers = ref([])
 const loading = ref(false)
 const error = ref('')
+const validationErrors = reactive({})
+const apiErrors = reactive({})
+const editingProvider = ref(null)
 
 async function fetchProviders() {
   loading.value = true
@@ -208,24 +160,42 @@ async function fetchProviders() {
 
 onMounted(fetchProviders)
 
-function openConfigModal(provider) {
-  configProvider.value = provider
-  // Tìm provider trong danh sách để fill form
-  const found = providers.value.find(p => p.name === provider)
-  if (found) {
-    providerName.value = found.name
-    apiKey.value = found.api_key
-    secretKey.value = found.secret_key
-    env.value = found.env
-    status.value = found.status
-  }
+function openConfigModal(providerName) {
+  const found = providers.value.find(p => p.name === providerName)
+  editingProvider.value = found ? { ...found } : null
   showConfig.value = true
+  Object.keys(apiErrors).forEach(key => delete apiErrors[key])
 }
 function openTestModal(provider) {
   testProvider.value = provider
   showTest.value = true
 }
+function clearValidationErrors() {
+  Object.keys(validationErrors).forEach(key => delete validationErrors[key])
+}
+
+function validateProviderForm(name, apiKey, secretKey) {
+  clearValidationErrors()
+  if (!name.trim()) validationErrors.providerName = 'Tên Provider là bắt buộc'
+  else if (name.length > 100) validationErrors.providerName = 'Tên Provider không được vượt quá 100 ký tự'
+  if (!apiKey.trim()) validationErrors.apiKey = 'API Key là bắt buộc'
+  else if (apiKey.length > 100) validationErrors.apiKey = 'API Key không được vượt quá 100 ký tự'
+  if (!secretKey.trim()) validationErrors.secretKey = 'Secret Key là bắt buộc'
+  else if (secretKey.length > 100) validationErrors.secretKey = 'Secret Key không được vượt quá 100 ký tự'
+  return Object.keys(validationErrors).length === 0
+}
+function validateNewProviderForm(name, apiKey, secretKey) {
+  clearValidationErrors()
+  if (!name.trim()) validationErrors.newProviderName = 'Tên Provider là bắt buộc'
+  else if (name.length > 100) validationErrors.newProviderName = 'Tên Provider không được vượt quá 100 ký tự'
+  if (!apiKey.trim()) validationErrors.newProviderApiKey = 'API Key là bắt buộc'
+  else if (apiKey.length > 100) validationErrors.newProviderApiKey = 'API Key không được vượt quá 100 ký tự'
+  if (!secretKey.trim()) validationErrors.newProviderSecretKey = 'Secret Key là bắt buộc'
+  else if (secretKey.length > 100) validationErrors.newProviderSecretKey = 'Secret Key không được vượt quá 100 ký tự'
+  return Object.keys(validationErrors).length === 0
+}
 async function submitConfig() {
+  if (!validateProviderForm(providerName.value, apiKey.value, secretKey.value)) return
   // Nếu provider đã tồn tại thì update, chưa có thì tạo mới
   const found = providers.value.find(p => p.name === providerName.value)
   const data = {
@@ -248,6 +218,7 @@ async function submitConfig() {
   }
 }
 async function submitAddProvider() {
+  if (!validateNewProviderForm(newProviderName.value, newProviderApiKey.value, newProviderSecretKey.value)) return
   try {
     await api.post(endpoints.shippingApi.create, {
       name: newProviderName.value,
@@ -265,6 +236,12 @@ async function submitAddProvider() {
 async function submitTest() {
   // Nếu backend có API test thì gọi ở đây, tạm thời chỉ đóng modal
   showTest.value = false
+}
+function handleEditProvider(formData) {
+  // Gọi API update provider, xử lý lỗi, đóng modal nếu thành công
+}
+function handleAddProvider(formData) {
+  // Gọi API tạo provider, xử lý lỗi, đóng modal nếu thành công
 }
 function openEdit() { showEdit.value = true }
 </script> 

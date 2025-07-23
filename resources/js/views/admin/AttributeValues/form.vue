@@ -193,23 +193,48 @@ function clearErrors() {
   Object.keys(validationErrors).forEach(key => delete validationErrors[key])
 }
 
-// Validate form
+const validationRules = computed(() => ({
+  attribute_id: [
+    { required: 'Vui lòng chọn thuộc tính' }
+  ],
+  value: [
+    { required: 'Giá trị là bắt buộc' }
+  ],
+  name: [
+    { max: [100, 'Tên hiển thị không được vượt quá 100 ký tự'] }
+  ],
+  status: [
+    { required: 'Vui lòng chọn trạng thái' }
+  ],
+  sort_order: [
+    { number: 'Thứ tự phải là số' }
+  ]
+}))
+
 function validateForm() {
   clearErrors()
-  
-  // Validate attribute_id
-  if (!formData.attribute_id) {
-    validationErrors.attribute_id = 'Vui lòng chọn thuộc tính'
+  let valid = true
+  const rules = validationRules.value
+  for (const field in rules) {
+    for (const rule of rules[field]) {
+      if (rule.required && !formData[field]) {
+        validationErrors[field] = rule.required
+        valid = false
+        break
+      }
+      if (rule.number && formData[field] && isNaN(Number(formData[field]))) {
+        validationErrors[field] = rule.number
+        valid = false
+        break
+      }
+      if (rule.max && formData[field] && formData[field].length > rule.max[0]) {
+        validationErrors[field] = rule.max[1]
+        valid = false
+        break
+      }
+    }
   }
-  // Validate value
-  if (!formData.value.trim()) {
-    validationErrors.value = 'Giá trị là bắt buộc'
-  }
-  // Validate sort_order
-  if (formData.sort_order && isNaN(Number(formData.sort_order))) {
-    validationErrors.sort_order = 'Thứ tự phải là số'
-  }
-  return Object.keys(validationErrors).length === 0
+  return valid
 }
 
 // Validate and submit form

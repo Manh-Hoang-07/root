@@ -14,7 +14,6 @@
         <p v-if="validationErrors.name" class="mt-1 text-sm text-red-600">{{ validationErrors.name }}</p>
         <p v-else-if="apiErrors.name" class="mt-1 text-sm text-red-600">{{ apiErrors.name }}</p>
       </div>
-
       <!-- Danh mục cha -->
       <div>
         <label for="parent_id" class="block text-sm font-medium text-gray-700 mb-1">Danh mục cha</label>
@@ -32,7 +31,6 @@
         <p v-if="validationErrors.parent_id" class="mt-1 text-sm text-red-600">{{ validationErrors.parent_id }}</p>
         <p v-else-if="apiErrors.parent_id" class="mt-1 text-sm text-red-600">{{ apiErrors.parent_id }}</p>
       </div>
-
       <!-- Slug -->
       <div>
         <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
@@ -47,7 +45,6 @@
         <p v-else-if="apiErrors.slug" class="mt-1 text-sm text-red-600">{{ apiErrors.slug }}</p>
         <p class="mt-1 text-sm text-gray-500">Để trống để tự động tạo từ tên</p>
       </div>
-
       <!-- Mô tả -->
       <div>
         <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
@@ -61,7 +58,6 @@
         <p v-if="validationErrors.description" class="mt-1 text-sm text-red-600">{{ validationErrors.description }}</p>
         <p v-else-if="apiErrors.description" class="mt-1 text-sm text-red-600">{{ apiErrors.description }}</p>
       </div>
-
       <!-- Hình ảnh -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Hình ảnh</label>
@@ -83,7 +79,6 @@
           </div>
         </div>
       </div>
-
       <!-- Trạng thái -->
       <div>
         <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
@@ -100,7 +95,6 @@
         <p v-if="validationErrors.status" class="mt-1 text-sm text-red-600">{{ validationErrors.status }}</p>
         <p v-else-if="apiErrors.status" class="mt-1 text-sm text-red-600">{{ apiErrors.status }}</p>
       </div>
-
       <!-- Buttons -->
       <div class="flex justify-end space-x-3 pt-4">
         <button
@@ -121,7 +115,6 @@
     </form>
   </Modal>
 </template>
-
 <script setup>
 import { ref, computed, reactive, watch, onMounted } from 'vue'
 import Modal from '@/components/Modal.vue'
@@ -143,7 +136,6 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-// Lấy danh sách trạng thái từ API
 const statusOptions = ref({})
 const fetchStatusOptions = async () => {
   try {
@@ -153,19 +145,13 @@ const fetchStatusOptions = async () => {
     console.error('Error fetching status options:', error)
   }
 }
-
 onMounted(fetchStatusOptions)
 
-// Form title
 const formTitle = computed(() => props.category ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới')
-
-// Modal visibility
 const modalVisible = computed({
   get: () => props.show,
   set: () => onClose()
 })
-
-// Form data
 const formData = reactive({
   name: '',
   parent_id: '',
@@ -175,13 +161,9 @@ const formData = reactive({
   status: 1,
   remove_image: false
 })
-
-// Form state
-const imagePreview = ref(null)
 const validationErrors = reactive({})
 const isSubmitting = ref(false)
 
-// Watch category prop to update form data
 watch(() => props.category, (newCategory) => {
   if (newCategory) {
     formData.name = newCategory.name || ''
@@ -196,7 +178,6 @@ watch(() => props.category, (newCategory) => {
   }
 }, { immediate: true })
 
-// Reset form
 function resetForm() {
   formData.name = ''
   formData.parent_id = ''
@@ -208,117 +189,106 @@ function resetForm() {
   imagePreview.value = null
   clearErrors()
 }
-
-// Clear errors
 function clearErrors() {
   Object.keys(validationErrors).forEach(key => delete validationErrors[key])
 }
-
-// Handle image change
+const validationRules = computed(() => ({
+  name: [
+    { required: 'Tên danh mục là bắt buộc.' },
+    { max: [100, 'Tên danh mục không được vượt quá 100 ký tự.'] }
+  ],
+  slug: [
+    { pattern: [/^[a-z0-9-]*$/, 'Slug chỉ được chứa chữ thường, số và dấu gạch ngang.'] }
+  ],
+  description: [
+    { max: [500, 'Mô tả không được vượt quá 500 ký tự.'] }
+  ],
+  parent_id: [
+    { notSelf: ['Danh mục không thể là danh mục cha của chính nó.'] }
+  ]
+}))
+function validateForm() {
+  clearErrors()
+  let valid = true
+  const rules = validationRules.value
+  for (const field in rules) {
+    for (const rule of rules[field]) {
+      if (rule.required && !formData[field]) {
+        validationErrors[field] = rule.required
+        valid = false
+        break
+      }
+      if (rule.max && formData[field] && formData[field].length > rule.max[0]) {
+        validationErrors[field] = rule.max[1]
+        valid = false
+        break
+      }
+      if (rule.pattern && formData[field] && !rule.pattern[0].test(formData[field])) {
+        validationErrors[field] = rule.pattern[1]
+        valid = false
+        break
+      }
+      if (rule.notSelf && props.category && formData.parent_id === props.category.id) {
+        validationErrors.parent_id = rule.notSelf[0]
+        valid = false
+        break
+      }
+    }
+  }
+  return valid
+}
+function validateAndSubmit() {
+  if (!validateForm()) {
+    return
+  }
+  isSubmitting.value = true
+  try {
+    const submitData = new FormData()
+    submitData.append('name', formData.name)
+    submitData.append('slug', formData.slug)
+    submitData.append('description', formData.description)
+    submitData.append('status', formData.status)
+    if (formData.parent_id !== '') {
+      submitData.append('parent_id', formData.parent_id)
+    }
+    if (formData.image) {
+      submitData.append('image', formData.image)
+    }
+    if (formData.remove_image) {
+      submitData.append('remove_image', 1)
+    }
+    emit('submit', submitData)
+  } finally {
+    isSubmitting.value = false
+  }
+}
+function onClose() {
+  emit('cancel')
+}
+const imagePreview = ref(null)
 function handleImageChange(event) {
   const file = event.target.files[0]
   if (!file) return
-
-  // Validate file type
   const validTypes = ['image/jpeg', 'image/png', 'image/gif']
   if (!validTypes.includes(file.type)) {
     validationErrors.image = 'File phải là định dạng JPG, PNG hoặc GIF'
     return
   }
-
-  // Validate file size (max 2MB)
   if (file.size > 2 * 1024 * 1024) {
     validationErrors.image = 'Kích thước file không được vượt quá 2MB'
     return
   }
-
-  // Clear error if valid
   delete validationErrors.image
-  
   formData.image = file
   formData.remove_image = false
-
-  // Create preview
   const reader = new FileReader()
   reader.onload = (e) => {
     imagePreview.value = e.target.result
   }
   reader.readAsDataURL(file)
 }
-
-// Get image URL
 function getImageUrl(image) {
   if (!image) return null
   return image.startsWith('http') ? image : `/storage/${image}`
-}
-
-// Validate form
-function validateForm() {
-  clearErrors()
-  
-  // Validate name
-  if (!formData.name.trim()) {
-    validationErrors.name = 'Tên danh mục là bắt buộc'
-  } else if (formData.name.length > 100) {
-    validationErrors.name = 'Tên danh mục không được vượt quá 100 ký tự'
-  }
-  
-  // Validate slug if provided
-  if (formData.slug && !/^[a-z0-9-]+$/.test(formData.slug)) {
-    validationErrors.slug = 'Slug chỉ được chứa chữ thường, số và dấu gạch ngang'
-  }
-  
-  // Validate description length
-  if (formData.description && formData.description.length > 500) {
-    validationErrors.description = 'Mô tả không được vượt quá 500 ký tự'
-  }
-  
-  // Validate parent_id to avoid self-reference
-  if (props.category && formData.parent_id === props.category.id) {
-    validationErrors.parent_id = 'Danh mục không thể là danh mục cha của chính nó'
-  }
-  
-  return Object.keys(validationErrors).length === 0
-}
-
-// Validate and submit form
-function validateAndSubmit() {
-  if (!validateForm()) {
-    return
-  }
-  
-  isSubmitting.value = true
-  
-  try {
-    // Create FormData object for file upload
-    const submitData = new FormData()
-    submitData.append('name', formData.name)
-    submitData.append('slug', formData.slug)
-    submitData.append('description', formData.description)
-    submitData.append('status', formData.status)
-    
-    // Parent ID
-    if (formData.parent_id !== '') {
-      submitData.append('parent_id', formData.parent_id)
-    }
-    
-    // Image
-    if (formData.image) {
-      submitData.append('image', formData.image)
-    }
-    
-    if (formData.remove_image) {
-      submitData.append('remove_image', 1)
-    }
-
-    emit('submit', submitData)
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-// Close modal
-function onClose() {
-  emit('cancel')
 }
 </script> 

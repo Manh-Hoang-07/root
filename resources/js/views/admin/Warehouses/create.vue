@@ -1,37 +1,74 @@
 <template>
-  <Modal v-if="show" v-model="modalVisible" title="Thêm kho hàng mới">
-    <Form :warehouse="null" :mode="'create'" @submit="handleSubmit" @cancel="onClose" />
-  </Modal>
+  <div>
+    <WarehouseForm 
+      v-if="showModal"
+      :show="showModal"
+      :api-errors="apiErrors"
+      :status-options="statusOptions"
+      @submit="handleSubmit" 
+      @cancel="onClose" 
+    />
+  </div>
 </template>
 <script setup>
-import Form from './form.vue'
-import api from '@/api/apiClient'
+import WarehouseForm from './form.vue'
 import endpoints from '@/api/endpoints'
-import Modal from '@/components/Modal.vue'
-import { computed } from 'vue'
+import { ref, reactive, watch } from 'vue'
+import axios from 'axios'
+
 const props = defineProps({
   show: Boolean,
   onClose: Function
 })
 const emit = defineEmits(['created'])
-const modalVisible = computed({
-  get: () => props.show,
-  set: (val) => { if (!val) props.onClose() }
-})
-async function handleSubmit(data) {
-  console.log('Warehouse create: handleSubmit called', {
-    endpoint: endpoints.warehouses.create,
-    data: data
-  })
-  
+
+const showModal = ref(false)
+const apiErrors = reactive({})
+const statusOptions = ref({})
+
+watch(() => props.show, (newValue) => {
+  showModal.value = newValue
+  if (newValue) {
+    Object.keys(apiErrors).forEach(key => delete apiErrors[key])
+    fetchStatusOptions()
+  }
+}, { immediate: true })
+
+async function fetchStatusOptions() {
   try {
-    const response = await api.post(endpoints.warehouses.create, data)
-    console.log('Warehouse create: Success', response)
+    const response = await axios.get(endpoints.enums('BasicStatus'))
+    statusOptions.value = response.data
+  } catch (error) {
+    statusOptions.value = {
+      active: 'Hoạt động',
+      inactive: 'Không hoạt động'
+    }
+  }
+}
+
+async function handleSubmit(formData) {
+  try {
+    Object.keys(apiErrors).forEach(key => delete apiErrors[key])
+    await axios.post(endpoints.warehouses.create, formData)
     emit('created')
     props.onClose()
-  } catch (e) {
-    console.error('Warehouse create: Error', e)
-    // handle error
+  } catch (error) {
+    if (error.response?.status === 422 && error.response?.data?.errors) {
+      const errors = error.response.data.errors
+      for (const field in errors) {
+        if (Array.isArray(errors[field])) {
+          apiErrors[field] = errors[field][0]
+        } else {
+          apiErrors[field] = errors[field]
+        }
+      }
+    }
+  }
+}
+
+function onClose() {
+  if (props.onClose) {
+    props.onClose()
   }
 }
 </script> 

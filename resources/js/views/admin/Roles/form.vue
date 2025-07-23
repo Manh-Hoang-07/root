@@ -193,19 +193,30 @@ function clearErrors() {
   Object.keys(validationErrors).forEach(key => delete validationErrors[key])
 }
 
-// Validate form
+// Validation rules
+const validationRules = computed(() => ({
+  name: [
+    { required: 'Tên vai trò là bắt buộc' }
+  ],
+  display_name: [
+    { required: 'Tên hiển thị là bắt buộc' }
+  ]
+}))
+
 function validateForm() {
   clearErrors()
-  
-  // Validate name
-  if (!formData.name.trim()) {
-    validationErrors.name = 'Tên vai trò là bắt buộc'
+  let valid = true
+  const rules = validationRules.value
+  for (const field in rules) {
+    for (const rule of rules[field]) {
+      if (rule.required && !formData[field]) {
+        validationErrors[field] = rule.required
+        valid = false
+        break
+      }
+    }
   }
-  // Validate display_name
-  if (!formData.display_name.trim()) {
-    validationErrors.display_name = 'Tên hiển thị là bắt buộc'
-  }
-  return Object.keys(validationErrors).length === 0
+  return valid
 }
 
 // Validate and submit form

@@ -146,23 +146,36 @@ function clearErrors() {
   Object.keys(validationErrors).forEach(key => delete validationErrors[key])
 }
 
-// Validate form
+// Validation rules
+const validationRules = computed(() => ({
+  name: [
+    { required: 'Tên thuộc tính là bắt buộc' },
+    { max: [100, 'Tên thuộc tính không được vượt quá 100 ký tự'] }
+  ],
+  type: [
+    { required: 'Vui lòng chọn kiểu thuộc tính' }
+  ]
+}))
+
 function validateForm() {
   clearErrors()
-  
-  // Validate name
-  if (!formData.name.trim()) {
-    validationErrors.name = 'Tên thuộc tính là bắt buộc'
-  } else if (formData.name.length > 100) {
-    validationErrors.name = 'Tên thuộc tính không được vượt quá 100 ký tự'
+  let valid = true
+  const rules = validationRules.value
+  for (const field in rules) {
+    for (const rule of rules[field]) {
+      if (rule.required && !formData[field]) {
+        validationErrors[field] = rule.required
+        valid = false
+        break
+      }
+      if (rule.max && formData[field] && formData[field].length > rule.max[0]) {
+        validationErrors[field] = rule.max[1]
+        valid = false
+        break
+      }
+    }
   }
-  
-  // Validate type
-  if (!formData.type) {
-    validationErrors.type = 'Vui lòng chọn kiểu thuộc tính'
-  }
-  
-  return Object.keys(validationErrors).length === 0
+  return valid
 }
 
 // Validate and submit form
