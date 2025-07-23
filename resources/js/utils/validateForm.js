@@ -40,6 +40,14 @@ export default function validateForm(form, rules) {
               break
             }
           }
+          // Bổ sung xử lý pattern
+          if (rule === 'pattern' && value) {
+            const [regex, patternMsg] = Array.isArray(msg) ? msg : [msg, 'Định dạng không hợp lệ.']
+            if (!regex.test(value)) {
+              newErrors[field] = patternMsg
+              break
+            }
+          }
         }
       }
     }
