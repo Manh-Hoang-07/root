@@ -13,7 +13,8 @@
 <script setup>
 import CategoryForm from './form.vue'
 import endpoints from '@/api/endpoints'
-import { ref, reactive, watch } from 'vue'
+import { ref, watch } from 'vue'
+import { useApiFormSubmit } from '@/utils/useApiFormSubmit'
 import axios from 'axios'
 
 const props = defineProps({
@@ -23,8 +24,15 @@ const props = defineProps({
 const emit = defineEmits(['created'])
 
 const showModal = ref(false)
-const apiErrors = reactive({})
 const parentCategories = ref([])
+
+const { apiErrors, submit } = useApiFormSubmit({
+  endpoint: endpoints.categories.create,
+  emit,
+  onClose: props.onClose,
+  eventName: 'created',
+  method: 'post'
+})
 
 watch(() => props.show, (newValue) => {
   showModal.value = newValue
@@ -43,23 +51,7 @@ async function fetchParentCategories() {
 }
 
 async function handleSubmit(formData) {
-  try {
-    Object.keys(apiErrors).forEach(key => delete apiErrors[key])
-    const response = await axios.post(endpoints.categories.create, formData)
-    emit('created')
-    props.onClose()
-  } catch (error) {
-    if (error.response?.status === 422 && error.response?.data?.errors) {
-      const errors = error.response.data.errors
-      for (const field in errors) {
-        if (Array.isArray(errors[field])) {
-          apiErrors[field] = errors[field][0]
-        } else {
-          apiErrors[field] = errors[field]
-        }
-      }
-    }
-  }
+  await submit(formData)
 }
 
 function onClose() {

@@ -16,6 +16,7 @@
           name="name"
           :error="errors.name"
           required
+          autocomplete="organization"
           @update:model-value="clearError('name')"
         />
         <!-- Slug -->
@@ -24,6 +25,7 @@
           label="Slug"
           name="slug"
           :error="errors.slug"
+          autocomplete="off"
           @update:model-value="clearError('slug')"
         >
           <template #help>Để trống để tự động tạo từ tên</template>
@@ -35,17 +37,19 @@
           name="description"
           type="textarea"
           :error="errors.description"
+          autocomplete="off"
           @update:model-value="clearError('description')"
         />
         <!-- Logo -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Logo</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1" for="brand-logo">Logo</label>
           <div class="flex items-start space-x-4">
-            <div v-if="logoPreview || (brand && brand.logo)" class="w-24 h-24 border rounded-md overflow-hidden">
-              <img :src="logoPreview || getImageUrl(brand?.logo)" alt="Logo preview" class="w-full h-full object-contain" />
+            <div v-if="logoPreview || logoUrl" class="w-24 h-24 border rounded-md overflow-hidden">
+              <img :src="logoPreview || logoUrl" alt="Logo preview" class="w-full h-full object-contain" />
             </div>
             <div class="flex-1">
               <input
+                id="brand-logo"
                 type="file"
                 @change="handleLogoChange"
                 accept="image/*"
@@ -63,27 +67,30 @@
           label="Trạng thái"
           name="status"
           type="select"
-          :options="statusOptionsArr"
+          :options="statusOptions"
           :error="errors.status"
           @update:model-value="clearError('status')"
         />
-        <!-- Buttons sẽ nằm trong FormWrapper -->
       </template>
     </FormWrapper>
   </Modal>
 </template>
 <script setup>
-import { ref, computed, reactive, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import Modal from '@/components/Modal.vue'
 import FormWrapper from '@/components/FormWrapper.vue'
 import FormField from '@/components/FormField.vue'
-import endpoints from '@/api/endpoints'
-import axios from 'axios'
+import { useFormDefaults } from '@/utils/useFormDefaults'
+import { useUrl } from '@/utils/useUrl'
 import formToFormData from '@/utils/formToFormData'
 
 const props = defineProps({
   show: Boolean,
   brand: Object,
+  statusEnums: {
+    type: Array,
+    default: () => []
+  },
   apiErrors: {
     type: Object,
     default: () => ({})
@@ -91,29 +98,19 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['submit', 'cancel'])
-const statusOptions = ref({})
-const fetchStatusOptions = async () => {
-  try {
-    const response = await axios.get(endpoints.enums('BasicStatus'))
-    statusOptions.value = response.data
-  } catch (error) {
-    console.error('Error fetching status options:', error)
-  }
-}
-onMounted(fetchStatusOptions)
 const formTitle = computed(() => props.brand ? 'Chỉnh sửa thương hiệu' : 'Thêm thương hiệu mới')
 const modalVisible = computed({
   get: () => props.show,
   set: () => onClose()
 })
-const defaultValues = computed(() => ({
-  name: props.brand?.name || '',
-  slug: props.brand?.slug || '',
-  description: props.brand?.description || '',
-  status: props.brand?.status === true || props.brand?.status === 1 ? 1 : 0,
+const defaultValues = useFormDefaults(props, 'brand', {
+  name: '',
+  slug: '',
+  description: '',
+  status: '',
   logo: null,
   remove_logo: false
-}))
+})
 const logoPreview = ref(null)
 watch(() => props.brand, (newBrand) => {
   if (newBrand) {
@@ -138,46 +135,33 @@ const validationRules = computed(() => ({
   ]
 }))
 function handleSubmit(form) {
-  // Ép kiểu status về số để backend Enum không lỗi
-  if (form.status !== undefined) {
-    form.status = Number(form.status)
-  }
   emit('submit', formToFormData(form))
 }
+const statusOptions = computed(() =>
+  (props.statusEnums || []).map(opt => ({
+    value: opt.id,
+    label: opt.name
+  }))
+)
+const logoUrl = useUrl(props, 'brand', 'logo')
 function handleLogoChange(event) {
   const file = event.target.files[0]
   if (!file) return
   const validTypes = ['image/jpeg', 'image/png', 'image/gif']
   if (!validTypes.includes(file.type)) {
-    // Đẩy lỗi vào FormWrapper qua localErrors
-    // Không có errors.logo ở đây, nên cần custom xử lý
-    // Có thể dùng emit('error', { logo: ... }) nếu muốn
+    // Đẩy lỗi vào FormWrapper qua localErrors nếu muốn
     return
   }
   if (file.size > 2 * 1024 * 1024) {
-    // Đẩy lỗi vào FormWrapper qua localErrors
+    // Đẩy lỗi vào FormWrapper qua localErrors nếu muốn
     return
   }
-  // Xóa lỗi logo nếu có
-  // Gán file
-  // Gán preview
-  // Cập nhật form.logo qua FormWrapper
   logoPreview.value = null
-  // Cần cập nhật form.logo, nhưng form lấy từ slot, nên cần expose qua ref nếu muốn
-  // Ở đây chỉ preview, file sẽ được lấy từ input khi submit
   const reader = new FileReader()
   reader.onload = (e) => {
     logoPreview.value = e.target.result
   }
   reader.readAsDataURL(file)
-}
-const statusOptionsArr = computed(() => {
-  if (!statusOptions.value || typeof statusOptions.value !== 'object') return []
-  return Object.entries(statusOptions.value).map(([value, label]) => ({ value: Number(value), label }))
-})
-function getImageUrl(logo) {
-  if (!logo) return null
-  return logo.startsWith('http') ? logo : `/storage/${logo}`
 }
 function onClose() {
   emit('cancel')
