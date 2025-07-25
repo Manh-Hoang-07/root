@@ -16,6 +16,7 @@
           name="name"
           :error="errors.name"
           required
+          autocomplete="name"
           @update:model-value="clearError('name')"
         />
         <!-- Danh mục cha -->
@@ -36,6 +37,7 @@
           label="Slug"
           name="slug"
           :error="errors.slug"
+          autocomplete="off"
           @update:model-value="clearError('slug')"
         >
           <template #help>Để trống để tự động tạo từ tên</template>
@@ -47,17 +49,19 @@
           name="description"
           type="textarea"
           :error="errors.description"
+          autocomplete="off"
           @update:model-value="clearError('description')"
         />
         <!-- Hình ảnh -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Hình ảnh</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1" for="category-image">Hình ảnh</label>
           <div class="flex items-start space-x-4">
-            <div v-if="imagePreview || (category && category.image)" class="w-24 h-24 border rounded-md overflow-hidden">
-              <img :src="imagePreview || getImageUrl(category?.image)" alt="Image preview" class="w-full h-full object-contain" />
+            <div v-if="imagePreview || imageUrl" class="w-24 h-24 border rounded-md overflow-hidden">
+              <img :src="imagePreview || imageUrl" alt="Image preview" class="w-full h-full object-contain" />
             </div>
             <div class="flex-1">
               <input
+                id="category-image"
                 type="file"
                 @change="handleImageChange"
                 accept="image/*"
@@ -75,27 +79,33 @@
           label="Trạng thái"
           name="status"
           type="select"
-          :options="statusOptionsArr"
+          :options="statusOptions"
           :error="errors.status"
           @update:model-value="clearError('status')"
         />
-        <!-- Buttons sẽ nằm trong FormWrapper -->
       </template>
     </FormWrapper>
   </Modal>
 </template>
 <script setup>
-import { ref, computed, reactive, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import Modal from '@/components/Modal.vue'
 import FormWrapper from '@/components/FormWrapper.vue'
 import FormField from '@/components/FormField.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
+import { useFormDefaults } from '@/utils/useFormDefaults'
+import { useUrl } from '@/utils/useUrl'
+import formToFormData from '@/utils/formToFormData'
 
 const props = defineProps({
   show: Boolean,
   category: Object,
   parentCategories: {
+    type: Array,
+    default: () => []
+  },
+  statusEnums: {
     type: Array,
     default: () => []
   },
@@ -107,31 +117,20 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-const statusOptions = ref({})
-const fetchStatusOptions = async () => {
-  try {
-    const response = await axios.get(endpoints.enums('BasicStatus'))
-    statusOptions.value = response.data
-  } catch (error) {
-    console.error('Error fetching status options:', error)
-  }
-}
-onMounted(fetchStatusOptions)
-
 const formTitle = computed(() => props.category ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới')
 const modalVisible = computed({
   get: () => props.show,
   set: () => onClose()
 })
-const defaultValues = computed(() => ({
-  name: props.category?.name || '',
-  parent_id: props.category?.parent_id || '',
-  slug: props.category?.slug || '',
-  description: props.category?.description || '',
-  status: props.category?.status === true || props.category?.status === 1 ? 1 : 0,
+const defaultValues = useFormDefaults(props, 'category', {
+  name: '',
+  parent_id: '',
+  slug: '',
+  description: '',
+  status: '',
   image: null,
   remove_image: false
-}))
+})
 const imagePreview = ref(null)
 watch(() => props.category, (newCategory) => {
   if (newCategory) {
@@ -159,21 +158,7 @@ const validationRules = computed(() => ({
   ]
 }))
 function handleSubmit(form) {
-  const submitData = new FormData()
-  submitData.append('name', form.name)
-  submitData.append('slug', form.slug)
-  submitData.append('description', form.description)
-  submitData.append('status', form.status)
-  if (form.parent_id !== '') {
-    submitData.append('parent_id', form.parent_id)
-  }
-  if (form.image) {
-    submitData.append('image', form.image)
-  }
-  if (form.remove_image) {
-    submitData.append('remove_image', 1)
-  }
-  emit('submit', submitData)
+  emit('submit', formToFormData(form))
 }
 const parentCategoryOptions = computed(() => {
   const options = [{ value: '', label: 'Không có (Danh mục gốc)' }]
@@ -182,10 +167,13 @@ const parentCategoryOptions = computed(() => {
   }
   return options
 })
-const statusOptionsArr = computed(() => {
-  if (!statusOptions.value || typeof statusOptions.value !== 'object') return []
-  return Object.entries(statusOptions.value).map(([value, label]) => ({ value: Number(value), label }))
-})
+const statusOptions = computed(() =>
+  (props.statusEnums || []).map(opt => ({
+    value: opt.id,
+    label: opt.name
+  }))
+)
+const imageUrl = useUrl(props, 'category', 'image')
 function handleImageChange(event) {
   const file = event.target.files[0]
   if (!file) return
@@ -204,10 +192,6 @@ function handleImageChange(event) {
     imagePreview.value = e.target.result
   }
   reader.readAsDataURL(file)
-}
-function getImageUrl(image) {
-  if (!image) return null
-  return image.startsWith('http') ? image : `/storage/${image}`
 }
 function onClose() {
   emit('cancel')
