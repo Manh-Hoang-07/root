@@ -79,6 +79,7 @@ import FormWrapper from '@/components/FormWrapper.vue'
 import FormField from '@/components/FormField.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
+import formToFormData from '@/utils/formToFormData'
 
 const props = defineProps({
   show: Boolean,
@@ -137,18 +138,11 @@ const validationRules = computed(() => ({
   ]
 }))
 function handleSubmit(form) {
-  const submitData = new FormData()
-  submitData.append('name', form.name)
-  submitData.append('slug', form.slug)
-  submitData.append('description', form.description)
-  submitData.append('status', form.status)
-  if (form.logo) {
-    submitData.append('logo', form.logo)
+  // Ép kiểu status về số để backend Enum không lỗi
+  if (form.status !== undefined) {
+    form.status = Number(form.status)
   }
-  if (form.remove_logo) {
-    submitData.append('remove_logo', 1)
-  }
-  emit('submit', submitData)
+  emit('submit', formToFormData(form))
 }
 function handleLogoChange(event) {
   const file = event.target.files[0]

@@ -2,11 +2,11 @@
 
 namespace App\Enums;
 
-enum UserStatus: int
+enum UserStatus: string
 {
-    case Active = 1;
-    case Pending = 2;
-    case Inactive = 3;
+    case Active = 'active';
+    case Pending = 'pending';
+    case Inactive = 'inactive';
 
     /**
      * Lấy tên hiển thị của trạng thái
@@ -26,9 +26,9 @@ enum UserStatus: int
     public static function toArray(): array
     {
         return [
-            self::Active->value => self::Active->label(),
-            self::Pending->value => self::Pending->label(),
-            self::Inactive->value => self::Inactive->label(),
+            ['id' => self::Active->value, 'name' => self::Active->label()],
+            ['id' => self::Pending->value, 'name' => self::Pending->label()],
+            ['id' => self::Inactive->value, 'name' => self::Inactive->label()],
         ];
     }
 } 

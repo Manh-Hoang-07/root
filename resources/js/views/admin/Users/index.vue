@@ -268,18 +268,16 @@ function getStatusName(status) {
   if (!Array.isArray(statusEnums.value)) {
     return status;
   }
-  const statusObj = statusEnums.value.find(s => s.value === status)
-  return statusObj ? statusObj.name : status
+  const statusStr = typeof status === 'number' ? String(status) : status;
+  const statusObj = statusEnums.value.find(s => s.id === statusStr || s.value === statusStr)
+  return statusObj ? (statusObj.name || statusObj.label) : status
 }
 
 function getStatusClass(status) {
-  // Chuyển đổi status về dạng số nếu có thể
-  const statusValue = parseInt(status);
-  
-  switch (statusValue) {
-    case 1: return 'bg-green-100 text-green-800' // Active
-    case 2: return 'bg-yellow-100 text-yellow-800' // Pending
-    case 3: return 'bg-red-100 text-red-800' // Inactive
+  switch (status) {
+    case 'active': return 'bg-green-100 text-green-800'
+    case 'pending': return 'bg-yellow-100 text-yellow-800'
+    case 'inactive': return 'bg-red-100 text-red-800'
     default: return 'bg-gray-100 text-gray-800'
   }
 }

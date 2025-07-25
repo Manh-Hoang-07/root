@@ -24,8 +24,8 @@ enum BasicStatus: string
     public static function toArray(): array
     {
         return [
-            self::Active->value => self::Active->label(),
-            self::Inactive->value => self::Inactive->label(),
+            ['id' => self::Active->value, 'name' => self::Active->label()],
+            ['id' => self::Inactive->value, 'name' => self::Inactive->label()],
         ];
     }
 } 

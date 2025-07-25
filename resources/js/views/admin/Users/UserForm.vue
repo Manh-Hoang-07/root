@@ -186,6 +186,9 @@ import FormWrapper from '@/components/FormWrapper.vue'
 import FormField from '@/components/FormField.vue'
 import ImageUploader from '@/components/ImageUploader.vue'
 import { computed, ref } from 'vue'
+import formToFormData from '@/utils/formToFormData'
+import { useDefaultValuesFromObject } from '@/utils/useDefaultValuesFromObject'
+import { useUrl } from '@/utils/useUrl'
 
 const props = defineProps({
   user: Object,
@@ -195,7 +198,7 @@ const props = defineProps({
     validator: (value) => ['create', 'edit'].includes(value)
   },
   statusEnums: {
-    type: Array,
+    type: [Array, Object],
     default: () => []
   },
   genderEnums: {
@@ -213,50 +216,29 @@ const emit = defineEmits(['submit', 'cancel'])
 const formWrapper = ref(null)
 const showDebug = ref(false) // Set to true to show debug panel
 
-// Giá trị mặc định cho form
-const defaultValues = {
-  username: '', 
-  email: '', 
-  password: '', 
-  status: '', 
-  gender: '', 
-  phone: '', 
-  address: '', 
-  avatar: null,
-  email_verified_at: null, 
-  phone_verified_at: null, 
-  last_login_at: null, 
-  birthday: null, 
-  about: '',
+// Giá trị mặc định cho form (dùng composable dùng chung)
+const defaultValues = useDefaultValuesFromObject(props, 'user', {
+  status: '',
+  gender: '',
   remove_avatar: false
-}
-
-// Tính toán avatarDefaultUrl từ user data
-const avatarDefaultUrl = computed(() => {
-  if (props.user?.avatar) {
-    return props.user.avatar.startsWith('http') ? props.user.avatar : `/storage/${props.user.avatar}`
-  } else if (props.user?.profile?.avatar) {
-    return props.user.profile.avatar.startsWith('http') ? props.user.profile.avatar : `/storage/${props.user.profile.avatar}`
-  }
-  return null
 })
 
-// Format options cho select
-const statusOptions = computed(() => {
-  if (!Array.isArray(props.statusEnums)) return [];
-  return props.statusEnums.map(item => ({
-    value: item.value,
-    label: item.name
-  })) || []
-})
+// Avatar url dùng chung
+const avatarDefaultUrl = useUrl(props, 'user', 'avatar', 'profile')
 
-const genderOptions = computed(() => {
-  if (!Array.isArray(props.genderEnums)) return [];
-  return props.genderEnums.map(item => ({
-    value: item.value,
-    label: item.name
-  })) || []
-})
+// Options cho select
+const statusOptions = computed(() =>
+  (props.statusEnums || []).map(opt => ({
+    value: opt.id,
+    label: opt.name
+  }))
+)
+const genderOptions = computed(() =>
+  (props.genderEnums || []).map(opt => ({
+    value: opt.id,
+    label: opt.name
+  }))
+)
 
 // Validation rules
 const validationRules = computed(() => ({
@@ -277,7 +259,7 @@ const validationRules = computed(() => ({
 
 // Phương thức xử lý submit
 function handleSubmit(formData) {
-  emit('submit', formData)
+  emit('submit', formToFormData(formData))
 }
 
 // Phương thức xử lý lỗi validation

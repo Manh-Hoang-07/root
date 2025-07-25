@@ -26,9 +26,9 @@ enum Gender: int
     public static function toArray(): array
     {
         return [
-            self::Male->value => self::Male->label(),
-            self::Female->value => self::Female->label(),
-            self::Other->value => self::Other->label(),
+            ['id' => self::Male->value, 'name' => self::Male->label()],
+            ['id' => self::Female->value, 'name' => self::Female->label()],
+            ['id' => self::Other->value, 'name' => self::Other->label()],
         ];
     }
 } 
