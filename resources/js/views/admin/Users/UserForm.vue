@@ -24,6 +24,7 @@
           :maxlength="50"
           :error="errors.username"
           required
+          autocomplete="username"
           @update:model-value="clearError('username')"
         />
         
@@ -34,6 +35,7 @@
           type="email"
           :error="errors.email"
           required
+          autocomplete="email"
           @update:model-value="clearError('email')"
         />
         
@@ -44,6 +46,7 @@
           type="tel"
           :maxlength="20"
           :error="errors.phone"
+          autocomplete="tel"
           @update:model-value="clearError('phone')"
         />
         
@@ -55,6 +58,7 @@
           type="password"
           :error="errors.password"
           required
+          autocomplete="new-password"
           @update:model-value="clearError('password')"
         />
         
@@ -66,6 +70,7 @@
           type="password"
           :error="errors.password_confirmation"
           required
+          autocomplete="new-password"
           @update:model-value="clearError('password_confirmation')"
         />
         
@@ -76,6 +81,7 @@
           name="password"
           type="password"
           :error="errors.password"
+          autocomplete="new-password"
           @update:model-value="clearError('password')"
         />
         
@@ -129,6 +135,7 @@
           name="name"
           type="text"
           :error="errors.name"
+          autocomplete="name"
           @update:model-value="clearError('name')"
         />
         
@@ -158,6 +165,7 @@
           name="address"
           type="text"
           :error="errors.address"
+          autocomplete="street-address"
           @update:model-value="clearError('address')"
         />
         
@@ -187,7 +195,7 @@ import FormField from '@/components/FormField.vue'
 import ImageUploader from '@/components/ImageUploader.vue'
 import { computed, ref } from 'vue'
 import formToFormData from '@/utils/formToFormData'
-import { useDefaultValuesFromObject } from '@/utils/useDefaultValuesFromObject'
+import { useFormDefaults } from '@/utils/useFormDefaults'
 import { useUrl } from '@/utils/useUrl'
 
 const props = defineProps({
@@ -217,7 +225,7 @@ const formWrapper = ref(null)
 const showDebug = ref(false) // Set to true to show debug panel
 
 // Giá trị mặc định cho form (dùng composable dùng chung)
-const defaultValues = useDefaultValuesFromObject(props, 'user', {
+const defaultValues = useFormDefaults(props, 'user', {
   status: '',
   gender: '',
   remove_avatar: false

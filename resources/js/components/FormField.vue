@@ -1,6 +1,6 @@
 <template>
   <div class="form-field" :class="{ 'has-error': !!error }">
-    <label v-if="label" :for="id" class="block text-sm font-medium mb-1" :class="labelClass">
+    <label v-if="label" :for="fieldId" class="block text-sm font-medium mb-1" :class="labelClass">
       {{ label }}
       <span v-if="required" class="text-red-500">*</span>
     </label>
@@ -8,7 +8,7 @@
     <!-- Input text, email, password, number, tel -->
     <input
       v-if="['text', 'email', 'password', 'number', 'tel', 'date', 'datetime-local'].includes(type)"
-      :id="id"
+      :id="fieldId"
       :name="name"
       :type="type"
       :value="modelValue"
@@ -18,6 +18,7 @@
       :maxlength="maxlength"
       :min="min"
       :max="max"
+      :autocomplete="autocomplete"
       :class="[
         'w-full px-4 py-2 border rounded-xl',
         error ? 'border-red-500' : 'border-gray-300',
@@ -29,7 +30,7 @@
     <!-- Textarea -->
     <textarea
       v-else-if="type === 'textarea'"
-      :id="id"
+      :id="fieldId"
       :name="name"
       :value="modelValue"
       @input="updateValue($event.target.value)"
@@ -48,7 +49,7 @@
     <!-- Select -->
     <select
       v-else-if="type === 'select'"
-      :id="id"
+      :id="fieldId"
       :name="name"
       :value="modelValue"
       @change="updateValue($event.target.value)"
@@ -73,7 +74,7 @@
     <!-- Checkbox -->
     <div v-else-if="type === 'checkbox'" class="flex items-center">
       <input
-        :id="id"
+        :id="fieldId"
         :name="name"
         type="checkbox"
         :checked="!!modelValue"
@@ -81,7 +82,7 @@
         :disabled="disabled"
         class="h-4 w-4 text-blue-600 border-gray-300 rounded"
       />
-      <label :for="id" class="ml-2 block text-sm text-gray-700">
+      <label :for="fieldId" class="ml-2 block text-sm text-gray-700">
         {{ checkboxLabel || label }}
       </label>
     </div>
@@ -94,7 +95,7 @@
         class="flex items-center"
       >
         <input
-          :id="`${id}-${option.value}`"
+          :id="`${fieldId}-${option.value}`"
           :name="name"
           type="radio"
           :value="option.value"
@@ -103,7 +104,7 @@
           :disabled="disabled"
           class="h-4 w-4 text-blue-600 border-gray-300"
         />
-        <label :for="`${id}-${option.value}`" class="ml-2 block text-sm text-gray-700">
+        <label :for="`${fieldId}-${option.value}`" class="ml-2 block text-sm text-gray-700">
           {{ option.label }}
         </label>
       </div>
@@ -167,7 +168,6 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  
   // Input specific props
   maxlength: {
     type: [Number, String],
@@ -181,25 +181,21 @@ const props = defineProps({
     type: [Number, String],
     default: undefined
   },
-  
   // Textarea specific props
   rows: {
     type: [Number, String],
     default: 3
   },
-  
   // Select and Radio specific props
   options: {
     type: Array,
     default: () => []
   },
-  
   // Checkbox specific props
   checkboxLabel: {
     type: String,
     default: ''
   },
-  
   // Styling
   labelClass: {
     type: String,
@@ -208,6 +204,11 @@ const props = defineProps({
   inputClass: {
     type: String,
     default: ''
+  },
+  // Autocomplete
+  autocomplete: {
+    type: String,
+    default: undefined
   }
 })
 
