@@ -2,6 +2,7 @@
 namespace App\Http\Requests\Admin\Category;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 
 class CategoryRequest extends FormRequest
 {
@@ -12,11 +13,12 @@ class CategoryRequest extends FormRequest
 
     public function rules()
     {
-        $categoryId = $this->route('category') ? $this->route('category')->id : null;
+        Log::info('Request all:', $this->all());
+        $categoryRoute = $this->route('category');
+        $categoryId = is_object($categoryRoute) ? $categoryRoute->id : $categoryRoute;
 
         return [
             'name' => 'required|string|max:100',
-            'slug' => 'required|string|max:255|unique:categories,slug,' . $categoryId,
             'description' => 'nullable|string|max:255',
             'parent_id' => 'nullable|exists:categories,id',
             'status' => 'required|in:active,inactive',
@@ -29,14 +31,31 @@ class CategoryRequest extends FormRequest
         return [
             'name.required' => 'Tên danh mục không được để trống.',
             'name.max' => 'Tên danh mục không được vượt quá :max ký tự.',
-            'slug.required' => 'Slug không được để trống.',
-            'slug.max' => 'Slug không được vượt quá :max ký tự.',
-            'slug.unique' => 'Slug đã tồn tại.',
             'parent_id.exists' => 'Danh mục cha không hợp lệ.',
             'status.required' => 'Trạng thái không được để trống.',
             'status.in' => 'Trạng thái không hợp lệ.',
             'image.string' => 'Ảnh phải là chuỗi.',
             'description.string' => 'Mô tả phải là chuỗi.',
         ];
+    }
+
+    public function validated($key = null, $default = null)
+    {
+        $data = parent::validated($key, $default);
+        Log::info('Validated data:', $data);
+        // Chuyển các trường có giá trị 'null' (string) thành null thực sự
+        foreach (['parent_id', 'image'] as $field) {
+            if (isset($data[$field]) && $data[$field] === 'null') {
+                $data[$field] = null;
+            }
+        }
+        $allowed = [
+            'name',
+            'parent_id',
+            'description',
+            'status',
+            'image',
+        ];
+        return array_intersect_key($data, array_flip($allowed));
     }
 } 

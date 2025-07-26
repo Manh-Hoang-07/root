@@ -51,8 +51,9 @@ watch(() => props.modelValue, (val) => {
 
 function getImageUrl(url) {
   if (!url) return null
-  if (url.startsWith('http') || url.startsWith('/storage/')) return url
-  return `/storage/${url.replace(/^\\|^\//, '')}`
+  if (url.startsWith('http')) return url
+  if (url.startsWith('/storage/')) return url.replace(/^(\/storage\/)+/, '/storage/')
+  return `/storage/${url.replace(/^\/storage\//, '')}`
 }
 
 async function onFileChange(e) {

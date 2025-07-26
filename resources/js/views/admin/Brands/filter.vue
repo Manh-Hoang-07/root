@@ -52,8 +52,8 @@ const filters = reactive({
 
 // Các tùy chọn cho select
 const statusOptions = [
-  { value: '1', label: 'Hoạt động' },
-  { value: '0', label: 'Không hoạt động' }
+  { value: 'active', label: 'Hoạt động' },
+  { value: 'inactive', label: 'Không hoạt động' }
 ]
 
 const sortOptions = [

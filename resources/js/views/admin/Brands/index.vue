@@ -23,8 +23,6 @@
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên thương hiệu</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Logo</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
           </tr>
@@ -33,17 +31,12 @@
           <tr v-for="brand in brands" :key="brand.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ brand.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ brand.name }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ brand.slug }}</td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <img v-if="brand.logo" :src="getImageUrl(brand.logo)" alt="Logo" class="h-10 w-10 object-contain" />
-              <span v-else class="text-gray-400">Không có logo</span>
-            </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                :class="brand.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                :class="brand.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
               >
-                {{ brand.status ? 'Hoạt động' : 'Không hoạt động' }}
+                {{ brand.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -62,7 +55,7 @@
             </td>
           </tr>
           <tr v-if="brands.length === 0">
-            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+            <td colspan="4" class="px-6 py-4 text-center text-gray-500">
               {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
             </td>
           </tr>
@@ -256,6 +249,8 @@ function changePage(url) {
 // Helper functions
 function getImageUrl(logo) {
   if (!logo) return null
-  return logo.startsWith('http') ? logo : `/storage/${logo}`
+  if (logo.startsWith('http')) return logo
+  if (logo.startsWith('/storage/')) return logo.replace(/^(\/storage\/)+/, '/storage/')
+  return `/storage/${logo.replace(/^\/storage\//, '')}`
 }
 </script> 

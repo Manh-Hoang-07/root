@@ -48,7 +48,7 @@ const { apiErrors, submit } = useApiFormSubmit({
   emit,
   onClose: props.onClose,
   eventName: 'updated',
-  method: 'post'
+  method: 'put'
 })
 
 async function handleSubmit(formData) {

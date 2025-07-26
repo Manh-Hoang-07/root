@@ -23,9 +23,7 @@
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên danh mục</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Danh mục cha</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hình ảnh</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
           </tr>
@@ -34,18 +32,13 @@
           <tr v-for="category in categories" :key="category.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ category.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ category.name }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ category.slug }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ category.parent_name || 'Danh mục gốc' }}</td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <img v-if="category.image" :src="getImageUrl(category.image)" alt="Hình ảnh" class="h-10 w-10 object-contain" />
-              <span v-else class="text-gray-400">Không có hình</span>
-            </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                :class="category.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                :class="category.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
               >
-                {{ category.status ? 'Hoạt động' : 'Không hoạt động' }}
+                {{ category.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -64,7 +57,7 @@
             </td>
           </tr>
           <tr v-if="categories.length === 0">
-            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+            <td colspan="5" class="px-6 py-4 text-center text-gray-500">
               {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
             </td>
           </tr>
@@ -256,7 +249,9 @@ function changePage(url) {
 // Helper functions
 function getImageUrl(image) {
   if (!image) return null
-  return image.startsWith('http') ? image : `/storage/${image}`
+  if (image.startsWith('http')) return image
+  if (image.startsWith('/storage/')) return image.replace(/^(\/storage\/)+/, '/storage/')
+  return `/storage/${image.replace(/^\/storage\//, '')}`
 }
 </script>
 

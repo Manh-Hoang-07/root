@@ -31,17 +31,6 @@
         >
           <template #help>Không có (Danh mục gốc)</template>
         </FormField>
-        <!-- Slug -->
-        <FormField
-          v-model="form.slug"
-          label="Slug"
-          name="slug"
-          :error="errors.slug"
-          autocomplete="off"
-          @update:model-value="clearError('slug')"
-        >
-          <template #help>Để trống để tự động tạo từ tên</template>
-        </FormField>
         <!-- Mô tả -->
         <FormField
           v-model="form.description"
@@ -54,24 +43,9 @@
         />
         <!-- Hình ảnh -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1" for="category-image">Hình ảnh</label>
-          <div class="flex items-start space-x-4">
-            <div v-if="imagePreview || imageUrl" class="w-24 h-24 border rounded-md overflow-hidden">
-              <img :src="imagePreview || imageUrl" alt="Image preview" class="w-full h-full object-contain" />
-            </div>
-            <div class="flex-1">
-              <input
-                id="category-image"
-                type="file"
-                @change="handleImageChange"
-                accept="image/*"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                :class="{ 'border-red-500': errors.image }"
-              />
-              <p v-if="errors.image" class="mt-1 text-sm text-red-600">{{ errors.image }}</p>
-              <p class="mt-1 text-sm text-gray-500">PNG, JPG hoặc GIF (tối đa 2MB)</p>
-            </div>
-          </div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Hình ảnh</label>
+          <ImageUploader v-model="form.image" :default-url="imageUrl" />
+          <div v-if="errors.image" class="text-red-500 text-sm mt-1">{{ errors.image }}</div>
         </div>
         <!-- Trạng thái -->
         <FormField
@@ -97,6 +71,7 @@ import axios from 'axios'
 import { useFormDefaults } from '@/utils/useFormDefaults'
 import { useUrl } from '@/utils/useUrl'
 import formToFormData from '@/utils/formToFormData'
+import ImageUploader from '@/components/ImageUploader.vue'
 
 const props = defineProps({
   show: Boolean,
@@ -147,9 +122,6 @@ const validationRules = computed(() => ({
     { required: 'Tên danh mục là bắt buộc.' },
     { max: [100, 'Tên danh mục không được vượt quá 100 ký tự.'] }
   ],
-  slug: [
-    { pattern: [/^[a-z0-9-]*$/, 'Slug chỉ được chứa chữ thường, số và dấu gạch ngang.'] }
-  ],
   description: [
     { max: [500, 'Mô tả không được vượt quá 500 ký tự.'] }
   ],
@@ -158,7 +130,7 @@ const validationRules = computed(() => ({
   ]
 }))
 function handleSubmit(form) {
-  emit('submit', formToFormData(form))
+  emit('submit', form) // chỉ truyền object dữ liệu, không gọi formToFormData ở đây
 }
 const parentCategoryOptions = computed(() => {
   const options = [{ value: '', label: 'Không có (Danh mục gốc)' }]
@@ -174,26 +146,4 @@ const statusOptions = computed(() =>
   }))
 )
 const imageUrl = useUrl(props, 'category', 'image')
-function handleImageChange(event) {
-  const file = event.target.files[0]
-  if (!file) return
-  const validTypes = ['image/jpeg', 'image/png', 'image/gif']
-  if (!validTypes.includes(file.type)) {
-    // Đẩy lỗi vào FormWrapper qua localErrors nếu muốn
-    return
-  }
-  if (file.size > 2 * 1024 * 1024) {
-    // Đẩy lỗi vào FormWrapper qua localErrors nếu muốn
-    return
-  }
-  imagePreview.value = null
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    imagePreview.value = e.target.result
-  }
-  reader.readAsDataURL(file)
-}
-function onClose() {
-  emit('cancel')
-}
 </script> 

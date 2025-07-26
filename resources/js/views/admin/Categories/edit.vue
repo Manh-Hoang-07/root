@@ -5,6 +5,7 @@
       :show="showModal"
       :category="category"
       :parent-categories="parentCategories"
+      :status-enums="statusEnums"
       :api-errors="apiErrors"
       @submit="handleSubmit" 
       @cancel="onClose" 
@@ -27,18 +28,22 @@ const emit = defineEmits(['updated'])
 
 const showModal = ref(false)
 const parentCategories = ref([])
+const statusEnums = ref([])
 
 const { apiErrors, submit } = useApiFormSubmit({
   endpoint: endpoints.categories.update(props.category?.id),
   emit,
   onClose: props.onClose,
   eventName: 'updated',
-  method: 'post'
+  method: 'put'
 })
 
 watch(() => props.show, (newValue) => {
   showModal.value = newValue
-  if (newValue) fetchParentCategories()
+  if (newValue) {
+    fetchParentCategories()
+    fetchStatusEnums()
+  }
 }, { immediate: true })
 
 async function fetchParentCategories() {
@@ -49,6 +54,15 @@ async function fetchParentCategories() {
     parentCategories.value = response.data.data || []
   } catch (error) {
     parentCategories.value = []
+  }
+}
+
+async function fetchStatusEnums() {
+  try {
+    const response = await axios.get(endpoints.enums('BasicStatus'))
+    statusEnums.value = Array.isArray(response.data) ? response.data : []
+  } catch (error) {
+    statusEnums.value = []
   }
 }
 

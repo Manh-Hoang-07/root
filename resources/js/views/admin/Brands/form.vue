@@ -19,17 +19,6 @@
           autocomplete="organization"
           @update:model-value="clearError('name')"
         />
-        <!-- Slug -->
-        <FormField
-          v-model="form.slug"
-          label="Slug"
-          name="slug"
-          :error="errors.slug"
-          autocomplete="off"
-          @update:model-value="clearError('slug')"
-        >
-          <template #help>Để trống để tự động tạo từ tên</template>
-        </FormField>
         <!-- Mô tả -->
         <FormField
           v-model="form.description"
@@ -42,24 +31,12 @@
         />
         <!-- Logo -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1" for="brand-logo">Logo</label>
-          <div class="flex items-start space-x-4">
-            <div v-if="logoPreview || logoUrl" class="w-24 h-24 border rounded-md overflow-hidden">
-              <img :src="logoPreview || logoUrl" alt="Logo preview" class="w-full h-full object-contain" />
-            </div>
-            <div class="flex-1">
-              <input
-                id="brand-logo"
-                type="file"
-                @change="handleLogoChange"
-                accept="image/*"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                :class="{ 'border-red-500': errors.logo }"
-              />
-              <p v-if="errors.logo" class="mt-1 text-sm text-red-600">{{ errors.logo }}</p>
-              <p class="mt-1 text-sm text-gray-500">PNG, JPG hoặc GIF (tối đa 2MB)</p>
-            </div>
-          </div>
+          <label class="block text-sm font-medium text-gray-700 mb-1" for="brand-image">Logo</label>
+          <ImageUploader
+            v-model="form.image"
+            :default-url="imageUrl"
+            @remove="form.remove_image = true"
+          />
         </div>
         <!-- Trạng thái -->
         <FormField
@@ -83,6 +60,7 @@ import FormField from '@/components/FormField.vue'
 import { useFormDefaults } from '@/utils/useFormDefaults'
 import { useUrl } from '@/utils/useUrl'
 import formToFormData from '@/utils/formToFormData'
+import ImageUploader from '@/components/ImageUploader.vue'
 
 const props = defineProps({
   show: Boolean,
@@ -105,37 +83,23 @@ const modalVisible = computed({
 })
 const defaultValues = useFormDefaults(props, 'brand', {
   name: '',
-  slug: '',
   description: '',
   status: '',
-  logo: null,
-  remove_logo: false
+  image: null,
+  remove_image: false
 })
-const logoPreview = ref(null)
-watch(() => props.brand, (newBrand) => {
-  if (newBrand) {
-    logoPreview.value = null
-  } else {
-    resetForm()
-  }
-}, { immediate: true })
-function resetForm() {
-  logoPreview.value = null
-}
+const imageUrl = useUrl(props, 'brand', 'image')
 const validationRules = computed(() => ({
   name: [
     { required: 'Tên thương hiệu là bắt buộc.' },
     { max: [100, 'Tên thương hiệu không được vượt quá 100 ký tự.'] }
-  ],
-  slug: [
-    { pattern: [/^[a-z0-9-]*$/, 'Slug chỉ được chứa chữ thường, số và dấu gạch ngang.'] }
   ],
   description: [
     { max: [500, 'Mô tả không được vượt quá 500 ký tự.'] }
   ]
 }))
 function handleSubmit(form) {
-  emit('submit', formToFormData(form))
+  emit('submit', form) // KHÔNG gọi formToFormData ở đây!
 }
 const statusOptions = computed(() =>
   (props.statusEnums || []).map(opt => ({
@@ -143,26 +107,6 @@ const statusOptions = computed(() =>
     label: opt.name
   }))
 )
-const logoUrl = useUrl(props, 'brand', 'logo')
-function handleLogoChange(event) {
-  const file = event.target.files[0]
-  if (!file) return
-  const validTypes = ['image/jpeg', 'image/png', 'image/gif']
-  if (!validTypes.includes(file.type)) {
-    // Đẩy lỗi vào FormWrapper qua localErrors nếu muốn
-    return
-  }
-  if (file.size > 2 * 1024 * 1024) {
-    // Đẩy lỗi vào FormWrapper qua localErrors nếu muốn
-    return
-  }
-  logoPreview.value = null
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    logoPreview.value = e.target.result
-  }
-  reader.readAsDataURL(file)
-}
 function onClose() {
   emit('cancel')
 }
