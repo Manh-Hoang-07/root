@@ -115,8 +115,9 @@ abstract class BaseController extends Controller
             Log::info('BaseController::parseRequestData - parsed FormData', ['data' => $data]);
         }
         
+        // Chỉ loại bỏ empty string và empty array, giữ lại null
         return array_filter($data, function($value) {
-            return $value !== null && $value !== '' && $value !== [];
+            return $value !== '' && $value !== [];
         });
     }
 } 

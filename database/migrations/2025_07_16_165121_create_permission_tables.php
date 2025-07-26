@@ -28,6 +28,7 @@ return new class extends Migration
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->foreign('parent_id')->references('id')->on('permissions')->onDelete('set null');
             $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
+            $table->string('status')->default('active');
             $table->timestamps();
 
             $table->unique(['name', 'guard_name']);
@@ -45,6 +46,7 @@ return new class extends Migration
             $table->string('guard_name');
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->foreign('parent_id')->references('id')->on('roles')->onDelete('set null');
+            $table->string('status')->default('active');
             $table->timestamps();
             if ($teams || config('permission.testing')) {
                 $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);

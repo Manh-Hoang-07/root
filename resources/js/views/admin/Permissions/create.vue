@@ -3,6 +3,8 @@
     <PermissionForm 
       v-if="showModal"
       :show="showModal"
+      :parent-options="parentOptions"
+      :status-enums="statusEnums"
       :api-errors="apiErrors"
       @submit="handleSubmit" 
       @cancel="onClose" 
@@ -12,7 +14,8 @@
 <script setup>
 import PermissionForm from './form.vue'
 import endpoints from '@/api/endpoints'
-import { ref, reactive, watch } from 'vue'
+import { ref, watch } from 'vue'
+import { useApiFormSubmit } from '@/utils/useApiFormSubmit'
 import axios from 'axios'
 
 const props = defineProps({
@@ -22,30 +25,46 @@ const props = defineProps({
 const emit = defineEmits(['created'])
 
 const showModal = ref(false)
-const apiErrors = reactive({})
+const statusEnums = ref([])
+const parentOptions = ref([])
 
+const { apiErrors, submit } = useApiFormSubmit({
+  endpoint: endpoints.permissions.create,
+  emit,
+  onClose: props.onClose,
+  eventName: 'created',
+  method: 'post'
+})
+
+// Watch show prop để cập nhật showModal
 watch(() => props.show, (newValue) => {
   showModal.value = newValue
+  if (newValue) {
+    fetchStatusEnums()
+    fetchParentOptions()
+  }
 }, { immediate: true })
 
-async function handleSubmit(formData) {
+async function fetchStatusEnums() {
   try {
-    Object.keys(apiErrors).forEach(key => delete apiErrors[key])
-    const response = await axios.post(endpoints.permissions.create, formData)
-    emit('created')
-    props.onClose()
+    const response = await axios.get(endpoints.enums('BasicStatus'))
+    statusEnums.value = Array.isArray(response.data) ? response.data : []
   } catch (error) {
-    if (error.response?.status === 422 && error.response?.data?.errors) {
-      const errors = error.response.data.errors
-      for (const field in errors) {
-        if (Array.isArray(errors[field])) {
-          apiErrors[field] = errors[field][0]
-        } else {
-          apiErrors[field] = errors[field]
-        }
-      }
-    }
+    statusEnums.value = []
   }
+}
+
+async function fetchParentOptions() {
+  try {
+    const response = await axios.get(endpoints.permissions.list, { params: { per_page: 100 } })
+    parentOptions.value = response.data.data || []
+  } catch (error) {
+    parentOptions.value = []
+  }
+}
+
+async function handleSubmit(formData) {
+  await submit(formData)
 }
 
 function onClose() {

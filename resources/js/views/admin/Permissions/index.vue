@@ -6,14 +6,14 @@
         @click="openCreateModal" 
         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
       >
-        Thêm quyền
+        Thêm quyền mới
       </button>
     </div>
 
     <!-- Bộ lọc -->
-    <PermissionFilter
-      :initial-filters="filters"
-      @update:filters="handleFilterChange"
+    <PermissionFilter 
+      :initial-filters="currentFilters"
+      @update:filters="handleFilterUpdate" 
     />
 
     <!-- Bảng dữ liệu -->
@@ -21,6 +21,7 @@
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên quyền</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên hiển thị</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guard</th>
@@ -31,36 +32,42 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-for="permission in permissions" :key="permission.id">
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ permission.name }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ permission.display_name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ permission.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ permission.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ permission.display_name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ permission.guard_name }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ getParentName(permission.parent_id) }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ permission.parent_name }}</td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                :class="permission.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                :class="getStatusClass(permission.status)"
               >
-                {{ permission.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
+                {{ getStatusName(permission.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
               <button 
+                v-if="!permission.has_children"
                 @click="openEditModal(permission)" 
                 class="text-indigo-600 hover:text-indigo-900 mr-3"
               >
                 Sửa
               </button>
               <button 
+                v-if="!permission.has_children"
                 @click="confirmDelete(permission)" 
                 class="text-red-600 hover:text-red-900"
               >
                 Xóa
               </button>
+              <span v-if="permission.has_children" class="text-gray-500 text-sm">
+                Không thể sửa/xóa (có {{ permission.children_count }} quyền con)
+              </span>
             </td>
           </tr>
           <tr v-if="permissions.length === 0">
-            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-              {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
+            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+              Không có dữ liệu
             </td>
           </tr>
         </tbody>
@@ -68,9 +75,9 @@
     </div>
 
     <!-- Phân trang -->
-    <div v-if="permissions.length > 0" class="mt-4 flex justify-between items-center">
+    <div class="mt-4 flex justify-between items-center">
       <div class="text-sm text-gray-700">
-        Hiển thị {{ pagination.from || 0 }} đến {{ pagination.to || 0 }} trên tổng số {{ pagination.total || 0 }} bản ghi
+        Hiển thị {{ pagination.from }} đến {{ pagination.to }} trên tổng số {{ pagination.total }} bản ghi
       </div>
       <div class="flex space-x-1">
         <button 
@@ -112,15 +119,15 @@
       v-if="showDeleteModal"
       :show="showDeleteModal"
       title="Xác nhận xóa"
-      :message="`Bạn có chắc chắn muốn xóa quyền ${selectedPermission?.name || ''}?`"
-      :on-close="closeDeleteModal"
+      message="Bạn có chắc chắn muốn xóa quyền này không?"
       @confirm="deletePermission"
+      @cancel="closeDeleteModal"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import CreatePermission from './create.vue'
 import EditPermission from './edit.vue'
 import PermissionFilter from './filter.vue'
@@ -131,20 +138,24 @@ import axios from 'axios'
 // State
 const permissions = ref([])
 const selectedPermission = ref(null)
+const loading = ref(false)
+
+// Filter state
+const currentFilters = ref({
+  search: '',
+  status: '',
+  sort_by: 'created_at_desc'
+})
+
+// Pagination state
 const pagination = reactive({
   current_page: 1,
   from: 0,
   to: 0,
   total: 0,
-  per_page: 10,
+  per_page: 20,
   links: []
 })
-const filters = reactive({
-  search: '',
-  status: '',
-  sort_by: 'created_at_desc'
-})
-const loading = ref(false)
 
 // Modal state
 const showCreateModal = ref(false)
@@ -162,9 +173,7 @@ async function fetchPermissions(page = 1) {
     const response = await axios.get(endpoints.permissions.list, {
       params: { 
         page,
-        search: filters.search,
-        status: filters.status,
-        sort_by: filters.sort_by
+        ...currentFilters.value
       }
     })
     permissions.value = response.data.data
@@ -186,8 +195,8 @@ async function fetchPermissions(page = 1) {
 }
 
 // Filter handlers
-function handleFilterChange(newFilters) {
-  Object.assign(filters, newFilters)
+function handleFilterUpdate(filters) {
+  currentFilters.value = filters
   fetchPermissions(1)
 }
 
@@ -248,16 +257,21 @@ function changePage(url) {
   fetchPermissions(page)
 }
 
-// Map id -> quyền để tra nhanh tên quyền cha
-const permissionMap = computed(() => {
-  const map = {}
-  permissions.value.forEach(p => { map[p.id] = p })
-  return map
-})
-function getParentName(parent_id) {
-  if (!parent_id) return '—'
-  const p = permissionMap.value[parent_id]
-  return p ? (p.display_name || p.name) : parent_id
+// Helper functions
+function getStatusClass(status) {
+  if (status === 'active') {
+    return 'bg-green-100 text-green-800'
+  } else {
+    return 'bg-red-100 text-red-800'
+  }
+}
+
+function getStatusName(status) {
+  if (status === 'active') {
+    return 'Hoạt động'
+  } else {
+    return 'Không hoạt động'
+  }
 }
 </script>
 

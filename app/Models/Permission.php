@@ -14,6 +14,7 @@ class Permission extends SpatiePermission
         'display_name',
         'guard_name',
         'parent_id',
+        'status',
     ];
 
     public function parent()
