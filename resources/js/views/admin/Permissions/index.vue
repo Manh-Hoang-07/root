@@ -36,7 +36,9 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ permission.name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ permission.display_name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ permission.guard_name }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ permission.parent_name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ permission.parent_name || '-- Không có --' }}
+            </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
@@ -176,7 +178,9 @@ async function fetchPermissions(page = 1) {
         ...currentFilters.value
       }
     })
+    console.log('Permissions response:', response.data)
     permissions.value = response.data.data
+    console.log('Permissions data:', permissions.value)
     // Update pagination
     const meta = response.data.meta
     if (meta) {

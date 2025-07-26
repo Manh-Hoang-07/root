@@ -24,13 +24,25 @@ class UserResource extends JsonResource
             'phone_verified_at' => $this->phone_verified_at ? $this->phone_verified_at->toDateTimeString() : null,
             'last_login_at' => $this->last_login_at ? $this->last_login_at->toDateTimeString() : null,
             'created_at' => $this->created_at ? $this->created_at->toDateTimeString() : null,
-            // Profile fields
-            'name' => $this->profile ? $this->profile->name : null,
-            'gender' => $this->profile ? $this->profile->gender : null,
-            'birthday' => $this->profile ? ($this->profile->birthday ? $this->profile->birthday->format('Y-m-d') : null) : null,
-            'address' => $this->profile ? $this->profile->address : null,
-            'image' => $this->profile ? $this->profile->image : null,
-            'about' => $this->profile ? $this->profile->about : null,
+            // Profile fields - chỉ trả về khi relationship được load
+            'name' => $this->whenLoaded('profile', function() {
+                return $this->profile ? $this->profile->name : null;
+            }, null),
+            'gender' => $this->whenLoaded('profile', function() {
+                return $this->profile ? $this->profile->gender : null;
+            }, null),
+            'birthday' => $this->whenLoaded('profile', function() {
+                return $this->profile && $this->profile->birthday ? $this->profile->birthday->format('Y-m-d') : null;
+            }, null),
+            'address' => $this->whenLoaded('profile', function() {
+                return $this->profile ? $this->profile->address : null;
+            }, null),
+            'image' => $this->whenLoaded('profile', function() {
+                return $this->profile ? $this->profile->image : null;
+            }, null),
+            'about' => $this->whenLoaded('profile', function() {
+                return $this->profile ? $this->profile->about : null;
+            }, null),
         ];
     }
 }

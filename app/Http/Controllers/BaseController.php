@@ -11,6 +11,15 @@ abstract class BaseController extends Controller
     protected $resource;
     protected $storeRequestClass = Request::class;
     protected $updateRequestClass = Request::class;
+    
+    // Tự động load relationships cho tất cả requests
+    protected $defaultRelations = [];
+    
+    // Tự động load relationships cho index method
+    protected $indexRelations = [];
+    
+    // Tự động load relationships cho show method
+    protected $showRelations = [];
 
     public function __construct($service, $resource)
     {
@@ -30,7 +39,12 @@ abstract class BaseController extends Controller
 
     public function index(Request $request)
     {
-        $relations = $this->parseRelations($request->get('relations'));
+        // Parse relations từ request
+        $requestRelations = $this->parseRelations($request->get('relations'));
+        
+        // Chỉ sử dụng relations được yêu cầu, không có default
+        $relations = $requestRelations;
+        
         $fields = $this->parseFields($request->get('fields'));
         $data = $this->service->list($request->all(), $request->get('per_page', 20), $relations, $fields);
         return $this->resource::collection($data);
@@ -38,7 +52,12 @@ abstract class BaseController extends Controller
 
     public function show($id, Request $request = null)
     {
-        $relations = $request ? $this->parseRelations($request->get('relations')) : [];
+        // Parse relations từ request
+        $requestRelations = $request ? $this->parseRelations($request->get('relations')) : [];
+        
+        // Chỉ sử dụng relations được yêu cầu, không có default
+        $relations = $requestRelations;
+        
         $fields = $request ? $this->parseFields($request->get('fields')) : ['*'];
         $item = $this->service->find($id, $relations, $fields);
         return new $this->resource($item);
@@ -49,36 +68,57 @@ abstract class BaseController extends Controller
         $request = app($this->getStoreRequestClass());
         $data = $this->parseRequestData($request);
         $item = $this->service->create($data);
+        
+        // Load relations cho response nếu cần
+        if (!empty($this->defaultRelations)) {
+            $item->load($this->defaultRelations);
+        }
+        
         return new $this->resource($item);
     }
 
     public function update($id)
     {
         $request = app($this->getUpdateRequestClass());
-        Log::info('BaseController::update', [
-            'id' => $id,
-            'request_data' => $request->all(),
-            'request_method' => $request->method(),
-            'content_type' => $request->header('Content-Type'),
-            'form_data' => $request->input(),
-            'files' => $request->allFiles()
-        ]);
+        
+        // Debug log chỉ khi cần thiết
+        if (config('app.debug')) {
+            Log::info('BaseController::update', [
+                'id' => $id,
+                'request_data' => $request->all(),
+                'request_method' => $request->method(),
+                'content_type' => $request->header('Content-Type'),
+            ]);
+        }
         
         $data = $this->parseRequestData($request);
         
-        $item = $this->service->update($id, $data);
-        
-        Log::info('BaseController::update result', [
-            'updated_item' => $item->toArray()
-        ]);
-        
-        return new $this->resource($item);
+        try {
+            $item = $this->service->update($id, $data);
+            
+            // Load relations cho response nếu cần
+            if (!empty($this->defaultRelations)) {
+                $item->load($this->defaultRelations);
+            }
+            
+            return new $this->resource($item);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 
     public function destroy($id)
     {
-        $this->service->delete($id);
-        return response()->json(['success' => true]);
+        try {
+            $this->service->delete($id);
+            return response()->json(['success' => true]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 
     protected function parseRelations($relations)
@@ -112,7 +152,9 @@ abstract class BaseController extends Controller
 
         if (empty($data) && $request->header('Content-Type') && str_contains($request->header('Content-Type'), 'multipart/form-data')) {
             $data = $request->input();
-            Log::info('BaseController::parseRequestData - parsed FormData', ['data' => $data]);
+            if (config('app.debug')) {
+                Log::info('BaseController::parseRequestData - parsed FormData', ['data' => $data]);
+            }
         }
         
         // Chỉ loại bỏ empty string và empty array, giữ lại null

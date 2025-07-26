@@ -3,6 +3,7 @@ namespace App\Repositories\Permission;
 
 use App\Models\Permission;
 use App\Repositories\BaseRepository;
+use Illuminate\Support\Facades\Log;
 
 class PermissionRepository extends BaseRepository
 {
@@ -21,16 +22,33 @@ class PermissionRepository extends BaseRepository
                 ->whereColumn('parent_id', 'permissions.id')
         ]);
         
+        // LEFT JOIN để lấy parent_name
+        $query->leftJoin('permissions as parent_permissions', 'permissions.parent_id', '=', 'parent_permissions.id')
+              ->addSelect('parent_permissions.display_name as parent_name');
+        
+        // Debug: Log query SQL
+        Log::info('Permission query SQL', [
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings()
+        ]);
+        
+        // Debug: Kiểm tra parent permissions
+        $parentIds = Permission::whereNotNull('parent_id')->pluck('parent_id')->unique();
+        Log::info('Parent IDs found:', ['parent_ids' => $parentIds->toArray()]);
+        
+        $existingParentIds = Permission::whereIn('id', $parentIds)->pluck('id');
+        Log::info('Existing parent IDs:', ['existing_parent_ids' => $existingParentIds->toArray()]);
+        
         // Apply filters
         if (!empty($filters['search'])) {
             $query->where(function($q) use ($filters) {
-                $q->where('name', 'like', '%' . $filters['search'] . '%')
-                  ->orWhere('display_name', 'like', '%' . $filters['search'] . '%');
+                $q->where('permissions.name', 'like', '%' . $filters['search'] . '%')
+                  ->orWhere('permissions.display_name', 'like', '%' . $filters['search'] . '%');
             });
         }
         
         if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+            $query->where('permissions.status', $filters['status']);
         }
         
         // Apply sorting
@@ -48,26 +66,33 @@ class PermissionRepository extends BaseRepository
             $query->select($fields);
         }
         
-        return $query->paginate($perPage);
+        $result = $query->paginate($perPage);
+        
+        // Debug: Log result
+        Log::info('Permission query result', [
+            'data' => $result->items()
+        ]);
+        
+        return $result;
     }
     
-    private function applySorting($query, $sortBy)
+    protected function applySorting($query, $sortBy)
     {
         switch ($sortBy) {
             case 'created_at_desc':
-                $query->orderBy('created_at', 'desc');
+                $query->orderBy('permissions.created_at', 'desc');
                 break;
             case 'created_at_asc':
-                $query->orderBy('created_at', 'asc');
+                $query->orderBy('permissions.created_at', 'asc');
                 break;
             case 'name_asc':
-                $query->orderBy('name', 'asc');
+                $query->orderBy('permissions.name', 'asc');
                 break;
             case 'name_desc':
-                $query->orderBy('name', 'desc');
+                $query->orderBy('permissions.name', 'desc');
                 break;
             default:
-                $query->orderBy('created_at', 'desc');
+                $query->orderBy('permissions.created_at', 'desc');
         }
     }
 } 

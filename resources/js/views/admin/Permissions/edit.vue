@@ -58,7 +58,12 @@ async function fetchStatusEnums() {
 
 async function fetchParentOptions() {
   try {
-    const response = await axios.get(endpoints.permissions.list, { params: { per_page: 100 } })
+    const response = await axios.get(endpoints.permissions.list, { 
+      params: { 
+        per_page: 100,
+        relations: 'parent'
+      } 
+    })
     // Loại bỏ permission hiện tại khỏi danh sách parent options
     const allPermissions = response.data.data || []
     parentOptions.value = allPermissions.filter(permission => permission.id !== props.permission?.id)

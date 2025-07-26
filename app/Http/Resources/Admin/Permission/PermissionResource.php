@@ -17,9 +17,7 @@ class PermissionResource extends JsonResource
             'display_name' => $this->display_name,
             'guard_name' => $this->guard_name,
             'parent_id' => $this->parent_id,
-            'parent_name' => $this->whenLoaded('parent', function() {
-                return $this->parent ? $this->parent->display_name : null;
-            }),
+            'parent_name' => $this->parent_name, // Từ subquery
             'status' => $this->status,
             'has_children' => $this->children_count > 0,
             'children_count' => $this->children_count,

@@ -48,6 +48,7 @@
           type="select"
           :options="parentOptionsFormatted"
           :error="errors.parent_id"
+          placeholder="Chọn quyền cha"
           @update:model-value="clearError('parent_id')"
         />
         

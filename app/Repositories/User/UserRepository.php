@@ -13,6 +13,66 @@ class UserRepository extends BaseRepository
         return User::class;
     }
 
+    public function all($filters = [], $perPage = 20, $relations = [], $fields = ['*'])
+    {
+        $query = $this->model->newQuery();
+        
+        // Apply filters
+        if (!empty($filters['search'])) {
+            $query->where(function($q) use ($filters) {
+                $q->where('username', 'like', '%' . $filters['search'] . '%')
+                  ->orWhere('email', 'like', '%' . $filters['search'] . '%');
+            });
+        }
+        
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        
+        // Apply sorting
+        if (!empty($filters['sort_by'])) {
+            $this->applySorting($query, $filters['sort_by']);
+        }
+        
+        // Load relations
+        if (!empty($relations)) {
+            $query->with($relations);
+        }
+        
+        // Select fields
+        if ($fields !== ['*']) {
+            $query->select($fields);
+        }
+        
+        return $query->paginate($perPage);
+    }
+    
+    protected function applySorting($query, $sortBy)
+    {
+        switch ($sortBy) {
+            case 'created_at_desc':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'created_at_asc':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'username_asc':
+                $query->orderBy('username', 'asc');
+                break;
+            case 'username_desc':
+                $query->orderBy('username', 'desc');
+                break;
+            case 'email_asc':
+                $query->orderBy('email', 'asc');
+                break;
+            case 'email_desc':
+                $query->orderBy('email', 'desc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+        }
+    }
+
     public function changePassword($id, $newPassword)
     {
         $user = $this->find($id);

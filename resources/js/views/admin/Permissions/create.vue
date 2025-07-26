@@ -56,7 +56,12 @@ async function fetchStatusEnums() {
 
 async function fetchParentOptions() {
   try {
-    const response = await axios.get(endpoints.permissions.list, { params: { per_page: 100 } })
+    const response = await axios.get(endpoints.permissions.list, { 
+      params: { 
+        per_page: 100,
+        relations: 'parent'
+      } 
+    })
     parentOptions.value = response.data.data || []
   } catch (error) {
     parentOptions.value = []
