@@ -18,7 +18,6 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên đăng nhập</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ tên</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
           </tr>
@@ -28,13 +27,12 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ user.username }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.email }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.name }}</td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                :class="getStatusClass(user.status)"
+                :class="user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
               >
-                {{ getStatusName(user.status) }}
+                {{ user.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -45,6 +43,12 @@
                 Sửa
               </button>
               <button 
+                @click="openChangePasswordModal(user)" 
+                class="text-blue-600 hover:text-blue-900 mr-3"
+              >
+                Đổi mật khẩu
+              </button>
+              <button 
                 @click="confirmDelete(user)" 
                 class="text-red-600 hover:text-red-900"
               >
@@ -53,7 +57,7 @@
             </td>
           </tr>
           <tr v-if="users.length === 0">
-            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+            <td colspan="5" class="px-6 py-4 text-center text-gray-500">
               Không có dữ liệu
             </td>
           </tr>
@@ -105,6 +109,15 @@
       @updated="handleUserUpdated"
     />
 
+    <!-- Modal đổi mật khẩu -->
+    <ChangePassword
+      v-if="showChangePasswordModal"
+      :show="showChangePasswordModal"
+      :user="selectedUser"
+      :on-close="closeChangePasswordModal"
+      @password-changed="handlePasswordChanged"
+    />
+
     <!-- Modal xác nhận xóa -->
     <ConfirmModal
       v-if="showDeleteModal"
@@ -119,8 +132,9 @@
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
-import CreateUser from './create-new.vue'
-import EditUser from './edit-new.vue'
+import CreateUser from './create.vue'
+import EditUser from './edit.vue'
+import ChangePassword from './change-password.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import endpoints from '@/api/endpoints'
 
@@ -149,6 +163,7 @@ const pagination = reactive({
 // Modal state
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
+const showChangePasswordModal = ref(false)
 const showDeleteModal = ref(false)
 
 // Fetch data
@@ -181,20 +196,13 @@ async function fetchUsers(page = 1) {
 
 async function fetchEnums() {
   try {
-    // Sửa lại tên enum cho phù hợp với API
     const [statusResponse, genderResponse] = await Promise.all([
-      axios.get(endpoints.enums('UserStatus')), // Sửa từ user_status thành UserStatus
+      axios.get(endpoints.enums('UserStatus')),
       axios.get(endpoints.enums('Gender'))
     ])
     
-    // Kiểm tra và đảm bảo dữ liệu là mảng
-    statusEnums.value = Array.isArray(statusResponse.data) ? statusResponse.data : 
-                       (statusResponse.data && typeof statusResponse.data === 'object') ? 
-                       Object.entries(statusResponse.data).map(([key, value]) => ({ value: parseInt(key), name: value })) : [];
-                       
-    genderEnums.value = Array.isArray(genderResponse.data) ? genderResponse.data : 
-                      (genderResponse.data && typeof genderResponse.data === 'object') ? 
-                      Object.entries(genderResponse.data).map(([key, value]) => ({ value: parseInt(key), name: value })) : [];
+    statusEnums.value = Array.isArray(statusResponse.data) ? statusResponse.data : []
+    genderEnums.value = Array.isArray(genderResponse.data) ? genderResponse.data : []
     
     console.log('Status enums:', statusEnums.value)
     console.log('Gender enums:', genderEnums.value)
@@ -224,6 +232,16 @@ function closeEditModal() {
   selectedUser.value = null
 }
 
+function openChangePasswordModal(user) {
+  selectedUser.value = user
+  showChangePasswordModal.value = true
+}
+
+function closeChangePasswordModal() {
+  showChangePasswordModal.value = false
+  selectedUser.value = null
+}
+
 function confirmDelete(user) {
   selectedUser.value = user
   showDeleteModal.value = true
@@ -243,6 +261,10 @@ async function handleUserCreated() {
 async function handleUserUpdated() {
   await fetchUsers()
   closeEditModal()
+}
+
+async function handlePasswordChanged() {
+  closeChangePasswordModal()
 }
 
 async function deleteUser() {
@@ -268,9 +290,8 @@ function getStatusName(status) {
   if (!Array.isArray(statusEnums.value)) {
     return status;
   }
-  const statusStr = typeof status === 'number' ? String(status) : status;
-  const statusObj = statusEnums.value.find(s => s.id === statusStr || s.value === statusStr)
-  return statusObj ? (statusObj.name || statusObj.label) : status
+  const statusObj = statusEnums.value.find(s => s.id === status)
+  return statusObj ? statusObj.name : status
 }
 
 function getStatusClass(status) {
@@ -278,6 +299,7 @@ function getStatusClass(status) {
     case 'active': return 'bg-green-100 text-green-800'
     case 'pending': return 'bg-yellow-100 text-yellow-800'
     case 'inactive': return 'bg-red-100 text-red-800'
+    case 'banned': return 'bg-red-100 text-red-800'
     default: return 'bg-gray-100 text-gray-800'
   }
 }

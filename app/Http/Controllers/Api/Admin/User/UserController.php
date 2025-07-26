@@ -5,6 +5,7 @@ use App\Http\Controllers\BaseController;
 use App\Services\User\UserService;
 use App\Http\Resources\Admin\User\UserResource;
 use App\Http\Requests\Admin\User\UserRequest;
+use App\Http\Requests\Admin\User\ChangePasswordRequest;
 
 class UserController extends BaseController
 {
@@ -13,5 +14,16 @@ class UserController extends BaseController
         parent::__construct($service, UserResource::class);
         $this->storeRequestClass = UserRequest::class;
         $this->updateRequestClass = UserRequest::class;
+    }
+
+    public function changePassword(ChangePasswordRequest $request, $id)
+    {
+        $data = $request->validated();
+        $result = $this->service->changePassword($id, $data['password']);
+        
+        return response()->json([
+            'message' => 'Mật khẩu đã được thay đổi thành công.',
+            'data' => $result
+        ]);
     }
 } 

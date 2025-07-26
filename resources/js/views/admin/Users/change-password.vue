@@ -1,10 +1,9 @@
 <template>
   <div>
-    <UserForm 
+    <ChangePasswordForm 
       v-if="showModal"
       :show="showModal"
-      :status-enums="statusEnums"
-      :gender-enums="genderEnums"
+      :user="user"
       :api-errors="apiErrors"
       @submit="handleSubmit" 
       @cancel="onClose" 
@@ -12,26 +11,25 @@
   </div>
 </template>
 <script setup>
-import UserForm from './UserForm.vue'
+import ChangePasswordForm from './ChangePasswordForm.vue'
 import endpoints from '@/api/endpoints'
 import { ref, watch } from 'vue'
 import { useApiFormSubmit } from '@/utils/useApiFormSubmit'
 
 const props = defineProps({
   show: Boolean,
-  statusEnums: Array,
-  genderEnums: Array,
+  user: Object,
   onClose: Function
 })
-const emit = defineEmits(['created'])
+const emit = defineEmits(['password-changed'])
 
 const showModal = ref(false)
 
 const { apiErrors, submit } = useApiFormSubmit({
-  endpoint: endpoints.users.create,
+  endpoint: endpoints.users.changePassword(props.user?.id),
   emit,
   onClose: props.onClose,
-  eventName: 'created',
+  eventName: 'password-changed',
   method: 'post'
 })
 

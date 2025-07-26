@@ -27,8 +27,10 @@ class UserResource extends JsonResource
             // Profile fields
             'name' => $this->profile ? $this->profile->name : null,
             'gender' => $this->profile ? $this->profile->gender : null,
+            'birthday' => $this->profile ? ($this->profile->birthday ? $this->profile->birthday->format('Y-m-d') : null) : null,
             'address' => $this->profile ? $this->profile->address : null,
-            'avatar' => $this->profile ? $this->profile->avatar : null,
+            'image' => $this->profile ? $this->profile->image : null,
+            'about' => $this->profile ? $this->profile->about : null,
         ];
     }
 }

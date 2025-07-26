@@ -1,33 +1,26 @@
 <template>
-  <FormWrapper
-    :initial-data="user"
-    :default-values="defaultValues"
-    :rules="validationRules"
-    :api-errors="apiErrors"
-    :show-debug="showDebug"
-    submit-text="Lưu thông tin"
-    @submit="handleSubmit"
-    @cancel="$emit('cancel')"
-    @error="handleError"
-    ref="formWrapper"
-  >
-    <template #default="{ form, errors, clearError }">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Thông tin đăng nhập -->
-        <div class="md:col-span-2 font-semibold text-base mb-2">Thông tin đăng nhập</div>
-        
+  <Modal v-model="modalVisible" :title="formTitle">
+    <FormWrapper
+      :default-values="defaultValues"
+      :rules="validationRules"
+      :api-errors="apiErrors"
+      :submit-text="user ? 'Cập nhật' : 'Thêm mới'"
+      @submit="handleSubmit"
+      @cancel="onClose"
+    >
+      <template #default="{ form, errors, clearError, isSubmitting }">
+        <!-- Tên đăng nhập -->
         <FormField
           v-model="form.username"
           label="Tên đăng nhập"
           name="username"
-          type="text"
-          :maxlength="50"
           :error="errors.username"
           required
           autocomplete="username"
           @update:model-value="clearError('username')"
         />
         
+        <!-- Email -->
         <FormField
           v-model="form.email"
           label="Email"
@@ -39,19 +32,20 @@
           @update:model-value="clearError('email')"
         />
         
+        <!-- Số điện thoại -->
         <FormField
           v-model="form.phone"
           label="Số điện thoại"
           name="phone"
           type="tel"
-          :maxlength="20"
           :error="errors.phone"
           autocomplete="tel"
           @update:model-value="clearError('phone')"
         />
         
+        <!-- Mật khẩu -->
         <FormField
-          v-if="mode === 'create'"
+          v-if="!user"
           v-model="form.password"
           label="Mật khẩu"
           name="password"
@@ -63,7 +57,7 @@
         />
         
         <FormField
-          v-if="mode === 'create'"
+          v-if="!user"
           v-model="form.password_confirmation"
           label="Xác nhận mật khẩu"
           name="password_confirmation"
@@ -74,82 +68,28 @@
           @update:model-value="clearError('password_confirmation')"
         />
         
-        <FormField
-          v-else
-          v-model="form.password"
-          label="Mật khẩu (để trống nếu không đổi)"
-          name="password"
-          type="password"
-          :error="errors.password"
-          autocomplete="new-password"
-          @update:model-value="clearError('password')"
-        />
-        
-        <FormField
-          v-model="form.status"
-          label="Trạng thái"
-          name="status"
-          type="select"
-          :options="statusOptions"
-          placeholder="Chọn trạng thái"
-          :error="errors.status"
-          @update:model-value="clearError('status')"
-        />
-        
-        <!-- Thông tin xác thực -->
-        <div class="md:col-span-2 font-semibold text-base mt-6 mb-2">Thông tin xác thực</div>
-        
-        <FormField
-          v-model="form.email_verified_at"
-          label="Email xác thực lúc"
-          name="email_verified_at"
-          type="datetime-local"
-          :error="errors.email_verified_at"
-          @update:model-value="clearError('email_verified_at')"
-        />
-        
-        <FormField
-          v-model="form.phone_verified_at"
-          label="SĐT xác thực lúc"
-          name="phone_verified_at"
-          type="datetime-local"
-          :error="errors.phone_verified_at"
-          @update:model-value="clearError('phone_verified_at')"
-        />
-        
-        <FormField
-          v-model="form.last_login_at"
-          label="Đăng nhập cuối"
-          name="last_login_at"
-          type="datetime-local"
-          :error="errors.last_login_at"
-          @update:model-value="clearError('last_login_at')"
-        />
-        
-        <!-- Thông tin cá nhân -->
-        <div class="md:col-span-2 font-semibold text-base mt-6 mb-2">Thông tin cá nhân</div>
-        
+        <!-- Họ tên -->
         <FormField
           v-model="form.name"
           label="Họ tên"
           name="name"
-          type="text"
           :error="errors.name"
           autocomplete="name"
           @update:model-value="clearError('name')"
         />
         
+        <!-- Giới tính -->
         <FormField
           v-model="form.gender"
           label="Giới tính"
           name="gender"
           type="select"
           :options="genderOptions"
-          placeholder="Chọn giới tính"
           :error="errors.gender"
           @update:model-value="clearError('gender')"
         />
         
+        <!-- Ngày sinh -->
         <FormField
           v-model="form.birthday"
           label="Ngày sinh"
@@ -159,54 +99,66 @@
           @update:model-value="clearError('birthday')"
         />
         
+        <!-- Địa chỉ -->
         <FormField
           v-model="form.address"
           label="Địa chỉ"
           name="address"
-          type="text"
           :error="errors.address"
           autocomplete="street-address"
           @update:model-value="clearError('address')"
         />
         
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium mb-1">Ảnh đại diện</label>
-          <ImageUploader v-model="form.avatar" :default-url="avatarDefaultUrl" @remove="form.remove_avatar = true" />
-          <div v-if="errors.avatar" class="text-red-500 text-sm mt-1">{{ errors.avatar }}</div>
+        <!-- Ảnh đại diện -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1" for="user-image">Ảnh đại diện</label>
+          <ImageUploader
+            v-model="form.image"
+            :default-url="imageUrl"
+            @remove="form.remove_image = true"
+          />
         </div>
         
+        <!-- Giới thiệu -->
         <FormField
           v-model="form.about"
           label="Giới thiệu"
           name="about"
           type="textarea"
           :error="errors.about"
-          class="md:col-span-2"
+          autocomplete="off"
           @update:model-value="clearError('about')"
         />
-      </div>
-    </template>
-  </FormWrapper>
+        
+        <!-- Trạng thái -->
+        <FormField
+          v-model="form.status"
+          label="Trạng thái"
+          name="status"
+          type="select"
+          :options="statusOptions"
+          :error="errors.status"
+          @update:model-value="clearError('status')"
+        />
+      </template>
+    </FormWrapper>
+  </Modal>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import Modal from '@/components/Modal.vue'
 import FormWrapper from '@/components/FormWrapper.vue'
 import FormField from '@/components/FormField.vue'
 import ImageUploader from '@/components/ImageUploader.vue'
-import { computed, ref } from 'vue'
-import formToFormData from '@/utils/formToFormData'
 import { useFormDefaults } from '@/utils/useFormDefaults'
 import { useUrl } from '@/utils/useUrl'
 
 const props = defineProps({
+  show: Boolean,
   user: Object,
-  mode: {
-    type: String,
-    default: 'create',
-    validator: (value) => ['create', 'edit'].includes(value)
-  },
   statusEnums: {
-    type: [Array, Object],
+    type: Array,
     default: () => []
   },
   genderEnums: {
@@ -221,26 +173,67 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-const formWrapper = ref(null)
-const showDebug = ref(false) // Set to true to show debug panel
-
-// Giá trị mặc định cho form (dùng composable dùng chung)
-const defaultValues = useFormDefaults(props, 'user', {
-  status: '',
-  gender: '',
-  remove_avatar: false
+const formTitle = computed(() => props.user ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới')
+const modalVisible = computed({
+  get: () => props.show,
+  set: () => onClose()
 })
 
-// Avatar url dùng chung
-const avatarDefaultUrl = useUrl(props, 'user', 'avatar', 'profile')
+const defaultValues = useFormDefaults(props, 'user', {
+  username: '',
+  email: '',
+  phone: '',
+  password: '',
+  password_confirmation: '',
+  name: '',
+  gender: '',
+  birthday: '',
+  address: '',
+  image: null,
+  about: '',
+  status: '',
+  remove_image: false
+})
 
-// Options cho select
+const imageUrl = useUrl(props, 'user', 'image')
+
+const validationRules = computed(() => ({
+  username: [
+    { required: 'Tên đăng nhập là bắt buộc.' },
+    { max: [50, 'Tên đăng nhập không được vượt quá 50 ký tự.'] }
+  ],
+  email: [
+    { required: 'Email là bắt buộc.' },
+    { email: 'Email không hợp lệ.' }
+  ],
+  phone: [
+    { max: [20, 'Số điện thoại không được vượt quá 20 ký tự.'] }
+  ],
+  password: props.user ? [] : [
+    { required: 'Mật khẩu là bắt buộc.' },
+    { min: [8, 'Mật khẩu phải có ít nhất 8 ký tự.'] }
+  ],
+  password_confirmation: props.user ? [] : [
+    { required: 'Vui lòng xác nhận mật khẩu.' }
+  ],
+  name: [
+    { max: [255, 'Họ tên không được vượt quá 255 ký tự.'] }
+  ],
+  address: [
+    { max: [255, 'Địa chỉ không được vượt quá 255 ký tự.'] }
+  ],
+  about: [
+    { max: [500, 'Giới thiệu không được vượt quá 500 ký tự.'] }
+  ]
+}))
+
 const statusOptions = computed(() =>
   (props.statusEnums || []).map(opt => ({
     value: opt.id,
     label: opt.name
   }))
 )
+
 const genderOptions = computed(() =>
   (props.genderEnums || []).map(opt => ({
     value: opt.id,
@@ -248,42 +241,11 @@ const genderOptions = computed(() =>
   }))
 )
 
-// Validation rules
-const validationRules = computed(() => ({
-  username: [{ required: 'Tên đăng nhập là bắt buộc.' }],
-  email: [
-    { required: 'Email là bắt buộc.' },
-    { email: 'Email không hợp lệ.' }
-  ],
-  password: props.mode === 'create' ? [
-    { required: 'Mật khẩu là bắt buộc.' },
-    { min: [6, 'Mật khẩu tối thiểu 6 ký tự.'] }
-  ] : [],
-  password_confirmation: props.mode === 'create' ? [
-    { required: 'Vui lòng xác nhận mật khẩu.' },
-    { match: ['password', 'Mật khẩu xác nhận không khớp.'] }
-  ] : []
-}))
-
-// Phương thức xử lý submit
-function handleSubmit(formData) {
-  emit('submit', formToFormData(formData))
+function handleSubmit(form) {
+  emit('submit', form)
 }
 
-// Phương thức xử lý lỗi validation
-function handleError(errors) {
-  console.log('Form validation errors:', errors)
+function onClose() {
+  emit('cancel')
 }
-
-// Phương thức để set lỗi từ server
-function setServerErrors(apiErrors) {
-  if (formWrapper.value) {
-    formWrapper.value.setServerErrors(apiErrors)
-  }
-}
-
-// Expose các phương thức cần thiết
-defineExpose({
-  setServerErrors
-})
 </script> 

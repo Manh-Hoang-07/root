@@ -21,24 +21,43 @@ class UserRequest extends FormRequest
      */
     public function rules(): array
     {
-        $userId = $this->route('user') ? $this->route('user')->id : null;
+        $user = $this->route('user');
+        $userId = null;
+        
+        if ($user) {
+            $userId = is_object($user) ? $user->id : $user;
+        }
 
         $rules = [
             'username' => 'required|string|max:50|unique:users,username,' . $userId,
             'email' => 'required|email|max:255|unique:users,email,' . $userId,
             'phone' => 'nullable|string|max:20|unique:users,phone,' . $userId,
+            'password' => $this->isMethod('post') ? 'required|string|min:8|confirmed' : 'nullable|string|min:8|confirmed',
             'status' => 'required|string|in:active,inactive,banned',
-            'roles' => 'sometimes|array',
-            'roles.*' => 'exists:roles,id',
+            'name' => 'nullable|string|max:255',
+            'gender' => 'nullable|string|in:male,female,other',
+            'birthday' => 'nullable|date',
+            'address' => 'nullable|string|max:255',
+            'image' => 'nullable|string|max:255',
+            'about' => 'nullable|string|max:500',
         ];
 
-        if ($this->isMethod('post')) {
-            $rules['password'] = 'required|string|min:8|confirmed';
-        } elseif ($this->isMethod('put') || $this->isMethod('patch')) {
-            $rules['password'] = 'nullable|string|min:8|confirmed';
-        }
-
         return $rules;
+    }
+
+    public function validated($key = null, $default = null)
+    {
+        $validated = parent::validated($key, $default);
+        
+        // Convert string "null" to actual null for nullable fields
+        $nullableFields = ['phone', 'name', 'gender', 'birthday', 'address', 'about', 'image'];
+        foreach ($nullableFields as $field) {
+            if (isset($validated[$field]) && $validated[$field] === 'null') {
+                $validated[$field] = null;
+            }
+        }
+        
+        return $validated;
     }
 
     public function messages(): array

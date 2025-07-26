@@ -2,11 +2,11 @@
 
 namespace App\Enums;
 
-enum Gender: int
+enum Gender: string
 {
-    case Male = 1;
-    case Female = 2;
-    case Other = 3;
+    case Male = 'male';
+    case Female = 'female';
+    case Other = 'other';
 
     /**
      * Lấy tên hiển thị của giới tính
