@@ -11,7 +11,7 @@
   </div>
 </template>
 <script setup>
-import ChangePasswordForm from './ChangePasswordForm.vue'
+import ChangePasswordForm from './change-password-form.vue'
 import endpoints from '@/api/endpoints'
 import { ref, watch } from 'vue'
 import { useApiFormSubmit } from '@/utils/useApiFormSubmit'

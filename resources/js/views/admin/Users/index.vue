@@ -10,6 +10,12 @@
       </button>
     </div>
 
+    <!-- Bộ lọc -->
+    <UserFilter 
+      :initial-filters="currentFilters"
+      @update:filters="handleFilterUpdate" 
+    />
+
     <!-- Bảng dữ liệu -->
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
       <table class="min-w-full divide-y divide-gray-200">
@@ -135,12 +141,18 @@ import { ref, onMounted, reactive } from 'vue'
 import CreateUser from './create.vue'
 import EditUser from './edit.vue'
 import ChangePassword from './change-password.vue'
+import UserFilter from './filter.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import endpoints from '@/api/endpoints'
 
 // State
 const users = ref([])
 const selectedUser = ref(null)
+const currentFilters = ref({
+  search: '',
+  status: '',
+  sort_by: 'created_at_desc'
+})
 const statusEnums = ref([
   { value: 1, name: 'Hoạt động' },
   { value: 2, name: 'Chờ xác nhận' },
@@ -177,7 +189,10 @@ onMounted(async () => {
 async function fetchUsers(page = 1) {
   try {
     const response = await axios.get(endpoints.users.list, {
-      params: { page }
+      params: { 
+        page,
+        ...currentFilters.value
+      }
     })
     users.value = response.data.data
     
@@ -192,6 +207,11 @@ async function fetchUsers(page = 1) {
   } catch (error) {
     console.error('Error fetching users:', error)
   }
+}
+
+function handleFilterUpdate(filters) {
+  currentFilters.value = filters
+  fetchUsers(1)
 }
 
 async function fetchEnums() {

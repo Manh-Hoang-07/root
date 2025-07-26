@@ -12,7 +12,7 @@
   </div>
 </template>
 <script setup>
-import UserForm from './UserForm.vue'
+import UserForm from './form.vue'
 import endpoints from '@/api/endpoints'
 import { ref, watch } from 'vue'
 import { useApiFormSubmit } from '@/utils/useApiFormSubmit'
