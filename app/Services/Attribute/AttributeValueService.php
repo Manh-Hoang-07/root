@@ -11,20 +11,4 @@ class AttributeValueService extends BaseService
     {
         parent::__construct($repo);
     }
-
-    public function create($data)
-    {
-        if (!empty($data['value'])) {
-            $data['slug'] = Str::slug($data['value']);
-        }
-        return parent::create($data);
-    }
-
-    public function update($id, $data)
-    {
-        if (!empty($data['value'])) {
-            $data['slug'] = Str::slug($data['value']);
-        }
-        return parent::update($id, $data);
-    }
-} 
+}
