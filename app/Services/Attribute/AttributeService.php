@@ -3,6 +3,7 @@ namespace App\Services\Attribute;
 
 use App\Repositories\Attribute\AttributeRepository;
 use App\Services\BaseService;
+use Illuminate\Support\Str;
 
 class AttributeService extends BaseService
 {

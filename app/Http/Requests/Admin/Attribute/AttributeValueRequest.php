@@ -6,28 +6,23 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class AttributeValueRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
+        $attributeValueRoute = $this->route('attributeValue');
+        $attributeValueId = is_object($attributeValueRoute) ? $attributeValueRoute->id : $attributeValueRoute;
+
         return [
             'attribute_id' => 'required|exists:attributes,id',
-            'value' => 'required|string|max:255',
+            'value' => 'required|string|max:100',
             'name' => 'nullable|string|max:255',
-            'sort_order' => 'required|integer',
-            'status' => 'sometimes|string|in:active,inactive',
-            'description' => 'nullable|string',
+            'sort_order' => 'required|integer|min:0',
+            'status' => 'required|in:active,inactive',
+            'description' => 'nullable|string|max:255',
         ];
     }
 
@@ -41,8 +36,30 @@ class AttributeValueRequest extends FormRequest
             'name.max' => 'Tên không được vượt quá :max ký tự.',
             'sort_order.required' => 'Thứ tự sắp xếp không được để trống.',
             'sort_order.integer' => 'Thứ tự sắp xếp phải là số nguyên.',
+            'sort_order.min' => 'Thứ tự sắp xếp phải lớn hơn hoặc bằng 0.',
+            'status.required' => 'Trạng thái không được để trống.',
             'status.in' => 'Trạng thái không hợp lệ.',
             'description.string' => 'Mô tả phải là chuỗi.',
         ];
+    }
+
+    public function validated($key = null, $default = null)
+    {
+        $data = parent::validated($key, $default);
+        // Chuyển các trường có giá trị 'null' (string) thành null thực sự
+        foreach (['name', 'description'] as $field) {
+            if (isset($data[$field]) && $data[$field] === 'null') {
+                $data[$field] = null;
+            }
+        }
+        $allowed = [
+            'attribute_id',
+            'value',
+            'name',
+            'sort_order',
+            'status',
+            'description',
+        ];
+        return array_intersect_key($data, array_flip($allowed));
     }
 }
