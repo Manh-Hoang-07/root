@@ -39,7 +39,14 @@ async function handleSubmit(formData) {
   try {
     if (!props.role) return;
     Object.keys(apiErrors).forEach(key => delete apiErrors[key])
-    const response = await axios.post(endpoints.roles.update(props.role.id), formData)
+    
+    // Thêm _method = PUT để Laravel hiểu đây là PUT request
+    const dataWithMethod = {
+      ...formData,
+      _method: 'PUT'
+    }
+    
+    const response = await axios.post(endpoints.roles.update(props.role.id), dataWithMethod)
     emit('updated')
     props.onClose()
   } catch (error) {

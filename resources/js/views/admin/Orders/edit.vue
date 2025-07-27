@@ -53,7 +53,11 @@ async function handleSubmit(formData) {
   try {
     if (!props.order) return;
     Object.keys(apiErrors).forEach(key => delete apiErrors[key])
-    await axios.post(endpoints.orders.update(props.order.id), formData)
+    const dataWithMethod = {
+      ...formData,
+      _method: 'PUT'
+    }
+    await axios.post(endpoints.orders.update(props.order.id), dataWithMethod)
     emit('updated')
     props.onClose()
   } catch (error) {

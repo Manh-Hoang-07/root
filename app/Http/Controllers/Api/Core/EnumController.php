@@ -15,6 +15,9 @@ class EnumController extends Controller
     {
         $enums = [];
 
+        // Chuyển type về snake_case để hỗ trợ cả PascalCase/CamelCase
+        $type = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $type));
+
         switch ($type) {
             case 'user_status':
                 $enums = \App\Enums\UserStatus::cases();
@@ -34,9 +37,10 @@ class EnumController extends Controller
 
         $data = collect($enums)->map(function ($enum) {
             return [
+                'id' => $enum->value,
+                'name' => $enum->label(),
                 'value' => $enum->value,
-                'label' => $enum->label ?? $enum->value,
-                'name' => $enum->name
+                'label' => $enum->label()
             ];
         });
 

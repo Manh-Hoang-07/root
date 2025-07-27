@@ -201,8 +201,7 @@ function handleFilterUpdate(filters) {
 async function fetchEnums() {
   try {
     const statusResponse = await axios.get(endpoints.enums('RoleStatus'))
-    statusEnums.value = Array.isArray(statusResponse.data) ? statusResponse.data : []
-    console.log('Status enums:', statusEnums.value)
+    statusEnums.value = Array.isArray(statusResponse.data.data) ? statusResponse.data.data : []
   } catch (error) {
     console.error('Error fetching enums:', error)
     statusEnums.value = []

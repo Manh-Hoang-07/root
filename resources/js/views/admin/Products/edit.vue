@@ -53,7 +53,11 @@ async function handleSubmit(formData) {
   try {
     if (!props.product) return;
     Object.keys(apiErrors).forEach(key => delete apiErrors[key])
-    await axios.post(endpoints.products.update(props.product.id), formData)
+    const dataWithMethod = {
+      ...formData,
+      _method: 'PUT'
+    }
+    await axios.post(endpoints.products.update(props.product.id), dataWithMethod)
     emit('updated')
     props.onClose()
   } catch (error) {

@@ -159,7 +159,11 @@ async function handleCreateService(formData) {
 }
 async function handleEditService(formData) {
   try {
-    await axios.post(endpoints.shippingServices.update(editingService.value.id), formData)
+    const dataWithMethod = {
+      ...formData,
+      _method: 'PUT'
+    }
+    await axios.post(endpoints.shippingServices.update(editingService.value.id), dataWithMethod)
     await fetchServices()
     closeModal()
   } catch (error) {

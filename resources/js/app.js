@@ -19,5 +19,5 @@ Object.keys(authDirectives).forEach(key => {
 
 // Khởi tạo Auth trước khi mount app
 Auth.init().then(() => {
-  app.mount('#app');
+app.mount('#app');
 });

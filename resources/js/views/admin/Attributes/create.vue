@@ -43,7 +43,7 @@ watch(() => props.show, (newValue) => {
 async function fetchStatusEnums() {
   try {
     const response = await axios.get(endpoints.enums('BasicStatus'))
-    statusEnums.value = Array.isArray(response.data) ? response.data : []
+    statusEnums.value = Array.isArray(response.data.data) ? response.data.data : []
   } catch (error) {
     statusEnums.value = []
   }

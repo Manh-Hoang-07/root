@@ -222,8 +222,8 @@ async function fetchEnums() {
       apiClient.get(endpoints.enums('Gender'))
     ])
     
-    statusEnums.value = Array.isArray(statusResponse.data) ? statusResponse.data : []
-    genderEnums.value = Array.isArray(genderResponse.data) ? genderResponse.data : []
+    statusEnums.value = Array.isArray(statusResponse.data.data) ? statusResponse.data.data : []
+    genderEnums.value = Array.isArray(genderResponse.data.data) ? genderResponse.data.data : []
     
     console.log('Status enums:', statusEnums.value)
     console.log('Gender enums:', genderEnums.value)

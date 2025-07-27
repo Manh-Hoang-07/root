@@ -52,7 +52,11 @@ async function handleSubmit(formData) {
   try {
     if (!props.warehouse) return;
     Object.keys(apiErrors).forEach(key => delete apiErrors[key])
-    await axios.post(endpoints.warehouses.update(props.warehouse.id), formData)
+    const dataWithMethod = {
+      ...formData,
+      _method: 'PUT'
+    }
+    await axios.post(endpoints.warehouses.update(props.warehouse.id), dataWithMethod)
     emit('updated')
     props.onClose()
   } catch (error) {

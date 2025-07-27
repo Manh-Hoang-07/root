@@ -20,6 +20,7 @@ class RoleResource extends JsonResource
             'display_name' => $this->display_name,
             'guard_name' => $this->guard_name,
             'parent_id' => $this->parent_id,
+            'status' => $this->status,
             'permissions' => $this->permissions ? $this->permissions->map(function($p) {
                 return [
                     'id' => $p->id,
