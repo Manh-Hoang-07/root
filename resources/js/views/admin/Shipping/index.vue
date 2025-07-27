@@ -78,8 +78,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
-import DataTable from '@/components/DataTable.vue'
-import Pagination from '@/components/Pagination.vue'
+import DataTable from '@/components/Core/DataTable.vue'
+import Pagination from '@/components/Core/Pagination.vue'
 import Filter from './filter.vue'
 import Create from './create.vue'
 import Edit from './edit.vue'

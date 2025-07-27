@@ -7,7 +7,7 @@
 import Form from './form.vue'
 import api from '@/api/apiClient'
 import endpoints from '@/api/endpoints'
-import Modal from '@/components/Modal.vue'
+import Modal from '@/components/Core/Modal.vue'
 import { computed } from 'vue'
 const props = defineProps({
   show: Boolean,

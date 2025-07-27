@@ -154,7 +154,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import FormField from '../components/FormField.vue'
+import FormField from '../components/Core/FormField.vue'
 import validateForm from '../utils/validateForm'
 
 const router = useRouter()

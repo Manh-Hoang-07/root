@@ -133,7 +133,7 @@ import { ref, onMounted, reactive } from 'vue'
 import CreatePermission from './create.vue'
 import EditPermission from './edit.vue'
 import PermissionFilter from './filter.vue'
-import ConfirmModal from '@/components/ConfirmModal.vue'
+import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 

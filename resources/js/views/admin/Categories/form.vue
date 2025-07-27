@@ -63,15 +63,15 @@
 </template>
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import Modal from '@/components/Modal.vue'
-import FormWrapper from '@/components/FormWrapper.vue'
-import FormField from '@/components/FormField.vue'
+import Modal from '@/components/Core/Modal.vue'
+import FormWrapper from '@/components/Core/FormWrapper.vue'
+import FormField from '@/components/Core/FormField.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 import { useFormDefaults } from '@/utils/useFormDefaults'
 import { useUrl } from '@/utils/useUrl'
 import formToFormData from '@/utils/formToFormData'
-import ImageUploader from '@/components/ImageUploader.vue'
+import ImageUploader from '@/components/Core/ImageUploader.vue'
 
 const props = defineProps({
   show: Boolean,

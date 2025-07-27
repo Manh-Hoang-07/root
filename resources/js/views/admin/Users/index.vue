@@ -142,7 +142,7 @@ import CreateUser from './create.vue'
 import EditUser from './edit.vue'
 import ChangePassword from './change-password.vue'
 import UserFilter from './filter.vue'
-import ConfirmModal from '@/components/ConfirmModal.vue'
+import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import endpoints from '@/api/endpoints'
 import apiClient from '@/api/apiClient'
 

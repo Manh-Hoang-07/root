@@ -122,7 +122,7 @@ import { ref, onMounted, reactive } from 'vue'
 import CreateCategory from './create.vue'
 import EditCategory from './edit.vue'
 import CategoryFilter from './filter.vue'
-import ConfirmModal from '@/components/ConfirmModal.vue'
+import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 

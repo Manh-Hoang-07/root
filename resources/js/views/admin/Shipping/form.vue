@@ -31,7 +31,7 @@
 </template>
 <script setup>
 import { ref, watch } from 'vue'
-import FormLayout from '@/components/FormLayout.vue'
+import FormLayout from '@/components/Core/FormLayout.vue'
 const props = defineProps({
   shippingZone: Object,
   mode: String

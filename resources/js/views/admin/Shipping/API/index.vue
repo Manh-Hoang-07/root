@@ -117,8 +117,8 @@
 import { ref, onMounted, reactive } from 'vue'
 import api from '@/api/apiClient'
 import endpoints from '@/api/endpoints'
-import CustomSection from '@/components/CustomSection.vue'
-import Modal from '@/components/Modal.vue'
+import CustomSection from '@/components/Layout/CustomSection.vue'
+import Modal from '@/components/Core/Modal.vue'
 import EditApiModal from './edit.vue'
 import ApiProviderForm from './ApiProviderForm.vue'
 

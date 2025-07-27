@@ -67,7 +67,7 @@
 </template>
 <script setup>
 import { ref, computed, reactive, watch } from 'vue'
-import Modal from '@/components/Modal.vue'
+import Modal from '@/components/Core/Modal.vue'
 const props = defineProps({
   show: Boolean,
   pricingRule: Object,

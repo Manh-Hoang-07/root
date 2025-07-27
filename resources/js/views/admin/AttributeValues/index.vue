@@ -126,7 +126,7 @@ import { ref, onMounted, reactive } from 'vue'
 import CreateAttributeValue from './create.vue'
 import EditAttributeValue from './edit.vue'
 import AttributeValueFilter from './filter.vue'
-import ConfirmModal from '@/components/ConfirmModal.vue'
+import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 

@@ -69,9 +69,9 @@
 
 <script setup>
 import { computed } from 'vue'
-import Modal from '@/components/Modal.vue'
-import FormWrapper from '@/components/FormWrapper.vue'
-import FormField from '@/components/FormField.vue'
+import Modal from '@/components/Core/Modal.vue'
+import FormWrapper from '@/components/Core/FormWrapper.vue'
+import FormField from '@/components/Core/FormField.vue'
 import { useFormDefaults } from '@/utils/useFormDefaults'
 
 const props = defineProps({

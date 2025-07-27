@@ -107,7 +107,7 @@
 import { ref, onMounted, computed, reactive } from 'vue'
 import api from '@/api/apiClient'
 import endpoints from '@/api/endpoints'
-import Modal from '@/components/Modal.vue'
+import Modal from '@/components/Core/Modal.vue'
 
 const showAddZone = ref(false)
 const editZoneName = ref('')

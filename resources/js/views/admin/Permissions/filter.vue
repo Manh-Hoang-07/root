@@ -30,8 +30,8 @@
 
 <script setup>
 import { reactive } from 'vue'
-import AdminFilter from '@/components/AdminFilter.vue'
-import AdminFilterItem from '@/components/AdminFilterItem.vue'
+import AdminFilter from '@/components/Admin/AdminFilter.vue'
+import AdminFilterItem from '@/components/Admin/AdminFilterItem.vue'
 
 const props = defineProps({
   initialFilters: {

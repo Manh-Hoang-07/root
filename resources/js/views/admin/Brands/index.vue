@@ -120,7 +120,7 @@ import { ref, onMounted, reactive } from 'vue'
 import CreateBrand from './create.vue'
 import EditBrand from './edit.vue'
 import BrandFilter from './filter.vue'
-import ConfirmModal from '@/components/ConfirmModal.vue'
+import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 

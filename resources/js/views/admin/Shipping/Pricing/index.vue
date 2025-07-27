@@ -168,8 +168,8 @@ import { ref, onMounted } from 'vue'
 import api from '@/api/apiClient'
 import endpoints from '@/api/endpoints'
 import PricingRuleForm from './PricingRuleForm.vue'
-import CustomSection from '@/components/CustomSection.vue'
-import Modal from '@/components/Modal.vue'
+import CustomSection from '@/components/Layout/CustomSection.vue'
+import Modal from '@/components/Core/Modal.vue'
 
 const showEditPricing = ref(false)
 const serviceId = ref('')

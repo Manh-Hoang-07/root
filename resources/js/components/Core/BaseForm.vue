@@ -6,7 +6,7 @@
 
 <script setup>
 import { watch, ref } from 'vue'
-import FormLayout from '@/components/FormLayout.vue'
+import FormLayout from '@/components/Core/FormLayout.vue'
 import useFormData from '@/composables/useFormData'
 import useFormErrors from '@/composables/useFormErrors'
 

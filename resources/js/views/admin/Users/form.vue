@@ -147,10 +147,10 @@
 
 <script setup>
 import { computed } from 'vue'
-import Modal from '@/components/Modal.vue'
-import FormWrapper from '@/components/FormWrapper.vue'
-import FormField from '@/components/FormField.vue'
-import ImageUploader from '@/components/ImageUploader.vue'
+import Modal from '@/components/Core/Modal.vue'
+import FormWrapper from '@/components/Core/FormWrapper.vue'
+import FormField from '@/components/Core/FormField.vue'
+import ImageUploader from '@/components/Core/ImageUploader.vue'
 import { useFormDefaults } from '@/utils/useFormDefaults'
 import { useUrl } from '@/utils/useUrl'
 

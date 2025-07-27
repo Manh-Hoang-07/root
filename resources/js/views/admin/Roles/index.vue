@@ -128,7 +128,7 @@ import { ref, onMounted, reactive, computed } from 'vue'
 import CreateRole from './create.vue'
 import EditRole from './edit.vue'
 import RoleFilter from './filter.vue'
-import ConfirmModal from '@/components/ConfirmModal.vue'
+import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 

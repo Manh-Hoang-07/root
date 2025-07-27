@@ -59,8 +59,8 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import HeaderBar from '@/components/HeaderBar.vue';
-import SidebarMenu from '@/components/SidebarMenu.vue';
+import HeaderBar from '@/components/Layout/HeaderBar.vue';
+import SidebarMenu from '@/components/Layout/SidebarMenu.vue';
 
 const router = useRouter();
 const route = useRoute();

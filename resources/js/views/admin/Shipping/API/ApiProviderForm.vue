@@ -72,8 +72,8 @@
 </template>
 <script setup>
 import { ref, computed, reactive, watch } from 'vue'
-import Modal from '@/components/Modal.vue'
-import FormLayout from '@/components/FormLayout.vue'
+import Modal from '@/components/Core/Modal.vue'
+import FormLayout from '@/components/Core/FormLayout.vue'
 
 const props = defineProps({
   show: Boolean,
