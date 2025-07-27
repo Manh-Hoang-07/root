@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\Product;
 
-use App\Http\Controllers\BaseController;
+use App\Http\Controllers\Api\Admin\BaseController;
 use App\Services\Product\ProductService;
 use App\Http\Resources\Admin\Product\ProductResource;
 use App\Http\Requests\Admin\Product\ProductRequest;

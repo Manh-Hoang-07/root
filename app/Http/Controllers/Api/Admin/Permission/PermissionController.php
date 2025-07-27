@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\Permission;
 
-use App\Http\Controllers\BaseController;
+use App\Http\Controllers\Api\Admin\BaseController;
 use App\Services\Permission\PermissionService;
 use App\Http\Resources\Admin\Permission\PermissionResource;
 use App\Http\Requests\Admin\Permission\PermissionRequest;

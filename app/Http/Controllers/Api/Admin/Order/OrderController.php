@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\Order;
 
-use App\Http\Controllers\BaseController;
+use App\Http\Controllers\Api\Admin\BaseController;
 use App\Services\Order\OrderService;
 use App\Http\Resources\Admin\Order\OrderResource;
 use App\Http\Requests\Admin\Order\OrderRequest;

@@ -8,6 +8,12 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Thêm token vào header nếu có
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    
     console.log('API Request:', {
       method: config.method,
       url: config.url,
@@ -39,6 +45,19 @@ api.interceptors.response.use(
       url: error.config?.url,
       message: error.message
     })
+    
+    // Xử lý lỗi authentication
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Chỉ xóa token, không redirect
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('isAuthenticated')
+      localStorage.removeItem('user')
+      localStorage.removeItem('userRole')
+      
+      // Không redirect tự động, để user tự xử lý
+      console.log('Authentication failed, token cleared')
+    }
+    
     return Promise.reject(error)
   }
 )

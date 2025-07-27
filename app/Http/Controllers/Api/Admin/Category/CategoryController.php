@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\Category;
 
-use App\Http\Controllers\BaseController;
+use App\Http\Controllers\Api\Admin\BaseController;
 use App\Services\Category\CategoryService;
 use App\Http\Resources\Admin\Category\CategoryResource;
 use Illuminate\Support\Facades\DB;

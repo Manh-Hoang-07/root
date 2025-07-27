@@ -10,17 +10,37 @@ use App\Http\Controllers\Api\Admin\Category\CategoryController;
 use App\Http\Controllers\Api\Admin\Brand\BrandController;
 use App\Http\Controllers\Api\Admin\Attribute\AttributeController;
 use App\Http\Controllers\Api\Admin\Attribute\AttributeValueController;
-use App\Http\Controllers\Api\EnumController;
-use App\Http\Controllers\Api\ImageController;
+use App\Http\Controllers\Api\Core\EnumController;
+use App\Http\Controllers\Api\Core\ImageController;
 use App\Http\Controllers\Api\Admin\Permission\PermissionController;
 use App\Http\Controllers\Api\Admin\Role\RoleController;
+use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\User\User\UserController as ApiUserController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+// Public routes - không cần authentication
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 
-// Admin User API
-Route::prefix('admin')->group(function () {
+// Public API - thông tin công khai
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/brands', [BrandController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show']);
+
+// Protected routes - cần authentication
+Route::middleware(['auto.auth'])->group(function () {
+    // User routes
+                    Route::get('/me', [ApiUserController::class, 'me']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/change-password', [ApiUserController::class, 'changePassword']);
+    Route::get('/my-orders', [OrderController::class, 'myOrders']);
+    Route::post('/orders', [OrderController::class, 'store']);
+    
+
+});
+
+// Admin User API - cần role admin
+Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function () { 
     Route::apiResource('users', UserController::class);
     Route::apiResource('permissions', PermissionController::class);
     Route::apiResource('roles', RoleController::class);
@@ -39,7 +59,7 @@ Route::prefix('admin')->group(function () {
 Route::get('/enums/{type}', [EnumController::class, 'get']); 
 Route::post('/upload-image', [ImageController::class, 'upload']); 
 
-Route::prefix('admin')->group(function () {
+Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::prefix('shipping')->group(function () {
         Route::apiResource('api', App\Http\Controllers\Api\Admin\Shipping\ShippingApiConfigController::class);
         Route::apiResource('services', App\Http\Controllers\Api\Admin\Shipping\ShippingServiceController::class);

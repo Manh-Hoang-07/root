@@ -144,6 +144,7 @@ import ChangePassword from './change-password.vue'
 import UserFilter from './filter.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import endpoints from '@/api/endpoints'
+import apiClient from '@/api/apiClient'
 
 // State
 const users = ref([])
@@ -188,7 +189,7 @@ onMounted(async () => {
 
 async function fetchUsers(page = 1) {
   try {
-    const response = await axios.get(endpoints.users.list, {
+    const response = await apiClient.get(endpoints.users.list, {
       params: { 
         page,
         ...currentFilters.value
@@ -217,8 +218,8 @@ function handleFilterUpdate(filters) {
 async function fetchEnums() {
   try {
     const [statusResponse, genderResponse] = await Promise.all([
-      axios.get(endpoints.enums('UserStatus')),
-      axios.get(endpoints.enums('Gender'))
+      apiClient.get(endpoints.enums('UserStatus')),
+      apiClient.get(endpoints.enums('Gender'))
     ])
     
     statusEnums.value = Array.isArray(statusResponse.data) ? statusResponse.data : []
@@ -289,7 +290,7 @@ async function handlePasswordChanged() {
 
 async function deleteUser() {
   try {
-    await axios.delete(endpoints.users.delete(selectedUser.value.id))
+    await apiClient.delete(endpoints.users.delete(selectedUser.value.id))
     await fetchUsers()
     closeDeleteModal()
   } catch (error) {

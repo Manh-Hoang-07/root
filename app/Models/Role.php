@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Enums\RoleStatus;
+use Spatie\Permission\Models\Role as SpatieRole;
 
-class Role extends Model
+class Role extends SpatieRole
 {
     use HasFactory;
 
@@ -31,8 +32,4 @@ class Role extends Model
         return $this->hasMany(Role::class, 'parent_id');
     }
 
-    public function permissions()
-    {
-        return $this->belongsToMany(\App\Models\Permission::class, 'role_has_permissions', 'role_id', 'permission_id');
-    }
 }

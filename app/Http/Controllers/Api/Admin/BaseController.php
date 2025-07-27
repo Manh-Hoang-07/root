@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-abstract class BaseController extends Controller
+abstract class BaseController extends \App\Http\Controllers\Controller
 {
     protected $service;
     protected $resource;
