@@ -11,7 +11,7 @@ class RoleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -28,8 +28,9 @@ class RoleRequest extends FormRequest
             'display_name' => 'required|string|max:255',
             'guard_name' => 'sometimes|string|max:255',
             'parent_id' => 'nullable|exists:roles,id',
+            'status' => 'sometimes|string|in:active,inactive',
             'permissions' => 'sometimes|array',
-            'permissions.*' => 'exists:permissions,id',
+            'permissions.*' => 'integer|exists:permissions,id',
         ];
     }
 
@@ -42,6 +43,7 @@ class RoleRequest extends FormRequest
             'display_name.required' => 'Tên hiển thị không được để trống.',
             'display_name.max' => 'Tên hiển thị không được vượt quá :max ký tự.',
             'parent_id.exists' => 'Vai trò cha không hợp lệ.',
+            'status.in' => 'Trạng thái không hợp lệ.',
             'permissions.array' => 'Danh sách quyền phải là mảng.',
             'permissions.*.exists' => 'Quyền không hợp lệ.',
         ];

@@ -78,6 +78,33 @@
         <p v-else-if="apiErrors.status" class="mt-1 text-sm text-red-600">{{ apiErrors.status }}</p>
       </div>
 
+      <!-- Quyền -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Quyền</label>
+        <div v-if="loadingPermissions" class="text-center py-4 text-gray-500">
+          Đang tải danh sách quyền...
+        </div>
+        <div v-else>
+          <Multiselect
+            v-model="formData.permissions"
+            :options="permissionOptions"
+            :multiple="true"
+            :searchable="true"
+            :close-on-select="false"
+            :clear-on-select="false"
+            :preserve-search="true"
+            placeholder="Chọn quyền..."
+            label="label"
+            track-by="value"
+            :preselect-first="false"
+            :class="{ 'border-red-500': validationErrors.permissions || apiErrors.permissions }"
+            @input="handlePermissionsChange"
+          />
+        </div>
+        <p v-if="validationErrors.permissions" class="mt-1 text-sm text-red-600">{{ validationErrors.permissions }}</p>
+        <p v-else-if="apiErrors.permissions" class="mt-1 text-sm text-red-600">{{ apiErrors.permissions }}</p>
+      </div>
+
       <!-- Buttons -->
       <div class="flex justify-end space-x-3 pt-4">
         <button
@@ -102,12 +129,17 @@
 <script setup>
 import { ref, computed, reactive, watch, onMounted } from 'vue'
 import Modal from '@/components/Modal.vue'
+import Multiselect from 'vue-multiselect'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 
 const props = defineProps({
   show: Boolean,
   role: Object,
+  statusEnums: {
+    type: Array,
+    default: () => []
+  },
   apiErrors: {
     type: Object,
     default: () => ({})
@@ -116,16 +148,24 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-// Lấy danh sách trạng thái từ API
-const statusOptions = ref({})
-const fetchStatusOptions = async () => {
-  try {
-    const response = await axios.get(endpoints.enums('BasicStatus'))
-    statusOptions.value = response.data
-  } catch (error) {
-    console.error('Error fetching status options:', error)
+// Status options từ props
+const statusOptions = computed(() => {
+  const options = {}
+  if (Array.isArray(props.statusEnums)) {
+    props.statusEnums.forEach(enumItem => {
+      options[enumItem.id] = enumItem.name
+    })
   }
-}
+  return options
+})
+
+// Permission options cho multiselect
+const permissionOptions = computed(() => {
+  return permissions.value.map(permission => ({
+    value: permission.id,
+    label: `${permission.display_name || permission.name}${permission.parent_name ? ` (${permission.parent_name})` : ''}`
+  }))
+})
 
 // Lấy danh sách vai trò cha
 const parentOptions = ref([])
@@ -138,9 +178,25 @@ const fetchParentOptions = async () => {
   }
 }
 
+// Lấy danh sách quyền
+const permissions = ref([])
+const loadingPermissions = ref(false)
+const fetchPermissions = async () => {
+  loadingPermissions.value = true
+  try {
+    const response = await axios.get(endpoints.permissions.list, { params: { per_page: 1000 } })
+    permissions.value = response.data.data || []
+  } catch (error) {
+    console.error('Error fetching permissions:', error)
+    permissions.value = []
+  } finally {
+    loadingPermissions.value = false
+  }
+}
+
 onMounted(() => {
-  fetchStatusOptions()
   fetchParentOptions()
+  fetchPermissions()
 })
 
 // Form title
@@ -158,7 +214,8 @@ const formData = reactive({
   display_name: '',
   guard_name: '',
   parent_id: '',
-  status: 'active'
+  status: 'active',
+  permissions: []
 })
 
 // Form state
@@ -173,6 +230,13 @@ watch(() => props.role, (newVal) => {
     formData.guard_name = newVal.guard_name || ''
     formData.parent_id = newVal.parent_id || ''
     formData.status = newVal.status || 'active'
+    // Xử lý permissions
+    if (newVal.permissions && Array.isArray(newVal.permissions)) {
+      // Chuyển đổi permissions thành array of IDs cho multiselect
+      formData.permissions = newVal.permissions.map(p => p.id || p)
+    } else {
+      formData.permissions = []
+    }
   } else {
     resetForm()
   }
@@ -185,6 +249,7 @@ function resetForm() {
   formData.guard_name = ''
   formData.parent_id = ''
   formData.status = 'active'
+  formData.permissions = []
   clearErrors()
 }
 
@@ -228,21 +293,63 @@ function validateAndSubmit() {
   isSubmitting.value = true
   
   try {
-    // Create FormData object for file upload
-    const submitData = new FormData()
-    submitData.append('name', formData.name)
-    submitData.append('display_name', formData.display_name)
-    submitData.append('guard_name', formData.guard_name)
-    submitData.append('parent_id', formData.parent_id)
-    submitData.append('status', formData.status)
+    // Tạo object data thay vì FormData
+    const submitData = {
+      name: formData.name,
+      display_name: formData.display_name,
+      guard_name: formData.guard_name,
+      parent_id: formData.parent_id || null,
+      status: formData.status,
+      permissions: []
+    }
+    
+    // Thêm permissions
+    if (formData.permissions && formData.permissions.length > 0) {
+      console.log('Permissions to submit:', formData.permissions)
+      // Đảm bảo permissions là array of IDs
+      submitData.permissions = formData.permissions.map(permission => {
+        return typeof permission === 'object' ? permission.value : permission
+      })
+      console.log('Permission IDs:', submitData.permissions)
+    }
+    
     emit('submit', submitData)
   } finally {
     isSubmitting.value = false
   }
 }
 
+// Handle permissions change
+function handlePermissionsChange(selectedPermissions) {
+  console.log('Permissions changed:', selectedPermissions)
+  // Đảm bảo formData.permissions luôn là array of IDs
+  if (Array.isArray(selectedPermissions)) {
+    formData.permissions = selectedPermissions.map(p => typeof p === 'object' ? p.value : p)
+  } else {
+    formData.permissions = []
+  }
+  console.log('FormData permissions:', formData.permissions)
+}
+
 // Close modal
 function onClose() {
   emit('cancel')
 }
-</script> 
+</script>
+
+<style src="vue-multiselect/dist/vue-multiselect.css"></style>
+<style>
+.multiselect__tag, .multiselect__single, .multiselect__option {
+  color: #222 !important;
+  font-size: 14px !important;
+  min-width: 40px;
+}
+/* Thêm scroll cho vùng tag khi tràn */
+.multiselect__tags {
+  max-height: 90px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+</style> 

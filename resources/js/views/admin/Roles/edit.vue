@@ -4,6 +4,7 @@
       v-if="showModal"
       :show="showModal"
       :role="role"
+      :status-enums="statusEnums"
       :api-errors="apiErrors"
       @submit="handleSubmit" 
       @cancel="onClose" 
@@ -19,6 +20,10 @@ import axios from 'axios'
 const props = defineProps({
   show: Boolean,
   role: Object,
+  statusEnums: {
+    type: Array,
+    default: () => []
+  },
   onClose: Function
 })
 const emit = defineEmits(['updated'])

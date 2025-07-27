@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Enums\RoleStatus;
 
 class Role extends Model
 {
@@ -14,6 +15,11 @@ class Role extends Model
         'display_name',
         'guard_name',
         'parent_id',
+        'status',
+    ];
+
+    protected $casts = [
+        'status' => RoleStatus::class,
     ];
 
     public function parent()

@@ -6,14 +6,14 @@
         @click="openCreateModal" 
         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
       >
-        Thêm vai trò
+        Thêm vai trò mới
       </button>
     </div>
 
     <!-- Bộ lọc -->
-    <RoleFilter
-      :initial-filters="filters"
-      @update:filters="handleFilterChange"
+    <RoleFilter 
+      :initial-filters="currentFilters"
+      @update:filters="handleFilterUpdate" 
     />
 
     <!-- Bảng dữ liệu -->
@@ -21,6 +21,7 @@
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên vai trò</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên hiển thị</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guard</th>
@@ -31,16 +32,17 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-for="role in roles" :key="role.id">
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ role.name }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ role.display_name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ role.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ role.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ role.display_name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ role.guard_name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ getParentName(role.parent_id) }}</td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                :class="role.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                :class="getStatusClass(role.status)"
               >
-                {{ role.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
+                {{ getStatusName(role.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -59,7 +61,7 @@
             </td>
           </tr>
           <tr v-if="roles.length === 0">
-            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
               {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
             </td>
           </tr>
@@ -68,9 +70,9 @@
     </div>
 
     <!-- Phân trang -->
-    <div v-if="roles.length > 0" class="mt-4 flex justify-between items-center">
+    <div class="mt-4 flex justify-between items-center">
       <div class="text-sm text-gray-700">
-        Hiển thị {{ pagination.from || 0 }} đến {{ pagination.to || 0 }} trên tổng số {{ pagination.total || 0 }} bản ghi
+        Hiển thị {{ pagination.from }} đến {{ pagination.to }} trên tổng số {{ pagination.total }} bản ghi
       </div>
       <div class="flex space-x-1">
         <button 
@@ -94,6 +96,7 @@
     <CreateRole
       v-if="showCreateModal"
       :show="showCreateModal"
+      :status-enums="statusEnums"
       :on-close="closeCreateModal"
       @created="handleRoleCreated"
     />
@@ -103,6 +106,7 @@
       v-if="showEditModal"
       :show="showEditModal"
       :role="selectedRole"
+      :status-enums="statusEnums"
       :on-close="closeEditModal"
       @updated="handleRoleUpdated"
     />
@@ -131,6 +135,15 @@ import axios from 'axios'
 // State
 const roles = ref([])
 const selectedRole = ref(null)
+const currentFilters = ref({
+  search: '',
+  status: '',
+  sort_by: 'created_at_desc'
+})
+const statusEnums = ref([
+  { value: 1, name: 'Hoạt động' },
+  { value: 2, name: 'Không hoạt động' }
+])
 const pagination = reactive({
   current_page: 1,
   from: 0,
@@ -138,11 +151,6 @@ const pagination = reactive({
   total: 0,
   per_page: 10,
   links: []
-})
-const filters = reactive({
-  search: '',
-  status: '',
-  sort_by: 'created_at_desc'
 })
 const loading = ref(false)
 
@@ -153,7 +161,10 @@ const showDeleteModal = ref(false)
 
 // Fetch data
 onMounted(async () => {
-  await fetchRoles()
+  await Promise.all([
+    fetchRoles(),
+    fetchEnums()
+  ])
 })
 
 async function fetchRoles(page = 1) {
@@ -162,22 +173,19 @@ async function fetchRoles(page = 1) {
     const response = await axios.get(endpoints.roles.list, {
       params: { 
         page,
-        search: filters.search,
-        status: filters.status,
-        sort_by: filters.sort_by
+        ...currentFilters.value
       }
     })
     roles.value = response.data.data
+    
     // Update pagination
     const meta = response.data.meta
-    if (meta) {
-      pagination.current_page = meta.current_page
-      pagination.from = meta.from
-      pagination.to = meta.to
-      pagination.total = meta.total
-      pagination.per_page = meta.per_page
-      pagination.links = meta.links
-    }
+    pagination.current_page = meta.current_page
+    pagination.from = meta.from
+    pagination.to = meta.to
+    pagination.total = meta.total
+    pagination.per_page = meta.per_page
+    pagination.links = meta.links
   } catch (error) {
     console.error('Error fetching roles:', error)
   } finally {
@@ -185,10 +193,20 @@ async function fetchRoles(page = 1) {
   }
 }
 
-// Filter handlers
-function handleFilterChange(newFilters) {
-  Object.assign(filters, newFilters)
+function handleFilterUpdate(filters) {
+  currentFilters.value = filters
   fetchRoles(1)
+}
+
+async function fetchEnums() {
+  try {
+    const statusResponse = await axios.get(endpoints.enums('RoleStatus'))
+    statusEnums.value = Array.isArray(statusResponse.data) ? statusResponse.data : []
+    console.log('Status enums:', statusEnums.value)
+  } catch (error) {
+    console.error('Error fetching enums:', error)
+    statusEnums.value = []
+  }
 }
 
 // Modal handlers
@@ -243,9 +261,27 @@ async function deleteRole() {
 
 function changePage(url) {
   if (!url) return
+  
   const urlObj = new URL(url)
   const page = urlObj.searchParams.get('page')
   fetchRoles(page)
+}
+
+// Helper functions
+function getStatusName(status) {
+  if (!Array.isArray(statusEnums.value)) {
+    return status;
+  }
+  const statusObj = statusEnums.value.find(s => s.id === status)
+  return statusObj ? statusObj.name : status
+}
+
+function getStatusClass(status) {
+  switch (status) {
+    case 'active': return 'bg-green-100 text-green-800'
+    case 'inactive': return 'bg-red-100 text-red-800'
+    default: return 'bg-gray-100 text-gray-800'
+  }
 }
 
 // Map id -> vai trò để tra nhanh tên vai trò cha
@@ -254,6 +290,7 @@ const roleMap = computed(() => {
   roles.value.forEach(r => { map[r.id] = r })
   return map
 })
+
 function getParentName(parent_id) {
   if (!parent_id) return '—'
   const r = roleMap.value[parent_id]

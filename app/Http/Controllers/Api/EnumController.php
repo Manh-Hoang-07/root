@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\BasicStatus;
 use App\Enums\Gender;
+use App\Enums\RoleStatus;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class EnumController extends Controller
             'UserStatus' => UserStatus::toArray(),
             'Gender' => Gender::toArray(),
             'BasicStatus' => BasicStatus::toArray(),
+            'RoleStatus' => RoleStatus::toArray(),
             default => null,
         };
 

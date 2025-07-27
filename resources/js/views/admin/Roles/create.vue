@@ -3,6 +3,7 @@
     <RoleForm 
       v-if="showModal"
       :show="showModal"
+      :status-enums="statusEnums"
       :api-errors="apiErrors"
       @submit="handleSubmit" 
       @cancel="onClose" 
@@ -17,6 +18,10 @@ import axios from 'axios'
 
 const props = defineProps({
   show: Boolean,
+  statusEnums: {
+    type: Array,
+    default: () => []
+  },
   onClose: Function
 })
 const emit = defineEmits(['created'])
