@@ -32,14 +32,14 @@
           <template #help>Không có (Danh mục gốc)</template>
         </FormField>
         <!-- Mô tả -->
-        <CKEditor
-          v-model="form.description"
-          label="Mô tả"
-          :error="errors.description"
-          placeholder="Nhập mô tả chi tiết cho danh mục..."
-          height="250px"
-          @update:model-value="clearError('description')"
-        />
+              <CKEditorUltimate
+        v-model="form.description"
+        label="Mô tả chi tiết"
+        :error="errors.description"
+        placeholder="Nhập mô tả chi tiết cho danh mục với đầy đủ tính năng định dạng..."
+        height="400px"
+        @update:model-value="clearError('description')"
+      />
         <!-- Hình ảnh -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Hình ảnh</label>
@@ -71,7 +71,7 @@ import { useFormDefaults } from '@/utils/useFormDefaults'
 import { useUrl } from '@/utils/useUrl'
 import formToFormData from '@/utils/formToFormData'
 import ImageUploader from '@/components/Core/ImageUploader.vue'
-import CKEditor from '@/components/Core/CKEditor.vue'
+import CKEditorUltimate from '@/components/Core/CKEditorUltimate.vue'
 
 const props = defineProps({
   show: Boolean,
@@ -132,6 +132,12 @@ const validationRules = computed(() => ({
 function handleSubmit(form) {
   emit('submit', form) // chỉ truyền object dữ liệu, không gọi formToFormData ở đây
 }
+
+function onClose() {
+  emit('cancel')
+}
+
+
 const parentCategoryOptions = computed(() => {
   const options = [{ value: '', label: 'Không có (Danh mục gốc)' }]
   if (Array.isArray(props.parentCategories)) {

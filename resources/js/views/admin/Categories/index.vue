@@ -23,7 +23,7 @@
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên danh mục</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mô tả</th>
+    
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Danh mục cha</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
@@ -33,13 +33,7 @@
           <tr v-for="category in categories" :key="category.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ category.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ category.name }}</td>
-            <td class="px-6 py-4 text-sm text-gray-600 max-w-xs">
-              <HtmlContent 
-                :content="category.description" 
-                :max-lines="3"
-                placeholder="Không có mô tả"
-              />
-            </td>
+            
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ category.parent_name || 'Danh mục gốc' }}</td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
@@ -65,9 +59,9 @@
             </td>
           </tr>
           <tr v-if="categories.length === 0">
-            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-              {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
-            </td>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+          {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
+        </td>
           </tr>
         </tbody>
       </table>
@@ -131,7 +125,7 @@ import CreateCategory from './create.vue'
 import EditCategory from './edit.vue'
 import CategoryFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
-import HtmlContent from '@/components/Core/HtmlContent.vue'
+
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 
@@ -267,4 +261,5 @@ function getImageUrl(image) {
 </script>
 
 <style scoped>
+
 </style> 
