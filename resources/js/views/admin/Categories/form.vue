@@ -32,13 +32,12 @@
           <template #help>Không có (Danh mục gốc)</template>
         </FormField>
         <!-- Mô tả -->
-        <FormField
+        <CKEditor
           v-model="form.description"
           label="Mô tả"
-          name="description"
-          type="textarea"
           :error="errors.description"
-          autocomplete="off"
+          placeholder="Nhập mô tả chi tiết cho danh mục..."
+          height="250px"
           @update:model-value="clearError('description')"
         />
         <!-- Hình ảnh -->
@@ -72,6 +71,7 @@ import { useFormDefaults } from '@/utils/useFormDefaults'
 import { useUrl } from '@/utils/useUrl'
 import formToFormData from '@/utils/formToFormData'
 import ImageUploader from '@/components/Core/ImageUploader.vue'
+import CKEditor from '@/components/Core/CKEditor.vue'
 
 const props = defineProps({
   show: Boolean,
@@ -123,7 +123,7 @@ const validationRules = computed(() => ({
     { max: [100, 'Tên danh mục không được vượt quá 100 ký tự.'] }
   ],
   description: [
-    { max: [500, 'Mô tả không được vượt quá 500 ký tự.'] }
+    { max: [2000, 'Mô tả không được vượt quá 2000 ký tự.'] }
   ],
   parent_id: [
     { notSelf: ['Danh mục không thể là danh mục cha của chính nó.'] }

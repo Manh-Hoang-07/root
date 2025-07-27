@@ -57,7 +57,21 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
 });
 
 Route::get('/enums/{type}', [EnumController::class, 'get']); 
-Route::post('/upload-image', [ImageController::class, 'upload']); 
+Route::post('/upload-image', [ImageController::class, 'upload']);
+
+// Test route để debug upload
+Route::post('/test-upload', function (Request $request) {
+    return response()->json([
+        'success' => true,
+        'message' => 'Test upload endpoint working',
+        'data' => [
+            'files' => $request->allFiles(),
+            'headers' => $request->headers->all(),
+            'method' => $request->method(),
+            'url' => $request->url()
+        ]
+    ]);
+}); 
 
 Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::prefix('shipping')->group(function () {

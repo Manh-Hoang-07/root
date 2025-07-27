@@ -156,6 +156,16 @@ const routes = [
         name: 'AdminAttributeValues',
         component: () => import('../views/admin/AttributeValues/index.vue')
       },
+      {
+        path: 'categories/demo',
+        name: 'AdminCategoriesDemo',
+        component: () => import('../views/admin/Categories/demo.vue')
+      },
+      {
+        path: 'categories/upload-test',
+        name: 'AdminCategoriesUploadTest',
+        component: () => import('../views/admin/Categories/upload-test.vue')
+      },
     ]
   },
 

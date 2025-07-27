@@ -67,15 +67,30 @@ async function onFileChange(e) {
       const res = await api.post('/api/upload-image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      const url = res.data.url || res.data.path || res.data.image
+      
+      console.log('Upload response:', res.data)
+      
+      // Kiểm tra response structure
+      const responseData = res.data.data || res.data
+      const url = responseData.url || responseData.path || responseData.image
+      
       if (url) {
         emit('update:modelValue', url)
         previewUrl.value = getImageUrl(url)
+        console.log('Upload successful, URL:', url)
+      } else {
+        console.error('No URL in response:', res.data)
+        error.value = 'Upload thất bại: Không nhận được URL!'
+      }
+    } catch (err) {
+      console.error('Upload error:', err)
+      if (err.response?.data?.message) {
+        error.value = `Upload thất bại: ${err.response.data.message}`
+      } else if (err.message) {
+        error.value = `Upload thất bại: ${err.message}`
       } else {
         error.value = 'Upload thất bại!'
       }
-    } catch (err) {
-      error.value = 'Upload thất bại!'
     } finally {
       uploading.value = false
     }
