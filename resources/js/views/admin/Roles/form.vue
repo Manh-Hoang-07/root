@@ -163,7 +163,7 @@ const statusOptions = computed(() => {
 const permissionOptions = computed(() => {
   return permissions.value.map(permission => ({
     value: permission.id,
-    label: `${permission.display_name || permission.name}${permission.parent_name ? ` (${permission.parent_name})` : ''}`
+    label: permission.display_name || permission.name
   }))
 })
 
@@ -232,8 +232,11 @@ watch(() => props.role, (newVal) => {
     formData.status = newVal.status || 'active'
     // Xử lý permissions
     if (newVal.permissions && Array.isArray(newVal.permissions)) {
-      // Chuyển đổi permissions thành array of IDs cho multiselect
-      formData.permissions = newVal.permissions.map(p => p.id || p)
+      // Chuyển đổi permissions thành array of objects cho multiselect
+      formData.permissions = newVal.permissions.map(p => ({
+        value: p.id || p,
+        label: p.display_name || p.name
+      }))
     } else {
       formData.permissions = []
     }
@@ -322,12 +325,8 @@ function validateAndSubmit() {
 // Handle permissions change
 function handlePermissionsChange(selectedPermissions) {
   console.log('Permissions changed:', selectedPermissions)
-  // Đảm bảo formData.permissions luôn là array of IDs
-  if (Array.isArray(selectedPermissions)) {
-    formData.permissions = selectedPermissions.map(p => typeof p === 'object' ? p.value : p)
-  } else {
-    formData.permissions = []
-  }
+  // Giữ nguyên format objects cho multiselect
+  formData.permissions = selectedPermissions || []
   console.log('FormData permissions:', formData.permissions)
 }
 
