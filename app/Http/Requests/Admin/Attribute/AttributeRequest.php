@@ -6,51 +6,45 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class AttributeRequest extends FormRequest
 {
+    /**
+     * Determine if the user is authorized to make this request.
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
     public function rules(): array
     {
-        $attributeRoute = $this->route('attribute');
-        $attributeId = is_object($attributeRoute) ? $attributeRoute->id : $attributeRoute;
+        $attributeId = $this->route('attribute') ? $this->route('attribute')->id : null;
 
         return [
-            'name' => 'required|string|max:100',
-            'type' => 'required|string|in:text,number,select,color',
-            'status' => 'required|in:active,inactive',
-            'description' => 'nullable|string|max:255',
+            'name' => 'required|string|max:255|unique:attributes,name,' . $attributeId,
+            'description' => 'nullable|string',
+            'type' => 'required|string|in:text,textarea,select,multiselect,boolean,date,datetime',
+            'is_required' => 'boolean',
+            'is_unique' => 'boolean',
+            'is_filterable' => 'boolean',
+            'is_searchable' => 'boolean',
+            'status' => 'required|string|in:active,inactive',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required' => 'Tên thuộc tính không được để trống.',
+            'name.required' => 'Tên thuộc tính là bắt buộc.',
             'name.max' => 'Tên thuộc tính không được vượt quá :max ký tự.',
             'name.unique' => 'Tên thuộc tính đã tồn tại.',
-            'type.required' => 'Kiểu thuộc tính không được để trống.',
-            'type.in' => 'Kiểu thuộc tính không hợp lệ.',
-            'status.required' => 'Trạng thái không được để trống.',
+            'type.required' => 'Loại thuộc tính là bắt buộc.',
+            'type.in' => 'Loại thuộc tính không hợp lệ.',
+            'status.required' => 'Trạng thái là bắt buộc.',
             'status.in' => 'Trạng thái không hợp lệ.',
-            'description.string' => 'Mô tả phải là chuỗi.',
         ];
-    }
-
-    public function validated($key = null, $default = null)
-    {
-        $data = parent::validated($key, $default);
-        // Chuyển các trường có giá trị 'null' (string) thành null thực sự
-        if (isset($data['description']) && $data['description'] === 'null') {
-            $data['description'] = null;
-        }
-        $allowed = [
-            'name',
-            'type',
-            'status',
-            'description',
-        ];
-        return array_intersect_key($data, array_flip($allowed));
     }
 }

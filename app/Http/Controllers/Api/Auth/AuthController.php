@@ -35,7 +35,8 @@ class AuthController extends Controller
             
             // Set cookie với token
             if (isset($result['data']['token'])) {
-                $response->cookie('auth_token', $result['data']['token'], 30); // 30 phút
+                $domain = request()->getHost() === 'localhost' ? 'localhost' : null;
+                $response->cookie('auth_token', $result['data']['token'], 30, '/', $domain, false, false);
             }
             
             return $response;
@@ -68,16 +69,47 @@ class AuthController extends Controller
     }
 
     /**
+     * Lấy thông tin user hiện tại
+     */
+    public function me(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return $this->errorResponse('Unauthorized', 401);
+        }
+        
+        // Lấy role đầu tiên của user (nếu có)
+        $role = $user->roles->first();
+        $roleName = $role ? $role->name : null;
+        
+        return $this->successResponse([
+            'id' => $user->id,
+            'username' => $user->username,
+            'email' => $user->email,
+            'role' => $roleName,
+            'status' => $user->status,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at
+        ], 'Thông tin user');
+    }
+
+    /**
      * Đăng xuất
      */
     public function logout(Request $request): JsonResponse
     {
         $result = $this->authService->logout($request->user());
         
-        return $this->successResponse(
+        $response = $this->successResponse(
             null,
             $result['message']
         );
+        
+        // Xóa cookie auth_token
+        $response->cookie('auth_token', '', -1, '/', null, false, false);
+        
+        return $response;
     }
 
 

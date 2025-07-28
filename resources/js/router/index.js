@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { requireAuth, requireAdmin, requireGuest } from '../middleware/auth';
 
 // Import components
 import Home from '../views/home/Home/index.vue';
@@ -16,6 +17,7 @@ import AdminWarehouses from '../views/admin/Warehouses/index.vue';
 import AdminShipping from '../views/admin/Shipping/index.vue';
 import AdminReports from '../views/admin/Reports/index.vue';
 import AdminSettings from '../views/admin/Settings/index.vue';
+import TestAuth from '../views/TestAuth.vue';
 
 // User routes
 import UserDashboard from '../views/user/Dashboard/index.vue';
@@ -32,18 +34,26 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: Login
+    component: Login,
+    beforeEnter: requireGuest
   },
   {
     path: '/register',
     name: 'Register',
-    component: Register
+    component: Register,
+    beforeEnter: requireGuest
+  },
+  {
+    path: '/test-auth',
+    name: 'TestAuth',
+    component: TestAuth
   },
 
   // Admin routes (dùng layout riêng)
   {
     path: '/admin',
     component: AdminLayout,
+    beforeEnter: requireAdmin,
     children: [
       {
         path: '',
@@ -170,19 +180,19 @@ const routes = [
     path: '/user',
     name: 'UserDashboard',
     component: UserDashboard,
-    meta: { requiresAuth: true, role: 'user' }
+    beforeEnter: requireAuth
   },
   {
     path: '/user/profile',
     name: 'UserProfile',
     component: UserProfile,
-    meta: { requiresAuth: true, role: 'user' }
+    beforeEnter: requireAuth
   },
   {
     path: '/user/orders',
     name: 'UserOrders',
     component: UserOrders,
-    meta: { requiresAuth: true, role: 'user' }
+    beforeEnter: requireAuth
   },
 
   // Legacy route (redirect to admin)
@@ -199,14 +209,7 @@ const router = createRouter({
 
 // Navigation guard
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore();
-  
-  // Check if route requires authentication (chỉ áp dụng cho user)
-  if (to.meta.requiresAuth && to.meta.role === 'user' && !authStore.isAuthenticated) {
-    next('/login');
-    return;
-  }
-  
+  // Middleware đã được xử lý trong beforeEnter của từng route
   next();
 });
 

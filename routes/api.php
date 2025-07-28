@@ -30,13 +30,11 @@ Route::get('/products/{id}', [ProductController::class, 'show']);
 // Protected routes - cần authentication
 Route::middleware(['auto.auth'])->group(function () {
     // User routes
-                    Route::get('/me', [ApiUserController::class, 'me']);
-        Route::post('/logout', [AuthController::class, 'logout']);
-        Route::post('/change-password', [ApiUserController::class, 'changePassword']);
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/change-password', [ApiUserController::class, 'changePassword']);
     Route::get('/my-orders', [OrderController::class, 'myOrders']);
     Route::post('/orders', [OrderController::class, 'store']);
-    
-
 });
 
 // Admin User API - cần role admin
@@ -45,6 +43,12 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     Route::apiResource('permissions', PermissionController::class);
     Route::apiResource('roles', RoleController::class);
     Route::apiResource('products', ProductController::class);
+    Route::get('products/select/list', [ProductController::class, 'getForSelect']);
+    Route::get('products/{product}/variants', [App\Http\Controllers\Api\Admin\Variant\VariantController::class, 'getProductVariants']);
+    Route::get('products/{product}/images', [App\Http\Controllers\Api\Admin\Image\ImageController::class, 'getProductImages']);
+    Route::apiResource('variants', App\Http\Controllers\Api\Admin\Variant\VariantController::class);
+    Route::apiResource('images', App\Http\Controllers\Api\Admin\Image\ImageController::class);
+    Route::apiResource('attributes', App\Http\Controllers\Api\Admin\Attribute\AttributeController::class);
     Route::apiResource('warehouses', WarehouseController::class);
     Route::apiResource('orders', OrderController::class);
     Route::apiResource('categories', CategoryController::class);

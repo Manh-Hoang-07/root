@@ -48,20 +48,12 @@
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <button 
+              <Actions 
                 v-if="!permission.has_children"
-                @click="openEditModal(permission)" 
-                class="text-indigo-600 hover:text-indigo-900 mr-3"
-              >
-                Sửa
-              </button>
-              <button 
-                v-if="!permission.has_children"
-                @click="confirmDelete(permission)" 
-                class="text-red-600 hover:text-red-900"
-              >
-                Xóa
-              </button>
+                :item="permission"
+                @edit="openEditModal"
+                @delete="confirmDelete"
+              />
               <span v-if="permission.has_children" class="text-gray-500 text-sm">
                 Không thể sửa/xóa (có {{ permission.children_count }} quyền con)
               </span>
@@ -134,6 +126,7 @@ import CreatePermission from './create.vue'
 import EditPermission from './edit.vue'
 import PermissionFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
+import Actions from '@/components/Core/Actions.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 

@@ -42,18 +42,11 @@
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <button 
-                @click="openEditModal(attribute)" 
-                class="text-indigo-600 hover:text-indigo-900 mr-3"
-              >
-                Sửa
-              </button>
-              <button 
-                @click="confirmDelete(attribute)" 
-                class="text-red-600 hover:text-red-900"
-              >
-                Xóa
-              </button>
+              <Actions 
+                :item="attribute"
+                @edit="openEditModal"
+                @delete="confirmDelete"
+              />
             </td>
           </tr>
           <tr v-if="attributes.length === 0">
@@ -123,6 +116,7 @@ import CreateAttribute from './create.vue'
 import EditAttribute from './edit.vue'
 import AttributeFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
+import Actions from '@/components/Core/Actions.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 

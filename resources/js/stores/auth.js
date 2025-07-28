@@ -27,13 +27,8 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.ok && data.success) {
         isAuthenticated.value = true;
         
-        // Lưu token nếu có
-        if (data.data.token) {
-          localStorage.setItem('auth_token', data.data.token);
-        }
-        
-        // Lưu trạng thái đăng nhập
-        localStorage.setItem('isAuthenticated', 'true');
+        // Token đã được lưu vào cookie bởi backend
+        // Không cần lưu vào localStorage nữa
         
         // Lấy thông tin user từ API /me
         await fetchUserInfo();
@@ -81,40 +76,28 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async () => {
     try {
-      // Gọi API logout nếu có token
-      const token = localStorage.getItem('auth_token');
-      if (token) {
-        await fetch('/api/logout', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          }
-        });
-      }
+      // Gọi API logout (backend sẽ xóa cookie)
+      await fetch('/api/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {
-      // Xóa state và localStorage
+      // Xóa state
       isAuthenticated.value = false;
       user.value = null;
       userRole.value = '';
-      
-      localStorage.removeItem('isAuthenticated');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('user');
-      localStorage.removeItem('auth_token');
     }
   };
 
   const fetchUserInfo = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return false;
-
+      // Không cần gửi token trong header, backend sẽ tự động lấy từ cookie
       const response = await fetch('/api/me', {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         }
       });
@@ -124,10 +107,6 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.ok && data.success) {
         user.value = data.data;
         userRole.value = data.data.role;
-        
-        // Lưu vào localStorage
-        localStorage.setItem('userRole', data.data.role);
-        localStorage.setItem('user', JSON.stringify(data.data));
         
         return true;
       }
@@ -139,26 +118,28 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   const checkAuth = async () => {
-    const storedAuth = localStorage.getItem('isAuthenticated');
-    const token = localStorage.getItem('auth_token');
+    // Kiểm tra token trong cookie
+    const cookies = document.cookie.split(';');
+    let hasToken = false;
+    for (let cookie of cookies) {
+      const [name] = cookie.trim().split('=');
+      if (name === 'auth_token') {
+        hasToken = true;
+        break;
+      }
+    }
 
-    if (storedAuth === 'true' && token) {
+    if (hasToken) {
       // Thử lấy thông tin user từ API
       const success = await fetchUserInfo();
       if (success) {
         isAuthenticated.value = true;
         return true;
       } else {
-        // Nếu không lấy được thông tin user, chỉ xóa localStorage, không gọi logout API
+        // Nếu không lấy được thông tin user, xóa state
         isAuthenticated.value = false;
         user.value = null;
         userRole.value = '';
-        
-        localStorage.removeItem('isAuthenticated');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('user');
-        localStorage.removeItem('auth_token');
-        
         return false;
       }
     }
@@ -214,7 +195,7 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   // Khởi tạo từ localStorage (async)
-  checkAuth();
+  // checkAuth(); // Comment out để tránh gọi async function khi store được tạo
 
   return {
     // State

@@ -114,56 +114,38 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useAuthStore } from './stores/auth.js';
+import { useAuthInit } from './composables/useAuthInit.js';
 
 const router = useRouter();
 const route = useRoute();
 
-// State
-const isAuthenticated = ref(false);
-const userRole = ref('');
+// Initialize auth store
+const { authStore } = useAuthInit();
 
 // Computed
-const isAdmin = computed(() => isAuthenticated.value && userRole.value === 'admin');
-const isUser = computed(() => isAuthenticated.value && userRole.value === 'user');
+const isAuthenticated = computed(() => authStore.isAuthenticated);
+const isAdmin = computed(() => authStore.isAdmin);
+const isUser = computed(() => authStore.isUser);
 const isAdminRoute = computed(() => route.path.startsWith('/admin'));
 
 // Methods
 const loginAsAdmin = () => {
-  localStorage.setItem('isAuthenticated', 'true');
-  localStorage.setItem('userRole', 'admin');
-  isAuthenticated.value = true;
-  userRole.value = 'admin';
-  router.push('/admin');
+  // Redirect to login page for admin
+  router.push('/login');
 };
 
 const loginAsUser = () => {
-  localStorage.setItem('isAuthenticated', 'true');
-  localStorage.setItem('userRole', 'user');
-  isAuthenticated.value = true;
-  userRole.value = 'user';
-  router.push('/user');
+  // Redirect to login page for user
+  router.push('/login');
 };
 
-const logout = () => {
-  localStorage.removeItem('isAuthenticated');
-  localStorage.removeItem('userRole');
-  isAuthenticated.value = false;
-  userRole.value = '';
+const logout = async () => {
+  await authStore.logout();
   router.push('/');
 };
-
-// Lifecycle
-onMounted(() => {
-  const auth = localStorage.getItem('isAuthenticated');
-  const role = localStorage.getItem('userRole');
-  
-  if (auth === 'true' && role) {
-    isAuthenticated.value = true;
-    userRole.value = role;
-  }
-});
 </script>
 
 <style>

@@ -54,18 +54,11 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(warehouse.created_at) }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(warehouse.updated_at) }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <button 
-                @click="openEditModal(warehouse)" 
-                class="text-indigo-600 hover:text-indigo-900 mr-3"
-              >
-                Sửa
-              </button>
-              <button 
-                @click="confirmDelete(warehouse)" 
-                class="text-red-600 hover:text-red-900"
-              >
-                Xóa
-              </button>
+              <Actions 
+                :item="warehouse"
+                @edit="openEditModal"
+                @delete="confirmDelete"
+              />
             </td>
           </tr>
           <tr v-if="warehouses.length === 0">
@@ -135,6 +128,7 @@ import CreateWarehouse from './create.vue'
 import EditWarehouse from './edit.vue'
 import WarehouseFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
+import Actions from '@/components/Core/Actions.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 import { formatDate } from '@/utils/formatDate'

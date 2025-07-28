@@ -42,24 +42,23 @@
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <button 
-                @click="openEditModal(user)" 
-                class="text-indigo-600 hover:text-indigo-900 mr-3"
+              <Actions 
+                :item="user"
+                @edit="openEditModal"
+                @delete="confirmDelete"
               >
-                Sửa
-              </button>
-              <button 
-                @click="openChangePasswordModal(user)" 
-                class="text-blue-600 hover:text-blue-900 mr-3"
-              >
-                Đổi mật khẩu
-              </button>
-              <button 
-                @click="confirmDelete(user)" 
-                class="text-red-600 hover:text-red-900"
-              >
-                Xóa
-              </button>
+                <template #custom="{ item }">
+                  <button 
+                    @click="openChangePasswordModal(item)" 
+                    class="p-2 rounded-full hover:bg-blue-100 transition-colors duration-200"
+                    title="Đổi mật khẩu"
+                  >
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                  </button>
+                </template>
+              </Actions>
             </td>
           </tr>
           <tr v-if="users.length === 0">
@@ -143,6 +142,7 @@ import EditUser from './edit.vue'
 import ChangePassword from './change-password.vue'
 import UserFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
+import Actions from '@/components/Core/Actions.vue'
 import endpoints from '@/api/endpoints'
 import apiClient from '@/api/apiClient'
 

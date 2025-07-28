@@ -46,18 +46,11 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(order.created_at) }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(order.updated_at) }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <button 
-                @click="openEditModal(order)" 
-                class="text-indigo-600 hover:text-indigo-900 mr-3"
-              >
-                Sửa
-              </button>
-              <button 
-                @click="confirmDelete(order)" 
-                class="text-red-600 hover:text-red-900"
-              >
-                Xóa
-              </button>
+              <Actions 
+                :item="order"
+                @edit="openEditModal"
+                @delete="confirmDelete"
+              />
             </td>
           </tr>
           <tr v-if="orders.length === 0">
@@ -127,6 +120,7 @@ import CreateOrder from './create.vue'
 import EditOrder from './edit.vue'
 import OrderFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
+import Actions from '@/components/Core/Actions.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 import { formatDate } from '@/utils/formatDate'

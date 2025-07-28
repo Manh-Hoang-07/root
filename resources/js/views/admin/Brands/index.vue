@@ -40,18 +40,11 @@
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <button 
-                @click="openEditModal(brand)" 
-                class="text-indigo-600 hover:text-indigo-900 mr-3"
-              >
-                Sửa
-              </button>
-              <button 
-                @click="confirmDelete(brand)" 
-                class="text-red-600 hover:text-red-900"
-              >
-                Xóa
-              </button>
+              <Actions 
+                :item="brand"
+                @edit="openEditModal"
+                @delete="confirmDelete"
+              />
             </td>
           </tr>
           <tr v-if="brands.length === 0">
@@ -121,6 +114,7 @@ import CreateBrand from './create.vue'
 import EditBrand from './edit.vue'
 import BrandFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
+import Actions from '@/components/Core/Actions.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 

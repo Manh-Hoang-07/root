@@ -95,18 +95,11 @@
                 {{ formatDate(post.created_at) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button 
-                  @click="editPost(post)"
-                  class="text-blue-600 hover:text-blue-900 mr-3"
-                >
-                  Sửa
-                </button>
-                <button 
-                  @click="deletePost(post.id)"
-                  class="text-red-600 hover:text-red-900"
-                >
-                  Xóa
-                </button>
+                <Actions 
+                  :item="post"
+                  @edit="editPost"
+                  @delete="(item) => deletePost(item.id)"
+                />
               </td>
             </tr>
           </tbody>
@@ -197,6 +190,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import Actions from '@/components/Core/Actions.vue';
 
 const posts = ref([]);
 const showAddModal = ref(false);

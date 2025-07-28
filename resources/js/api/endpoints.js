@@ -21,7 +21,9 @@ function createResourceEndpoints(resource, custom = {}) {
 // Khai báo endpoints cho từng resource
 const endpoints = {
   users: createResourceEndpoints('users'),
-  products: createResourceEndpoints('products'),
+  products: createResourceEndpoints('products', {
+    getForSelect: '/api/admin/products/select/list'
+  }),
   orders: createResourceEndpoints('orders'),
   warehouses: createResourceEndpoints('warehouses', {
     customEndpoint: id => `/api/admin/warehouses/${id}/custom-action`

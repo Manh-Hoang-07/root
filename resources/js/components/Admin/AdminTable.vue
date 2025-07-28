@@ -50,18 +50,11 @@
               <slot name="row" :item="item" :index="index"></slot>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <slot name="actions" :item="item" :index="index">
-                  <button 
-                    @click="$emit('edit', item)" 
-                    class="text-indigo-600 hover:text-indigo-900 mr-3"
-                  >
-                    Sửa
-                  </button>
-                  <button 
-                    @click="$emit('delete', item)" 
-                    class="text-red-600 hover:text-red-900"
-                  >
-                    Xóa
-                  </button>
+                  <Actions 
+                    :item="item"
+                    @edit="$emit('edit', item)"
+                    @delete="$emit('delete', item)"
+                  />
                 </slot>
               </td>
             </tr>
@@ -107,6 +100,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import Actions from '../Core/Actions.vue'
 
 const props = defineProps({
   // Dữ liệu
