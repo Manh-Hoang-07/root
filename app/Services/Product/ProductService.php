@@ -26,6 +26,11 @@ class ProductService extends BaseService
     public function createProduct($data)
     {
         return DB::transaction(function () use ($data) {
+            // Auto-generate slug from name if not provided
+            if (!isset($data['slug']) || empty($data['slug'])) {
+                $data['slug'] = \Illuminate\Support\Str::slug($data['name']);
+            }
+            
             $product = $this->repo->create($data);
             
             // Attach categories if provided
@@ -73,6 +78,11 @@ class ProductService extends BaseService
     public function updateProduct($id, $data)
     {
         return DB::transaction(function () use ($id, $data) {
+            // Auto-generate slug from name if not provided
+            if (!isset($data['slug']) || empty($data['slug'])) {
+                $data['slug'] = \Illuminate\Support\Str::slug($data['name']);
+            }
+            
             $product = $this->repo->update($id, $data);
             
             // Sync categories if provided

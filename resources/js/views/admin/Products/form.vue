@@ -1,5 +1,5 @@
 <template>
-  <Modal v-model="modalVisible" :title="formTitle" size="6xl">
+  <Modal v-model="modalVisible" :title="formTitle" size="7xl">
     <FormWrapper
       :default-values="defaultValues"
       :rules="validationRules"
@@ -28,15 +28,7 @@
                 />
               </div>
 
-              <!-- Slug -->
-              <FormField
-                v-model="form.slug"
-                label="Slug"
-                name="slug"
-                :error="errors.slug"
-                autocomplete="off"
-                @update:model-value="clearError('slug')"
-              />
+
 
               <!-- Trạng thái -->
               <FormField
@@ -115,7 +107,7 @@
 
               <!-- Danh mục -->
               <MultipleSelect
-                v-model="form.categories"
+                  v-model="form.categories" 
                 :options="categoryOptions"
                 label="Danh mục"
                 placeholder="Chọn danh mục"
@@ -426,7 +418,7 @@
                           </td>
                           <td class="px-3 py-2">
                             <!-- Nếu có giá trị định sẵn -->
-                            <select 
+                      <select 
                               v-if="getAttributeValues(attrItem.attribute_id).length > 0"
                               v-model="attrItem.value_id"
                               class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
@@ -437,9 +429,9 @@
                                 :key="value.id" 
                                 :value="value.id"
                               >
-                                {{ value.value }}
-                              </option>
-                            </select>
+                          {{ value.value }}
+                        </option>
+                      </select>
                             
                             <!-- Nếu không có giá trị định sẵn -->
                             <input 
@@ -535,7 +527,6 @@ const productAttributeItems = ref([])
 // Default values cho form
 const defaultValues = useFormDefaults(props, 'product', {
   name: '',
-  slug: '',
   short_description: '',
   description: '',
   price: '',

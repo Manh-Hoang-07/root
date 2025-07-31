@@ -26,7 +26,6 @@ class ProductRequest extends FormRequest
 
         return [
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:products,slug,' . $productId,
             'description' => 'required|string',
             'short_description' => 'required|string|max:500',
             'price' => 'required|numeric|min:0',
@@ -65,8 +64,6 @@ class ProductRequest extends FormRequest
         return [
             'name.required' => 'Tên sản phẩm không được để trống.',
             'name.max' => 'Tên sản phẩm không được vượt quá :max ký tự.',
-            'slug.max' => 'Slug không được vượt quá :max ký tự.',
-            'slug.unique' => 'Slug đã tồn tại.',
             'description.required' => 'Mô tả không được để trống.',
             'short_description.required' => 'Mô tả ngắn không được để trống.',
             'short_description.max' => 'Mô tả ngắn không được vượt quá :max ký tự.',
@@ -118,16 +115,5 @@ class ProductRequest extends FormRequest
         ];
     }
 
-    /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        // Auto-generate slug from name if not provided
-        if (!$this->has('slug') && $this->has('name')) {
-            $this->merge([
-                'slug' => Str::slug($this->name)
-            ]);
-        }
-    }
+
 }
