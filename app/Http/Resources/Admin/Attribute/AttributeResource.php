@@ -22,7 +22,7 @@ class AttributeResource extends JsonResource
             'updated_at' => $this->updated_at,
             
             // Relationships
-            'values' => $this->whenLoaded('values'),
+            'attribute_values' => $this->whenLoaded('attributeValues'),
         ];
     }
 } 

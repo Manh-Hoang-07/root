@@ -46,7 +46,7 @@ class AuthService extends BaseService
         $this->authRepository->updateLastLogin($user->id);
 
         // Tạo token với thời gian hết hạn 30 phút
-        $token = $user->createToken('auth-token', ['*'], now()->addMinutes(30))->plainTextToken;
+        $token = $user->createToken('auth-token', ['*'], now()->addMinutes(60))->plainTextToken;
 
         return [
             'success' => true,

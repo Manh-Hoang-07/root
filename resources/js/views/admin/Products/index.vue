@@ -50,7 +50,12 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.sku || 'N/A' }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.category_names || 'N/A' }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.brand_name || 'N/A' }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ product.brand_name || 'N/A' }}
+              <div v-if="product.attributes?.brand" class="text-xs text-gray-400">
+                {{ product.attributes.brand }}
+              </div>
+            </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatCurrency(product.price) }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               <span v-if="product.sale_price" class="text-red-600 font-medium">{{ formatCurrency(product.sale_price) }}</span>
@@ -200,6 +205,7 @@ const showDeleteModal = ref(false)
 
 // Fetch data
 onMounted(async () => {
+  console.log('Products index mounted')
   await fetchProducts()
 })
 
@@ -240,9 +246,13 @@ function handleFilterChange(newFilters) {
 
 // Modal handlers
 function openCreateModal() {
+  console.log('Opening create modal...')
+  console.log('showCreateModal before:', showCreateModal.value)
   showCreateModal.value = true
+  console.log('showCreateModal after:', showCreateModal.value)
 }
 function closeCreateModal() {
+  console.log('Closing create modal...')
   showCreateModal.value = false
 }
 function openEditModal(product) {

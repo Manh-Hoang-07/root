@@ -31,6 +31,9 @@ class EnumController extends Controller
             case 'role_status':
                 $enums = \App\Enums\RoleStatus::cases();
                 break;
+            case 'product_status':
+                $enums = \App\Enums\ProductStatus::cases();
+                break;
             default:
                 return $this->errorResponse('Loại enum không hợp lệ.', 400);
         }

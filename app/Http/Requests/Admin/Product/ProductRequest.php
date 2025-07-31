@@ -39,6 +39,7 @@ class ProductRequest extends FormRequest
             'brand_id' => 'nullable|exists:brands,id',
             'status' => 'required|string|in:active,inactive',
             'categories' => 'sometimes|array',
+            'attributes' => 'sometimes|array',
             'categories.*' => 'exists:categories,id',
             
             // Variants validation
@@ -55,10 +56,7 @@ class ProductRequest extends FormRequest
             
             // Images validation
             'images' => 'sometimes|array',
-            'images.*.url' => 'required|string|max:500',
-            'images.*.alt_text' => 'nullable|string|max:255',
-            'images.*.caption' => 'nullable|string|max:500',
-            'images.*.order' => 'nullable|integer|min:0',
+            'images.*.url' => 'required|string|max:1000',
         ];
     }
 
@@ -96,6 +94,27 @@ class ProductRequest extends FormRequest
             'status.in' => 'Trạng thái không hợp lệ.',
             'categories.array' => 'Danh sách danh mục phải là mảng.',
             'categories.*.exists' => 'Danh mục không hợp lệ.',
+            
+            // Variants validation messages
+            'variants.*.sku.required' => 'SKU của biến thể không được để trống.',
+            'variants.*.sku.max' => 'SKU không được vượt quá :max ký tự.',
+            'variants.*.barcode.max' => 'Barcode không được vượt quá :max ký tự.',
+            'variants.*.price.required' => 'Giá biến thể không được để trống.',
+            'variants.*.price.numeric' => 'Giá biến thể phải là số.',
+            'variants.*.price.min' => 'Giá biến thể không được âm.',
+            'variants.*.sale_price.numeric' => 'Giá khuyến mãi biến thể phải là số.',
+            'variants.*.sale_price.min' => 'Giá khuyến mãi biến thể không được âm.',
+            'variants.*.quantity.required' => 'Số lượng biến thể không được để trống.',
+            'variants.*.quantity.integer' => 'Số lượng biến thể phải là số nguyên.',
+            'variants.*.quantity.min' => 'Số lượng biến thể không được âm.',
+            'variants.*.image.max' => 'Đường dẫn ảnh biến thể không được vượt quá :max ký tự.',
+            'variants.*.status.required' => 'Trạng thái biến thể không được để trống.',
+            'variants.*.status.in' => 'Trạng thái biến thể không hợp lệ.',
+            'variants.*.attribute_values.*.exists' => 'Giá trị thuộc tính không hợp lệ.',
+            
+            // Images validation messages
+            'images.*.url.required' => 'URL ảnh không được để trống.',
+            'images.*.url.max' => 'URL ảnh không được vượt quá :max ký tự.',
         ];
     }
 

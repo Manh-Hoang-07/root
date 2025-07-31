@@ -43,6 +43,47 @@
           @update:model-value="clearError('description')"
         />
         
+        <!-- Các tùy chọn nâng cao -->
+        <div class="grid grid-cols-2 gap-4">
+          <FormField
+            v-model="form.is_required"
+            label="Bắt buộc"
+            name="is_required"
+            type="checkbox"
+            :error="errors.is_required"
+            @update:model-value="clearError('is_required')"
+          />
+          
+          <FormField
+            v-model="form.is_unique"
+            label="Duy nhất"
+            name="is_unique"
+            type="checkbox"
+            :error="errors.is_unique"
+            @update:model-value="clearError('is_unique')"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <FormField
+            v-model="form.is_filterable"
+            label="Có thể lọc"
+            name="is_filterable"
+            type="checkbox"
+            :error="errors.is_filterable"
+            @update:model-value="clearError('is_filterable')"
+          />
+          
+          <FormField
+            v-model="form.is_searchable"
+            label="Có thể tìm kiếm"
+            name="is_searchable"
+            type="checkbox"
+            :error="errors.is_searchable"
+            @update:model-value="clearError('is_searchable')"
+          />
+        </div>
+
         <!-- Trạng thái -->
         <FormField
           v-model="form.status"
@@ -89,6 +130,10 @@ const defaultValues = useFormDefaults(props, 'attribute', {
   name: '',
   type: '',
   description: '',
+  is_required: false,
+  is_unique: false,
+  is_filterable: true,
+  is_searchable: true,
   status: ''
 })
 

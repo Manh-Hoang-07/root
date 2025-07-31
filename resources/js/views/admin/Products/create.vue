@@ -14,7 +14,7 @@
 import ProductForm from './form.vue'
 import endpoints from '@/api/endpoints'
 import { ref, reactive, watch, onMounted } from 'vue'
-import axios from 'axios'
+import apiClient from '@/api/apiClient'
 
 const props = defineProps({
   show: Boolean,
@@ -27,8 +27,10 @@ const apiErrors = reactive({})
 const statusOptions = ref({})
 
 watch(() => props.show, (newValue) => {
+  console.log('Create modal show changed:', newValue)
   showModal.value = newValue
   if (newValue) {
+    console.log('Modal opened, fetching status options...')
     Object.keys(apiErrors).forEach(key => delete apiErrors[key])
     fetchStatusOptions()
   }
@@ -36,7 +38,7 @@ watch(() => props.show, (newValue) => {
 
 async function fetchStatusOptions() {
   try {
-    const response = await axios.get(endpoints.enums('ProductStatus'))
+    const response = await apiClient.get(endpoints.enums('ProductStatus'))
     statusOptions.value = response.data
   } catch (error) {
     statusOptions.value = {
@@ -50,7 +52,7 @@ async function fetchStatusOptions() {
 async function handleSubmit(formData) {
   try {
     Object.keys(apiErrors).forEach(key => delete apiErrors[key])
-    await axios.post(endpoints.products.create, formData)
+    await apiClient.post(endpoints.products.create, formData)
     emit('created')
     props.onClose()
   } catch (error) {

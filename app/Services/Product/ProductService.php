@@ -55,9 +55,11 @@ class ProductService extends BaseService
             // Create images if provided
             if (isset($data['images']) && is_array($data['images'])) {
                 foreach ($data['images'] as $imageData) {
-                    $imageData['imageable_type'] = 'App\\Models\\Product';
-                    $imageData['imageable_id'] = $product->id;
-                    $product->images()->create($imageData);
+                    $product->images()->create([
+                        'url' => $imageData['url'],
+                        'imageable_type' => 'App\\Models\\Product',
+                        'imageable_id' => $product->id,
+                    ]);
                 }
             }
             
@@ -108,9 +110,11 @@ class ProductService extends BaseService
                 
                 // Create new images
                 foreach ($data['images'] as $imageData) {
-                    $imageData['imageable_type'] = 'App\\Models\\Product';
-                    $imageData['imageable_id'] = $product->id;
-                    $product->images()->create($imageData);
+                    $product->images()->create([
+                        'url' => $imageData['url'],
+                        'imageable_type' => 'App\\Models\\Product',
+                        'imageable_id' => $product->id,
+                    ]);
                 }
             }
             

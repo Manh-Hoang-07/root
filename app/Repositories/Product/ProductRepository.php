@@ -17,7 +17,7 @@ class ProductRepository extends BaseRepository
      */
     public function getProductsWithRelations($filters = [])
     {
-        $query = $this->model->with(['brand', 'categories', 'variants']);
+        $query = $this->model->with(['brand', 'categories', 'variants.attributeValues.attribute', 'images']);
 
         // Apply filters
         if (isset($filters['search']) && !empty($filters['search'])) {

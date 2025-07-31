@@ -24,6 +24,7 @@ class Product extends Model
         'height',
         'brand_id',
         'status',
+        'attributes',
     ];
 
     protected $casts = [
@@ -33,6 +34,7 @@ class Product extends Model
         'length' => 'float',
         'width' => 'float',
         'height' => 'float',
+        'attributes' => 'array',
     ];
 
     // Relationships
@@ -53,12 +55,12 @@ class Product extends Model
 
     public function inventory()
     {
-        return $this->hasMany(ProductInventory::class);
+        return $this->hasMany(Inventory::class);
     }
 
     public function images()
     {
-        return $this->hasMany(Image::class);
+        return $this->morphMany(Image::class, 'imageable');
     }
 
     public function orderItems()
@@ -85,6 +87,32 @@ class Product extends Model
     public function getMainSkuAttribute()
     {
         return $this->variants->first() ? $this->variants->first()->sku : null;
+    }
+
+    /**
+     * Set a product attribute
+     */
+    public function setProductAttribute($key, $value)
+    {
+        $attributes = $this->attributes ?? [];
+        $attributes[$key] = $value;
+        $this->attributes = $attributes;
+    }
+
+    /**
+     * Get a product attribute
+     */
+    public function getProductAttribute($key)
+    {
+        return $this->attributes[$key] ?? null;
+    }
+
+    /**
+     * Check if product has variants
+     */
+    public function hasVariants()
+    {
+        return $this->variants->count() > 0;
     }
 
     // Scopes

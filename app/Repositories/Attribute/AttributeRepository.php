@@ -17,6 +17,6 @@ class AttributeRepository extends BaseRepository
      */
     public function getAttributesWithValues()
     {
-        return $this->model->with('values')->get();
+        return $this->model->with('attributeValues')->get();
     }
 } 

@@ -6,6 +6,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = ref(false);
   const user = ref(null);
   const userRole = ref('');
+  const isFetchingUser = ref(false); // Thêm flag để tránh gọi API trùng lặp
 
   // Getters
   const isAdmin = computed(() => userRole.value === 'admin');
@@ -90,11 +91,24 @@ export const useAuthStore = defineStore('auth', () => {
       isAuthenticated.value = false;
       user.value = null;
       userRole.value = '';
+      isFetchingUser.value = false;
     }
   };
 
   const fetchUserInfo = async () => {
+    // Tránh gọi API trùng lặp
+    if (isFetchingUser.value) {
+      console.log('🔄 Already fetching user info, waiting...');
+      // Đợi cho đến khi fetch hoàn thành
+      while (isFetchingUser.value) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      return !!user.value;
+    }
+
+    isFetchingUser.value = true;
     try {
+      console.log('🔄 Fetching user info from API /me...');
       // Không cần gửi token trong header, backend sẽ tự động lấy từ cookie
       const response = await fetch('/api/me', {
         headers: {
@@ -107,13 +121,16 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.ok && data.success) {
         user.value = data.data;
         userRole.value = data.data.role;
-        
+        console.log('✅ User info fetched successfully:', data.data);
         return true;
       }
+      console.log('❌ Failed to fetch user info:', data);
       return false;
     } catch (error) {
       console.error('Fetch user info error:', error);
       return false;
+    } finally {
+      isFetchingUser.value = false;
     }
   };
 
@@ -202,6 +219,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     user,
     userRole,
+    isFetchingUser,
     
     // Getters
     isAdmin,

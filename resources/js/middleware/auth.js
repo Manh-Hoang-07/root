@@ -28,7 +28,11 @@ export function requireAuth(to, from, next) {
   // Kiểm tra token trong cookie
   const token = getTokenFromCookie();
   
-  console.log('🔍 requireAuth check:', { token: !!token, user: !!authStore.user });
+  console.log('🔍 requireAuth check:', { 
+    token: !!token, 
+    user: !!authStore.user,
+    isFetchingUser: authStore.isFetchingUser 
+  });
   
   if (!token) {
     console.log('❌ No token in cookie, redirect to login');
@@ -37,9 +41,9 @@ export function requireAuth(to, from, next) {
   }
   
   // Có token, kiểm tra thông tin user
-  if (!authStore.user) {
+  if (!authStore.user && !authStore.isFetchingUser) {
     console.log('🔄 Fetching user info...');
-    // Chưa có thông tin user, thử fetch
+    // Chưa có thông tin user và không đang fetch, thử fetch
     authStore.fetchUserInfo().then(success => {
       if (success) {
         console.log('✅ User info fetched successfully');
@@ -51,6 +55,19 @@ export function requireAuth(to, from, next) {
         next('/login');
       }
     });
+  } else if (authStore.isFetchingUser) {
+    console.log('⏳ User info is being fetched, waiting...');
+    // Đang fetch, đợi một chút rồi kiểm tra lại
+    setTimeout(() => {
+      if (authStore.user) {
+        console.log('✅ User info available after waiting');
+        next();
+      } else {
+        console.log('❌ Still no user info after waiting, redirect to login');
+        authStore.logout();
+        next('/login');
+      }
+    }, 500);
   } else {
     console.log('✅ User info already available');
     // Đã có thông tin user
@@ -67,7 +84,8 @@ export function requireAdmin(to, from, next) {
   console.log('🔍 requireAdmin check:', { 
     token: !!token,
     storeUserRole: authStore.userRole,
-    storeUser: !!authStore.user 
+    storeUser: !!authStore.user,
+    isFetchingUser: authStore.isFetchingUser
   });
   
   if (!token) {
@@ -77,9 +95,9 @@ export function requireAdmin(to, from, next) {
   }
   
   // Có token, kiểm tra thông tin user
-  if (!authStore.user) {
+  if (!authStore.user && !authStore.isFetchingUser) {
     console.log('🔄 Fetching user info for admin check...');
-    // Chưa có thông tin user, thử fetch
+    // Chưa có thông tin user và không đang fetch, thử fetch
     authStore.fetchUserInfo().then(success => {
       if (success) {
         console.log('✅ User info fetched, checking admin role...');
@@ -101,6 +119,25 @@ export function requireAdmin(to, from, next) {
         next('/login');
       }
     });
+  } else if (authStore.isFetchingUser) {
+    console.log('⏳ User info is being fetched for admin check, waiting...');
+    // Đang fetch, đợi một chút rồi kiểm tra lại
+    setTimeout(() => {
+      if (authStore.user) {
+        console.log('✅ User info available after waiting, checking admin role...');
+        if (authStore.userRole !== 'admin') {
+          console.log('❌ Not admin role, redirect to dashboard');
+          next('/dashboard');
+          return;
+        }
+        console.log('✅ Admin access granted after waiting');
+        next();
+      } else {
+        console.log('❌ Still no user info after waiting, redirect to login');
+        authStore.logout();
+        next('/login');
+      }
+    }, 500);
   } else {
     console.log('✅ User info available, checking admin role...');
     console.log('🔍 Current user:', { 

@@ -11,4 +11,12 @@ class AttributeService extends BaseService
     {
         parent::__construct($repo);
     }
+
+    /**
+     * Get attributes with their values
+     */
+    public function getAttributesWithValues()
+    {
+        return $this->repo->getAttributesWithValues();
+    }
 } 

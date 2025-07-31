@@ -49,6 +49,9 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     Route::apiResource('variants', App\Http\Controllers\Api\Admin\Variant\VariantController::class);
     Route::apiResource('images', App\Http\Controllers\Api\Admin\Image\ImageController::class);
     Route::apiResource('attributes', App\Http\Controllers\Api\Admin\Attribute\AttributeController::class);
+    
+    // Image upload
+    Route::post('images/upload', [App\Http\Controllers\Api\Admin\Core\ImageController::class, 'upload']);
     Route::apiResource('warehouses', WarehouseController::class);
     Route::apiResource('orders', OrderController::class);
     Route::apiResource('categories', CategoryController::class);

@@ -36,7 +36,7 @@ class AuthController extends Controller
             // Set cookie với token
             if (isset($result['data']['token'])) {
                 $domain = request()->getHost() === 'localhost' ? 'localhost' : null;
-                $response->cookie('auth_token', $result['data']['token'], 30, '/', $domain, false, false);
+                $response->cookie('auth_token', $result['data']['token'], 60, '/', $domain, false, false);
             }
             
             return $response;

@@ -3,9 +3,10 @@
     <ProductForm 
       v-if="showModal"
       :show="showModal"
-      :product="product"
+      :product="productData || product"
       :api-errors="apiErrors"
       :status-options="statusOptions"
+      mode="edit"
       @submit="handleSubmit" 
       @cancel="onClose" 
     />
@@ -27,14 +28,28 @@ const emit = defineEmits(['updated'])
 const showModal = ref(false)
 const apiErrors = reactive({})
 const statusOptions = ref({})
+const productData = ref(null)
 
 watch(() => props.show, (newValue) => {
   showModal.value = newValue
   if (newValue) {
     Object.keys(apiErrors).forEach(key => delete apiErrors[key])
     fetchStatusOptions()
+    if (props.product?.id) {
+      fetchProductDetails()
+    }
   }
 }, { immediate: true })
+
+async function fetchProductDetails() {
+  try {
+    const response = await axios.get(endpoints.products.update(props.product.id))
+    productData.value = response.data.data || response.data
+  } catch (error) {
+    console.error('Error fetching product details:', error)
+    productData.value = props.product
+  }
+}
 
 async function fetchStatusOptions() {
   try {
