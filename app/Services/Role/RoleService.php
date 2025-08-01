@@ -17,15 +17,14 @@ class RoleService extends BaseService
         $permissions = $data['permissions'] ?? [];
         unset($data['permissions']);
         
-        // Debug permissions data
-        Log::info('Permissions data:', ['permissions' => $permissions]);
+
         
         $role = parent::create($data);
         
         if (!empty($permissions)) {
             // Đảm bảo permissions là array of integers
             $permissionIds = array_map('intval', (array) $permissions);
-            Log::info('Permission IDs to sync:', ['ids' => $permissionIds]);
+
             $role->permissions()->sync($permissionIds);
         }
         
@@ -37,14 +36,13 @@ class RoleService extends BaseService
         $permissions = $data['permissions'] ?? [];
         unset($data['permissions']);
         
-        // Debug permissions data
-        Log::info('Update permissions data:', ['permissions' => $permissions]);
+
         
         $role = parent::update($id, $data);
         
         // Đảm bảo permissions là array of integers
         $permissionIds = array_map('intval', (array) $permissions);
-        Log::info('Update permission IDs to sync:', ['ids' => $permissionIds]);
+
         $role->permissions()->sync($permissionIds);
         
         return $role;

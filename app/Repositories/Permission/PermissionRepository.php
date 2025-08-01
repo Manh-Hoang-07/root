@@ -26,18 +26,7 @@ class PermissionRepository extends BaseRepository
         $query->leftJoin('permissions as parent_permissions', 'permissions.parent_id', '=', 'parent_permissions.id')
               ->addSelect('parent_permissions.display_name as parent_name');
         
-        // Debug: Log query SQL
-        Log::info('Permission query SQL', [
-            'sql' => $query->toSql(),
-            'bindings' => $query->getBindings()
-        ]);
-        
-        // Debug: Kiểm tra parent permissions
-        $parentIds = Permission::whereNotNull('parent_id')->pluck('parent_id')->unique();
-        Log::info('Parent IDs found:', ['parent_ids' => $parentIds->toArray()]);
-        
-        $existingParentIds = Permission::whereIn('id', $parentIds)->pluck('id');
-        Log::info('Existing parent IDs:', ['existing_parent_ids' => $existingParentIds->toArray()]);
+
         
         // Apply filters
         if (!empty($filters['search'])) {
@@ -68,10 +57,7 @@ class PermissionRepository extends BaseRepository
         
         $result = $query->paginate($perPage);
         
-        // Debug: Log result
-        Log::info('Permission query result', [
-            'data' => $result->items()
-        ]);
+
         
         return $result;
     }

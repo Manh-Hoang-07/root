@@ -220,7 +220,6 @@ const sampleContent = `
 <code style="background-color: transparent; padding: 0; color: inherit;">
 // JavaScript example
 function helloWorld() {
-  console.log("Hello from CKEditor Ultimate!");
   return "Amazing editor!";
 }
 
@@ -247,7 +246,7 @@ export default {
     <input type="checkbox" style="margin-right: 0.75rem;"> Tích hợp CKEditor Ultimate
   </li>
   <li style="display: flex; align-items: center; margin: 0.5rem 0; padding: 0.5rem; background-color: #f9fafb; border-radius: 0.375rem;">
-    <input type="checkbox" style="margin-right: 0.75rem;"> Test tất cả tính năng
+    <input type="checkbox" style="margin-right: 0.75rem;"> Kiểm tra tất cả tính năng
   </li>
   <li style="display: flex; align-items: center; margin: 0.5rem 0; padding: 0.5rem; background-color: #f9fafb; border-radius: 0.375rem;">
     <input type="checkbox" style="margin-right: 0.75rem;"> Deploy lên production
@@ -275,23 +274,19 @@ export default {
 `
 
 function handleUltimateChange(content) {
-  console.log('Ultimate content changed:', content)
   lastChange.value = new Date().toLocaleTimeString()
 }
 
 function handleCharacterCount(count) {
   characterCount.value = count
-  console.log('Character count:', count)
 }
 
 function handleWordCount(count) {
   wordCount.value = count
-  console.log('Word count:', count)
 }
 
 function handleStats(newStats) {
   stats.value = newStats
-  console.log('Stats:', newStats)
 }
 
 function loadSampleContent() {

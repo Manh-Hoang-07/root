@@ -118,6 +118,7 @@
 
 <script setup>
 import { ref, onMounted, reactive, computed } from 'vue'
+import { getEnumSync } from '@/constants/enums'
 import CreateRole from './create.vue'
 import EditRole from './edit.vue'
 import RoleFilter from './filter.vue'
@@ -155,10 +156,11 @@ const showDeleteModal = ref(false)
 
 // Fetch data
 onMounted(async () => {
-  await Promise.all([
-    fetchRoles(),
-    fetchEnums()
-  ])
+  // Load enums immediately (static)
+  fetchEnums()
+  
+  // Fetch roles
+  await fetchRoles()
 })
 
 async function fetchRoles(page = 1) {
@@ -192,14 +194,9 @@ function handleFilterUpdate(filters) {
   fetchRoles(1)
 }
 
-async function fetchEnums() {
-  try {
-    const statusResponse = await axios.get(endpoints.enums('RoleStatus'))
-    statusEnums.value = Array.isArray(statusResponse.data.data) ? statusResponse.data.data : []
-  } catch (error) {
-    console.error('Error fetching enums:', error)
-    statusEnums.value = []
-  }
+function fetchEnums() {
+  // Sử dụng static enum thay vì gọi API
+  statusEnums.value = getEnumSync('role_status')
 }
 
 // Modal handlers

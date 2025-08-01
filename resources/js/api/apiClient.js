@@ -9,13 +9,6 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // Không cần thêm token vào header, backend sẽ tự động lấy từ cookie
-    
-    console.log('API Request:', {
-      method: config.method,
-      url: config.url,
-      data: config.data,
-      headers: config.headers
-    })
     return config
   },
   (error) => {
@@ -27,11 +20,6 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', {
-      status: response.status,
-      data: response.data,
-      url: response.config.url
-    })
     return response
   },
   (error) => {
@@ -45,7 +33,6 @@ api.interceptors.response.use(
     // Xử lý lỗi authentication
     if (error.response?.status === 401 || error.response?.status === 403) {
       // Không cần xóa localStorage nữa, chỉ log
-      console.log('Authentication failed')
     }
     
     return Promise.reject(error)

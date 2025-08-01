@@ -171,9 +171,7 @@ async function fetchPermissions(page = 1) {
         ...currentFilters.value
       }
     })
-    console.log('Permissions response:', response.data)
     permissions.value = response.data.data
-    console.log('Permissions data:', permissions.value)
     // Update pagination
     const meta = response.data.meta
     if (meta) {

@@ -51,6 +51,7 @@
 </template>
 <script setup>
 import { ref, computed, reactive, watch, onMounted } from 'vue'
+import { getEnumSync } from '@/constants/enums'
 import Modal from '@/components/Core/Modal.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
@@ -82,17 +83,12 @@ const isSubmitting = ref(false)
 const statusOptions = ref({})
 
 onMounted(fetchStatusOptions)
-async function fetchStatusOptions() {
-  try {
-    const response = await axios.get(endpoints.enums('OrderStatus'))
-    statusOptions.value = response.data
-  } catch (error) {
-    statusOptions.value = {
-      pending: 'Chờ xử lý',
-      completed: 'Hoàn thành',
-      cancelled: 'Đã huỷ'
-    }
-  }
+function fetchStatusOptions() {
+  const enumData = getEnumSync('order_status')
+  statusOptions.value = enumData.map(item => ({
+    value: item.value,
+    label: item.label
+  }))
 }
 
 watch(() => props.order, (val) => {

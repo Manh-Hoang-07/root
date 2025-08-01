@@ -94,25 +94,36 @@
               />
 
               <!-- Thương hiệu -->
-              <FormField
-                v-model="form.brand_id"
-                label="Thương hiệu"
-                name="brand_id"
-                type="select"
-                :options="brandOptions"
-                :error="errors.brand_id"
-                placeholder="Chọn thương hiệu"
-                @update:model-value="clearError('brand_id')"
-              />
+              <div>
+                <label class="block text-sm font-medium mb-1">
+                  Thương hiệu
+                  <span class="text-red-500">*</span>
+                </label>
+                <SearchableSelect
+                  v-model="form.brand_id"
+                  :search-api="endpoints.brands.search"
+                  placeholder="Tìm thương hiệu..."
+                  :error="errors.brand_id"
+                  @change="clearError('brand_id')"
+                />
+                <div v-if="errors.brand_id" class="text-red-500 text-sm mt-1">{{ errors.brand_id }}</div>
+              </div>
 
               <!-- Danh mục -->
-              <MultipleSelect
-                v-model="selectedCategories" 
-                :options="categoryOptions"
-                label="Danh mục"
-                placeholder="Chọn danh mục"
-                :error="errors.categories"
-              />
+              <div>
+                <label class="block text-sm font-medium mb-1">
+                  Danh mục
+                  <span class="text-red-500">*</span>
+                </label>
+                <SearchableMultiSelect
+                  v-model="selectedCategories"
+                  :search-api="endpoints.categories.search"
+                  placeholder="Tìm danh mục..."
+                  :error="errors.categories"
+                  @change="clearError('categories')"
+                />
+                <div v-if="errors.categories" class="text-red-500 text-sm mt-1">{{ errors.categories }}</div>
+              </div>
 
               <!-- Kích thước và trọng lượng -->
               <FormField
@@ -489,10 +500,13 @@
 
 <script setup>
 import { ref, computed, reactive, watch, onMounted } from 'vue'
+import { getEnumSync } from '@/constants/enums'
 import Modal from '@/components/Core/Modal.vue'
 import FormWrapper from '@/components/Core/FormWrapper.vue'
 import FormField from '@/components/Core/FormField.vue'
 import MultipleSelect from '@/components/Core/MultipleSelect.vue'
+import SearchableSelect from '@/components/Core/SearchableSelect.vue'
+import SearchableMultiSelect from '@/components/Core/SearchableMultiSelect.vue'
 import endpoints from '@/api/endpoints'
 import apiClient from '@/api/apiClient'
 import { useFormDefaults } from '@/utils/useFormDefaults'
@@ -524,8 +538,6 @@ const totalUploading = ref(0)
 
 // Reactive data
 const statusOptions = ref([])
-const brands = ref([])
-const categories = ref([])
 const attributes = ref([])
 const selectedAttributes = ref([])
 const productAttributes = ref([])
@@ -533,21 +545,31 @@ const productAttributeItems = ref([])
 const selectedCategories = ref([])
 
 // Default values cho form
-const defaultValues = useFormDefaults(props, 'product', {
-  name: '',
-  short_description: '',
-  description: '',
-  price: '',
-  sale_price: '',
-  brand_id: '',
-  categories: [],
-  weight: '',
-  length: '',
-  width: '',
-  height: '',
-  image: '',
-  status: '',
-  attributes: {}
+const defaultValues = computed(() => {
+  const product = props.product || {}
+  console.log('Computing default values with product:', product)
+  
+  // Status đã là string rồi, không cần convert
+  let status = product.status || ''
+  
+  const values = {
+    name: product.name || '',
+    short_description: product.short_description || '',
+    description: product.description || '',
+    price: product.price || '',
+    sale_price: product.sale_price || '',
+    brand_id: product.brand_id || '',
+    categories: product.categories || [],
+    weight: product.weight || '',
+    length: product.length || '',
+    width: product.width || '',
+    height: product.height || '',
+    image: product.image || '',
+    status: status,
+    attributes: product.attributes || {}
+  }
+  console.log('Computed default values:', values)
+  return values
 })
 
 // Validation rules
@@ -572,113 +594,38 @@ const validationRules = computed(() => ({
   ]
 }))
 
-// Options cho select fields
-const brandOptions = computed(() => [
-  { value: '', label: 'Chọn thương hiệu' },
-  ...brands.value.map(brand => ({
-    value: brand.id,
-    label: brand.name
-  }))
-])
 
-const categoryOptions = computed(() => 
-  categories.value.map(category => ({
-    value: category.id,
-    label: category.name
-  }))
-)
 
 
 
 onMounted(() => {
   fetchStatusOptions()
-  fetchBrands()
-  fetchCategories()
-  fetchAttributes()
-  fetchProductAttributes()
+  fetchAttributes() // Chỉ gọi 1 lần, data sẽ được dùng chung
 })
 
-async function fetchStatusOptions() {
-  try {
-    const response = await apiClient.get(endpoints.enums('BasicStatus'))
-    console.log('Raw API response:', response)
-    console.log('Response data type:', typeof response.data)
-    console.log('Response data:', response.data)
-    
-    // Kiểm tra response.data có phải array không
-    let dataArray = response.data
-    if (!Array.isArray(dataArray)) {
-      // Nếu không phải array, thử response.data.data
-      if (response.data && response.data.data && Array.isArray(response.data.data)) {
-        dataArray = response.data.data
-      } else {
-        // Fallback nếu không có data
-        throw new Error('Invalid data format')
-      }
-    }
-    
-    // Convert API response to FormField format
-    statusOptions.value = dataArray.map(opt => ({
-      value: opt.value || opt.id,
-      label: opt.label || opt.name
-    }))
-    console.log('Status options loaded:', statusOptions.value)
-  } catch (error) {
-    console.error('Error fetching status options:', error)
-    // Fallback với format đúng cho FormField
-    statusOptions.value = [
-      { value: 'active', label: 'Hoạt động' },
-      { value: 'inactive', label: 'Không hoạt động' }
-    ]
-    console.log('Using fallback status options:', statusOptions.value)
-  }
+function fetchStatusOptions() {
+  const enumData = getEnumSync('product_status')
+  statusOptions.value = enumData.map(item => ({
+    value: item.value,
+    label: item.label
+  }))
+  console.log('Status options:', statusOptions.value)
 }
 
-async function fetchBrands() {
-  try {
-    const response = await apiClient.get(endpoints.brands.list)
-    brands.value = response.data.data || []
-  } catch (error) {
-    console.error('Error fetching brands:', error)
-    brands.value = []
-  }
-}
 
-async function fetchCategories() {
-  try {
-    const response = await apiClient.get(endpoints.categories.list)
-    categories.value = response.data.data || []
-    console.log('Fetched categories:', categories.value)
-  } catch (error) {
-    console.error('Error fetching categories:', error)
-    categories.value = []
-  }
-}
 
 async function fetchAttributes() {
   try {
-    console.log('Fetching attributes...')
     const response = await apiClient.get(`${endpoints.attributes.list}?relations=values`)
-    console.log('Attributes response:', response.data)
-    attributes.value = response.data.data || []
-    console.log('Attributes loaded:', attributes.value.length)
+    const attributesData = response.data.data || []
+    
+    // Sử dụng chung data cho cả 2 arrays
+    attributes.value = attributesData
+    productAttributes.value = attributesData
   } catch (error) {
     console.error('Error fetching attributes:', error)
     console.error('Error details:', error.response?.data)
     attributes.value = []
-  }
-}
-
-async function fetchProductAttributes() {
-  try {
-    console.log('Fetching product attributes...')
-    const response = await apiClient.get(`${endpoints.attributes.list}?relations=values`)
-    console.log('Product attributes response:', response.data)
-    productAttributes.value = response.data.data || []
-    console.log('Product attributes loaded:', productAttributes.value.length)
-  } catch (error) {
-    console.error('Error fetching product attributes:', error)
-    console.error('Error details:', error.response?.data)
     productAttributes.value = []
   }
 }
@@ -775,9 +722,11 @@ watch(selectedAttributes, (newSelected) => {
 })
 
 watch(() => props.product, (val) => {
+  console.log('ProductForm received product data:', val)
   if (val) {
     // Load variants and images if editing
     if (val.variants) {
+      console.log('Loading variants:', val.variants)
       variants.value = val.variants.map(v => ({
         sku: v.sku || '',
         barcode: v.barcode || '',
@@ -811,6 +760,7 @@ watch(() => props.product, (val) => {
     
     // Load categories if editing
     if (val.categories && Array.isArray(val.categories)) {
+      console.log('Loading categories:', val.categories)
       // Extract category IDs from categories array
       selectedCategories.value = val.categories.map(cat => cat.id || cat)
     } else {
@@ -818,6 +768,7 @@ watch(() => props.product, (val) => {
     }
     
     if (val.product_images) {
+      console.log('Loading images:', val.product_images)
       images.value = val.product_images.map(img => ({
         url: img.url || '',
         uploading: false
@@ -826,6 +777,7 @@ watch(() => props.product, (val) => {
     
     // Load product attributes if editing
     if (val.attributes) {
+      console.log('Loading attributes:', val.attributes)
       // Nếu attributes là array (format mới)
       if (Array.isArray(val.attributes)) {
         val.attributes.forEach(attr => {
@@ -938,7 +890,7 @@ async function handleMultipleImagesUpload(event) {
         }
       })
       
-      console.log('Upload response:', response.data)
+
       
       // Sử dụng URL thay vì dataUrl để tránh base64
       images.value.push({
@@ -964,10 +916,6 @@ function clearAllImages() {
 }
 
 function handleSubmit(formData) {
-  // Debug: Kiểm tra categories
-  console.log('Form data before submit:', formData)
-  console.log('Categories type:', typeof formData.categories)
-  console.log('Categories value:', formData.categories)
   
   // Chuyển đổi productAttributeItems thành attributes array với thông tin chi tiết
   const cleanAttributes = []
@@ -1023,8 +971,6 @@ function handleSubmit(formData) {
     }),
     images: images.value.map(img => ({ url: img.url }))
   }
-  
-  console.log('Submit data:', submitData)
   
   emit('submit', submitData)
 }

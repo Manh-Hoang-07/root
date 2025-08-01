@@ -15,12 +15,7 @@ class PermissionService extends BaseService
 
     public function update($id, $data)
     {
-        // Debug log
-        Log::info('PermissionService update', [
-            'id' => $id,
-            'data' => $data,
-            'parent_id' => $data['parent_id'] ?? null
-        ]);
+
 
         $permission = $this->repo->find($id);
         

@@ -113,7 +113,6 @@ const modalVisible = computed({
 
 const defaultValues = computed(() => {
   const obj = props.attributeValue || {}
-  console.log('AttributeValue prop:', obj)
   const result = {
     attribute_id: obj.attrbute_id ? String(obj.attrbute_id) : '', // Sửa từ attribute_id thành attrbute_id
     value: obj.value || '',
@@ -122,7 +121,6 @@ const defaultValues = computed(() => {
     description: obj.description || '',
     status: obj.status || ''
   }
-  console.log('Default values:', result)
   return result
 })
 

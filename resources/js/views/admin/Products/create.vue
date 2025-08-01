@@ -15,6 +15,7 @@ import ProductForm from './form.vue'
 import endpoints from '@/api/endpoints'
 import { ref, reactive, watch, onMounted } from 'vue'
 import apiClient from '@/api/apiClient'
+import { getEnumSync } from '@/constants/enums'
 
 const props = defineProps({
   show: Boolean,
@@ -27,26 +28,19 @@ const apiErrors = reactive({})
 const statusOptions = ref({})
 
 watch(() => props.show, (newValue) => {
-  console.log('Create modal show changed:', newValue)
   showModal.value = newValue
   if (newValue) {
-    console.log('Modal opened, fetching status options...')
     Object.keys(apiErrors).forEach(key => delete apiErrors[key])
     fetchStatusOptions()
   }
 }, { immediate: true })
 
-async function fetchStatusOptions() {
-  try {
-    const response = await apiClient.get(endpoints.enums('ProductStatus'))
-    statusOptions.value = response.data
-  } catch (error) {
-    statusOptions.value = {
-      active: 'Đang bán',
-      inactive: 'Ngừng bán',
-      draft: 'Bản nháp'
-    }
-  }
+function fetchStatusOptions() {
+  const enumData = getEnumSync('product_status')
+  statusOptions.value = enumData.map(item => ({
+    value: item.value,
+    label: item.label
+  }))
 }
 
 async function handleSubmit(formData) {

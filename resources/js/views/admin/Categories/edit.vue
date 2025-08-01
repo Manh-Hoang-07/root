@@ -16,6 +16,7 @@
 import CategoryForm from './form.vue'
 import endpoints from '@/api/endpoints'
 import { ref, watch } from 'vue'
+import { getEnumSync } from '@/constants/enums'
 import { useApiFormSubmit } from '@/utils/useApiFormSubmit'
 import axios from 'axios'
 
@@ -59,7 +60,7 @@ async function fetchParentCategories() {
 
 async function fetchStatusEnums() {
   try {
-    const response = await axios.get(endpoints.enums('BasicStatus'))
+    const response = { data: getEnumSync('basic_status') }
     statusEnums.value = Array.isArray(response.data.data) ? response.data.data : []
   } catch (error) {
     statusEnums.value = []

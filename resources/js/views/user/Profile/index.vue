@@ -79,6 +79,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { getEnumSync } from '@/constants/enums'
 
 const user = ref({ profile: {}, social_accounts: [] })
 const defaultAvatar = '/default-avatar.png'
@@ -98,19 +99,17 @@ const fetchUser = async () => {
     form.value.avatar = null
   } catch (e) {}
 }
-const fetchEnums = async () => {
-  try {
-    const [statusRes, genderRes] = await Promise.all([
-      axios.get('/api/enums/user-status'),
-      axios.get('/api/enums/gender')
-    ])
-    statusEnums.value = statusRes.data
-    genderEnums.value = genderRes.data
-  } catch (e) {}
+const fetchEnums = () => {
+  // Sử dụng static enum thay vì gọi API
+  statusEnums.value = getEnumSync('user_status')
+  genderEnums.value = getEnumSync('gender')
 }
 onMounted(async () => {
+  // Load enums immediately (static)
+  fetchEnums()
+  
+  // Fetch user data
   await fetchUser()
-  await fetchEnums()
 })
 const getStatusLabel = (status) => {
   const found = statusEnums.value.find(s => s.value === status)

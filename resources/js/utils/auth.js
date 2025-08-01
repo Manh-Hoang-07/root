@@ -98,18 +98,37 @@ class Auth {
           
           return true
         } else {
-          // Token không hợp lệ, xóa state
-          Auth.logout()
+          // Token không hợp lệ, chỉ xóa state, không gọi logout API
+          isAuthenticated.value = false
+          user.value = null
+          userRole.value = ''
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('isAuthenticated')
+          localStorage.removeItem('user')
+          localStorage.removeItem('userRole')
           return false
         }
       } catch (error) {
         console.error('Auth init error:', error)
-        Auth.logout()
+        // Chỉ xóa state, không gọi logout API
+        isAuthenticated.value = false
+        user.value = null
+        userRole.value = ''
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('isAuthenticated')
+        localStorage.removeItem('user')
+        localStorage.removeItem('userRole')
         return false
       }
     } else if (storedUser) {
-      // Có user data nhưng không có token, xóa state
-      Auth.logout()
+      // Có user data nhưng không có token, chỉ xóa state
+      isAuthenticated.value = false
+      user.value = null
+      userRole.value = ''
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('isAuthenticated')
+      localStorage.removeItem('user')
+      localStorage.removeItem('userRole')
       return false
     }
 

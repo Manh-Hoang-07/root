@@ -17,9 +17,32 @@ abstract class BaseRepository
     {
         $query = $this->model->query();
         
-        // Load relations
+        // Load relations - chỉ load khi được yêu cầu cụ thể
         if (!empty($relations)) {
-            $query->with($relations);
+            // Tối ưu: chỉ select các field cần thiết cho relationships
+            $optimizedRelations = [];
+            foreach ($relations as $relation) {
+                if (strpos($relation, ':') !== false) {
+                    // Nếu đã có select fields thì giữ nguyên
+                    $optimizedRelations[] = $relation;
+                } else {
+                    // Tự động tối ưu cho các relation phổ biến
+                    switch ($relation) {
+                        case 'brand':
+                            $optimizedRelations[] = 'brand:id,name';
+                            break;
+                        case 'categories':
+                            $optimizedRelations[] = 'categories:id,name';
+                            break;
+                        case 'images':
+                            $optimizedRelations[] = 'images:id,imageable_id,url';
+                            break;
+                        default:
+                            $optimizedRelations[] = $relation;
+                    }
+                }
+            }
+            $query->with($optimizedRelations);
         }
         
         // Select fields

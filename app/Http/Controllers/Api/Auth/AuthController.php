@@ -10,6 +10,7 @@ use App\Http\Resources\Auth\AuthResource;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -112,8 +113,51 @@ class AuthController extends Controller
         return $response;
     }
 
+    /**
+     * Refresh token
+     */
+    public function refreshToken(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
 
+            // Sử dụng AuthService để refresh token
+            $result = $this->authService->refreshToken($user);
+            
+            if ($result['success']) {
+                $response = $this->successResponse(
+                    $result['data'],
+                    $result['message']
+                );
+                
+                // Set cookie với token mới
+                if (isset($result['data']['token'])) {
+                    $domain = request()->getHost() === 'localhost' ? 'localhost' : null;
+                    $response->cookie('auth_token', $result['data']['token'], 1440, '/', $domain, false, false);
+                }
+                
+                return $response;
+            }
 
+            return $this->errorResponse(
+                $result['message'],
+                $result['status'] ?? 500
+            );
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to refresh token'
+            ], 500);
+        }
+    }
 
 
     /**

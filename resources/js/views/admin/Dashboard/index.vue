@@ -265,7 +265,6 @@ const getStatusClass = (status) => {
 }
 
 const handleQuickAction = (action) => {
-  console.log('Quick action:', action)
   // Implement quick action logic
   switch (action) {
     case 'add-product':
@@ -284,7 +283,6 @@ const handleQuickAction = (action) => {
 }
 
 onMounted(() => {
-  console.log('Dashboard mounted')
 })
 </script>
 

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Static Enum</title>
+</head>
+<body>
+    <h1>Test Static Enum Performance</h1>
+    <div id="app">
+        <h2>Product Status Options:</h2>
+        <div id="product-status"></div>
+        
+        <h2>User Status Options:</h2>
+        <div id="user-status"></div>
+        
+        <h2>Performance Test:</h2>
+        <div id="performance"></div>
+    </div>
+
+    <script type="module">
+        // Import static enums
+        import { ENUMS, getEnumSync } from './constants/enums.js'
+        
+        // Test product status
+        const productStatuses = getEnumSync('product_status')
+        document.getElementById('product-status').innerHTML = 
+            productStatuses.map(status => 
+                `<div>${status.id}: ${status.name} - ${status.label}</div>`
+            ).join('')
+        
+        // Test user status
+        const userStatuses = getEnumSync('user_status')
+        document.getElementById('user-status').innerHTML = 
+            userStatuses.map(status => 
+                `<div>${status.id}: ${status.name} - ${status.label}</div>`
+            ).join('')
+        
+        // Performance test
+        const start = performance.now()
+        for (let i = 0; i < 1000; i++) {
+            getEnumSync('product_status')
+        }
+        const end = performance.now()
+        
+        document.getElementById('performance').innerHTML = 
+            `<div>1000 calls to getEnumSync took: ${(end - start).toFixed(2)}ms</div>`
+    </script>
+</body>
+</html> 

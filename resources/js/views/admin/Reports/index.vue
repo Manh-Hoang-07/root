@@ -489,22 +489,18 @@ const getStatusClass = (status) => {
 }
 
 const refreshData = () => {
-  console.log('Refreshing data...')
   // Implement data refresh logic
 }
 
 const exportReport = () => {
-  console.log('Exporting report...')
   // Implement export logic
 }
 
 const generateReport = () => {
-  console.log('Generating report with filters:', filters.value)
   // Implement report generation logic
 }
 
 onMounted(() => {
-  console.log('Reports page mounted')
 })
 </script>
 

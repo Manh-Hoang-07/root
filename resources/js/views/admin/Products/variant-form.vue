@@ -89,6 +89,7 @@
 
 <script setup>
 import { ref, computed, reactive, watch, onMounted } from 'vue'
+import { getEnumSync } from '@/constants/enums'
 import Modal from '@/components/Core/Modal.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
@@ -129,16 +130,12 @@ onMounted(() => {
   fetchAttributes()
 })
 
-async function fetchStatusOptions() {
-  try {
-    const response = await axios.get(endpoints.enums('VariantStatus'))
-    statusOptions.value = response.data
-  } catch (error) {
-    statusOptions.value = {
-      active: 'Đang bán',
-      inactive: 'Ngừng bán'
-    }
-  }
+function fetchStatusOptions() {
+  const enumData = getEnumSync('variant_status')
+  statusOptions.value = enumData.map(item => ({
+    value: item.value,
+    label: item.label
+  }))
 }
 
 async function fetchAttributes() {

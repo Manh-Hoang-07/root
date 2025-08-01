@@ -17,7 +17,7 @@ import AdminWarehouses from '../views/admin/Warehouses/index.vue';
 import AdminShipping from '../views/admin/Shipping/index.vue';
 import AdminReports from '../views/admin/Reports/index.vue';
 import AdminSettings from '../views/admin/Settings/index.vue';
-import TestAuth from '../views/TestAuth.vue';
+
 
 // User routes
 import UserDashboard from '../views/user/Dashboard/index.vue';
@@ -43,11 +43,7 @@ const routes = [
     component: Register,
     beforeEnter: requireGuest
   },
-  {
-    path: '/test-auth',
-    name: 'TestAuth',
-    component: TestAuth
-  },
+
 
   // Admin routes (dùng layout riêng)
   {

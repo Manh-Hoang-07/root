@@ -137,6 +137,7 @@
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
+import { getEnumSync } from '@/constants/enums'
 import CreateUser from './create.vue'
 import EditUser from './edit.vue'
 import ChangePassword from './change-password.vue'
@@ -181,10 +182,11 @@ const showDeleteModal = ref(false)
 
 // Fetch data
 onMounted(async () => {
-  await Promise.all([
-    fetchUsers(),
-    fetchEnums()
-  ])
+  // Load enums immediately (static)
+  fetchEnums()
+  
+  // Fetch users
+  await fetchUsers()
 })
 
 async function fetchUsers(page = 1) {
@@ -215,23 +217,10 @@ function handleFilterUpdate(filters) {
   fetchUsers(1)
 }
 
-async function fetchEnums() {
-  try {
-    const [statusResponse, genderResponse] = await Promise.all([
-      apiClient.get(endpoints.enums('UserStatus')),
-      apiClient.get(endpoints.enums('Gender'))
-    ])
-    
-    statusEnums.value = Array.isArray(statusResponse.data.data) ? statusResponse.data.data : []
-    genderEnums.value = Array.isArray(genderResponse.data.data) ? genderResponse.data.data : []
-    
-    console.log('Status enums:', statusEnums.value)
-    console.log('Gender enums:', genderEnums.value)
-  } catch (error) {
-    console.error('Error fetching enums:', error)
-    statusEnums.value = []
-    genderEnums.value = []
-  }
+function fetchEnums() {
+  // Sử dụng static enum thay vì gọi API
+  statusEnums.value = getEnumSync('user_status')
+  genderEnums.value = getEnumSync('gender')
 }
 
 // Modal handlers

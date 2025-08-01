@@ -71,22 +71,34 @@ class Product extends Model
     // Accessors
     public function getBrandNameAttribute()
     {
-        return $this->brand ? $this->brand->name : null;
+        if ($this->relationLoaded('brand')) {
+            return $this->brand ? $this->brand->name : null;
+        }
+        return null; // Không load relationship nếu chưa được load
     }
 
     public function getCategoryNamesAttribute()
     {
-        return $this->categories->pluck('name')->implode(', ');
+        if ($this->relationLoaded('categories')) {
+            return $this->categories->pluck('name')->implode(', ');
+        }
+        return null; // Không load relationship nếu chưa được load
     }
 
     public function getTotalQuantityAttribute()
     {
-        return $this->inventory->sum('quantity');
+        if ($this->relationLoaded('inventory')) {
+            return $this->inventory->sum('quantity');
+        }
+        return 0; // Không load relationship nếu chưa được load
     }
 
     public function getMainSkuAttribute()
     {
-        return $this->variants->first() ? $this->variants->first()->sku : null;
+        if ($this->relationLoaded('variants')) {
+            return $this->variants->first() ? $this->variants->first()->sku : null;
+        }
+        return null; // Không load relationship nếu chưa được load
     }
 
     /**
@@ -112,7 +124,11 @@ class Product extends Model
      */
     public function hasVariants()
     {
-        return $this->variants->count() > 0;
+        if ($this->relationLoaded('variants')) {
+            return $this->variants->count() > 0;
+        }
+        // Nếu chưa load relationship thì dùng count query
+        return $this->variants()->count() > 0;
     }
 
     // Scopes

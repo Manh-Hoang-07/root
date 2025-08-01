@@ -50,13 +50,7 @@ class PermissionRequest extends FormRequest
     {
         $validated = parent::validated($key, $default);
         
-        // Debug log
-        Log::info('PermissionRequest validated data', [
-            'original' => $this->all(),
-            'validated' => $validated,
-            'parent_id_original' => $this->input('parent_id'),
-            'parent_id_validated' => $validated['parent_id'] ?? null
-        ]);
+
         
         // Convert empty string and "null" to actual null for nullable fields
         $nullableFields = ['display_name', 'guard_name', 'parent_id'];
@@ -66,11 +60,7 @@ class PermissionRequest extends FormRequest
             }
         }
         
-        // Debug log after conversion
-        Log::info('PermissionRequest after conversion', [
-            'final_validated' => $validated,
-            'parent_id_final' => $validated['parent_id'] ?? null
-        ]);
+
         
         return $validated;
     }

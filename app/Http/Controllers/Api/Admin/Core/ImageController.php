@@ -39,14 +39,7 @@ class ImageController extends Controller
             $mimeType = Storage::mimeType($path);
             $dataUrl = "data:$mimeType;base64,$base64";
             
-            // Debug log
-            Log::info('Image uploaded successfully', [
-                'fileName' => $fileName,
-                'path' => $path,
-                'url' => $url,
-                'exists' => Storage::exists($path),
-                'size' => Storage::size($path)
-            ]);
+
             
             return response()->json([
                 'success' => true,

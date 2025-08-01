@@ -43,12 +43,7 @@
               >
                 Sửa
               </button>
-              <button 
-                @click="openTestModal(provider.name)" 
-                class="text-blue-600 hover:text-blue-900"
-              >
-                Test
-              </button>
+
             </td>
           </tr>
           <tr v-if="providers.length === 0">
@@ -100,16 +95,7 @@
       @submit="handleEditProvider"
       @cancel="() => showConfig = false"
     />
-    <!-- Modal test API -->
-    <Modal v-if="showTest" v-model="showTest" :title="'Test API ' + testProvider">
-      <div class="py-4 text-center">
-        <p>Bạn muốn test kết nối API với <b>{{ testProvider }}</b>?</p>
-        <div class="flex justify-end gap-2 mt-6">
-          <button type="button" class="px-4 py-2 bg-gray-200 rounded-lg" @click="showTest = false">Hủy</button>
-          <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg" @click="submitTest">Test</button>
-        </div>
-      </div>
-    </Modal>
+
   </div>
 </template>
 
@@ -123,11 +109,9 @@ import EditApiModal from './edit.vue'
 import ApiProviderForm from './ApiProviderForm.vue'
 
 const showConfig = ref(false)
-const showTest = ref(false)
 const showAddProvider = ref(false)
 const showEdit = ref(false)
 const configProvider = ref('')
-const testProvider = ref('')
 const apiKey = ref('')
 const secretKey = ref('')
 const env = ref('production')
@@ -210,10 +194,7 @@ function openConfigModal(providerName) {
   showConfig.value = true
   Object.keys(apiErrors).forEach(key => delete apiErrors[key])
 }
-function openTestModal(provider) {
-  testProvider.value = provider
-  showTest.value = true
-}
+
 function clearValidationErrors() {
   Object.keys(validationErrors).forEach(key => delete validationErrors[key])
 }
@@ -277,10 +258,7 @@ async function submitAddProvider() {
     error.value = 'Thêm provider thất bại!'
   }
 }
-async function submitTest() {
-  // Nếu backend có API test thì gọi ở đây, tạm thời chỉ đóng modal
-  showTest.value = false
-}
+
 function handleEditProvider(formData) {
   // Gọi API update provider, xử lý lỗi, đóng modal nếu thành công
 }

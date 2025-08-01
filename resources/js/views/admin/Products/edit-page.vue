@@ -230,6 +230,7 @@ import ImageForm from './image-form.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 import { formatCurrency } from '@/utils/formatCurrency'
+import { getEnumSync } from '@/constants/enums'
 
 const route = useRoute()
 const productId = computed(() => route.params.id)
@@ -255,11 +256,14 @@ const imagesCount = computed(() => images.value.length)
 
 // Fetch data
 onMounted(async () => {
+  // Load status options immediately (static)
+  fetchStatusOptions()
+  
+  // Fetch other data
   await Promise.all([
     fetchProduct(),
     fetchVariants(),
-    fetchImages(),
-    fetchStatusOptions()
+    fetchImages()
   ])
 })
 
@@ -290,16 +294,12 @@ async function fetchImages() {
   }
 }
 
-async function fetchStatusOptions() {
-  try {
-    const response = await axios.get(endpoints.enums('ProductStatus'))
-    statusOptions.value = response.data
-  } catch (error) {
-    statusOptions.value = {
-      active: 'Đang bán',
-      inactive: 'Ngừng bán'
-    }
-  }
+function fetchStatusOptions() {
+  const enumData = getEnumSync('product_status')
+  statusOptions.value = enumData.map(item => ({
+    value: item.value,
+    label: item.label
+  }))
 }
 
 // Product form handlers

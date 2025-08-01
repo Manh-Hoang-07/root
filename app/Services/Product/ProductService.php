@@ -21,6 +21,14 @@ class ProductService extends BaseService
     }
 
     /**
+     * List products with filters and pagination
+     */
+    public function list($filters = [], $perPage = 20, $relations = [], $fields = ['*'])
+    {
+        return $this->repo->all($filters, $perPage, $relations, $fields);
+    }
+
+    /**
      * Create product with categories, variants and images
      */
     public function createProduct($data)

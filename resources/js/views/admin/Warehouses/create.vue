@@ -14,6 +14,7 @@
 import WarehouseForm from './form.vue'
 import endpoints from '@/api/endpoints'
 import { ref, reactive, watch } from 'vue'
+import { getEnumSync } from '@/constants/enums'
 import axios from 'axios'
 
 const props = defineProps({
@@ -34,16 +35,12 @@ watch(() => props.show, (newValue) => {
   }
 }, { immediate: true })
 
-async function fetchStatusOptions() {
-  try {
-    const response = await axios.get(endpoints.enums('BasicStatus'))
-    statusOptions.value = response.data
-  } catch (error) {
-    statusOptions.value = {
-      active: 'Hoạt động',
-      inactive: 'Không hoạt động'
-    }
-  }
+function fetchStatusOptions() {
+  const enumData = getEnumSync('basic_status')
+  statusOptions.value = enumData.map(item => ({
+    value: item.value,
+    label: item.label
+  }))
 }
 
 async function handleSubmit(formData) {

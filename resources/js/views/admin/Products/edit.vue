@@ -3,7 +3,7 @@
     <ProductForm 
       v-if="showModal"
       :show="showModal"
-      :product="productData || product"
+      :product="productData"
       :api-errors="apiErrors"
       :status-options="statusOptions"
       mode="edit"
@@ -17,6 +17,7 @@ import ProductForm from './form.vue'
 import endpoints from '@/api/endpoints'
 import { ref, reactive, watch, onMounted } from 'vue'
 import axios from 'axios'
+import { getEnumSync } from '@/constants/enums'
 
 const props = defineProps({
   show: Boolean,
@@ -29,42 +30,49 @@ const showModal = ref(false)
 const apiErrors = reactive({})
 const statusOptions = ref({})
 const productData = ref(null)
+const loading = ref(false)
 
 watch(() => props.show, (newValue) => {
   showModal.value = newValue
   if (newValue) {
     Object.keys(apiErrors).forEach(key => delete apiErrors[key])
     fetchStatusOptions()
+    
+    // Luôn fetch dữ liệu chi tiết từ API khi mở modal
     if (props.product?.id) {
       fetchProductDetails()
     }
+  } else {
+    productData.value = null // Reset data khi đóng modal
   }
 }, { immediate: true })
 
 async function fetchProductDetails() {
+  if (!props.product?.id) return
+  
+  loading.value = true
   try {
-    // Sử dụng GET endpoint để lấy product details với đầy đủ relationships
+    console.log('Fetching product details for ID:', props.product.id)
     const response = await axios.get(`/api/admin/products/${props.product.id}`)
+    console.log('Product details response:', response.data)
+    
     productData.value = response.data.data || response.data
-    console.log('Fetched product data:', productData.value)
-    console.log('Product images:', productData.value?.product_images)
+    console.log('Product data set:', productData.value)
   } catch (error) {
     console.error('Error fetching product details:', error)
+    // Fallback về dữ liệu từ list view nếu API lỗi
     productData.value = props.product
+  } finally {
+    loading.value = false
   }
 }
 
-async function fetchStatusOptions() {
-  try {
-    const response = await axios.get(endpoints.enums('ProductStatus'))
-    statusOptions.value = response.data
-  } catch (error) {
-    statusOptions.value = {
-      active: 'Đang bán',
-      inactive: 'Ngừng bán',
-      draft: 'Bản nháp'
-    }
-  }
+function fetchStatusOptions() {
+  const enumData = getEnumSync('product_status')
+  statusOptions.value = enumData.map(item => ({
+    value: item.value,
+    label: item.label
+  }))
 }
 
 async function handleSubmit(formData) {

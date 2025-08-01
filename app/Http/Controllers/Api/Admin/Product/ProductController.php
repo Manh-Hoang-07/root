@@ -17,17 +17,6 @@ class ProductController extends BaseController
     }
 
     /**
-     * Get products with filters and pagination
-     */
-    public function index(Request $request)
-    {
-        $filters = $request->only(['search', 'status', 'brand_id', 'category_id', 'sort_by', 'per_page']);
-        $products = $this->service->getProductsWithRelations($filters);
-        
-        return ProductResource::collection($products);
-    }
-
-    /**
      * Store a new product
      */
     public function store()

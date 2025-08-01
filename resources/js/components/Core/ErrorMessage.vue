@@ -11,14 +11,7 @@ const props = defineProps({
   error: [String, Array, null]
 })
 
-// Watch để debug nếu cần
-if (process.env.NODE_ENV !== 'production') {
-  watch(() => props.error, (newVal) => {
-    if (newVal) {
-      console.log('ErrorMessage received:', newVal)
-    }
-  })
-}
+
 
 const displayError = computed(() => {
   if (!props.error) return null

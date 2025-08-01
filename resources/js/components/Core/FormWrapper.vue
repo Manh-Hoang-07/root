@@ -1,12 +1,6 @@
 <template>
   <div class="form-wrapper">
-    <div v-if="showDebug" class="p-2 mb-4 bg-gray-100 rounded">
-      <div class="text-sm font-bold">Debug Info:</div>
-      <div class="text-xs">
-        <pre>{{ JSON.stringify(displayErrors, null, 2) }}</pre>
-      </div>
-      <button @click="testErrors" class="px-2 py-1 mt-2 text-xs bg-blue-500 text-white rounded">Test Error</button>
-    </div>
+
     
     <slot 
       :form="form" 
@@ -67,11 +61,7 @@ const props = defineProps({
     type: Object,
     default: () => ({})
   },
-  // UI options
-  showDebug: {
-    type: Boolean,
-    default: false
-  },
+
   showCancelButton: {
     type: Boolean,
     default: true
@@ -101,14 +91,29 @@ const form = reactive({ ...props.defaultValues, ...props.initialData })
 const localErrors = reactive({})
 const isSubmitting = ref(false)
 
+// Method để update form
+const updateForm = (newData) => {
+  console.log('Updating form with:', newData)
+  Object.keys(newData).forEach(key => {
+    if (key in form) {
+      form[key] = newData[key]
+    }
+  })
+}
+
 // Kết hợp lỗi từ API và lỗi local
 const displayErrors = computed(() => {
   return { ...localErrors, ...props.apiErrors }
 })
 
-// Theo dõi apiErrors để debug
-watch(() => props.apiErrors, (newErrors) => {
-  console.log('API errors received in FormWrapper:', newErrors)
+// Watch defaultValues để update form
+watch(() => props.defaultValues, (newValues) => {
+  console.log('Default values changed:', newValues)
+  Object.keys(newValues).forEach(key => {
+    if (key in form) {
+      form[key] = newValues[key]
+    }
+  })
 }, { deep: true })
 
 // Theo dõi initialData để cập nhật form
@@ -170,20 +175,10 @@ function handleCancel() {
   emit('cancel')
 }
 
-// Phương thức test để kiểm tra tính năng
-function testErrors() {
-  Object.assign(localErrors, {
-    username: 'Test error for username',
-    email: 'Test error for email'
-  })
-}
-
-// Expose các phương thức cần thiết
+// Expose methods
 defineExpose({
+  updateForm,
   form,
-  clearError,
-  clearAllErrors,
-  validate,
-  testErrors
+  validate: () => validateForm(form, props.rules)
 })
 </script> 

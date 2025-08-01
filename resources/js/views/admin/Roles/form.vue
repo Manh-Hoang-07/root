@@ -308,12 +308,10 @@ function validateAndSubmit() {
     
     // Thêm permissions
     if (formData.permissions && formData.permissions.length > 0) {
-      console.log('Permissions to submit:', formData.permissions)
       // Đảm bảo permissions là array of IDs
       submitData.permissions = formData.permissions.map(permission => {
         return typeof permission === 'object' ? permission.value : permission
       })
-      console.log('Permission IDs:', submitData.permissions)
     }
     
     emit('submit', submitData)
@@ -324,10 +322,8 @@ function validateAndSubmit() {
 
 // Handle permissions change
 function handlePermissionsChange(selectedPermissions) {
-  console.log('Permissions changed:', selectedPermissions)
   // Giữ nguyên format objects cho multiselect
   formData.permissions = selectedPermissions || []
-  console.log('FormData permissions:', formData.permissions)
 }
 
 // Close modal

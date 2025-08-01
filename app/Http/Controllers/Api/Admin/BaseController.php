@@ -9,6 +9,7 @@ abstract class BaseController extends \App\Http\Controllers\Controller
 {
     protected $service;
     protected $resource;
+    protected $listResource; // Thêm listResource
     protected $storeRequestClass = Request::class;
     protected $updateRequestClass = Request::class;
     
@@ -25,6 +26,19 @@ abstract class BaseController extends \App\Http\Controllers\Controller
     {
         $this->service = $service;
         $this->resource = $resource;
+        
+        // Tự động tạo listResource nếu không được set
+        if (!$this->listResource) {
+            $resourceClass = $resource;
+            $listResourceClass = str_replace('Resource', 'ListResource', $resourceClass);
+            
+            // Kiểm tra xem ListResource có tồn tại không
+            if (class_exists($listResourceClass)) {
+                $this->listResource = $listResourceClass;
+            } else {
+                $this->listResource = $resource; // Fallback về resource gốc
+            }
+        }
     }
 
     protected function getStoreRequestClass()
@@ -47,7 +61,9 @@ abstract class BaseController extends \App\Http\Controllers\Controller
         
         $fields = $this->parseFields($request->get('fields'));
         $data = $this->service->list($request->all(), $request->get('per_page', 20), $relations, $fields);
-        return $this->resource::collection($data);
+        
+        // Sử dụng listResource cho index
+        return $this->listResource::collection($data);
     }
 
     public function show($id, Request $request = null)
@@ -81,15 +97,7 @@ abstract class BaseController extends \App\Http\Controllers\Controller
     {
         $request = app($this->getUpdateRequestClass());
         
-        // Debug log chỉ khi cần thiết
-        if (config('app.debug')) {
-            Log::info('BaseController::update', [
-                'id' => $id,
-                'request_data' => $request->all(),
-                'request_method' => $request->method(),
-                'content_type' => $request->header('Content-Type'),
-            ]);
-        }
+
         
         $data = $this->parseRequestData($request);
         
@@ -152,9 +160,6 @@ abstract class BaseController extends \App\Http\Controllers\Controller
 
         if (empty($data) && $request->header('Content-Type') && str_contains($request->header('Content-Type'), 'multipart/form-data')) {
             $data = $request->input();
-            if (config('app.debug')) {
-                Log::info('BaseController::parseRequestData - parsed FormData', ['data' => $data]);
-            }
         }
         
         // Chỉ loại bỏ empty string và empty array, giữ lại null

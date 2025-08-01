@@ -1,27 +1,15 @@
-import { onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth.js'
+import { onMounted } from 'vue'
 
 export function useAuthInit() {
   const authStore = useAuthStore()
-  
+
   onMounted(async () => {
-    console.log('🚀 Initializing auth store...')
-    console.log('🔍 Before checkAuth:', {
-      isAuthenticated: authStore.isAuthenticated,
-      user: !!authStore.user,
-      userRole: authStore.userRole,
-      isFetchingUser: authStore.isFetchingUser
-    })
-    
+    // Kiểm tra auth khi app khởi động
     await authStore.checkAuth()
-    
-    console.log('✅ Auth store initialized:', {
-      isAuthenticated: authStore.isAuthenticated,
-      user: !!authStore.user,
-      userRole: authStore.userRole,
-      isFetchingUser: authStore.isFetchingUser
-    })
   })
-  
-  return { authStore }
+
+  return {
+    authStore
+  }
 } 

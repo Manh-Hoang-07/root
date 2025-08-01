@@ -15,6 +15,7 @@
 import OrderForm from './form.vue'
 import endpoints from '@/api/endpoints'
 import { ref, reactive, watch, onMounted } from 'vue'
+import { getEnumSync } from '@/constants/enums'
 import axios from 'axios'
 
 const props = defineProps({
@@ -36,17 +37,12 @@ watch(() => props.show, (newValue) => {
   }
 }, { immediate: true })
 
-async function fetchStatusOptions() {
-  try {
-    const response = await axios.get(endpoints.enums('OrderStatus'))
-    statusOptions.value = response.data
-  } catch (error) {
-    statusOptions.value = {
-      pending: 'Chờ xử lý',
-      completed: 'Hoàn thành',
-      cancelled: 'Đã huỷ'
-    }
-  }
+function fetchStatusOptions() {
+  const enumData = getEnumSync('order_status')
+  statusOptions.value = enumData.map(item => ({
+    value: item.value,
+    label: item.label
+  }))
 }
 
 async function handleSubmit(formData) {

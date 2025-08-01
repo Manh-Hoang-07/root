@@ -68,8 +68,6 @@ async function onFileChange(e) {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       
-      console.log('Upload response:', res.data)
-      
       // Kiểm tra response structure
       const responseData = res.data.data || res.data
       const url = responseData.url || responseData.path || responseData.image
@@ -77,7 +75,6 @@ async function onFileChange(e) {
       if (url) {
         emit('update:modelValue', url)
         previewUrl.value = getImageUrl(url)
-        console.log('Upload successful, URL:', url)
       } else {
         console.error('No URL in response:', res.data)
         error.value = 'Upload thất bại: Không nhận được URL!'

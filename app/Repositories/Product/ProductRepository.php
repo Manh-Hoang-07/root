@@ -17,7 +17,7 @@ class ProductRepository extends BaseRepository
      */
     public function getProductsWithRelations($filters = [])
     {
-        $query = $this->model->with(['brand', 'categories', 'variants.attributeValues.attribute', 'images']);
+        $query = $this->model->query();
 
         // Apply filters
         if (isset($filters['search']) && !empty($filters['search'])) {
@@ -67,6 +67,9 @@ class ProductRepository extends BaseRepository
             $query->orderBy('created_at', 'desc');
         }
 
+        // Chỉ load relationships cần thiết cho list view
+        $query->with(['brand:id,name', 'categories:id,name']);
+
         return $query->paginate($filters['per_page'] ?? 15);
     }
 
@@ -76,11 +79,12 @@ class ProductRepository extends BaseRepository
     public function getProductWithRelations($id)
     {
         return $this->model->with([
-            'brand', 
-            'categories', 
-            'variants.attributeValues.attribute',
-            'inventory.warehouse',
-            'images'
+            'brand:id,name', 
+            'categories:id,name', 
+            'variants:id,product_id,name,sku,barcode,price,sale_price,quantity,image,status',
+            'variants.attributeValues:id,variant_id,attribute_id,value',
+            'variants.attributeValues.attribute:id,name',
+            'images:id,imageable_id,url'
         ])->findOrFail($id);
     }
 

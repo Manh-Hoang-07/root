@@ -32,6 +32,7 @@ Route::middleware(['auto.auth'])->group(function () {
     // User routes
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
     Route::post('/change-password', [ApiUserController::class, 'changePassword']);
     Route::get('/my-orders', [OrderController::class, 'myOrders']);
     Route::post('/orders', [OrderController::class, 'store']);
@@ -52,6 +53,10 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     
     // Image upload
     Route::post('images/upload', [App\Http\Controllers\Api\Admin\Core\ImageController::class, 'upload']);
+    // Search endpoints - phải đặt trước resource routes
+    Route::get('brands/search', [BrandController::class, 'search']);
+    Route::get('categories/search', [CategoryController::class, 'search']);
+    
     Route::apiResource('warehouses', WarehouseController::class);
     Route::apiResource('orders', OrderController::class);
     Route::apiResource('categories', CategoryController::class);
@@ -66,19 +71,13 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
 Route::get('/enums/{type}', [EnumController::class, 'get']); 
 Route::post('/upload-image', [ImageController::class, 'upload']);
 
-// Test route để debug upload
-Route::post('/test-upload', function (Request $request) {
-    return response()->json([
-        'success' => true,
-        'message' => 'Test upload endpoint working',
-        'data' => [
-            'files' => $request->allFiles(),
-            'headers' => $request->headers->all(),
-            'method' => $request->method(),
-            'url' => $request->url()
-        ]
-    ]);
-}); 
+// Admin routes for enum cache management
+Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function () {
+    Route::delete('/enums/{type}/cache', [EnumController::class, 'clearCache']);
+    Route::delete('/enums/cache/all', [EnumController::class, 'clearAllCache']);
+});
+
+ 
 
 Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::prefix('shipping')->group(function () {
@@ -91,3 +90,5 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
         Route::apiResource('advanced', App\Http\Controllers\Api\Admin\Shipping\ShippingAdvancedSettingController::class);
     });
 }); 
+
+ 

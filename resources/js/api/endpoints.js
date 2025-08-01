@@ -28,8 +28,12 @@ const endpoints = {
   warehouses: createResourceEndpoints('warehouses', {
     customEndpoint: id => `/api/admin/warehouses/${id}/custom-action`
   }),
-  categories: createResourceEndpoints('categories'),
-  brands: createResourceEndpoints('brands'),
+  categories: createResourceEndpoints('categories', {
+    search: '/api/admin/categories/search'
+  }),
+  brands: createResourceEndpoints('brands', {
+    search: '/api/admin/brands/search'
+  }),
   attributes: createResourceEndpoints('attributes'),
   attributeValues: createResourceEndpoints('attribute-values'), // Thêm dòng này
   permissions: createResourceEndpoints('permissions'),

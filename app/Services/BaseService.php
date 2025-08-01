@@ -41,6 +41,11 @@ abstract class BaseService
         return $this->repo->delete($id);
     }
 
+    public function getRepo()
+    {
+        return $this->repo;
+    }
+
     protected function handleImageUpload($data)
     {
         // Xử lý tự động cho trường image nếu là file upload

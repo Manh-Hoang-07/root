@@ -15,8 +15,6 @@ export default function useFormErrors() {
    * @param {Boolean} append - Nếu true, sẽ thêm vào lỗi hiện tại thay vì thay thế
    */
   function setErrors(newErrors, append = false) {
-    console.log('setErrors called with:', newErrors, 'append:', append)
-    
     // Nếu không phải append, xóa lỗi cũ
     if (!append) {
       clearAll()
@@ -32,8 +30,6 @@ export default function useFormErrors() {
           errors[key] = error  // Sử dụng nguyên nếu là chuỗi
         }
       }
-      
-      console.log('Errors after setting:', errors)
     }
   }
 
@@ -42,7 +38,6 @@ export default function useFormErrors() {
    * @param {Object} apiErrors - Object chứa lỗi từ API
    */
   function setServerErrors(apiErrors) {
-    console.log('setServerErrors called with:', apiErrors)
     setErrors(apiErrors)
   }
 
@@ -61,7 +56,6 @@ export default function useFormErrors() {
    */
   function clearAll() {
     Object.keys(errors).forEach(key => delete errors[key])
-    console.log('Errors after clearAll:', errors)
   }
   
   /**

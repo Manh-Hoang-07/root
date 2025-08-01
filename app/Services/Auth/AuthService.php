@@ -99,13 +99,49 @@ class AuthService extends BaseService
      */
     public function logout(User $user): array
     {
-        // Xóa tất cả token của user
-        $user->tokens()->delete();
+        try {
+            // Revoke tất cả tokens của user
+            $user->tokens()->delete();
 
-        return [
-            'success' => true,
-            'message' => 'Đăng xuất thành công.'
-        ];
+            return [
+                'success' => true,
+                'message' => 'Đăng xuất thành công.'
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Đăng xuất thất bại: ' . $e->getMessage(),
+                'status' => 500
+            ];
+        }
+    }
+
+    /**
+     * Refresh token
+     */
+    public function refreshToken(User $user): array
+    {
+        try {
+            // Revoke current token
+            $user->tokens()->delete();
+            
+            // Tạo token mới với thời gian hết hạn 24 giờ
+            $token = $user->createToken('auth-token', ['*'], now()->addHours(24))->plainTextToken;
+
+            return [
+                'success' => true,
+                'message' => 'Token refreshed successfully.',
+                'data' => [
+                    'token' => $token
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Failed to refresh token: ' . $e->getMessage(),
+                'status' => 500
+            ];
+        }
     }
 
     /**

@@ -6,6 +6,7 @@
       type="text"
       v-model="filters.search"
       placeholder="Tìm theo tên sản phẩm, mô tả, SKU"
+      @input="debouncedSearch"
     />
     <AdminFilterItem
       id="status"
@@ -46,6 +47,7 @@ import AdminFilter from '@/components/Admin/AdminFilter.vue'
 import AdminFilterItem from '@/components/Admin/AdminFilterItem.vue'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
+import { debounce } from '@/utils/debounce'
 
 const props = defineProps({
   initialFilters: {
@@ -62,6 +64,11 @@ const filters = reactive({
   category_id: props.initialFilters.category_id || '',
   sort_by: props.initialFilters.sort_by || 'created_at_desc',
 })
+
+// Debounced search function
+const debouncedSearch = debounce(() => {
+  emit('update:filters', { ...filters })
+}, 300)
 
 const statusOptions = [
   { value: 'active', label: 'Đang bán' },

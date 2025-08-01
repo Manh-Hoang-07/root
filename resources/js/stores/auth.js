@@ -76,6 +76,8 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   const logout = async () => {
+    console.log('Logout called from:', new Error().stack)
+    
     try {
       // Gọi API logout (backend sẽ xóa cookie)
       await fetch('/api/logout', {
@@ -91,14 +93,17 @@ export const useAuthStore = defineStore('auth', () => {
       isAuthenticated.value = false;
       user.value = null;
       userRole.value = '';
-      isFetchingUser.value = false;
+      
+      // Xóa localStorage
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('user');
+      localStorage.removeItem('userRole');
     }
   };
 
   const fetchUserInfo = async () => {
-    // Tránh gọi API trùng lặp
     if (isFetchingUser.value) {
-      console.log('🔄 Already fetching user info, waiting...');
       // Đợi cho đến khi fetch hoàn thành
       while (isFetchingUser.value) {
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -108,7 +113,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     isFetchingUser.value = true;
     try {
-      console.log('🔄 Fetching user info from API /me...');
+      console.log('Fetching user info...')
       // Không cần gửi token trong header, backend sẽ tự động lấy từ cookie
       const response = await fetch('/api/me', {
         headers: {
@@ -116,15 +121,17 @@ export const useAuthStore = defineStore('auth', () => {
         }
       });
 
+      console.log('User info response status:', response.status)
       const data = await response.json();
+      console.log('User info response data:', data)
 
       if (response.ok && data.success) {
         user.value = data.data;
         userRole.value = data.data.role;
-        console.log('✅ User info fetched successfully:', data.data);
+        console.log('User info fetched successfully')
         return true;
       }
-      console.log('❌ Failed to fetch user info:', data);
+      console.log('User info fetch failed')
       return false;
     } catch (error) {
       console.error('Fetch user info error:', error);
@@ -138,8 +145,9 @@ export const useAuthStore = defineStore('auth', () => {
     // Kiểm tra token trong cookie
     const cookies = document.cookie.split(';');
     let hasToken = false;
+    
     for (let cookie of cookies) {
-      const [name] = cookie.trim().split('=');
+      const [name, value] = cookie.trim().split('=');
       if (name === 'auth_token') {
         hasToken = true;
         break;
@@ -161,6 +169,26 @@ export const useAuthStore = defineStore('auth', () => {
       }
     }
     return false;
+  };
+
+  const refreshToken = async () => {
+    try {
+      const response = await fetch('/api/refresh-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        // Token đã được refresh tự động trong cookie
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Refresh token error:', error);
+      return false;
+    }
   };
 
   const updateProfile = async (profileData) => {
@@ -231,6 +259,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     checkAuth,
     fetchUserInfo,
+    refreshToken,
     updateProfile,
     changePassword
   };
