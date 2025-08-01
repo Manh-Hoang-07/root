@@ -26,10 +26,29 @@ class ImageController extends Controller
         try {
             $file = $request->file('image');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('public/images', $fileName);
+            
+            // Debug: Log upload attempt
+            file_put_contents(storage_path('logs/debug.log'), 
+                date('Y-m-d H:i:s') . " - Public upload method called\n" .
+                date('Y-m-d H:i:s') . " - File name: $fileName\n",
+                FILE_APPEND
+            );
+            
+            $path = $file->storeAs('images', $fileName, 'public');
+            
+            // Debug: Check if file exists
+            $actualPath = storage_path('app/public/' . $path);
+            $fileExists = file_exists($actualPath);
+            
+            file_put_contents(storage_path('logs/debug.log'), 
+                date('Y-m-d H:i:s') . " - File stored at: $path\n" .
+                date('Y-m-d H:i:s') . " - Actual path: $actualPath\n" .
+                date('Y-m-d H:i:s') . " - File exists: " . ($fileExists ? 'YES' : 'NO') . "\n\n",
+                FILE_APPEND
+            );
 
             return $this->successResponse([
-                'url' => Storage::url($path),
+                'url' => '/storage/' . $path,
                 'path' => $path,
                 'filename' => $fileName
             ], 'Upload ảnh thành công.');
