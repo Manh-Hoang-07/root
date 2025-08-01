@@ -50,12 +50,28 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.sku || 'N/A' }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.category_names || 'N/A' }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ product.brand_name || 'N/A' }}
-              <div v-if="product.attributes?.brand" class="text-xs text-gray-400">
-                {{ product.attributes.brand }}
-              </div>
-            </td>
+                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+         {{ product.brand_name || 'N/A' }}
+         <div v-if="product.attributes" class="text-xs text-gray-400">
+           <!-- Format mới: array -->
+           <div v-if="Array.isArray(product.attributes) && product.attributes.length > 0">
+             <div v-for="attr in product.attributes.slice(0, 2)" :key="attr.attribute_name" class="mb-1">
+               <span class="font-medium">{{ attr.attribute_name }}:</span> 
+               <span class="text-gray-600">{{ attr.value }}</span>
+               <span v-if="attr.value_id" class="text-xs text-blue-500 ml-1">(ID: {{ attr.value_id }})</span>
+             </div>
+             <div v-if="product.attributes.length > 2" class="text-gray-500">
+               +{{ product.attributes.length - 2 }} thuộc tính khác
+             </div>
+           </div>
+           <!-- Format cũ: object -->
+           <div v-else-if="typeof product.attributes === 'object' && !Array.isArray(product.attributes)">
+             <div v-for="(value, key) in product.attributes" :key="key" class="mb-1">
+               <span class="font-medium">{{ key }}:</span> {{ value }}
+             </div>
+           </div>
+         </div>
+       </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatCurrency(product.price) }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               <span v-if="product.sale_price" class="text-red-600 font-medium">{{ formatCurrency(product.sale_price) }}</span>

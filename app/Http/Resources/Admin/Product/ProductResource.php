@@ -17,7 +17,7 @@ class ProductResource extends JsonResource
             'price' => $this->price,
             'sale_price' => $this->sale_price,
             'image' => $this->image,
-            'images' => $this->whenLoaded('images', function() {
+            'product_images' => $this->whenLoaded('images', function() {
                 return $this->images->map(function($image) {
                     return [
                         'id' => $image->id,
@@ -35,9 +35,9 @@ class ProductResource extends JsonResource
             'status' => $this->status,
             'sku' => $this->main_sku,
             'category_names' => $this->category_names,
-            'total_quantity' => $this->total_quantity,
-            'attributes' => $this->attributes,
-            'has_variants' => $this->hasVariants(),
+                   'total_quantity' => $this->total_quantity,
+       'attributes' => $this->attributes,
+       'has_variants' => $this->hasVariants(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             
@@ -69,7 +69,6 @@ class ProductResource extends JsonResource
                 });
             }),
             'inventory' => $this->whenLoaded('inventory'),
-            'images' => $this->whenLoaded('images'),
         ];
     }
 } 

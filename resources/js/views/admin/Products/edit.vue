@@ -43,8 +43,11 @@ watch(() => props.show, (newValue) => {
 
 async function fetchProductDetails() {
   try {
-    const response = await axios.get(endpoints.products.update(props.product.id))
+    // Sử dụng GET endpoint để lấy product details với đầy đủ relationships
+    const response = await axios.get(`/api/admin/products/${props.product.id}`)
     productData.value = response.data.data || response.data
+    console.log('Fetched product data:', productData.value)
+    console.log('Product images:', productData.value?.product_images)
   } catch (error) {
     console.error('Error fetching product details:', error)
     productData.value = props.product

@@ -31,6 +31,12 @@ class ProductService extends BaseService
                 $data['slug'] = \Illuminate\Support\Str::slug($data['name']);
             }
             
+            // Process attributes if provided - keep full information
+            if (isset($data['attributes']) && is_array($data['attributes'])) {
+                // Keep the full array format with all details
+                $data['attributes'] = $data['attributes'];
+            }
+            
             $product = $this->repo->create($data);
             
             // Attach categories if provided
@@ -83,6 +89,12 @@ class ProductService extends BaseService
                 $data['slug'] = \Illuminate\Support\Str::slug($data['name']);
             }
             
+            // Process attributes if provided - keep full information
+            if (isset($data['attributes']) && is_array($data['attributes'])) {
+                // Keep the full array format with all details
+                $data['attributes'] = $data['attributes'];
+            }
+            
             $product = $this->repo->update($id, $data);
             
             // Sync categories if provided
@@ -113,12 +125,12 @@ class ProductService extends BaseService
                 }
             }
             
-            // Update images if provided
+            // Update images - always process to ensure sync
+            // Delete existing images
+            $product->images()->delete();
+            
+            // Create new images if provided
             if (isset($data['images']) && is_array($data['images'])) {
-                // Delete existing images
-                $product->images()->delete();
-                
-                // Create new images
                 foreach ($data['images'] as $imageData) {
                     $product->images()->create([
                         'url' => $imageData['url'],

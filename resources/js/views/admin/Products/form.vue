@@ -107,7 +107,7 @@
 
               <!-- Danh mục -->
               <MultipleSelect
-                  v-model="form.categories" 
+                v-model="selectedCategories" 
                 :options="categoryOptions"
                 label="Danh mục"
                 placeholder="Chọn danh mục"
@@ -204,7 +204,12 @@
               <!-- Hiển thị ảnh phụ -->
               <div v-if="images.length > 0" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 <div v-for="(image, index) in images" :key="index" class="relative group">
-                  <img :src="image.url" :alt="`Ảnh phụ ${index + 1}`" class="w-full h-24 object-cover rounded border" @error="handleImageError" />
+                  <img 
+                    :src="image.url" 
+                    :alt="`Ảnh phụ ${index + 1}`" 
+                    class="w-full h-24 object-cover rounded border" 
+                    @error="handleImageError"
+                  />
                   <button 
                     @click="removeImage(index)" 
                     class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
@@ -213,6 +218,7 @@
                   </button>
                 </div>
               </div>
+
             </div>
           </div>
 
@@ -271,14 +277,15 @@
                         <!-- Nếu có giá trị định sẵn -->
                         <select 
                           v-if="getProductAttributeValues(item.attribute_id).length > 0"
-                          v-model="item.value"
+                          v-model="item.value_id"
                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                          @change="onProductAttributeValueChange(index)"
                         >
                           <option value="">-- Chọn giá trị --</option>
                           <option 
                             v-for="value in getProductAttributeValues(item.attribute_id)" 
                             :key="value.id" 
-                            :value="value.value"
+                            :value="value.id"
                           >
                             {{ value.value }}
                           </option>
@@ -523,6 +530,7 @@ const attributes = ref([])
 const selectedAttributes = ref([])
 const productAttributes = ref([])
 const productAttributeItems = ref([])
+const selectedCategories = ref([])
 
 // Default values cho form
 const defaultValues = useFormDefaults(props, 'product', {
@@ -700,7 +708,8 @@ function getProductAttributeValues(attributeId) {
 function addProductAttributeRow() {
   productAttributeItems.value.push({
     attribute_id: '',
-    value: ''
+    value: '',
+    value_id: null
   })
 }
 
@@ -709,8 +718,20 @@ function removeProductAttributeRow(index) {
 }
 
 function onAttributeChange(index) {
-  // Reset value khi thay đổi attribute
+  // Reset value và value_id khi thay đổi attribute
   productAttributeItems.value[index].value = ''
+  productAttributeItems.value[index].value_id = null
+}
+
+function onProductAttributeValueChange(index) {
+  // Khi chọn value_id, tự động set value
+  const item = productAttributeItems.value[index]
+  if (item.value_id) {
+    const selectedValue = getProductAttributeValues(item.attribute_id).find(v => v.id == item.value_id)
+    if (selectedValue) {
+      item.value = selectedValue.value
+    }
+  }
 }
 
 // Variant attribute functions
@@ -788,8 +809,16 @@ watch(() => props.product, (val) => {
       selectedAttributes.value = Array.from(usedAttributeIds)
     }
     
-    if (val.images) {
-      images.value = val.images.map(img => ({
+    // Load categories if editing
+    if (val.categories && Array.isArray(val.categories)) {
+      // Extract category IDs from categories array
+      selectedCategories.value = val.categories.map(cat => cat.id || cat)
+    } else {
+      selectedCategories.value = []
+    }
+    
+    if (val.product_images) {
+      images.value = val.product_images.map(img => ({
         url: img.url || '',
         uploading: false
       }))
@@ -797,16 +826,29 @@ watch(() => props.product, (val) => {
     
     // Load product attributes if editing
     if (val.attributes) {
-      // Chuyển đổi attributes object thành productAttributeItems
-      Object.keys(val.attributes).forEach(key => {
-        const attribute = productAttributes.value.find(attr => attr.name === key)
-        if (attribute) {
+      // Nếu attributes là array (format mới)
+      if (Array.isArray(val.attributes)) {
+        val.attributes.forEach(attr => {
           productAttributeItems.value.push({
-            attribute_id: attribute.id,
-            value: val.attributes[key]
+            attribute_id: attr.attribute_id,
+            value: attr.value,
+            value_id: attr.value_id || null
           })
-        }
-      })
+        })
+      } 
+      // Nếu attributes là object (format cũ - backward compatibility)
+      else if (typeof val.attributes === 'object' && !Array.isArray(val.attributes)) {
+        Object.keys(val.attributes).forEach(key => {
+          const attribute = productAttributes.value.find(attr => attr.name === key)
+          if (attribute) {
+            productAttributeItems.value.push({
+              attribute_id: attribute.id,
+              value: val.attributes[key],
+              value_id: null
+            })
+          }
+        })
+      }
     }
   } else {
     resetForm()
@@ -818,6 +860,7 @@ function resetForm() {
   images.value = []
   selectedAttributes.value = []
   productAttributeItems.value = []
+  selectedCategories.value = []
 }
 
 // Variant functions
@@ -926,20 +969,34 @@ function handleSubmit(formData) {
   console.log('Categories type:', typeof formData.categories)
   console.log('Categories value:', formData.categories)
   
-  // Chuyển đổi productAttributeItems thành attributes object
-  const cleanAttributes = {}
+  // Chuyển đổi productAttributeItems thành attributes array với thông tin chi tiết
+  const cleanAttributes = []
   productAttributeItems.value.forEach(item => {
     if (item.value && item.value.trim() !== '') {
-      const attributeName = getProductAttributeName(item.attribute_id)
-      cleanAttributes[attributeName] = item.value
+      const attribute = productAttributes.value.find(attr => attr.id == item.attribute_id)
+      if (attribute) {
+        const attrData = {
+          attribute_id: item.attribute_id,
+          attribute_name: attribute.name,
+          value: item.value,
+          type: attribute.type || 'text'
+        }
+        
+        // Nếu có value_id (từ attribute_values), thêm vào
+        if (item.value_id) {
+          attrData.value_id = item.value_id
+        }
+        
+        cleanAttributes.push(attrData)
+      }
     }
   })
   
   // Thêm variants và images vào formData
   const submitData = {
     ...formData,
-    attributes: Object.keys(cleanAttributes).length > 0 ? cleanAttributes : null,
-    categories: Array.isArray(formData.categories) ? formData.categories : [],
+    attributes: cleanAttributes.length > 0 ? cleanAttributes : null,
+    categories: selectedCategories.value,
     variants: variants.value.map(variant => {
       const cleanVariant = { ...variant }
       // Loại bỏ các field không cần thiết

@@ -39,6 +39,9 @@ class ProductRequest extends FormRequest
             'status' => 'required|string|in:active,inactive',
             'categories' => 'sometimes|array',
             'attributes' => 'sometimes|array',
+            'attributes.*.attribute_id' => 'required|exists:attributes,id',
+            'attributes.*.attribute_name' => 'required|string|max:255',
+            'attributes.*.value' => 'required|string|max:500',
             'categories.*' => 'exists:categories,id',
             
             // Variants validation
