@@ -114,7 +114,7 @@ const modalVisible = computed({
 const defaultValues = computed(() => {
   const obj = props.attributeValue || {}
   const result = {
-    attribute_id: obj.attrbute_id ? String(obj.attrbute_id) : '', // Sửa từ attribute_id thành attrbute_id
+    attribute_id: obj.attribute_id ? String(obj.attribute_id) : '',
     value: obj.value || '',
     name: obj.name || '',
     sort_order: obj.sort_order || 0,
@@ -146,8 +146,8 @@ const validationRules = computed(() => ({
 
 const statusOptions = computed(() =>
   (props.statusEnums || []).map(opt => ({
-    value: opt.id,
-    label: opt.name
+    value: opt.value,
+    label: opt.label
   }))
 )
 

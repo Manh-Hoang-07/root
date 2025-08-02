@@ -40,9 +40,9 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                :class="val.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                :class="getStatusClass(val.status)"
               >
-                {{ val.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
+                {{ getStatusLabel(val.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -121,6 +121,7 @@ import EditAttributeValue from './edit.vue'
 import AttributeValueFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
+import { getEnumLabel } from '@/constants/enums'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 
@@ -242,6 +243,17 @@ function changePage(url) {
   const urlObj = new URL(url)
   const page = urlObj.searchParams.get('page')
   fetchAttributeValues(page)
+}
+
+// Status helper functions
+function getStatusLabel(status) {
+  return getEnumLabel('basic_status', status) || status || 'Không xác định'
+}
+
+function getStatusClass(status) {
+  if (status === 'active') return 'bg-green-100 text-green-800'
+  if (status === 'inactive') return 'bg-red-100 text-red-800'
+  return 'bg-gray-100 text-gray-800'
 }
 </script>
 
