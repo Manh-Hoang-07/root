@@ -7,6 +7,8 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null);
   const userRole = ref('');
   const isFetchingUser = ref(false); // Thêm flag để tránh gọi API trùng lặp
+  const lastFetchTime = ref(0); // Thêm timestamp để cache
+  const fetchCacheDuration = 30000; // Cache trong 30 giây
 
   // Getters
   const isAdmin = computed(() => userRole.value === 'admin');
@@ -91,21 +93,34 @@ export const useAuthStore = defineStore('auth', () => {
       });
     } catch (error) {
       console.error('Logout API error:', error);
-    } finally {
-      // Xóa state
-      isAuthenticated.value = false;
-      user.value = null;
-      userRole.value = '';
-      
-      // Xóa localStorage
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('isAuthenticated');
-      localStorage.removeItem('user');
-      localStorage.removeItem('userRole');
+    }
+    
+    // Xóa state
+    isAuthenticated.value = false;
+    user.value = null;
+    userRole.value = '';
+    lastFetchTime.value = 0; // Reset cache time
+    
+    // Xóa localStorage
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userRole');
+    
+    // Reset global init flag để có thể init lại khi cần
+    if (typeof window !== 'undefined') {
+      window.__authInitialized = false;
     }
   };
 
-  const fetchUserInfo = async () => {
+  const fetchUserInfo = async (force = false) => {
+    // Kiểm tra cache - nếu đã fetch gần đây và không force, return cached data
+    const now = Date.now();
+    if (!force && user.value && (now - lastFetchTime.value) < fetchCacheDuration) {
+      console.log('Using cached user info');
+      return !!user.value;
+    }
+
     if (isFetchingUser.value) {
       // Đợi cho đến khi fetch hoàn thành
       while (isFetchingUser.value) {
@@ -132,6 +147,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.ok && data.success) {
         user.value = data.data;
         userRole.value = data.data.role;
+        lastFetchTime.value = now; // Update cache time
         console.log('User info fetched successfully')
         return true;
       }
@@ -159,20 +175,32 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     if (hasToken) {
-      // Thử lấy thông tin user từ API
+      // Thử lấy thông tin user từ API (sử dụng cache)
       const success = await fetchUserInfo();
       if (success) {
         isAuthenticated.value = true;
         return true;
       } else {
-        // Nếu không lấy được thông tin user, xóa state
+        // Token không hợp lệ, xóa state
         isAuthenticated.value = false;
         user.value = null;
         userRole.value = '';
+        lastFetchTime.value = 0;
         return false;
       }
+    } else {
+      // Không có token, xóa state
+      isAuthenticated.value = false;
+      user.value = null;
+      userRole.value = '';
+      lastFetchTime.value = 0;
+      return false;
     }
-    return false;
+  };
+
+  // Force refresh user info (bỏ qua cache)
+  const refreshUserInfo = async () => {
+    return await fetchUserInfo(true);
   };
 
   const refreshToken = async () => {
@@ -253,6 +281,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     userRole,
     isFetchingUser,
+    lastFetchTime,
     
     // Getters
     isAdmin,
@@ -262,8 +291,9 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     logout,
-    checkAuth,
     fetchUserInfo,
+    checkAuth,
+    refreshUserInfo,
     refreshToken,
     updateProfile,
     changePassword

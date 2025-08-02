@@ -10,8 +10,10 @@ class AttributeValueResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'attrbute_id' => $this->attribute_id,
-            'attribute_name' => $this->attribute->name ?? null,
+            'attribute_id' => $this->attribute_id,
+            'attribute_name' => $this->whenLoaded('attribute', function() {
+                return $this->attribute->name ?? null;
+            }),
             'value' => $this->value,
             'name' => $this->name,
             'sort_order' => $this->sort_order,

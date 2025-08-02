@@ -47,7 +47,7 @@ export function requireAuth(to, from, next) {
       }
     }, 500);
   } else {
-    // Đã có thông tin user
+    // Đã có thông tin user (có thể từ cache)
     next();
   }
 }
@@ -95,7 +95,7 @@ export function requireAdmin(to, from, next) {
       }
     }, 500);
   } else {
-    // Kiểm tra role admin
+    // Đã có thông tin user (có thể từ cache), kiểm tra role admin
     if (authStore.userRole !== 'admin') {
       next('/dashboard');
       return;

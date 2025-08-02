@@ -35,9 +35,9 @@ class ProductResource extends JsonResource
             'status' => $this->status,
             'sku' => $this->main_sku,
             'category_names' => $this->category_names,
-                   'total_quantity' => $this->total_quantity,
-       'attributes' => $this->attributes,
-       'has_variants' => $this->hasVariants(),
+            'total_quantity' => $this->total_quantity,
+            'attributes' => $this->attributes,
+            'has_variants' => $this->hasVariants(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             
@@ -55,16 +55,16 @@ class ProductResource extends JsonResource
                         'quantity' => $variant->quantity,
                         'image' => $variant->image,
                         'status' => $variant->status,
-                        'attribute_values' => $variant->relationLoaded('attributeValues')
-                            ? $variant->attributeValues->map(function($attrValue) {
+                        'attribute_values' => $variant->whenLoaded('attributeValues', function() use ($variant) {
+                            return $variant->attributeValues->map(function($attrValue) {
                                 return [
                                     'id' => $attrValue->id,
                                     'attribute_id' => $attrValue->attribute_id,
                                     'attribute_name' => $attrValue->attribute->name ?? null,
                                     'value' => $attrValue->value,
                                 ];
-                            })
-                            : [],
+                            });
+                        }, []),
                     ];
                 });
             }),

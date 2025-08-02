@@ -37,6 +37,21 @@ abstract class BaseRepository
                         case 'images':
                             $optimizedRelations[] = 'images:id,imageable_id,url';
                             break;
+                        case 'variants':
+                            $optimizedRelations[] = 'variants:id,product_id,sku,price,sale_price,quantity,image,status';
+                            break;
+                        case 'variants.attributeValues':
+                            $optimizedRelations[] = 'variants.attributeValues:id,variant_id,attribute_id,value';
+                            break;
+                        case 'variants.attributeValues.attribute':
+                            $optimizedRelations[] = 'variants.attributeValues.attribute:id,name';
+                            break;
+                        case 'attributeValues':
+                            $optimizedRelations[] = 'attributeValues:id,attribute_id,value';
+                            break;
+                        case 'attributeValues.attribute':
+                            $optimizedRelations[] = 'attributeValues.attribute:id,name';
+                            break;
                         default:
                             $optimizedRelations[] = $relation;
                     }
