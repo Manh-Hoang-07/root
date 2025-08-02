@@ -66,8 +66,8 @@ abstract class BaseController extends Controller
         // Parse relations từ request
         $requestRelations = $this->parseRelations($request->get('relations'));
         
-        // Chỉ sử dụng relations được yêu cầu, không có default
-        $relations = $requestRelations;
+        // Sử dụng indexRelations nếu không có relations được yêu cầu
+        $relations = !empty($requestRelations) ? $requestRelations : $this->indexRelations;
         
         $fields = $this->parseFields($request->get('fields'));
         $data = $this->service->list($request->all(), $request->get('per_page', 20), $relations, $fields);
@@ -86,8 +86,8 @@ abstract class BaseController extends Controller
         // Parse relations từ request
         $requestRelations = $request ? $this->parseRelations($request->get('relations')) : [];
         
-        // Chỉ sử dụng relations được yêu cầu, không có default
-        $relations = $requestRelations;
+        // Sử dụng showRelations nếu không có relations được yêu cầu
+        $relations = !empty($requestRelations) ? $requestRelations : $this->showRelations;
         
         $fields = $request ? $this->parseFields($request->get('fields')) : ['*'];
         $item = $this->service->find($id, $relations, $fields);

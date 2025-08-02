@@ -58,8 +58,8 @@ async function fetchParentCategories() {
 
 async function fetchStatusEnums() {
   try {
-    const response = { data: getEnumSync('basic_status') }
-    statusEnums.value = Array.isArray(response.data.data) ? response.data.data : []
+    const enumData = getEnumSync('basic_status')
+    statusEnums.value = Array.isArray(enumData) ? enumData : []
   } catch (error) {
     statusEnums.value = []
   }

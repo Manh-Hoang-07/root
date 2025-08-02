@@ -48,4 +48,15 @@ class CategoryRepository extends BaseRepository
     {
         return ['name', 'description'];
     }
+
+    /**
+     * Override applyRelationshipSearch for Category
+     */
+    protected function applyRelationshipSearch($query, $searchValue)
+    {
+        // Search in parent category name
+        $query->orWhereHas('parent', function($q) use ($searchValue) {
+            $q->where('name', 'like', "%$searchValue%");
+        });
+    }
 } 
