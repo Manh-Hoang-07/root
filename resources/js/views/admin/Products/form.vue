@@ -558,8 +558,6 @@ const selectedCategories = ref([])
 // Default values cho form
 const defaultValues = computed(() => {
   const product = props.product || {}
-  console.log('Computing default values with product:', product)
-  
   // Status đã là string rồi, không cần convert
   let status = product.status || ''
   
@@ -580,7 +578,6 @@ const defaultValues = computed(() => {
     status: status,
     attributes: product.attributes || {}
   }
-  console.log('Computed default values:', values)
   return values
 })
 
@@ -625,7 +622,7 @@ function fetchStatusOptions() {
     value: item.value,
     label: item.label
   }))
-  console.log('Status options:', statusOptions.value)
+
 }
 
 
@@ -639,8 +636,6 @@ async function fetchAttributes() {
     attributes.value = attributesData
     productAttributes.value = attributesData
   } catch (error) {
-    console.error('Error fetching attributes:', error)
-    console.error('Error details:', error.response?.data)
     attributes.value = []
     productAttributes.value = []
   }
@@ -738,11 +733,9 @@ watch(selectedAttributes, (newSelected) => {
 })
 
 watch(() => props.product, (val) => {
-  console.log('ProductForm received product data:', val)
   if (val) {
     // Load variants and images if editing
     if (val.variants) {
-      console.log('Loading variants:', val.variants)
       variants.value = val.variants.map(v => ({
         sku: v.sku || '',
         barcode: v.barcode || '',
@@ -776,7 +769,6 @@ watch(() => props.product, (val) => {
     
     // Load categories if editing
     if (val.categories && Array.isArray(val.categories)) {
-      console.log('Loading categories:', val.categories)
       // Extract category IDs from categories array
       selectedCategories.value = val.categories.map(cat => cat.id || cat)
     } else {
@@ -784,7 +776,6 @@ watch(() => props.product, (val) => {
     }
     
     if (val.product_images) {
-      console.log('Loading images:', val.product_images)
       images.value = val.product_images.map(img => ({
         url: img.url || '',
         uploading: false
@@ -793,7 +784,6 @@ watch(() => props.product, (val) => {
     
     // Load product attributes if editing
     if (val.attributes) {
-      console.log('Loading attributes:', val.attributes)
       // Nếu attributes là array (format mới)
       if (Array.isArray(val.attributes)) {
         val.attributes.forEach(attr => {
@@ -879,7 +869,7 @@ async function handleVariantImageUpload(event, index) {
     // Sử dụng URL thay vì dataUrl để tránh base64
     variants.value[index].image = response.data.url || response.data.full_url
   } catch (error) {
-    console.error('Upload error:', error)
+    
     alert('Lỗi khi tải ảnh lên')
   } finally {
     variants.value[index].uploading = false
@@ -917,7 +907,7 @@ async function handleMultipleImagesUpload(event) {
       uploadingCount.value++
     }
   } catch (error) {
-    console.error('Upload error:', error)
+    
     alert('Lỗi khi tải ảnh lên')
   } finally {
     multipleImagesUploading.value = false

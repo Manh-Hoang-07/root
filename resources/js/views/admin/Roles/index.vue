@@ -183,7 +183,7 @@ async function fetchRoles(page = 1) {
     pagination.per_page = meta.per_page
     pagination.links = meta.links
   } catch (error) {
-    console.error('Error fetching roles:', error)
+    
   } finally {
     loading.value = false
   }
@@ -245,7 +245,7 @@ async function deleteRole() {
     await fetchRoles()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting role:', error)
+    
   }
 }
 

@@ -76,11 +76,11 @@ async function onFileChange(e) {
         emit('update:modelValue', url)
         previewUrl.value = getImageUrl(url)
       } else {
-        console.error('No URL in response:', res.data)
+        
         error.value = 'Upload thất bại: Không nhận được URL!'
       }
     } catch (err) {
-      console.error('Upload error:', err)
+      
       if (err.response?.data?.message) {
         error.value = `Upload thất bại: ${err.response.data.message}`
       } else if (err.message) {

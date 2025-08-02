@@ -13,6 +13,51 @@ class ProductRepository extends BaseRepository
     }
 
     /**
+     * Optimize relations for Product model
+     */
+    protected function optimizeRelations($relations)
+    {
+        $optimizedRelations = [];
+        foreach ($relations as $relation) {
+            if (strpos($relation, ':') !== false) {
+                // Nếu đã có select fields thì giữ nguyên
+                $optimizedRelations[] = $relation;
+            } else {
+                // Tối ưu cho các relation của Product
+                switch ($relation) {
+                    case 'brand':
+                        $optimizedRelations[] = 'brand:id,name';
+                        break;
+                    case 'categories':
+                        $optimizedRelations[] = 'categories:id,name';
+                        break;
+                    case 'images':
+                        $optimizedRelations[] = 'images:id,imageable_id,url';
+                        break;
+                    case 'variants':
+                        $optimizedRelations[] = 'variants:id,product_id,sku,price,sale_price,quantity,image,status';
+                        break;
+                    case 'variants.attributeValues':
+                        $optimizedRelations[] = 'variants.attributeValues:id,variant_id,attribute_id,value';
+                        break;
+                    case 'variants.attributeValues.attribute':
+                        $optimizedRelations[] = 'variants.attributeValues.attribute:id,name';
+                        break;
+                    case 'attributeValues':
+                        $optimizedRelations[] = 'attributeValues:id,attribute_id,value';
+                        break;
+                    case 'attributeValues.attribute':
+                        $optimizedRelations[] = 'attributeValues.attribute:id,name';
+                        break;
+                    default:
+                        $optimizedRelations[] = $relation;
+                }
+            }
+        }
+        return $optimizedRelations;
+    }
+
+    /**
      * Get products with relationships
      */
     public function getProductsWithRelations($filters = [])

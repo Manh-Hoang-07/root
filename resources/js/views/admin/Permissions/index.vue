@@ -183,7 +183,7 @@ async function fetchPermissions(page = 1) {
       pagination.links = meta.links
     }
   } catch (error) {
-    console.error('Error fetching permissions:', error)
+    
   } finally {
     loading.value = false
   }
@@ -241,7 +241,7 @@ async function deletePermission() {
     await fetchPermissions()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting permission:', error)
+    
   }
 }
 

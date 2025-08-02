@@ -13,6 +13,36 @@ class UserRepository extends BaseRepository
         return User::class;
     }
 
+    /**
+     * Optimize relations for User model
+     */
+    protected function optimizeRelations($relations)
+    {
+        $optimizedRelations = [];
+        foreach ($relations as $relation) {
+            if (strpos($relation, ':') !== false) {
+                // Nếu đã có select fields thì giữ nguyên
+                $optimizedRelations[] = $relation;
+            } else {
+                // Tối ưu cho các relation của User
+                switch ($relation) {
+                    case 'roles':
+                        $optimizedRelations[] = 'roles:id,name';
+                        break;
+                    case 'permissions':
+                        $optimizedRelations[] = 'permissions:id,name';
+                        break;
+                    case 'profile':
+                        $optimizedRelations[] = 'profile:id,user_id,name,phone,address';
+                        break;
+                    default:
+                        $optimizedRelations[] = $relation;
+                }
+            }
+        }
+        return $optimizedRelations;
+    }
+
     public function all($filters = [], $perPage = 20, $relations = [], $fields = ['*'])
     {
         $query = $this->model->newQuery();

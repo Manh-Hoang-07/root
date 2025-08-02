@@ -237,7 +237,7 @@ const loadPosts = async () => {
       }
     ];
   } catch (error) {
-    console.error('Error loading posts:', error);
+    
   }
 };
 
@@ -268,7 +268,7 @@ const savePost = async () => {
     
     closeModal();
   } catch (error) {
-    console.error('Error saving post:', error);
+    
   }
 };
 
@@ -280,7 +280,7 @@ const deletePost = async (id) => {
         posts.value.splice(index, 1);
       }
     } catch (error) {
-      console.error('Error deleting post:', error);
+      
     }
   }
 };

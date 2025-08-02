@@ -14,7 +14,7 @@ export function useAuthInit() {
       try {
         await authStore.checkAuth()
       } catch (error) {
-        console.error('Auth init error:', error)
+        // Handle error silently
       } finally {
         isInitializing.value = false
       }

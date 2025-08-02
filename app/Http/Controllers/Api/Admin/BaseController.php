@@ -7,7 +7,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 abstract class BaseController extends Controller
 {
@@ -26,10 +25,7 @@ abstract class BaseController extends Controller
     // Tự động load relationships cho show method
     protected $showRelations = [];
     
-    // Cache settings
-    protected $enableCache = true;
-    protected $cacheTtl = 300; // 5 minutes
-    protected $cachePrefix = 'api_';
+
 
     public function __construct($service, $resource)
     {
@@ -62,15 +58,7 @@ abstract class BaseController extends Controller
 
     public function index(Request $request)
     {
-        if (!$this->enableCache) {
-            return $this->getIndexData($request);
-        }
-        
-        $cacheKey = $this->generateCacheKey('index', $request);
-        
-        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($request) {
-            return $this->getIndexData($request);
-        });
+        return $this->getIndexData($request);
     }
     
     protected function getIndexData(Request $request)
@@ -90,15 +78,7 @@ abstract class BaseController extends Controller
 
     public function show($id, Request $request = null)
     {
-        if (!$this->enableCache) {
-            return $this->getShowData($id, $request);
-        }
-        
-        $cacheKey = $this->generateCacheKey('show', $request, $id);
-        
-        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($id, $request) {
-            return $this->getShowData($id, $request);
-        });
+        return $this->getShowData($id, $request);
     }
     
     protected function getShowData($id, Request $request = null)
@@ -126,8 +106,6 @@ abstract class BaseController extends Controller
         }
         
         // Invalidate cache
-        $this->invalidateCache();
-        
         return new $this->resource($item);
     }
 
@@ -146,8 +124,6 @@ abstract class BaseController extends Controller
             }
             
             // Invalidate cache
-            $this->invalidateCache();
-            
             return new $this->resource($item);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
@@ -162,8 +138,6 @@ abstract class BaseController extends Controller
             $this->service->delete($id);
             
             // Invalidate cache
-            $this->invalidateCache();
-            
             return response()->json(['success' => true]);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
@@ -175,67 +149,11 @@ abstract class BaseController extends Controller
     /**
      * Generate cache key for requests
      */
-    protected function generateCacheKey($method, Request $request = null, $id = null)
-    {
-        $params = $request ? $request->all() : [];
-        ksort($params);
-        
-        $key = $this->cachePrefix . static::class . '_' . $method;
-        if ($id) {
-            $key .= '_' . $id;
-        }
-        $key .= '_' . md5(serialize($params));
-        
-        return $key;
-    }
+
     
-    /**
-     * Invalidate all cache for this controller
-     */
-    protected function invalidateCache()
-    {
-        if (!$this->enableCache) {
-            return;
-        }
-        
-        $pattern = $this->cachePrefix . static::class . '_*';
-        
-        // Get all cache keys matching the pattern
-        $keys = Cache::get($pattern) ?: [];
-        
-        // Clear specific cache keys
-        foreach ($keys as $key) {
-            Cache::forget($key);
-        }
-        
-        // Also clear by pattern (if using Redis)
-        if (config('cache.default') === 'redis') {
-            $redis = Cache::getRedis();
-            $keys = $redis->keys($pattern);
-            foreach ($keys as $key) {
-                $redis->del($key);
-            }
-        }
-        
-        // Log cache invalidation
-        Log::info('Cache invalidated', [
-            'controller' => static::class,
-            'pattern' => $pattern
-        ]);
-    }
+
     
-    /**
-     * Get cached data with fallback
-     */
-    protected function getCachedData($key, $callback, $ttl = null)
-    {
-        if (!$this->enableCache) {
-            return $callback();
-        }
-        
-        $ttl = $ttl ?: $this->cacheTtl;
-        return Cache::remember($key, $ttl, $callback);
-    }
+
 
     protected function parseRelations($relations)
     {

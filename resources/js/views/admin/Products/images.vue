@@ -148,7 +148,7 @@ async function fetchProduct() {
     const response = await axios.get(endpoints.products.update(productId.value))
     product.value = response.data
   } catch (error) {
-    console.error('Error fetching product:', error)
+    
   }
 }
 
@@ -158,7 +158,7 @@ async function fetchImages() {
     const response = await axios.get(`/api/admin/products/${productId.value}/images`)
     images.value = response.data.data || []
   } catch (error) {
-    console.error('Error fetching images:', error)
+    
   } finally {
     loading.value = false
   }
@@ -203,7 +203,7 @@ async function deleteImage() {
     await fetchImages()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting image:', error)
+    
   }
 }
 </script> 

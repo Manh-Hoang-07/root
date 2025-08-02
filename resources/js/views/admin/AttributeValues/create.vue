@@ -60,7 +60,7 @@ async function fetchAttributeOptions() {
     const response = await axios.get(endpoints.attributes.list, { params: { per_page: 100 } })
     attributeOptions.value = response.data.data || []
   } catch (error) {
-    console.error('Error fetching attributes:', error)
+    
     attributeOptions.value = []
   }
 }

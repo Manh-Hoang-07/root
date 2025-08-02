@@ -272,7 +272,7 @@ async function fetchProduct() {
     const response = await axios.get(endpoints.products.update(productId.value))
     product.value = response.data
   } catch (error) {
-    console.error('Error fetching product:', error)
+    
   }
 }
 
@@ -281,7 +281,7 @@ async function fetchVariants() {
     const response = await axios.get(`/api/admin/products/${productId.value}/variants`)
     variants.value = response.data.data || []
   } catch (error) {
-    console.error('Error fetching variants:', error)
+    
   }
 }
 
@@ -290,7 +290,7 @@ async function fetchImages() {
     const response = await axios.get(`/api/admin/products/${productId.value}/images`)
     images.value = response.data.data || []
   } catch (error) {
-    console.error('Error fetching images:', error)
+    
   }
 }
 
@@ -369,7 +369,7 @@ async function deleteVariant(variant) {
       await axios.delete(`/api/admin/variants/${variant.id}`)
       await fetchVariants()
     } catch (error) {
-      console.error('Error deleting variant:', error)
+      
     }
   }
 }
@@ -406,7 +406,7 @@ async function deleteImage(image) {
       await axios.delete(`/api/admin/images/${image.id}`)
       await fetchImages()
     } catch (error) {
-      console.error('Error deleting image:', error)
+      
     }
   }
 }

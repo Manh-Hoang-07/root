@@ -184,7 +184,7 @@ async function fetchWarehouses(page = 1) {
       pagination.links = meta.links
     }
   } catch (error) {
-    console.error('Error fetching warehouses:', error)
+    
   } finally {
     loading.value = false
   }
@@ -234,7 +234,7 @@ async function deleteWarehouse() {
     await fetchWarehouses()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting warehouse:', error)
+    
   }
 }
 function changePage(url) {

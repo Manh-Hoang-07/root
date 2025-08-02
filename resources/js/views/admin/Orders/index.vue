@@ -176,7 +176,7 @@ async function fetchOrders(page = 1) {
       pagination.links = meta.links
     }
   } catch (error) {
-    console.error('Error fetching orders:', error)
+    
   } finally {
     loading.value = false
   }
@@ -226,7 +226,7 @@ async function deleteOrder() {
     await fetchOrders()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting order:', error)
+    
   }
 }
 function changePage(url) {

@@ -52,14 +52,11 @@ async function fetchProductDetails() {
   
   loading.value = true
   try {
-    console.log('Fetching product details for ID:', props.product.id)
     const response = await axios.get(`/api/admin/products/${props.product.id}`)
-    console.log('Product details response:', response.data)
     
     productData.value = response.data.data || response.data
-    console.log('Product data set:', productData.value)
   } catch (error) {
-    console.error('Error fetching product details:', error)
+    
     // Fallback về dữ liệu từ list view nếu API lỗi
     productData.value = props.product
   } finally {

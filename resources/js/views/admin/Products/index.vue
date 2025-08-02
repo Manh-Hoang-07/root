@@ -224,7 +224,7 @@ async function fetchProducts(page = 1) {
       pagination.links = meta.links
     }
   } catch (error) {
-    console.error('Error fetching products:', error)
+    
   } finally {
     loading.value = false
   }
@@ -275,7 +275,7 @@ async function deleteProduct() {
     await fetchProducts()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting product:', error)
+    
   }
 }
 

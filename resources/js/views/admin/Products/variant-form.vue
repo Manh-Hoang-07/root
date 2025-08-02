@@ -143,7 +143,7 @@ async function fetchAttributes() {
     const response = await axios.get(endpoints.attributes.list)
     attributes.value = response.data.data || []
   } catch (error) {
-    console.error('Error fetching attributes:', error)
+    
     attributes.value = []
   }
 }

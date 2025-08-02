@@ -204,7 +204,7 @@ async function fetchCategories() {
     const response = await axios.get(endpoints.categories.list, { params: { all: true } })
     categories.value = response.data.data || []
   } catch (error) {
-    console.error('Error fetching categories:', error)
+    
   }
 }
 
@@ -214,7 +214,7 @@ async function fetchBrands() {
     const response = await axios.get(endpoints.brands.list, { params: { all: true } })
     brands.value = response.data.data || []
   } catch (error) {
-    console.error('Error fetching brands:', error)
+    
   }
 }
 

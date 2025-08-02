@@ -93,7 +93,6 @@ const isSubmitting = ref(false)
 
 // Method để update form
 const updateForm = (newData) => {
-  console.log('Updating form with:', newData)
   Object.keys(newData).forEach(key => {
     if (key in form) {
       form[key] = newData[key]
@@ -108,7 +107,6 @@ const displayErrors = computed(() => {
 
 // Watch defaultValues để update form
 watch(() => props.defaultValues, (newValues) => {
-  console.log('Default values changed:', newValues)
   Object.keys(newValues).forEach(key => {
     if (key in form) {
       form[key] = newValues[key]

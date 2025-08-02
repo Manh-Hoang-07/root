@@ -208,7 +208,7 @@ async function fetchUsers(page = 1) {
     pagination.per_page = meta.per_page
     pagination.links = meta.links
   } catch (error) {
-    console.error('Error fetching users:', error)
+    
   }
 }
 
@@ -283,7 +283,7 @@ async function deleteUser() {
     await fetchUsers()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting user:', error)
+    
   }
 }
 

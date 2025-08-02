@@ -174,7 +174,7 @@ async function fetchCategories(page = 1) {
       pagination.links = meta.links
     }
   } catch (error) {
-    console.error('Error fetching categories:', error)
+    
   } finally {
     loading.value = false
   }
@@ -232,7 +232,7 @@ async function deleteCategory() {
     await fetchCategories()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting category:', error)
+    
   }
 }
 

@@ -249,7 +249,7 @@ const loadSettings = async () => {
       securitySettings.value = data.data.security || {};
     }
   } catch (error) {
-    console.error('Error loading settings:', error);
+    
   }
 };
 
@@ -267,7 +267,7 @@ const saveGeneralSettings = async () => {
       alert('Cài đặt chung đã được lưu thành công!');
     }
   } catch (error) {
-    console.error('Error saving general settings:', error);
+    
   }
 };
 
@@ -285,7 +285,7 @@ const saveOrderSettings = async () => {
       alert('Cài đặt đơn hàng đã được lưu thành công!');
     }
   } catch (error) {
-    console.error('Error saving order settings:', error);
+    
   }
 };
 
@@ -303,7 +303,7 @@ const saveEmailSettings = async () => {
       alert('Cài đặt email đã được lưu thành công!');
     }
   } catch (error) {
-    console.error('Error saving email settings:', error);
+    
   }
 };
 
@@ -321,7 +321,7 @@ const saveSecuritySettings = async () => {
       alert('Cài đặt bảo mật đã được lưu thành công!');
     }
   } catch (error) {
-    console.error('Error saving security settings:', error);
+    
   }
 };
 

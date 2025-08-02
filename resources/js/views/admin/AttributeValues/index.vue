@@ -175,7 +175,7 @@ async function fetchAttributeValues(page = 1) {
       pagination.links = meta.links
     }
   } catch (error) {
-    console.error('Error fetching attribute values:', error)
+    
   } finally {
     loading.value = false
   }
@@ -233,7 +233,7 @@ async function deleteAttributeValue() {
     await fetchAttributeValues()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting attribute value:', error)
+    
   }
 }
 

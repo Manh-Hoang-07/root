@@ -105,7 +105,7 @@ async function fetchBrands() {
       }))
     ]
   } catch (error) {
-    console.error('Error fetching brands:', error)
+    
     brandOptions.value = [{ value: '', label: 'Tất cả thương hiệu' }]
   }
 }
@@ -121,7 +121,7 @@ async function fetchCategories() {
       }))
     ]
   } catch (error) {
-    console.error('Error fetching categories:', error)
+    
     categoryOptions.value = [{ value: '', label: 'Tất cả danh mục' }]
   }
 }

@@ -187,7 +187,7 @@ async function fetchAttributes(page = 1) {
       pagination.links = meta.links
     }
   } catch (error) {
-    console.error('Error fetching attributes:', error)
+    
   } finally {
     loading.value = false
   }
@@ -245,7 +245,7 @@ async function deleteAttribute() {
     await fetchAttributes()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting attribute:', error)
+    
   }
 }
 

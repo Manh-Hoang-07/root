@@ -80,8 +80,6 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   const logout = async () => {
-    console.log('Logout called from:', new Error().stack)
-    
     try {
       // Gọi API logout (backend sẽ xóa cookie)
       await fetch('/api/logout', {
@@ -117,7 +115,6 @@ export const useAuthStore = defineStore('auth', () => {
     // Kiểm tra cache - nếu đã fetch gần đây và không force, return cached data
     const now = Date.now();
     if (!force && user.value && (now - lastFetchTime.value) < fetchCacheDuration) {
-      console.log('Using cached user info');
       return !!user.value;
     }
 
@@ -131,7 +128,6 @@ export const useAuthStore = defineStore('auth', () => {
 
     isFetchingUser.value = true;
     try {
-      console.log('Fetching user info...')
       // Không cần gửi token trong header, backend sẽ tự động lấy từ cookie
       const response = await fetch('/api/me', {
         headers: {
@@ -140,18 +136,14 @@ export const useAuthStore = defineStore('auth', () => {
         credentials: 'include'
       });
 
-      console.log('User info response status:', response.status)
       const data = await response.json();
-      console.log('User info response data:', data)
 
       if (response.ok && data.success) {
         user.value = data.data;
         userRole.value = data.data.role;
         lastFetchTime.value = now; // Update cache time
-        console.log('User info fetched successfully')
         return true;
       }
-      console.log('User info fetch failed')
       return false;
     } catch (error) {
       console.error('Fetch user info error:', error);

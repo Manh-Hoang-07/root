@@ -170,7 +170,7 @@ async function fetchBrands(page = 1) {
       pagination.links = meta.links
     }
   } catch (error) {
-    console.error('Error fetching brands:', error)
+    
   } finally {
     loading.value = false
   }
@@ -228,7 +228,7 @@ async function deleteBrand() {
     await fetchBrands()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting brand:', error)
+    
   }
 }
 

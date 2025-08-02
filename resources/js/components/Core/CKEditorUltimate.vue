@@ -115,7 +115,7 @@ class UltimateUploadAdapter {
 
       return { default: url }
     } catch (error) {
-      console.error('Upload error:', error)
+      
       throw error
     }
   }
@@ -436,7 +436,7 @@ onMounted(async () => {
     }
 
   } catch (error) {
-    console.error('Error initializing CKEditor Ultimate:', error)
+    
   }
 })
 

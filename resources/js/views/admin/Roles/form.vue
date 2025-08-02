@@ -187,7 +187,7 @@ const fetchPermissions = async () => {
     const response = await axios.get(endpoints.permissions.list, { params: { per_page: 1000 } })
     permissions.value = response.data.data || []
   } catch (error) {
-    console.error('Error fetching permissions:', error)
+    
     permissions.value = []
   } finally {
     loadingPermissions.value = false

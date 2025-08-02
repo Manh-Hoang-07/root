@@ -10,4 +10,28 @@ class BrandRepository extends BaseRepository
     {
         return Brand::class;
     }
+
+    /**
+     * Optimize relations for Brand model
+     */
+    protected function optimizeRelations($relations)
+    {
+        $optimizedRelations = [];
+        foreach ($relations as $relation) {
+            if (strpos($relation, ':') !== false) {
+                // Nếu đã có select fields thì giữ nguyên
+                $optimizedRelations[] = $relation;
+            } else {
+                // Tối ưu cho các relation của Brand
+                switch ($relation) {
+                    case 'products':
+                        $optimizedRelations[] = 'products:id,name,slug,price,image';
+                        break;
+                    default:
+                        $optimizedRelations[] = $relation;
+                }
+            }
+        }
+        return $optimizedRelations;
+    }
 } 

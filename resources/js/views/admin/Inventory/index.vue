@@ -262,11 +262,11 @@ async function fetchInventories(page = 1) {
         pagination.links = meta.links || []
       }
     } else {
-      console.error('API returned success: false')
+      
       inventories.value = []
     }
   } catch (error) {
-    console.error('Error fetching inventories:', error)
+    
     inventories.value = []
   } finally {
     loading.value = false
@@ -280,7 +280,7 @@ async function loadFilterOptions() {
       filterOptions.value = response.data.data
     }
   } catch (error) {
-    console.error('Error loading filter options:', error)
+    
   }
 }
 
@@ -350,7 +350,7 @@ async function deleteInventory() {
     await fetchInventories()
     closeDeleteModal()
   } catch (error) {
-    console.error('Error deleting inventory:', error)
+    
   }
 }
 

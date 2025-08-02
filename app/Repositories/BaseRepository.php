@@ -19,44 +19,7 @@ abstract class BaseRepository
         
         // Load relations - chỉ load khi được yêu cầu cụ thể
         if (!empty($relations)) {
-            // Tối ưu: chỉ select các field cần thiết cho relationships
-            $optimizedRelations = [];
-            foreach ($relations as $relation) {
-                if (strpos($relation, ':') !== false) {
-                    // Nếu đã có select fields thì giữ nguyên
-                    $optimizedRelations[] = $relation;
-                } else {
-                    // Tự động tối ưu cho các relation phổ biến
-                    switch ($relation) {
-                        case 'brand':
-                            $optimizedRelations[] = 'brand:id,name';
-                            break;
-                        case 'categories':
-                            $optimizedRelations[] = 'categories:id,name';
-                            break;
-                        case 'images':
-                            $optimizedRelations[] = 'images:id,imageable_id,url';
-                            break;
-                        case 'variants':
-                            $optimizedRelations[] = 'variants:id,product_id,sku,price,sale_price,quantity,image,status';
-                            break;
-                        case 'variants.attributeValues':
-                            $optimizedRelations[] = 'variants.attributeValues:id,variant_id,attribute_id,value';
-                            break;
-                        case 'variants.attributeValues.attribute':
-                            $optimizedRelations[] = 'variants.attributeValues.attribute:id,name';
-                            break;
-                        case 'attributeValues':
-                            $optimizedRelations[] = 'attributeValues:id,attribute_id,value';
-                            break;
-                        case 'attributeValues.attribute':
-                            $optimizedRelations[] = 'attributeValues.attribute:id,name';
-                            break;
-                        default:
-                            $optimizedRelations[] = $relation;
-                    }
-                }
-            }
+            $optimizedRelations = $this->optimizeRelations($relations);
             $query->with($optimizedRelations);
         }
         
@@ -133,6 +96,25 @@ abstract class BaseRepository
                 $query->orderBy($field, $direction);
             }
         }
+    }
+
+    /**
+     * Optimize relations by selecting only necessary fields
+     * Override in child classes to provide specific optimizations
+     */
+    protected function optimizeRelations($relations)
+    {
+        $optimizedRelations = [];
+        foreach ($relations as $relation) {
+            if (strpos($relation, ':') !== false) {
+                // Nếu đã có select fields thì giữ nguyên
+                $optimizedRelations[] = $relation;
+            } else {
+                // Default: giữ nguyên relation
+                $optimizedRelations[] = $relation;
+            }
+        }
+        return $optimizedRelations;
     }
 
     public function find($id, $relations = [], $fields = ['*'])

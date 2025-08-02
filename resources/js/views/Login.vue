@@ -241,7 +241,7 @@ const handleLogin = async () => {
       }
     }
   } catch (error) {
-    console.error('Login error:', error)
+    
     generalError.value = 'Lỗi kết nối. Vui lòng thử lại.'
   } finally {
     isSubmitting.value = false

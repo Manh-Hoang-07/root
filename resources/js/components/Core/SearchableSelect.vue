@@ -126,7 +126,7 @@ const loadDefaultOptions = async () => {
         options.value = allOptions.slice(0, 50)
       }
     } catch (error) {
-      console.error('Error loading default options:', error)
+      
     } finally {
       loading.value = false
     }
@@ -145,7 +145,7 @@ const debouncedSearch = debounce(async () => {
     const response = await axios.get(`${props.searchApi}?search=${encodeURIComponent(searchQuery.value)}`)
     options.value = response.data.data || []
   } catch (error) {
-    console.error('Search error:', error)
+    
     options.value = []
   } finally {
     loading.value = false
@@ -198,7 +198,7 @@ watch(() => props.modelValue, async (newValue) => {
           selectedOption.value = response.data.data[0]
         }
       } catch (error) {
-        console.error('Error fetching option:', error)
+        
       }
     }
   } else if (!newValue) {
@@ -217,7 +217,7 @@ onMounted(async () => {
         options.value = [response.data.data[0]]
       }
     } catch (error) {
-      console.error('Error loading initial option:', error)
+      
     }
   }
 })
