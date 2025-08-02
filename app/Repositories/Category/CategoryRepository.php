@@ -40,4 +40,12 @@ class CategoryRepository extends BaseRepository
         }
         return $optimizedRelations;
     }
+
+    /**
+     * Override searchable fields for Category
+     */
+    protected function getSearchableFields()
+    {
+        return ['name', 'description'];
+    }
 } 

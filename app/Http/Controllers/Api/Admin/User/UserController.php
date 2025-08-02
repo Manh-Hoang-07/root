@@ -26,4 +26,6 @@ class UserController extends BaseController
             'data' => $result
         ]);
     }
+
+
 } 

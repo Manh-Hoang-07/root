@@ -36,6 +36,10 @@ abstract class BaseRepository
                 $this->applySearchFilter($query, $value);
             } elseif ($key === 'sort_by') {
                 $this->applySorting($query, $value);
+            } elseif ($key === 'ids') {
+                // Xử lý filter theo nhiều IDs
+                $idsArray = is_array($value) ? $value : explode(',', $value);
+                $query->whereIn('id', $idsArray);
             } elseif (in_array($key, ['page', 'per_page', 'sort', 'order'])) {
                 continue;
             } else {

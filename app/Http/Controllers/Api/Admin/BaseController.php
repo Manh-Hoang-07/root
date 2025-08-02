@@ -254,4 +254,57 @@ abstract class BaseController extends Controller
     {
         return $this->errorResponse($message, 403);
     }
+
+    /**
+     * Simple search method for all controllers
+     * Sử dụng method all() của repository với filters
+     */
+    public function search(Request $request)
+    {
+        $filters = [];
+        
+        // Xử lý search text
+        if ($request->get('search')) {
+            $filters['search'] = $request->get('search');
+        }
+        
+        // Xử lý ID
+        if ($request->get('id')) {
+            $filters['id'] = $request->get('id');
+        }
+        
+        // Xử lý IDs
+        if ($request->get('ids')) {
+            $filters['ids'] = $request->get('ids');
+        }
+        
+        // Xử lý các filters khác
+        if ($request->get('filters')) {
+            $filters = array_merge($filters, $request->get('filters'));
+        }
+        
+        $limit = min($request->get('limit', 10), 100);
+        $fields = $request->get('fields', ['id', 'name']);
+        
+        // Sử dụng service để lấy data
+        $results = $this->service->list($filters, $limit, [], $fields);
+        
+        // Format kết quả cho select dropdown
+        $data = $results->map(function ($item) {
+            $valueField = request('value_field', 'id');
+            $labelField = request('label_field', 'name');
+            
+            return [
+                'value' => $item->{$valueField},
+                'label' => $item->{$labelField}
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
+
 } 

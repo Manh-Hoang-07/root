@@ -115,4 +115,29 @@ class UserRepository extends BaseRepository
         
         return $user;
     }
+
+    /**
+     * Override searchable fields for User
+     */
+    protected function getSearchableFields()
+    {
+        return ['username', 'email', 'display_name'];
+    }
+
+    /**
+     * Override search filter for User to include role search
+     */
+    protected function applySearchFilter($query, $searchValue)
+    {
+        $query->where(function($q) use ($searchValue) {
+            // Search in main fields
+            $q->orWhere('username', 'like', "%{$searchValue}%")
+              ->orWhere('email', 'like', "%{$searchValue}%");
+            
+            // Search in role names
+            $q->orWhereHas('roles', function($roleQuery) use ($searchValue) {
+                $roleQuery->where('name', 'like', "%{$searchValue}%");
+            });
+        });
+    }
 } 

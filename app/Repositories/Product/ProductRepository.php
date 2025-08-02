@@ -154,4 +154,34 @@ class ProductRepository extends BaseRepository
                           ->limit($limit)
                           ->get();
     }
+
+    /**
+     * Override searchable fields for Product
+     */
+    protected function getSearchableFields()
+    {
+        return ['name', 'code', 'description', 'short_description'];
+    }
+
+    /**
+     * Override search filter for Product to include brand and category search
+     */
+    protected function applySearchFilter($query, $searchValue)
+    {
+        $query->where(function($q) use ($searchValue) {
+            // Search in main fields
+            $q->orWhere('name', 'like', "%{$searchValue}%")
+              ->orWhere('code', 'like', "%{$searchValue}%");
+            
+            // Search in brand name
+            $q->orWhereHas('brand', function($brandQuery) use ($searchValue) {
+                $brandQuery->where('name', 'like', "%{$searchValue}%");
+            });
+            
+            // Search in category names
+            $q->orWhereHas('categories', function($categoryQuery) use ($searchValue) {
+                $categoryQuery->where('name', 'like', "%{$searchValue}%");
+            });
+        });
+    }
 } 

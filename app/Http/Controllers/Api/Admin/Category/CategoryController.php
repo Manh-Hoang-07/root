@@ -23,33 +23,5 @@ class CategoryController extends BaseController
         return parent::index($request);
     }
 
-    public function search(Request $request)
-    {
-        $search = $request->get('search', '');
-        $id = $request->get('id');
-        $ids = $request->get('ids');
-        $limit = min($request->get('limit', 10), 100); // Max 100 items
 
-        $query = app($this->service->getRepo()->model())->query();
-
-        if ($id) {
-            $query->where('id', $id);
-        } elseif ($ids) {
-            $idsArray = explode(',', $ids);
-            $query->whereIn('id', $idsArray);
-        } elseif ($search) {
-            $query->where('name', 'like', "%{$search}%");
-        }
-
-        $categories = $query->limit($limit)->get(['id', 'name']);
-
-        return response()->json([
-            'data' => $categories->map(function ($category) {
-                return [
-                    'value' => $category->id,
-                    'label' => $category->name
-                ];
-            })
-        ]);
-    }
 } 
