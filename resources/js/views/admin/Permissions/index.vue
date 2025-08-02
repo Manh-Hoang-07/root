@@ -44,7 +44,7 @@
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
                 :class="getStatusClass(permission.status)"
               >
-                {{ getStatusName(permission.status) }}
+                {{ getStatusLabel(permission.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -127,6 +127,7 @@ import EditPermission from './edit.vue'
 import PermissionFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
+import { getEnumLabel } from '@/constants/enums'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 
@@ -252,21 +253,15 @@ function changePage(url) {
   fetchPermissions(page)
 }
 
-// Helper functions
-function getStatusClass(status) {
-  if (status === 'active') {
-    return 'bg-green-100 text-green-800'
-  } else {
-    return 'bg-red-100 text-red-800'
-  }
+// Status helper functions
+function getStatusLabel(status) {
+  return getEnumLabel('basic_status', status) || status || 'Không xác định'
 }
 
-function getStatusName(status) {
-  if (status === 'active') {
-    return 'Hoạt động'
-  } else {
-    return 'Không hoạt động'
-  }
+function getStatusClass(status) {
+  if (status === 'active') return 'bg-green-100 text-green-800'
+  if (status === 'inactive') return 'bg-red-100 text-red-800'
+  return 'bg-gray-100 text-gray-800'
 }
 </script>
 
