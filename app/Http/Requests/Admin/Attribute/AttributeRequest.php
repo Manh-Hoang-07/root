@@ -21,10 +21,8 @@ class AttributeRequest extends FormRequest
      */
     public function rules(): array
     {
-        $attributeId = $this->route('attribute') ? $this->route('attribute')->id : null;
-
         return [
-            'name' => 'required|string|max:255|unique:attributes,name,' . $attributeId,
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|string|in:text,textarea,select,multiselect,boolean,date,datetime',
             'is_required' => 'boolean',
@@ -40,7 +38,6 @@ class AttributeRequest extends FormRequest
         return [
             'name.required' => 'Tên thuộc tính là bắt buộc.',
             'name.max' => 'Tên thuộc tính không được vượt quá :max ký tự.',
-            'name.unique' => 'Tên thuộc tính đã tồn tại.',
             'type.required' => 'Loại thuộc tính là bắt buộc.',
             'type.in' => 'Loại thuộc tính không hợp lệ.',
             'status.required' => 'Trạng thái là bắt buộc.',
