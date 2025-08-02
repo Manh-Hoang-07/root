@@ -58,6 +58,9 @@ class InventoryService
      */
     public function create(array $data): Inventory
     {
+        // Validate business logic
+        $this->validateBusinessLogic($data);
+
         // Tự động tính available_quantity nếu không được cung cấp
         if (!isset($data['available_quantity'])) {
             $data['available_quantity'] = $data['quantity'] - ($data['reserved_quantity'] ?? 0);
@@ -71,6 +74,9 @@ class InventoryService
      */
     public function update(int $id, array $data): Inventory
     {
+        // Validate business logic
+        $this->validateBusinessLogic($data);
+
         // Tự động tính available_quantity nếu không được cung cấp
         if (!isset($data['available_quantity'])) {
             $inventory = $this->find($id);
@@ -215,6 +221,29 @@ class InventoryService
         $inventory->save();
         
         return true;
+    }
+
+    /**
+     * Validate business logic
+     */
+    private function validateBusinessLogic(array $data): void
+    {
+        $quantity = (int) ($data['quantity'] ?? 0);
+        $reservedQuantity = (int) ($data['reserved_quantity'] ?? 0);
+        $availableQuantity = (int) ($data['available_quantity'] ?? 0);
+
+        // Kiểm tra reserved_quantity không được lớn hơn quantity
+        if ($reservedQuantity > $quantity) {
+            throw new \Exception('Số lượng đã giữ chỗ không được lớn hơn tổng số lượng.');
+        }
+
+        // Kiểm tra available_quantity
+        if (isset($data['available_quantity'])) {
+            $expectedAvailable = $quantity - $reservedQuantity;
+            if ($availableQuantity > $expectedAvailable) {
+                throw new \Exception('Số lượng có thể bán không được lớn hơn số lượng thực tế.');
+            }
+        }
     }
 
     /**

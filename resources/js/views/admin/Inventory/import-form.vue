@@ -1,19 +1,19 @@
 <template>
-  <Modal v-model="modalVisible" :title="formTitle" size="4xl">
-        <FormWrapper
+  <Modal v-model="modalVisible" title="Nhập kho" size="4xl">
+    <FormWrapper
       :default-values="defaultValues"
       :rules="validationRules"
       :api-errors="apiErrors"
-      :submit-text="props.inventory ? 'Cập nhật' : 'Tạo tồn kho'"
+      :submit-text="'Nhập kho'"
       @submit="handleSubmit"
       @cancel="onClose"
       ref="formWrapperRef"
     >
       <template #default="{ form, errors, clearError, isSubmitting }">
         <div class="space-y-6">
-          <!-- Thông tin cơ bản -->
+          <!-- Thông tin nhập kho -->
           <div class="bg-gray-50 p-6 rounded-lg">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Thông tin tồn kho</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Thông tin nhập kho</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- Sản phẩm -->
               <div class="md:col-span-2">
@@ -43,27 +43,16 @@
                 />
               </div>
 
-              <!-- Số lượng -->
+              <!-- Số lượng nhập -->
               <FormField
                 v-model="form.quantity"
-                label="Số lượng"
+                label="Số lượng nhập"
                 name="quantity"
                 type="number"
                 :error="errors.quantity"
                 required
-                :min="0"
+                :min="1"
                 @update:model-value="clearError('quantity')"
-              />
-
-              <!-- Số lượng đã giữ chỗ -->
-              <FormField
-                v-model="form.reserved_quantity"
-                label="Số lượng đã giữ chỗ"
-                name="reserved_quantity"
-                type="number"
-                :error="errors.reserved_quantity"
-                :min="0"
-                @update:model-value="clearError('reserved_quantity')"
               />
             </div>
           </div>
@@ -131,10 +120,6 @@ import { useFormDefaults } from '@/utils/useFormDefaults'
 
 const props = defineProps({
   show: Boolean,
-  inventory: {
-    type: Object,
-    default: null
-  },
   apiErrors: {
     type: Object,
     default: () => ({})
@@ -157,21 +142,15 @@ const modalVisible = computed({
 })
 const formWrapperRef = ref(null)
 
-// Computed title
-const formTitle = computed(() => {
-  return props.inventory ? 'Chỉnh sửa tồn kho' : 'Thêm tồn kho mới'
-})
-
 // Default values for form
-const defaultValues = useFormDefaults(props, 'inventory', {
+const defaultValues = useFormDefaults(props, 'import', {
   product_id: '',
   warehouse_id: '',
-  quantity: 0,
+  quantity: 1,
   batch_no: '',
   lot_no: '',
   expiry_date: '',
-  cost_price: null,
-  reserved_quantity: 0
+  cost_price: null
 })
 
 // Validation rules
@@ -183,13 +162,9 @@ const validationRules = computed(() => ({
     { required: 'Vui lòng chọn kho hàng.' }
   ],
   quantity: [
-    { required: 'Vui lòng nhập số lượng.' },
+    { required: 'Vui lòng nhập số lượng nhập kho.' },
     { integer: 'Số lượng phải là số nguyên.' },
-    { min: [0, 'Số lượng không được âm.'] }
-  ],
-  reserved_quantity: [
-    { integer: 'Số lượng đã giữ chỗ phải là số nguyên.' },
-    { min: [0, 'Số lượng đã giữ chỗ không được âm.'] }
+    { min: [1, 'Số lượng nhập kho phải lớn hơn 0.'] }
   ],
   batch_no: [
     { max: [100, 'Mã lô hàng không được vượt quá 100 ký tự.'] }

@@ -45,6 +45,35 @@ class InventoryRequest extends FormRequest
     }
 
     /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            // Kiểm tra business logic
+            if ($this->has('quantity') && $this->has('reserved_quantity')) {
+                $quantity = (int) $this->quantity;
+                $reservedQuantity = (int) $this->reserved_quantity;
+                
+                if ($reservedQuantity > $quantity) {
+                    $validator->errors()->add('reserved_quantity', 'Số lượng đã giữ chỗ không được lớn hơn tổng số lượng.');
+                }
+            }
+
+            // Kiểm tra available_quantity
+            if ($this->has('available_quantity')) {
+                $quantity = (int) $this->quantity;
+                $reservedQuantity = (int) $this->reserved_quantity;
+                $availableQuantity = (int) $this->available_quantity;
+                
+                if ($availableQuantity > ($quantity - $reservedQuantity)) {
+                    $validator->errors()->add('available_quantity', 'Số lượng có thể bán không được lớn hơn số lượng thực tế.');
+                }
+            }
+        });
+    }
+
+    /**
      * Get custom messages for validator errors.
      */
     public function messages(): array

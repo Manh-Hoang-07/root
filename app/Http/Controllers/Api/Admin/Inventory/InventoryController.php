@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Admin\Inventory;
 
 use App\Http\Controllers\Api\Admin\BaseController;
 use App\Http\Requests\Admin\Inventory\InventoryRequest;
+use App\Http\Requests\Admin\Inventory\ImportInventoryRequest;
+use App\Http\Requests\Admin\Inventory\ExportInventoryRequest;
 use App\Http\Resources\Admin\Inventory\InventoryResource;
 use App\Http\Resources\Admin\Inventory\InventoryCollection;
 use App\Services\Inventory\InventoryService;
@@ -132,24 +134,18 @@ class InventoryController extends BaseController
     /**
      * Nhập kho (tăng số lượng)
      */
-    public function import(Request $request): JsonResponse
+    public function import(ImportInventoryRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'product_id' => 'required|exists:products,id',
-                'warehouse_id' => 'required|exists:warehouses,id',
-                'quantity' => 'required|integer|min:1',
-                'batch_no' => 'nullable|string|max:100',
-                'lot_no' => 'nullable|string|max:100',
-                'expiry_date' => 'nullable|date|after:today',
-                'cost_price' => 'nullable|numeric|min:0',
-            ]);
-
+            $validated = $request->validated();
+            
             $inventory = $this->inventoryService->import(
-                $request->product_id,
-                $request->warehouse_id,
-                $request->quantity,
-                $request->only(['batch_no', 'lot_no', 'expiry_date', 'cost_price'])
+                $validated['product_id'],
+                $validated['warehouse_id'],
+                $validated['quantity'],
+                array_filter($validated, function($key) {
+                    return in_array($key, ['batch_no', 'lot_no', 'expiry_date', 'cost_price']);
+                }, ARRAY_FILTER_USE_KEY)
             );
 
             return $this->successResponse(
@@ -164,21 +160,16 @@ class InventoryController extends BaseController
     /**
      * Xuất kho (giảm số lượng)
      */
-    public function export(Request $request): JsonResponse
+    public function export(ExportInventoryRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'product_id' => 'required|exists:products,id',
-                'warehouse_id' => 'required|exists:warehouses,id',
-                'quantity' => 'required|integer|min:1',
-                'batch_no' => 'nullable|string|max:100',
-            ]);
-
+            $validated = $request->validated();
+            
             $inventory = $this->inventoryService->export(
-                $request->product_id,
-                $request->warehouse_id,
-                $request->quantity,
-                $request->batch_no
+                $validated['product_id'],
+                $validated['warehouse_id'],
+                $validated['quantity'],
+                $validated['batch_no'] ?? null
             );
 
             return $this->successResponse(

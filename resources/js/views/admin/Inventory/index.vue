@@ -23,6 +23,9 @@
     <!-- Bộ lọc -->
     <InventoryFilter 
       :initial-filters="currentFilters"
+      :warehouses="filterOptions.warehouses || []"
+      :brands="filterOptions.brands || []"
+      :categories="filterOptions.categories || []"
       @update:filters="handleFilterUpdate" 
     />
 
