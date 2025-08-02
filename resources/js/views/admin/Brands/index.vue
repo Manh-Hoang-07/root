@@ -34,9 +34,9 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                :class="brand.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                :class="getStatusClass(brand.status)"
               >
-                {{ brand.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
+                {{ getStatusLabel(brand.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -115,6 +115,7 @@ import EditBrand from './edit.vue'
 import BrandFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
+import { getEnumLabel } from '@/constants/enums'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 
@@ -246,5 +247,16 @@ function getImageUrl(logo) {
   if (logo.startsWith('http')) return logo
   if (logo.startsWith('/storage/')) return logo.replace(/^(\/storage\/)+/, '/storage/')
   return `/storage/${logo.replace(/^\/storage\//, '')}`
+}
+
+// Status helper functions
+function getStatusLabel(status) {
+  return getEnumLabel('basic_status', status) || status || 'Không xác định'
+}
+
+function getStatusClass(status) {
+  if (status === 'active') return 'bg-green-100 text-green-800'
+  if (status === 'inactive') return 'bg-red-100 text-red-800'
+  return 'bg-gray-100 text-gray-800'
 }
 </script> 

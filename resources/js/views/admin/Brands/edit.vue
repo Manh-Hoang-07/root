@@ -1,9 +1,13 @@
 <template>
   <div>
+    <div v-if="loading" class="flex justify-center items-center p-8">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <span class="ml-2 text-gray-600">Đang tải dữ liệu...</span>
+    </div>
     <BrandForm 
-      v-if="showModal"
+      v-else-if="showModal"
       :show="showModal"
-      :brand="brand"
+      :brand="brandData"
       :status-enums="statusEnums"
       :api-errors="apiErrors"
       @submit="handleSubmit" 
@@ -14,9 +18,8 @@
 <script setup>
 import BrandForm from './form.vue'
 import endpoints from '@/api/endpoints'
-import { ref, watch } from 'vue'
+import { ref, watch, reactive } from 'vue'
 import { getEnumSync } from '@/constants/enums'
-import { useApiFormSubmit } from '@/utils/useApiFormSubmit'
 import axios from 'axios'
 
 const props = defineProps({
@@ -28,32 +31,75 @@ const emit = defineEmits(['updated'])
 
 const showModal = ref(false)
 const statusEnums = ref([])
+const brandData = ref(null)
+const loading = ref(false)
+const apiErrors = reactive({})
 
-const { apiErrors, submit } = useApiFormSubmit({
-  endpoint: endpoints.brands.update(props.brand?.id),
-  emit,
-  onClose: props.onClose,
-  eventName: 'updated',
-  method: 'put'
-})
-
-// Watch show prop để cập nhật showModal
 watch(() => props.show, (newValue) => {
   showModal.value = newValue
-  if (newValue) fetchStatusEnums()
+  if (newValue) {
+    Object.keys(apiErrors).forEach(key => delete apiErrors[key])
+    fetchStatusEnums()
+    
+    // Luôn fetch dữ liệu chi tiết từ API khi mở modal
+    if (props.brand?.id) {
+      fetchBrandDetails()
+    }
+  } else {
+    brandData.value = null // Reset data khi đóng modal
+    loading.value = false
+  }
 }, { immediate: true })
+
+async function fetchBrandDetails() {
+  if (!props.brand?.id) return
+  
+  loading.value = true
+  try {
+    const response = await axios.get(`/api/admin/brands/${props.brand.id}`)
+    
+    brandData.value = response.data.data || response.data
+  } catch (error) {
+    
+    // Fallback về dữ liệu từ list view nếu API lỗi
+    brandData.value = props.brand
+  } finally {
+    loading.value = false
+  }
+}
 
 async function fetchStatusEnums() {
   try {
-    const response = { data: getEnumSync('basic_status') }
-    statusEnums.value = Array.isArray(response.data.data) ? response.data.data : []
+    const enumData = getEnumSync('basic_status')
+    statusEnums.value = Array.isArray(enumData) ? enumData : []
   } catch (error) {
     statusEnums.value = []
   }
 }
 
 async function handleSubmit(formData) {
-  await submit(formData)
+  try {
+    if (!props.brand) return;
+    Object.keys(apiErrors).forEach(key => delete apiErrors[key])
+    const dataWithMethod = {
+      ...formData,
+      _method: 'PUT'
+    }
+    await axios.post(endpoints.brands.update(props.brand.id), dataWithMethod)
+    emit('updated')
+    props.onClose()
+  } catch (error) {
+    if (error.response?.status === 422 && error.response?.data?.errors) {
+      const errors = error.response.data.errors
+      for (const field in errors) {
+        if (Array.isArray(errors[field])) {
+          apiErrors[field] = errors[field][0]
+        } else {
+          apiErrors[field] = errors[field]
+        }
+      }
+    }
+  }
 }
 
 function onClose() {

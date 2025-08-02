@@ -31,9 +31,10 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, computed } from 'vue'
 import AdminFilter from '@/components/Admin/AdminFilter.vue'
 import AdminFilterItem from '@/components/Admin/AdminFilterItem.vue'
+import { getEnumSync } from '@/constants/enums'
 
 const props = defineProps({
   initialFilters: {
@@ -51,10 +52,19 @@ const filters = reactive({
 })
 
 // Các tùy chọn cho select
-const statusOptions = [
-  { value: 'active', label: 'Hoạt động' },
-  { value: 'inactive', label: 'Không hoạt động' }
-]
+const statusOptions = computed(() => {
+  const enumData = getEnumSync('basic_status')
+  const options = [{ value: '', label: 'Tất cả trạng thái' }]
+  
+  if (Array.isArray(enumData)) {
+    options.push(...enumData.map(item => ({
+      value: item.value,
+      label: item.label
+    })))
+  }
+  
+  return options
+})
 
 const sortOptions = [
   { value: 'created_at_desc', label: 'Mới nhất' },

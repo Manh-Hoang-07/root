@@ -103,8 +103,8 @@ function handleSubmit(form) {
 }
 const statusOptions = computed(() =>
   (props.statusEnums || []).map(opt => ({
-    value: opt.id,
-    label: opt.name
+    value: opt.value,
+    label: opt.label
   }))
 )
 function onClose() {
