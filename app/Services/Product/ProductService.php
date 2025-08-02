@@ -39,6 +39,11 @@ class ProductService extends BaseService
                 $data['slug'] = \Illuminate\Support\Str::slug($data['name']);
             }
             
+            // Auto-generate code if not provided
+            if (!isset($data['code']) || empty($data['code'])) {
+                $data['code'] = $this->generateProductCode();
+            }
+            
             // Process attributes if provided - keep full information
             if (isset($data['attributes']) && is_array($data['attributes'])) {
                 // Keep the full array format with all details
@@ -166,5 +171,27 @@ class ProductService extends BaseService
     public function getProductsForSelect()
     {
         return $this->repo->getProductsForSelect();
+    }
+    
+    /**
+     * Generate unique product code
+     */
+    private function generateProductCode()
+    {
+        $prefix = 'PROD';
+        $lastProduct = $this->repo->getModel()->orderBy('id', 'desc')->first();
+        
+        if ($lastProduct && $lastProduct->code) {
+            // Extract number from existing code
+            if (preg_match('/^' . $prefix . '-(\d+)$/', $lastProduct->code, $matches)) {
+                $nextNumber = intval($matches[1]) + 1;
+            } else {
+                $nextNumber = 1;
+            }
+        } else {
+            $nextNumber = 1;
+        }
+        
+        return $prefix . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
     }
 } 

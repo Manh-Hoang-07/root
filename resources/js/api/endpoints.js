@@ -38,6 +38,14 @@ const endpoints = {
   attributeValues: createResourceEndpoints('attribute-values'), // Thêm dòng này
   permissions: createResourceEndpoints('permissions'),
   roles: createResourceEndpoints('roles'),
+  inventory: createResourceEndpoints('inventory', {
+    import: '/api/admin/inventory/import',
+    export: '/api/admin/inventory/export',
+    expiringSoon: '/api/admin/inventory/expiring-soon',
+    expired: '/api/admin/inventory/expired',
+    lowStock: '/api/admin/inventory/low-stock',
+    filterOptions: '/api/admin/inventory/filter-options'
+  }),
   enums: type => `/api/enums/${type}`,
   // Thêm resource khác nếu cần
   // Thêm resource shipping

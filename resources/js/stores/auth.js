@@ -20,6 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(credentials)
       });
 
@@ -59,6 +60,7 @@ export const useAuthStore = defineStore('auth', () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(userData)
       });
 
@@ -84,7 +86,8 @@ export const useAuthStore = defineStore('auth', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        credentials: 'include'
       });
     } catch (error) {
       console.error('Logout API error:', error);
@@ -118,7 +121,8 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await fetch('/api/me', {
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        credentials: 'include'
       });
 
       console.log('User info response status:', response.status)
@@ -177,7 +181,8 @@ export const useAuthStore = defineStore('auth', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        credentials: 'include'
       });
 
       if (response.ok) {

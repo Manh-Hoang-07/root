@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Admin\Permission\PermissionController;
 use App\Http\Controllers\Api\Admin\Role\RoleController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\User\User\UserController as ApiUserController;
+use App\Http\Controllers\Api\Admin\Inventory\InventoryController;
 
 // Public routes - không cần authentication
 Route::post('/login', [AuthController::class, 'login']);
@@ -58,6 +59,30 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     Route::get('categories/search', [CategoryController::class, 'search']);
     
     Route::apiResource('warehouses', WarehouseController::class);
+    
+    // Inventory routes
+    Route::prefix('inventory')->group(function () {
+        Route::get('/', [InventoryController::class, 'index']);
+        
+        // Filter options - phải đặt trước {inventory} route
+        Route::get('/filter-options', [InventoryController::class, 'filterOptions']);
+        
+        // Special operations
+        Route::post('/import', [InventoryController::class, 'import']);
+        Route::post('/export', [InventoryController::class, 'export']);
+        
+        // Reports
+        Route::get('/expiring-soon', [InventoryController::class, 'expiringSoon']);
+        Route::get('/expired', [InventoryController::class, 'expired']);
+        Route::get('/low-stock', [InventoryController::class, 'lowStock']);
+        
+        // CRUD operations - đặt sau các specific routes
+        Route::get('/{inventory}', [InventoryController::class, 'show']);
+        Route::post('/', [InventoryController::class, 'store']);
+        Route::put('/{inventory}', [InventoryController::class, 'update']);
+        Route::delete('/{inventory}', [InventoryController::class, 'destroy']);
+    });
+    
     Route::apiResource('orders', OrderController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('brands', BrandController::class);
@@ -70,6 +95,10 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
 
 Route::get('/enums/{type}', [EnumController::class, 'get']); 
 Route::post('/upload-image', [ImageController::class, 'upload']);
+
+
+
+
 
 // Admin routes for enum cache management
 Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function () {
@@ -90,5 +119,7 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
         Route::apiResource('advanced', App\Http\Controllers\Api\Admin\Shipping\ShippingAdvancedSettingController::class);
     });
 }); 
+
+ 
 
  

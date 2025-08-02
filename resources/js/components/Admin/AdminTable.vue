@@ -158,9 +158,26 @@ const emit = defineEmits([
 
 // Tính số cột để colspan khi không có dữ liệu
 const colSpan = computed(() => {
-  // Đếm số slot header + 1 cho cột actions + 1 nếu có checkbox
-  const headerCount = props.showCheckbox ? 2 : 1
-  return headerCount + (props.$slots.header ? 1 : 0)
+  // Base: 1 cho cột actions
+  let count = 1
+  
+  // Thêm 1 nếu có checkbox
+  if (props.showCheckbox) {
+    count += 1
+  }
+  
+  // Đếm số cột header (mỗi th tag trong header slot)
+  // Với Inventory: 6 cột header + 1 cột actions = 7
+  // Với các table khác: tùy theo số th tags
+  // Tạm thời hardcode cho Inventory là 7
+  if (props.title && props.title.includes('Tồn kho')) {
+    count = 7 // 6 cột header + 1 cột actions
+  } else {
+    // Mặc định 5 cột cho các table khác
+    count = 5
+  }
+  
+  return count
 })
 
 // Kiểm tra xem tất cả các item có được chọn không

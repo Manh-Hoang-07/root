@@ -28,6 +28,17 @@
                 />
               </div>
 
+              <!-- Mã sản phẩm -->
+              <FormField
+                v-model="form.code"
+                label="Mã sản phẩm"
+                name="code"
+                :error="errors.code"
+                placeholder="PROD-001"
+                autocomplete="off"
+                @update:model-value="clearError('code')"
+              />
+
 
 
               <!-- Trạng thái -->
@@ -554,6 +565,7 @@ const defaultValues = computed(() => {
   
   const values = {
     name: product.name || '',
+    code: product.code || '',
     short_description: product.short_description || '',
     description: product.description || '',
     price: product.price || '',
@@ -577,6 +589,10 @@ const validationRules = computed(() => ({
   name: [
     { required: 'Tên sản phẩm là bắt buộc.' },
     { max: [255, 'Tên sản phẩm không được vượt quá 255 ký tự.'] }
+  ],
+  code: [
+    { max: [50, 'Mã sản phẩm không được vượt quá 50 ký tự.'] },
+    { pattern: [/^[A-Z0-9\-_]+$/, 'Mã sản phẩm chỉ được chứa chữ hoa, số, dấu gạch ngang và gạch dưới.'] }
   ],
   short_description: [
     { required: 'Mô tả ngắn là bắt buộc.' },

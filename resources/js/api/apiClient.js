@@ -2,6 +2,7 @@ import axios from 'axios'
 
 const api = axios.create({
   // baseURL: '/api', // Đã bỏ dòng này để tránh lặp /api/api
+  withCredentials: true, // Gửi cookies với mọi request
   // Thêm interceptor nếu cần
 })
 

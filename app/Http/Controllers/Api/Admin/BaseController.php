@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Log;
 
-abstract class BaseController extends \App\Http\Controllers\Controller
+abstract class BaseController extends Controller
 {
     protected $service;
     protected $resource;
@@ -97,8 +100,6 @@ abstract class BaseController extends \App\Http\Controllers\Controller
     {
         $request = app($this->getUpdateRequestClass());
         
-
-        
         $data = $this->parseRequestData($request);
         
         try {
@@ -166,5 +167,66 @@ abstract class BaseController extends \App\Http\Controllers\Controller
         return array_filter($data, function($value) {
             return $value !== '' && $value !== [];
         });
+    }
+
+    /**
+     * Trả về response thành công
+     */
+    protected function successResponse($data = null, string $message = 'Thành công', int $statusCode = 200): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data
+        ], $statusCode);
+    }
+
+    /**
+     * Trả về response lỗi
+     */
+    protected function errorResponse(string $message = 'Có lỗi xảy ra', int $statusCode = 500): JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'data' => null
+        ], $statusCode);
+    }
+
+    /**
+     * Trả về response không tìm thấy
+     */
+    protected function notFoundResponse(string $message = 'Không tìm thấy dữ liệu'): JsonResponse
+    {
+        return $this->errorResponse($message, 404);
+    }
+
+    /**
+     * Trả về response validation error
+     */
+    protected function validationErrorResponse(array $errors, string $message = 'Dữ liệu không hợp lệ'): JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'errors' => $errors,
+            'data' => null
+        ], 422);
+    }
+
+    /**
+     * Trả về response unauthorized
+     */
+    protected function unauthorizedResponse(string $message = 'Không có quyền truy cập'): JsonResponse
+    {
+        return $this->errorResponse($message, 401);
+    }
+
+    /**
+     * Trả về response forbidden
+     */
+    protected function forbiddenResponse(string $message = 'Truy cập bị từ chối'): JsonResponse
+    {
+        return $this->errorResponse($message, 403);
     }
 } 

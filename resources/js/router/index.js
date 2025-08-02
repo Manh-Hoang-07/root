@@ -14,6 +14,7 @@ import AdminOrders from '../views/admin/Orders/index.vue';
 import AdminUsers from '../views/admin/Users/index.vue';
 import AdminPermissions from '../views/admin/Permissions/index.vue';
 import AdminWarehouses from '../views/admin/Warehouses/index.vue';
+import AdminInventory from '../views/admin/Inventory/index.vue';
 import AdminShipping from '../views/admin/Shipping/index.vue';
 import AdminReports from '../views/admin/Reports/index.vue';
 import AdminSettings from '../views/admin/Settings/index.vue';
@@ -90,6 +91,11 @@ const routes = [
         path: 'warehouses',
         name: 'AdminWarehouses',
         component: AdminWarehouses
+      },
+      {
+        path: 'inventory',
+        name: 'AdminInventory',
+        component: AdminInventory
       },
       {
         path: 'shipping',
