@@ -1,9 +1,13 @@
 <template>
   <div>
+    <div v-if="loading" class="flex justify-center items-center p-8">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <span class="ml-2 text-gray-600">Đang tải dữ liệu...</span>
+    </div>
     <RoleForm 
-      v-if="showModal"
+      v-else-if="showModal"
       :show="showModal"
-      :role="role"
+      :role="roleData"
       :status-enums="statusEnums"
       :api-errors="apiErrors"
       @submit="handleSubmit" 
@@ -29,11 +33,41 @@ const props = defineProps({
 const emit = defineEmits(['updated'])
 
 const showModal = ref(false)
+const roleData = ref(null)
+const loading = ref(false)
 const apiErrors = reactive({})
 
 watch(() => props.show, (newValue) => {
   showModal.value = newValue
+  if (newValue) {
+    Object.keys(apiErrors).forEach(key => delete apiErrors[key])
+    
+    // Luôn fetch dữ liệu chi tiết từ API khi mở modal
+    if (props.role?.id) {
+      fetchRoleDetails()
+    }
+  } else {
+    roleData.value = null // Reset data khi đóng modal
+    loading.value = false
+  }
 }, { immediate: true })
+
+async function fetchRoleDetails() {
+  if (!props.role?.id) return
+  
+  loading.value = true
+  try {
+    const response = await axios.get(`/api/admin/roles/${props.role.id}`)
+    
+    roleData.value = response.data.data || response.data
+  } catch (error) {
+    
+    // Fallback về dữ liệu từ list view nếu API lỗi
+    roleData.value = props.role
+  } finally {
+    loading.value = false
+  }
+}
 
 async function handleSubmit(formData) {
   try {

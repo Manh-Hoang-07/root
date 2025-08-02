@@ -42,7 +42,7 @@
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
                 :class="getStatusClass(role.status)"
               >
-                {{ getStatusName(role.status) }}
+                {{ getStatusLabel(role.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -118,7 +118,7 @@
 
 <script setup>
 import { ref, onMounted, reactive, computed } from 'vue'
-import { getEnumSync } from '@/constants/enums'
+import { getEnumSync, getEnumLabel } from '@/constants/enums'
 import CreateRole from './create.vue'
 import EditRole from './edit.vue'
 import RoleFilter from './filter.vue'
@@ -135,10 +135,7 @@ const currentFilters = ref({
   status: '',
   sort_by: 'created_at_desc'
 })
-const statusEnums = ref([
-  { value: 1, name: 'Hoạt động' },
-  { value: 2, name: 'Không hoạt động' }
-])
+const statusEnums = ref([])
 const pagination = reactive({
   current_page: 1,
   from: 0,
@@ -196,7 +193,7 @@ function handleFilterUpdate(filters) {
 
 function fetchEnums() {
   // Sử dụng static enum thay vì gọi API
-  statusEnums.value = getEnumSync('role_status')
+  statusEnums.value = getEnumSync('basic_status')
 }
 
 // Modal handlers
@@ -257,21 +254,15 @@ function changePage(url) {
   fetchRoles(page)
 }
 
-// Helper functions
-function getStatusName(status) {
-  if (!Array.isArray(statusEnums.value)) {
-    return status;
-  }
-  const statusObj = statusEnums.value.find(s => s.id === status)
-  return statusObj ? statusObj.name : status
+// Status helper functions
+function getStatusLabel(status) {
+  return getEnumLabel('basic_status', status) || status || 'Không xác định'
 }
 
 function getStatusClass(status) {
-  switch (status) {
-    case 'active': return 'bg-green-100 text-green-800'
-    case 'inactive': return 'bg-red-100 text-red-800'
-    default: return 'bg-gray-100 text-gray-800'
-  }
+  if (status === 'active') return 'bg-green-100 text-green-800'
+  if (status === 'inactive') return 'bg-red-100 text-red-800'
+  return 'bg-gray-100 text-gray-800'
 }
 
 // Map id -> vai trò để tra nhanh tên vai trò cha

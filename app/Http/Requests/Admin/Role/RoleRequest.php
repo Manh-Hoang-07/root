@@ -21,7 +21,8 @@ class RoleRequest extends FormRequest
      */
     public function rules(): array
     {
-        $roleId = $this->route('role') ? $this->route('role')->id : null;
+        $roleRoute = $this->route('role');
+        $roleId = is_object($roleRoute) ? $roleRoute->id : $roleRoute;
 
         return [
             'name' => 'required|string|max:255|unique:roles,name,' . $roleId,

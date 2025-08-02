@@ -153,7 +153,7 @@ const statusOptions = computed(() => {
   const options = {}
   if (Array.isArray(props.statusEnums)) {
     props.statusEnums.forEach(enumItem => {
-      options[enumItem.id] = enumItem.name
+      options[enumItem.value] = enumItem.label
     })
   }
   return options
