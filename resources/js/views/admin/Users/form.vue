@@ -130,6 +130,18 @@
           @update:model-value="clearError('about')"
         />
         
+        <!-- Vai trò -->
+        <FormField
+          v-model="form.role_ids"
+          label="Vai trò"
+          name="role_ids"
+          type="select"
+          :options="roleOptions"
+          :error="errors.role_ids"
+          multiple
+          @update:model-value="clearError('role_ids')"
+        />
+        
         <!-- Trạng thái -->
         <FormField
           v-model="form.status"
@@ -165,6 +177,10 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  roleEnums: {
+    type: Array,
+    default: () => []
+  },
   apiErrors: {
     type: Object,
     default: () => ({})
@@ -179,20 +195,32 @@ const modalVisible = computed({
   set: () => onClose()
 })
 
-const defaultValues = useFormDefaults(props, 'user', {
-  username: '',
-  email: '',
-  phone: '',
-  password: '',
-  password_confirmation: '',
-  name: '',
-  gender: '',
-  birthday: '',
-  address: '',
-  image: null,
-  about: '',
-  status: '',
-  remove_image: false
+const defaultValues = computed(() => {
+  const obj = props.user || {}
+  
+  // Extract role_ids from roles array if exists
+  let roleIds = []
+  if (obj.roles && Array.isArray(obj.roles)) {
+    roleIds = obj.roles.map(role => role.id)
+  }
+  
+  return {
+    username: '',
+    email: '',
+    phone: '',
+    password: '',
+    password_confirmation: '',
+    name: '',
+    gender: '',
+    birthday: '',
+    address: '',
+    image: null,
+    about: '',
+    status: '',
+    role_ids: roleIds,
+    remove_image: false,
+    ...obj
+  }
 })
 
 const imageUrl = useUrl(props, 'user', 'image')
@@ -229,13 +257,20 @@ const validationRules = computed(() => ({
 
 const statusOptions = computed(() =>
   (props.statusEnums || []).map(opt => ({
-    value: opt.id,
-    label: opt.name
+    value: opt.value,
+    label: opt.label
   }))
 )
 
 const genderOptions = computed(() =>
   (props.genderEnums || []).map(opt => ({
+    value: opt.value,
+    label: opt.label
+  }))
+)
+
+const roleOptions = computed(() =>
+  (props.roleEnums || []).map(opt => ({
     value: opt.id,
     label: opt.name
   }))

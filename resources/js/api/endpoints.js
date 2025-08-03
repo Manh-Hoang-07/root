@@ -4,15 +4,18 @@ function createResourceEndpoints(resource, custom = {}) {
   const endpoints = {
     list: base,
     create: base,
+    show: id => `${base}/${id}`,
     update: id => `${base}/${id}`,
     delete: id => `${base}/${id}`,
     changeStatus: id => `${base}/toggle-status/${id}`,
     ...custom, // cho phép override hoặc thêm endpoint mới
   };
 
-  // Nếu là users thì thêm changePassword
+  // Nếu là users thì thêm changePassword và assignRoles
   if (resource === 'users') {
     endpoints.changePassword = id => `${base}/${id}/change-password`;
+    endpoints.showWithRoles = id => `${base}/${id}/with-roles`;
+    endpoints.assignRoles = id => `${base}/${id}/assign-roles`;
   }
 
   return endpoints;

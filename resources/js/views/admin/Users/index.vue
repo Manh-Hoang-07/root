@@ -21,18 +21,18 @@
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên đăng nhập</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số điện thoại</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-for="user in users" :key="user.id">
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.id }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ user.username }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ user.username || 'N/A' }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.email }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.phone || 'N/A' }}</td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
@@ -55,6 +55,15 @@
                   >
                     <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                  </button>
+                  <button 
+                    @click="openAssignRoleModal(item)" 
+                    class="p-2 rounded-full hover:bg-green-100 transition-colors duration-200"
+                    title="Phân quyền"
+                  >
+                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                   </button>
                 </template>
@@ -99,6 +108,7 @@
       :show="showCreateModal"
       :status-enums="statusEnums"
       :gender-enums="genderEnums"
+      :role-enums="roleEnums"
       :on-close="closeCreateModal"
       @created="handleUserCreated"
     />
@@ -110,6 +120,7 @@
       :user="selectedUser"
       :status-enums="statusEnums"
       :gender-enums="genderEnums"
+      :role-enums="roleEnums"
       :on-close="closeEditModal"
       @updated="handleUserUpdated"
     />
@@ -121,6 +132,15 @@
       :user="selectedUser"
       :on-close="closeChangePasswordModal"
       @password-changed="handlePasswordChanged"
+    />
+
+    <!-- Modal phân quyền -->
+    <AssignRole
+      v-if="showAssignRoleModal"
+      :show="showAssignRoleModal"
+      :user="selectedUser"
+      :on-close="closeAssignRoleModal"
+      @role-assigned="handleRoleAssigned"
     />
 
     <!-- Modal xác nhận xóa -->
@@ -141,6 +161,7 @@ import { getEnumSync, getEnumLabel } from '@/constants/enums'
 import CreateUser from './create.vue'
 import EditUser from './edit.vue'
 import ChangePassword from './change-password.vue'
+import AssignRole from './assign-role.vue'
 import UserFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
@@ -165,6 +186,7 @@ const genderEnums = ref([
   { value: 2, name: 'Nữ' },
   { value: 3, name: 'Khác' }
 ])
+const roleEnums = ref([])
 const pagination = reactive({
   current_page: 1,
   from: 0,
@@ -178,12 +200,16 @@ const pagination = reactive({
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showChangePasswordModal = ref(false)
+const showAssignRoleModal = ref(false)
 const showDeleteModal = ref(false)
 
 // Fetch data
 onMounted(async () => {
   // Load enums immediately (static)
   fetchEnums()
+  
+  // Load roles from API
+  await loadRoles()
   
   // Fetch users
   await fetchUsers()
@@ -223,6 +249,19 @@ function fetchEnums() {
   genderEnums.value = getEnumSync('gender')
 }
 
+async function loadRoles() {
+  try {
+    const response = await apiClient.get(endpoints.roles.list)
+    console.log('Roles API response:', response.data)
+    if (response.data.success) {
+      roleEnums.value = response.data.data
+      console.log('roleEnums loaded:', roleEnums.value)
+    }
+  } catch (error) {
+    console.error('Error loading roles:', error)
+  }
+}
+
 // Modal handlers
 function openCreateModal() {
   showCreateModal.value = true
@@ -252,6 +291,22 @@ function closeChangePasswordModal() {
   selectedUser.value = null
 }
 
+async function openAssignRoleModal(user) {
+  selectedUser.value = user
+  
+  // Đảm bảo roles đã được load
+  if (roleEnums.value.length === 0) {
+    await loadRoles()
+  }
+  
+  showAssignRoleModal.value = true
+}
+
+function closeAssignRoleModal() {
+  showAssignRoleModal.value = false
+  selectedUser.value = null
+}
+
 function confirmDelete(user) {
   selectedUser.value = user
   showDeleteModal.value = true
@@ -275,6 +330,11 @@ async function handleUserUpdated() {
 
 async function handlePasswordChanged() {
   closeChangePasswordModal()
+}
+
+async function handleRoleAssigned() {
+  await fetchUsers()
+  closeAssignRoleModal()
 }
 
 async function deleteUser() {
@@ -301,18 +361,14 @@ function getStatusLabel(status) {
 }
 
 function getStatusName(status) {
-  if (!Array.isArray(statusEnums.value)) {
-    return status;
-  }
-  const statusObj = statusEnums.value.find(s => s.id === status)
-  return statusObj ? statusObj.name : status
+  return getEnumLabel('user_status', status) || status
 }
 
 function getStatusClass(status) {
   switch (status) {
     case 'active': return 'bg-green-100 text-green-800'
     case 'pending': return 'bg-yellow-100 text-yellow-800'
-    case 'inactive': return 'bg-red-100 text-red-800'
+    case 'inactive': return 'bg-gray-100 text-gray-800'
     case 'banned': return 'bg-red-100 text-red-800'
     default: return 'bg-gray-100 text-gray-800'
   }

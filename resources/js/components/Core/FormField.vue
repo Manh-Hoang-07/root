@@ -52,20 +52,23 @@
       :id="fieldId"
       :name="name"
       :value="modelValue"
-      @change="updateValue($event.target.value)"
+      @change="updateValue($event)"
       :disabled="disabled"
+      :multiple="multiple"
       :class="[
         'w-full px-4 py-2 border rounded-xl',
         error ? 'border-red-500' : 'border-gray-300',
         disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white',
+        multiple ? 'min-h-[120px]' : '',
         inputClass
       ]"
     >
-      <option v-if="placeholder" value="">{{ placeholder }}</option>
+      <option v-if="placeholder && !multiple" value="">{{ placeholder }}</option>
       <option
         v-for="option in options"
         :key="option.value"
         :value="option.value"
+        :selected="multiple && Array.isArray(modelValue) && modelValue.includes(option.value)"
       >
         {{ option.label }}
       </option>
@@ -191,6 +194,10 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  multiple: {
+    type: Boolean,
+    default: false
+  },
   // Checkbox specific props
   checkboxLabel: {
     type: String,
@@ -220,7 +227,19 @@ const fieldId = computed(() => {
 })
 
 // Update value and emit event
-function updateValue(value) {
-  emit('update:modelValue', value)
+function updateValue(event) {
+  if (props.multiple && props.type === 'select') {
+    // For multiple select, we need to handle the selected options
+    const select = event.target
+    const selectedValues = []
+    for (let i = 0; i < select.options.length; i++) {
+      if (select.options[i].selected) {
+        selectedValues.push(select.options[i].value)
+      }
+    }
+    emit('update:modelValue', selectedValues)
+  } else {
+    emit('update:modelValue', event.target.value)
+  }
 }
 </script> 

@@ -40,6 +40,8 @@ class UserRequest extends FormRequest
             'address' => 'nullable|string|max:255',
             'image' => 'nullable|string|max:255',
             'about' => 'nullable|string|max:500',
+            'role_ids' => 'nullable|array',
+            'role_ids.*' => 'exists:roles,id',
         ];
 
         return $rules;

@@ -43,6 +43,17 @@ class UserResource extends JsonResource
             'about' => $this->whenLoaded('profile', function() {
                 return $this->profile ? $this->profile->about : null;
             }, null),
+            
+            // Roles relationship
+            'roles' => $this->whenLoaded('roles', function() {
+                return $this->roles->map(function($role) {
+                    return [
+                        'id' => $role->id,
+                        'name' => $role->name,
+                        'display_name' => $role->display_name,
+                    ];
+                });
+            }, []),
         ];
     }
 }

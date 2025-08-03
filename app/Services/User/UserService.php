@@ -17,6 +17,10 @@ class UserService extends BaseService
     public function create($data)
     {
         return DB::transaction(function () use ($data) {
+            // Extract role_ids before creating user
+            $roleIds = $data['role_ids'] ?? [];
+            unset($data['role_ids']);
+            
             // Hash password if provided
             if (isset($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
@@ -38,13 +42,22 @@ class UserService extends BaseService
             
             $user->profile()->create($profileData);
             
-            return $user->load('profile');
+            // Attach roles if provided
+            if (!empty($roleIds)) {
+                $user->roles()->attach($roleIds);
+            }
+            
+            return $user->load(['profile', 'roles']);
         });
     }
 
     public function update($id, $data)
     {
         return DB::transaction(function () use ($id, $data) {
+            // Extract role_ids before updating user
+            $roleIds = $data['role_ids'] ?? [];
+            unset($data['role_ids']);
+            
             // Hash password if provided
             if (isset($data['password']) && !empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
@@ -72,7 +85,10 @@ class UserService extends BaseService
                 $user->profile()->create($profileData);
             }
             
-            return $user->load('profile');
+            // Sync roles if provided
+            $user->roles()->sync($roleIds);
+            
+            return $user->load(['profile', 'roles']);
         });
     }
 
@@ -89,5 +105,40 @@ class UserService extends BaseService
     public function changePassword($id, $newPassword)
     {
         return $this->repo->changePassword($id, $newPassword);
+    }
+
+    /**
+     * Tìm user theo ID với relationships
+     */
+    public function findById($id)
+    {
+        return $this->repo->find($id);
+    }
+
+    /**
+     * Phân quyền cho user
+     */
+    public function assignRoles($id, $roleIds)
+    {
+        return DB::transaction(function () use ($id, $roleIds) {
+            $user = $this->repo->find($id);
+            
+            if (!$user) {
+                throw new \InvalidArgumentException('Không tìm thấy người dùng');
+            }
+            
+            // Sync roles
+            $user->roles()->sync($roleIds);
+            
+            return $user->load(['profile', 'roles']);
+        });
+    }
+
+    /**
+     * Tìm user theo ID với roles (cho modal phân quyền)
+     */
+    public function findByIdWithRoles($id)
+    {
+        return $this->repo->find($id, ['profile', 'roles']);
     }
 } 
