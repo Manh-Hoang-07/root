@@ -228,11 +228,8 @@ const fieldId = computed(() => {
 
 // Update value and emit event
 function updateValue(event) {
-  console.log('FormField updateValue called with:', event)
-  
   // Đảm bảo event tồn tại
   if (!event) {
-    console.warn('FormField: No event provided')
     return
   }
 
@@ -258,8 +255,6 @@ function updateValue(event) {
     // Input, textarea, select return value from target
     newValue = event.target && event.target.value !== undefined ? event.target.value : ''
   }
-  
-  console.log(`FormField updateValue: field="${props.name}", type="${props.type}", newValue="${newValue}"`)
   
   emit('update:modelValue', newValue)
 }

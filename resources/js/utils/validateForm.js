@@ -15,8 +15,6 @@ export default function validateForm(form, rules) {
       value = fieldValue.toString().trim()
     }
     
-    console.log(`Validating field: ${field}, value: "${value}", original: "${fieldValue}"`)
-    
     for (const ruleObj of rules[field]) {
       if (typeof ruleObj === 'string') {
         // Dạng ngắn, không custom message
@@ -67,9 +65,7 @@ export default function validateForm(form, rules) {
         }
       }
     }
-    // if (newErrors[field]) break // chỉ báo lỗi đầu tiên (xoá dòng này để báo tất cả lỗi)
   }
 
-  console.log('Validation errors:', newErrors)
   return newErrors
 } 
