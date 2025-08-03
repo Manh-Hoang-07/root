@@ -15,6 +15,7 @@ class InventoryResource extends JsonResource
         return [
             'id' => $this->id,
             'product_id' => $this->product_id,
+            'variant_id' => $this->variant_id,
             'warehouse_id' => $this->warehouse_id,
             'quantity' => $this->quantity,
             'batch_no' => $this->batch_no,
@@ -51,6 +52,14 @@ class InventoryResource extends JsonResource
                     'id' => $this->warehouse->id,
                     'name' => $this->warehouse->name,
                     'address' => $this->warehouse->address,
+                ];
+            }),
+            
+            'variant' => $this->whenLoaded('variant', function () {
+                return [
+                    'id' => $this->variant->id,
+                    'sku' => $this->variant->sku,
+                    'name' => $this->variant->name,
                 ];
             }),
         ];

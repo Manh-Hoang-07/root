@@ -50,7 +50,7 @@ class InventoryService
      */
     public function findById(int $id): ?Inventory
     {
-        return Inventory::with(['product.brand', 'warehouse'])->find($id);
+        return Inventory::with(['product.brand', 'variant', 'warehouse'])->find($id);
     }
 
     /**

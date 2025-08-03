@@ -249,11 +249,7 @@ async function fetchInventories(page = 1) {
       }
     })
     
-    console.log('Inventory API Response:', response.data)
-    console.log('Inventories data:', response.data.data)
-    if (response.data.data && response.data.data.length > 0) {
-      console.log('First inventory item:', response.data.data[0])
-    }
+
     
     if (response.data.success) {
       // Kiểm tra cấu trúc response

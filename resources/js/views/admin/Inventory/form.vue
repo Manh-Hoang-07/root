@@ -29,18 +29,18 @@
                  />
               </div>
 
-              <!-- Biến thể sản phẩm -->
-              <div class="md:col-span-2">
-                <FormField
-                  v-model="form.variant_id"
-                  label="Biến thể sản phẩm (Tùy chọn)"
-                  name="variant_id"
-                  type="select"
-                  :options="variantOptions"
-                  :error="errors.variant_id"
-                  @update:model-value="clearError('variant_id')"
-                />
-              </div>
+                                                                          <!-- Biến thể sản phẩm -->
+               <div class="md:col-span-2">
+                 <FormField
+                   v-model="form.variant_id"
+                   label="Biến thể sản phẩm (Tùy chọn)"
+                   name="variant_id"
+                   type="select"
+                   :options="variantOptions"
+                   :error="errors.variant_id"
+                   @update:model-value="clearError('variant_id')"
+                 />
+               </div>
 
               <!-- Kho hàng -->
               <div class="md:col-span-2">
@@ -171,13 +171,9 @@ const modalVisible = computed({
 })
 const formWrapperRef = ref(null)
 
-// Watch for inventory changes to set selected product
-watch(() => props.inventory, (newInventory) => {
-  if (newInventory?.product_id) {
-    selectedProductId.value = newInventory.product_id
-    loadVariants(newInventory.product_id)
-  }
-}, { immediate: true })
+// State for variants
+const variants = ref([])
+const selectedProductId = ref('')
 
 // Computed title
 const formTitle = computed(() => {
@@ -185,17 +181,23 @@ const formTitle = computed(() => {
 })
 
 // Default values for form
-const defaultValues = useFormDefaults(props, 'inventory', {
-  product_id: '',
-  variant_id: '',
-  warehouse_id: '',
-  quantity: 0,
-  batch_no: '',
-  lot_no: '',
-  expiry_date: '',
-  cost_price: null,
-  reserved_quantity: 0
+const defaultValues = computed(() => {
+  const obj = props.inventory || {}
+  return {
+    product_id: '',
+    variant_id: '',
+    warehouse_id: '',
+    quantity: 0,
+    batch_no: '',
+    lot_no: '',
+    expiry_date: '',
+    cost_price: null,
+    reserved_quantity: 0,
+    ...obj
+  }
 })
+
+
 
 // Validation rules
 const validationRules = computed(() => ({
@@ -251,10 +253,6 @@ const warehouseOptions = computed(() => {
   ]
 })
 
-// State for variants
-const variants = ref([])
-const selectedProductId = ref('')
-
 // Computed options for variants
 const variantOptions = computed(() => {
   if (!selectedProductId.value) {
@@ -266,11 +264,19 @@ const variantOptions = computed(() => {
   return [
     { value: '', label: 'Không chọn biến thể' },
     ...productVariants.map(variant => ({
-      value: variant.id,
+      value: String(variant.id), // Convert to string to match form.variant_id
       label: `${variant.sku} - ${variant.name || 'Không có tên'}`
     }))
   ]
 })
+
+// Watch for inventory changes to set selected product
+watch(() => props.inventory, (newInventory) => {
+  if (newInventory?.product_id) {
+    selectedProductId.value = newInventory.product_id
+    loadVariants(newInventory.product_id)
+  }
+}, { immediate: true })
 
 
 
