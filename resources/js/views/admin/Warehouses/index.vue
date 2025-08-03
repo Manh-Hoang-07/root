@@ -30,7 +30,6 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày cập nhật</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
           </tr>
         </thead>
@@ -46,13 +45,12 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                :class="warehouse.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                :class="getStatusClass(warehouse.status)"
               >
-                {{ warehouse.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
+                {{ getStatusLabel(warehouse.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(warehouse.created_at) }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(warehouse.updated_at) }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
               <Actions 
                 :item="warehouse"
@@ -62,7 +60,7 @@
             </td>
           </tr>
           <tr v-if="warehouses.length === 0">
-            <td colspan="11" class="px-6 py-4 text-center text-gray-500">
+            <td colspan="10" class="px-6 py-4 text-center text-gray-500">
               {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
             </td>
           </tr>
@@ -129,6 +127,7 @@ import EditWarehouse from './edit.vue'
 import WarehouseFilter from './filter.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
+import { getEnumLabel } from '@/constants/enums'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 import { formatDate } from '@/utils/formatDate'
@@ -242,6 +241,17 @@ function changePage(url) {
   const urlObj = new URL(url)
   const page = urlObj.searchParams.get('page')
   fetchWarehouses(page)
+}
+
+// Status helper functions
+function getStatusLabel(status) {
+  return getEnumLabel('basic_status', status) || status || 'Không xác định'
+}
+
+function getStatusClass(status) {
+  if (status === 'active') return 'bg-green-100 text-green-800'
+  if (status === 'inactive') return 'bg-red-100 text-red-800'
+  return 'bg-gray-100 text-gray-800'
 }
 </script>
 

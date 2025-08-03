@@ -4,7 +4,7 @@
       <!-- Tên kho hàng -->
       <div>
         <label class="block text-sm font-medium mb-1">Tên kho hàng <span class="text-red-500">*</span></label>
-        <input v-model="formData.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.name || apiErrors.name }" maxlength="100" />
+        <input v-model="formData.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.name || apiErrors.name }" maxlength="255" />
         <p v-if="validationErrors.name" class="mt-1 text-sm text-red-600">{{ validationErrors.name }}</p>
         <p v-else-if="apiErrors.name" class="mt-1 text-sm text-red-600">{{ apiErrors.name }}</p>
       </div>
@@ -17,15 +17,15 @@
       </div>
       <!-- Thành phố -->
       <div>
-        <label class="block text-sm font-medium mb-1">Thành phố <span class="text-red-500">*</span></label>
-        <input v-model="formData.city" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.city || apiErrors.city }" maxlength="100" />
+        <label class="block text-sm font-medium mb-1">Thành phố</label>
+        <input v-model="formData.city" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.city || apiErrors.city }" maxlength="255" />
         <p v-if="validationErrors.city" class="mt-1 text-sm text-red-600">{{ validationErrors.city }}</p>
         <p v-else-if="apiErrors.city" class="mt-1 text-sm text-red-600">{{ apiErrors.city }}</p>
       </div>
       <!-- Tỉnh/Thành -->
       <div>
-        <label class="block text-sm font-medium mb-1">Tỉnh/Thành <span class="text-red-500">*</span></label>
-        <input v-model="formData.province" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.province || apiErrors.province }" maxlength="100" />
+        <label class="block text-sm font-medium mb-1">Tỉnh/Thành</label>
+        <input v-model="formData.province" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.province || apiErrors.province }" maxlength="255" />
         <p v-if="validationErrors.province" class="mt-1 text-sm text-red-600">{{ validationErrors.province }}</p>
         <p v-else-if="apiErrors.province" class="mt-1 text-sm text-red-600">{{ apiErrors.province }}</p>
       </div>
@@ -39,7 +39,7 @@
       <!-- Email -->
       <div>
         <label class="block text-sm font-medium mb-1">Email</label>
-        <input v-model="formData.email" type="email" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.email || apiErrors.email }" maxlength="100" />
+        <input v-model="formData.email" type="email" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" :class="{ 'border-red-500': validationErrors.email || apiErrors.email }" maxlength="255" />
         <p v-if="validationErrors.email" class="mt-1 text-sm text-red-600">{{ validationErrors.email }}</p>
         <p v-else-if="apiErrors.email" class="mt-1 text-sm text-red-600">{{ apiErrors.email }}</p>
       </div>
@@ -63,12 +63,12 @@
 <script setup>
 import { ref, computed, reactive, watch } from 'vue'
 import Modal from '@/components/Core/Modal.vue'
+import { getEnumSync } from '@/constants/enums'
 
 const props = defineProps({
   show: Boolean,
   warehouse: Object,
   apiErrors: { type: Object, default: () => ({}) },
-  statusOptions: { type: Object, default: () => ({}) },
   mode: String
 })
 const emit = defineEmits(['submit', 'cancel'])
@@ -86,34 +86,46 @@ const formData = reactive({
   province: '',
   phone: '',
   email: '',
-  status: ''
+  status: 'active' // Giá trị mặc định
 })
 const validationErrors = reactive({})
 const isSubmitting = ref(false)
 
+const statusOptions = computed(() => {
+  const enumData = getEnumSync('basic_status')
+  const options = {}
+  if (Array.isArray(enumData)) {
+    enumData.forEach(item => {
+      options[item.value] = item.label
+    })
+  }
+  return options
+})
+
 const validationRules = computed(() => ({
   name: [
     { required: 'Tên kho hàng là bắt buộc' },
-    { max: [100, 'Tên kho hàng không được vượt quá 100 ký tự'] }
+    { max: [255, 'Tên kho hàng không được vượt quá 255 ký tự'] }
   ],
   address: [
     { required: 'Địa chỉ là bắt buộc' },
     { max: [255, 'Địa chỉ không được vượt quá 255 ký tự'] }
   ],
   city: [
-    { required: 'Thành phố là bắt buộc' },
-    { max: [100, 'Thành phố không được vượt quá 100 ký tự'] }
+    { max: [255, 'Thành phố không được vượt quá 255 ký tự'] }
   ],
   province: [
-    { required: 'Tỉnh/Thành là bắt buộc' },
-    { max: [100, 'Tỉnh/Thành không được vượt quá 100 ký tự'] }
+    { max: [255, 'Tỉnh/Thành không được vượt quá 255 ký tự'] }
   ],
   phone: [
     { max: [20, 'Số điện thoại không được vượt quá 20 ký tự'] }
   ],
   email: [
-    { max: [100, 'Email không được vượt quá 100 ký tự'] },
+    { max: [255, 'Email không được vượt quá 255 ký tự'] },
     { pattern: [/^\S+@\S+\.\S+$/, 'Email không hợp lệ'] }
+  ],
+  status: [
+    { required: 'Trạng thái là bắt buộc' }
   ]
 }))
 
@@ -125,7 +137,7 @@ watch(() => props.warehouse, (val) => {
     formData.province = val.province || ''
     formData.phone = val.phone || ''
     formData.email = val.email || ''
-    formData.status = val.status || Object.keys(props.statusOptions)[0] || ''
+    formData.status = val.status || Object.keys(statusOptions.value)[0] || ''
   } else {
     resetForm()
   }
@@ -138,7 +150,7 @@ function resetForm() {
   formData.province = ''
   formData.phone = ''
   formData.email = ''
-  formData.status = Object.keys(props.statusOptions)[0] || ''
+  formData.status = 'active' // Giá trị mặc định
   clearErrors()
 }
 function clearErrors() {
@@ -173,12 +185,13 @@ function validateAndSubmit() {
   if (!validateForm()) return
   isSubmitting.value = true
   try {
-    const submitData = new FormData()
+    console.log('Current formData:', formData)
+    const submitData = {}
     Object.entries(formData).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== '') {
-        submitData.append(key, value)
-      }
+      // Gửi tất cả các trường, kể cả rỗng
+      submitData[key] = value || ''
     })
+    console.log('Submitting warehouse data:', submitData)
     emit('submit', submitData)
   } finally {
     isSubmitting.value = false

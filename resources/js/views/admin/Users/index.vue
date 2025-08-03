@@ -36,9 +36,9 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                :class="user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                :class="getStatusClass(user.status)"
               >
-                {{ user.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
+                {{ getStatusLabel(user.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -137,7 +137,7 @@
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
-import { getEnumSync } from '@/constants/enums'
+import { getEnumSync, getEnumLabel } from '@/constants/enums'
 import CreateUser from './create.vue'
 import EditUser from './edit.vue'
 import ChangePassword from './change-password.vue'
@@ -296,6 +296,10 @@ function changePage(url) {
 }
 
 // Helper functions
+function getStatusLabel(status) {
+  return getEnumLabel('user_status', status) || status || 'Không xác định'
+}
+
 function getStatusName(status) {
   if (!Array.isArray(statusEnums.value)) {
     return status;

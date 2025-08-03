@@ -11,7 +11,7 @@ class WarehouseRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,7 +21,8 @@ class WarehouseRequest extends FormRequest
      */
     public function rules(): array
     {
-        $warehouseId = $this->route('warehouse') ? $this->route('warehouse')->id : null;
+        $warehouseRoute = $this->route('warehouse');
+        $warehouseId = is_object($warehouseRoute) ? $warehouseRoute->id : $warehouseRoute;
 
         return [
             'name' => 'required|string|max:255|unique:warehouses,name,' . $warehouseId,

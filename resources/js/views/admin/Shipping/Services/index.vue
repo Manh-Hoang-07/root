@@ -36,9 +36,9 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                :class="service.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                :class="getStatusClass(service.status)"
               >
-                {{ service.status === 'active' ? 'Hoạt động' : 'Không hoạt động' }}
+                {{ getStatusLabel(service.status) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -92,6 +92,7 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
 import ShippingServiceForm from './ShippingServiceForm.vue'
+import { getEnumLabel } from '@/constants/enums'
 import endpoints from '@/api/endpoints'
 import axios from 'axios'
 
@@ -177,5 +178,16 @@ async function handleEditService(formData) {
 }
 function confirmDelete(service) {
   // Xử lý xóa dịch vụ nếu cần
+}
+
+// Status helper functions
+function getStatusLabel(status) {
+  return getEnumLabel('basic_status', status) || status || 'Không xác định'
+}
+
+function getStatusClass(status) {
+  if (status === 'active') return 'bg-green-100 text-green-800'
+  if (status === 'inactive') return 'bg-red-100 text-red-800'
+  return 'bg-gray-100 text-gray-800'
 }
 </script> 

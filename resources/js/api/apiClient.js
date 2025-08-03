@@ -9,7 +9,11 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Không cần thêm token vào header, backend sẽ tự động lấy từ cookie
+    // Tự động thêm token vào header nếu có
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error) => {
