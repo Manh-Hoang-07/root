@@ -7,48 +7,42 @@ use App\Http\Requests\Admin\Inventory\InventoryRequest;
 use App\Http\Requests\Admin\Inventory\ImportInventoryRequest;
 use App\Http\Requests\Admin\Inventory\ExportInventoryRequest;
 use App\Http\Resources\Admin\Inventory\InventoryResource;
-use App\Http\Resources\Admin\Inventory\InventoryCollection;
+use App\Http\Resources\Admin\Inventory\InventoryListResource;
 use App\Services\Inventory\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class InventoryController extends BaseController
 {
-    protected $inventoryService;
-
-    public function __construct(InventoryService $inventoryService)
+    public function __construct(InventoryService $service)
     {
-        $this->inventoryService = $inventoryService;
-        parent::__construct($inventoryService, InventoryResource::class);
+        parent::__construct($service, InventoryResource::class);
+        $this->listResource = InventoryListResource::class;
         $this->storeRequestClass = InventoryRequest::class;
         $this->updateRequestClass = InventoryRequest::class;
+                                                $this->indexRelations = ['product:id,name,code', 'variant:id,sku,name', 'warehouse:id,name'];
+                    $this->showRelations = ['product', 'variant', 'warehouse'];
     }
 
     /**
      * Lấy danh sách tồn kho với phân trang và bộ lọc
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
         try {
             $filters = $request->only([
-                'search',
-                'warehouse_id',
-                'product_id',
-                'brand_id',
-                'category_id',
-                'low_stock',
-                'expiring_soon',
-                'expired',
-                'out_of_stock',
-                'sort_by',
-                'sort_direction'
+                'search', 'warehouse_id', 'product_id', 'brand_id', 'category_id',
+                'low_stock', 'expiring_soon', 'expired', 'out_of_stock',
+                'sort_by', 'sort_direction'
             ]);
 
             $perPage = $request->get('per_page', 15);
-            $inventories = $this->inventoryService->getInventories($filters, $perPage);
-
+            
+            // Load relations manually
+            $inventories = $this->service->getInventories($filters, $perPage);
+            
             return $this->successResponse(
-                new InventoryCollection($inventories),
+                $this->listResource::collection($inventories),
                 'Lấy danh sách tồn kho thành công'
             );
         } catch (\Exception $e) {
@@ -62,7 +56,7 @@ class InventoryController extends BaseController
     public function show($id, Request $request = null)
     {
         try {
-            $inventory = $this->inventoryService->findById($id);
+            $inventory = $this->service->findById($id);
             
             if (!$inventory) {
                 return $this->notFoundResponse('Không tìm thấy tồn kho');
@@ -84,7 +78,7 @@ class InventoryController extends BaseController
     {
         try {
             $request = app($this->getStoreRequestClass());
-            $inventory = $this->inventoryService->create($request->validated());
+            $inventory = $this->service->create($request->validated());
 
             return $this->successResponse(
                 new InventoryResource($inventory),
@@ -103,7 +97,7 @@ class InventoryController extends BaseController
     {
         try {
             $request = app($this->getUpdateRequestClass());
-            $inventory = $this->inventoryService->update($id, $request->validated());
+            $inventory = $this->service->update($id, $request->validated());
 
             return $this->successResponse(
                 new InventoryResource($inventory),
@@ -120,7 +114,7 @@ class InventoryController extends BaseController
     public function destroy($id)
     {
         try {
-            $this->inventoryService->delete($id);
+            $this->service->delete($id);
 
             return $this->successResponse(
                 null,
@@ -139,7 +133,7 @@ class InventoryController extends BaseController
         try {
             $validated = $request->validated();
             
-            $inventory = $this->inventoryService->import(
+            $inventory = $this->service->import(
                 $validated['product_id'],
                 $validated['warehouse_id'],
                 $validated['quantity'],
@@ -165,7 +159,7 @@ class InventoryController extends BaseController
         try {
             $validated = $request->validated();
             
-            $inventory = $this->inventoryService->export(
+            $inventory = $this->service->export(
                 $validated['product_id'],
                 $validated['warehouse_id'],
                 $validated['quantity'],
@@ -190,10 +184,10 @@ class InventoryController extends BaseController
     {
         try {
             $days = $request->get('days', 30);
-            $inventories = $this->inventoryService->getExpiringSoon($days);
+            $inventories = $this->service->getExpiringSoon($days);
 
             return $this->successResponse(
-                new InventoryCollection($inventories),
+                $this->listResource::collection($inventories),
                 'Lấy danh sách hàng sắp hết hạn thành công'
             );
         } catch (\Exception $e) {
@@ -207,10 +201,10 @@ class InventoryController extends BaseController
     public function expired(): JsonResponse
     {
         try {
-            $inventories = $this->inventoryService->getExpired();
+            $inventories = $this->service->getExpired();
 
             return $this->successResponse(
-                new InventoryCollection($inventories),
+                $this->listResource::collection($inventories),
                 'Lấy danh sách hàng đã hết hạn thành công'
             );
         } catch (\Exception $e) {
@@ -225,10 +219,10 @@ class InventoryController extends BaseController
     {
         try {
             $threshold = $request->get('threshold', 10);
-            $inventories = $this->inventoryService->getLowStock($threshold);
+            $inventories = $this->service->getLowStock($threshold);
 
             return $this->successResponse(
-                new InventoryCollection($inventories),
+                $this->listResource::collection($inventories),
                 'Lấy danh sách hàng sắp hết thành công'
             );
         } catch (\Exception $e) {
@@ -242,7 +236,7 @@ class InventoryController extends BaseController
     public function filterOptions(): JsonResponse
     {
         try {
-            $options = $this->inventoryService->getFilterOptions();
+            $options = $this->service->getFilterOptions();
 
             return $this->successResponse(
                 $options,

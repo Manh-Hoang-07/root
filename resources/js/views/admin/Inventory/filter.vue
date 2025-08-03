@@ -70,27 +70,25 @@
             class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             @change="emitFilters"
           >
-            <option value="">Tất cả trạng thái</option>
-            <option value="in_stock">Còn hàng</option>
-            <option value="low_stock">Sắp hết</option>
-            <option value="out_of_stock">Hết hàng</option>
+            <option v-for="option in stockStatusOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
           </select>
         </div>
 
-                 <!-- Trạng thái hạn sử dụng -->
-         <div class="flex items-center space-x-2">
-           <label class="text-sm font-medium text-gray-700">Hạn sử dụng:</label>
-           <select
-             v-model="filters.expiry_status"
-             class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-             @change="emitFilters"
-           >
-             <option value="">Tất cả hạn sử dụng</option>
-             <option value="valid">Còn hạn</option>
-             <option value="expiring_soon">Sắp hết hạn</option>
-             <option value="expired">Đã hết hạn</option>
-           </select>
-         </div>
+        <!-- Trạng thái hạn sử dụng -->
+        <div class="flex items-center space-x-2">
+          <label class="text-sm font-medium text-gray-700">Hạn sử dụng:</label>
+          <select
+            v-model="filters.expiry_status"
+            class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            @change="emitFilters"
+          >
+            <option v-for="option in expiryStatusOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
 
         <!-- Sắp xếp -->
         <div class="flex items-center space-x-2">
@@ -124,8 +122,9 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { debounce } from '@/utils/debounce'
+import { getEnumSync } from '@/constants/enums'
 
 const props = defineProps({
   initialFilters: {
@@ -147,6 +146,30 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:filters'])
+
+const stockStatusOptions = computed(() => {
+  const enumData = getEnumSync('stock_status')
+  const options = [{ value: '', label: 'Tất cả trạng thái' }]
+  if (Array.isArray(enumData)) {
+    options.push(...enumData.map(item => ({
+      value: item.value,
+      label: item.label
+    })))
+  }
+  return options
+})
+
+const expiryStatusOptions = computed(() => {
+  const enumData = getEnumSync('expiry_status')
+  const options = [{ value: '', label: 'Tất cả hạn sử dụng' }]
+  if (Array.isArray(enumData)) {
+    options.push(...enumData.map(item => ({
+      value: item.value,
+      label: item.label
+    })))
+  }
+  return options
+})
 
 const filters = ref({
   search: '',

@@ -22,6 +22,7 @@ class InventoryRequest extends FormRequest
     {
         $rules = [
             'product_id' => 'required|exists:products,id',
+            'variant_id' => 'nullable|exists:variants,id',
             'warehouse_id' => 'required|exists:warehouses,id',
             'quantity' => 'required|integer|min:0',
             'batch_no' => 'nullable|string|max:100',
@@ -32,13 +33,13 @@ class InventoryRequest extends FormRequest
             'cost_price' => 'nullable|numeric|min:0',
         ];
 
-        // Nếu là update, thêm unique rule cho product_id + warehouse_id + batch_no
+        // Nếu là update, thêm unique rule cho product_id + variant_id + warehouse_id + batch_no
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
             $inventoryId = $this->route('inventory');
-            $rules['product_id'] .= '|unique:inventories,product_id,' . $inventoryId . ',id,warehouse_id,' . $this->warehouse_id . ',batch_no,' . ($this->batch_no ?? 'NULL');
+            $rules['product_id'] .= '|unique:inventories,product_id,' . $inventoryId . ',id,variant_id,' . ($this->variant_id ?? 'NULL') . ',warehouse_id,' . $this->warehouse_id . ',batch_no,' . ($this->batch_no ?? 'NULL');
         } else {
             // Nếu là create, kiểm tra unique
-            $rules['product_id'] .= '|unique:inventories,product_id,NULL,id,warehouse_id,' . $this->warehouse_id . ',batch_no,' . ($this->batch_no ?? 'NULL');
+            $rules['product_id'] .= '|unique:inventories,product_id,NULL,id,variant_id,' . ($this->variant_id ?? 'NULL') . ',warehouse_id,' . $this->warehouse_id . ',batch_no,' . ($this->batch_no ?? 'NULL');
         }
 
         return $rules;
@@ -82,6 +83,7 @@ class InventoryRequest extends FormRequest
             'product_id.required' => 'Vui lòng chọn sản phẩm.',
             'product_id.exists' => 'Sản phẩm không tồn tại.',
             'product_id.unique' => 'Sản phẩm này đã có tồn kho trong kho hàng được chọn.',
+            'variant_id.exists' => 'Biến thể sản phẩm không tồn tại.',
             'warehouse_id.required' => 'Vui lòng chọn kho hàng.',
             'warehouse_id.exists' => 'Kho hàng không tồn tại.',
             'quantity.required' => 'Vui lòng nhập số lượng.',

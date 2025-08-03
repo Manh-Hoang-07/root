@@ -19,7 +19,7 @@ class InventoryRepository extends BaseRepository
      */
     public function getInventoriesWithRelations(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = $this->model->with(['product.brand', 'warehouse']);
+        $query = $this->model->with(['product', 'variant', 'warehouse']);
 
         // Áp dụng filters
         $this->applyFilters($query, $filters);

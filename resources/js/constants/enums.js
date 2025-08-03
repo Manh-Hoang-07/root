@@ -36,6 +36,16 @@ export const ENUMS = {
     { id: 'active', name: 'active', value: 'active', label: 'Hoạt động' },
     { id: 'inactive', name: 'inactive', value: 'inactive', label: 'Không hoạt động' },
     { id: 'outofstock', name: 'outofstock', value: 'outofstock', label: 'Hết hàng' }
+  ],
+  stock_status: [
+    { id: 'in_stock', name: 'in_stock', value: 'in_stock', label: 'Còn hàng' },
+    { id: 'low_stock', name: 'low_stock', value: 'low_stock', label: 'Sắp hết' },
+    { id: 'out_of_stock', name: 'out_of_stock', value: 'out_of_stock', label: 'Hết hàng' }
+  ],
+  expiry_status: [
+    { id: 'valid', name: 'valid', value: 'valid', label: 'Còn hạn' },
+    { id: 'expiring_soon', name: 'expiring_soon', value: 'expiring_soon', label: 'Sắp hết hạn' },
+    { id: 'expired', name: 'expired', value: 'expired', label: 'Đã hết hạn' }
   ]
 }
 

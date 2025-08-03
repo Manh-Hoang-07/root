@@ -17,15 +17,28 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- Sản phẩm -->
               <div class="md:col-span-2">
+                                 <FormField
+                   v-model="form.product_id"
+                   label="Sản phẩm"
+                   name="product_id"
+                   type="select"
+                   :options="productOptions"
+                   :error="errors.product_id"
+                   required
+                   @update:model-value="(value) => { clearError('product_id'); handleProductChange(value); if (!props.inventory) form.variant_id = ''; }"
+                 />
+              </div>
+
+              <!-- Biến thể sản phẩm -->
+              <div class="md:col-span-2">
                 <FormField
-                  v-model="form.product_id"
-                  label="Sản phẩm"
-                  name="product_id"
+                  v-model="form.variant_id"
+                  label="Biến thể sản phẩm (Tùy chọn)"
+                  name="variant_id"
                   type="select"
-                  :options="productOptions"
-                  :error="errors.product_id"
-                  required
-                  @update:model-value="clearError('product_id')"
+                  :options="variantOptions"
+                  :error="errors.variant_id"
+                  @update:model-value="clearError('variant_id')"
                 />
               </div>
 
@@ -128,6 +141,7 @@ import FormWrapper from '@/components/Core/FormWrapper.vue'
 import FormField from '@/components/Core/FormField.vue'
 import { ref, computed, watch } from 'vue'
 import { useFormDefaults } from '@/utils/useFormDefaults'
+import apiClient from '@/api/apiClient'
 
 const props = defineProps({
   show: Boolean,
@@ -157,6 +171,14 @@ const modalVisible = computed({
 })
 const formWrapperRef = ref(null)
 
+// Watch for inventory changes to set selected product
+watch(() => props.inventory, (newInventory) => {
+  if (newInventory?.product_id) {
+    selectedProductId.value = newInventory.product_id
+    loadVariants(newInventory.product_id)
+  }
+}, { immediate: true })
+
 // Computed title
 const formTitle = computed(() => {
   return props.inventory ? 'Chỉnh sửa tồn kho' : 'Thêm tồn kho mới'
@@ -165,6 +187,7 @@ const formTitle = computed(() => {
 // Default values for form
 const defaultValues = useFormDefaults(props, 'inventory', {
   product_id: '',
+  variant_id: '',
   warehouse_id: '',
   quantity: 0,
   batch_no: '',
@@ -228,7 +251,61 @@ const warehouseOptions = computed(() => {
   ]
 })
 
+// State for variants
+const variants = ref([])
+const selectedProductId = ref('')
 
+// Computed options for variants
+const variantOptions = computed(() => {
+  if (!selectedProductId.value) {
+    return [{ value: '', label: 'Chọn sản phẩm trước' }]
+  }
+  
+  const productVariants = variants.value.filter(v => v.product_id == selectedProductId.value)
+  
+  return [
+    { value: '', label: 'Không chọn biến thể' },
+    ...productVariants.map(variant => ({
+      value: variant.id,
+      label: `${variant.sku} - ${variant.name || 'Không có tên'}`
+    }))
+  ]
+})
+
+
+
+// Handle product change
+async function handleProductChange(productId) {
+  selectedProductId.value = productId
+  
+  // Reset variant selection if not editing
+  if (!props.inventory) {
+    variants.value = []
+  }
+  
+  // Load variants for selected product
+  if (productId) {
+    await loadVariants(productId)
+  } else {
+    variants.value = []
+  }
+}
+
+// Load variants for a product
+async function loadVariants(productId) {
+  try {
+    const response = await apiClient.get(`/api/admin/products/${productId}/variants`)
+    
+    if (response.data.success) {
+      variants.value = response.data.data || []
+    } else {
+      variants.value = response.data || []
+    }
+  } catch (error) {
+    console.error('Error loading variants:', error)
+    variants.value = []
+  }
+}
 
 // Handle form submission
 function handleSubmit(formData) {

@@ -20,10 +20,17 @@ class VariantController extends BaseController
     /**
      * Get variants for a product
      */
-    public function getProductVariants($productId)
+    public function getProductVariants($product)
     {
+        // Handle route model binding - $product could be a Product model or just an ID
+        $productId = is_object($product) ? $product->id : $product;
+        
         $variants = $this->service->getVariantsByProduct($productId);
-        return VariantResource::collection($variants);
+        
+        return $this->successResponse(
+            VariantResource::collection($variants),
+            'Lấy danh sách biến thể thành công'
+        );
     }
 
     /**

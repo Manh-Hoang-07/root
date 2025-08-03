@@ -48,15 +48,16 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-for="inventory in inventories" :key="inventory.id" class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div>
-                <div class="text-sm font-medium text-gray-900">{{ inventory.product?.name }}</div>
-                <div class="text-sm text-gray-500">{{ inventory.product?.brand?.name }}</div>
-              </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {{ inventory.warehouse?.name || 'N/A' }}
-            </td>
+                         <td class="px-6 py-4 whitespace-nowrap">
+                              <div>
+                  <div class="text-sm font-medium text-gray-900">{{ inventory.product_name || 'N/A' }}</div>
+                  <div class="text-sm text-gray-500">{{ inventory.product_code || 'N/A' }}</div>
+                  <div v-if="inventory.variant_sku" class="text-xs text-blue-600">{{ inventory.variant_sku }}</div>
+                </div>
+             </td>
+                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+               {{ inventory.warehouse_name || 'N/A' }}
+             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
               <div>
                 <div v-if="inventory.batch_no" class="font-medium">{{ inventory.batch_no }}</div>
@@ -64,17 +65,17 @@
                 <div v-if="!inventory.batch_no && !inventory.lot_no" class="text-gray-400">-</div>
               </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">
-              <div v-if="inventory.expiry_date">
-                <span 
-                  :class="inventory.expiry_status_class"
-                  class="px-2 py-1 text-xs font-semibold rounded-full"
-                >
-                  {{ formatDate(inventory.expiry_date) }}
-                </span>
-              </div>
-              <span v-else class="text-gray-400">-</span>
-            </td>
+                         <td class="px-6 py-4 whitespace-nowrap text-sm">
+               <div v-if="inventory.expiry_date">
+                 <span 
+                   :class="getExpiryStatusClass(inventory.expiry_date)"
+                   class="px-2 py-1 text-xs font-semibold rounded-full"
+                 >
+                   {{ formatDate(inventory.expiry_date) }}
+                 </span>
+               </div>
+               <span v-else class="text-gray-400">Không có hạn</span>
+             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="text-sm font-medium text-gray-900">{{ inventory.quantity || 0 }}</span>
             </td>
@@ -90,14 +91,14 @@
               </span>
               <span v-else class="text-gray-400">-</span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span
-                :class="inventory.stock_status_class"
-                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-              >
-                {{ inventory.stock_status_text }}
-              </span>
-            </td>
+                         <td class="px-6 py-4 whitespace-nowrap">
+               <span
+                 :class="getStockStatusClass(inventory)"
+                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+               >
+                 {{ getStockStatusText(inventory) }}
+               </span>
+             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
               <Actions 
                 :item="inventory"
@@ -248,11 +249,27 @@ async function fetchInventories(page = 1) {
       }
     })
     
+    console.log('Inventory API Response:', response.data)
+    console.log('Inventories data:', response.data.data)
+    if (response.data.data && response.data.data.length > 0) {
+      console.log('First inventory item:', response.data.data[0])
+    }
+    
     if (response.data.success) {
-      inventories.value = response.data.data.data || []
+      // Kiểm tra cấu trúc response
+      if (response.data.data && Array.isArray(response.data.data)) {
+        // Nếu data là array trực tiếp
+        inventories.value = response.data.data
+      } else if (response.data.data && response.data.data.data) {
+        // Nếu data có nested structure
+        inventories.value = response.data.data.data
+      } else {
+        // Fallback
+        inventories.value = response.data.data || []
+      }
       
       // Update pagination
-      const meta = response.data.data.pagination
+      const meta = response.data.meta || response.data.data?.meta
       if (meta) {
         pagination.current_page = meta.current_page || 1
         pagination.from = meta.from || 0
@@ -262,11 +279,11 @@ async function fetchInventories(page = 1) {
         pagination.links = meta.links || []
       }
     } else {
-      
+      console.error('API returned success: false')
       inventories.value = []
     }
   } catch (error) {
-    
+    console.error('Fetch inventories error:', error)
     inventories.value = []
   } finally {
     loading.value = false
@@ -375,6 +392,47 @@ function formatCurrency(amount) {
     style: 'currency',
     currency: 'VND'
   }).format(amount)
+}
+
+function getExpiryStatusClass(expiryDate) {
+  if (!expiryDate) return 'bg-gray-100 text-gray-800'
+  
+  const today = new Date()
+  const expiry = new Date(expiryDate)
+  const diffTime = expiry.getTime() - today.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  
+  if (diffDays < 0) {
+    return 'bg-red-100 text-red-800' // Đã hết hạn
+  } else if (diffDays <= 30) {
+    return 'bg-yellow-100 text-yellow-800' // Sắp hết hạn
+  } else {
+    return 'bg-green-100 text-green-800' // Còn hạn
+  }
+}
+
+function getStockStatusClass(inventory) {
+  const quantity = inventory.quantity || 0
+  
+  if (quantity <= 0) {
+    return 'bg-red-100 text-red-800' // Hết hàng
+  } else if (quantity <= 10) {
+    return 'bg-yellow-100 text-yellow-800' // Sắp hết
+  } else {
+    return 'bg-green-100 text-green-800' // Còn hàng
+  }
+}
+
+function getStockStatusText(inventory) {
+  const quantity = inventory.quantity || 0
+  
+  if (quantity <= 0) {
+    return 'Hết hàng'
+  } else if (quantity <= 10) {
+    return 'Sắp hết'
+  } else {
+    return 'Còn hàng'
+  }
 }
 </script>
 
