@@ -17,7 +17,11 @@
     />
 
     <!-- Bảng dữ liệu -->
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <div v-if="loading" class="mb-6">
+      <SkeletonLoader type="table" :rows="5" :columns="7" />
+    </div>
+    
+    <div v-else class="bg-white shadow-md rounded-lg overflow-hidden">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
@@ -89,7 +93,7 @@
           </tr>
           <tr v-if="products.length === 0">
             <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-              {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
+              Không có dữ liệu
             </td>
           </tr>
         </tbody>
@@ -149,35 +153,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed, defineAsyncComponent } from 'vue'
-import ProductFilter from './filter.vue'
+import { ref, onMounted, computed, defineAsyncComponent } from 'vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
+import SkeletonLoader from '@/components/Core/SkeletonLoader.vue'
 import endpoints from '@/api/endpoints'
-import axios from 'axios'
+import { useDataTable } from '@/composables/useDataTable'
+import { useToast } from '@/composables/useToast'
 import { formatDate } from '@/utils/formatDate'
 
-// Lazy load modal components
+// Lazy load all components
+const ProductFilter = defineAsyncComponent(() => import('./filter.vue'))
 const CreateProduct = defineAsyncComponent(() => import('./create.vue'))
 const EditProduct = defineAsyncComponent(() => import('./edit.vue'))
 
-// State
-const products = ref([])
+// Use composables
+const { showSuccess, showError } = useToast()
+const {
+  items: products,
+  loading,
+  pagination,
+  filters,
+  fetchData,
+  updateFilters,
+  deleteItem
+} = useDataTable(endpoints.products.list, {
+  defaultFilters: {
+    search: '',
+    status: '',
+    sort_by: 'created_at_desc'
+  },
+  cacheEnabled: true,
+  debounceTime: 300
+})
+
 const selectedProduct = ref(null)
-const pagination = reactive({
-  current_page: 1,
-  from: 0,
-  to: 0,
-  total: 0,
-  per_page: 10,
-  links: []
-})
-const filters = reactive({
-  search: '',
-  status: '',
-  sort_by: 'created_at_desc'
-})
-const loading = ref(false)
 
 // Modal state
 const showCreateModal = ref(false)
@@ -198,42 +208,12 @@ const processedProducts = computed(() => {
 
 // Fetch data
 onMounted(async () => {
-  await fetchProducts()
+  await fetchData()
 })
-
-async function fetchProducts(page = 1) {
-  loading.value = true
-  try {
-    const response = await axios.get(endpoints.products.list, {
-      params: { 
-        page,
-        search: filters.search,
-        status: filters.status,
-        sort_by: filters.sort_by
-      }
-    })
-    products.value = response.data.data
-    // Update pagination
-    const meta = response.data.meta
-    if (meta) {
-      pagination.current_page = meta.current_page
-      pagination.from = meta.from
-      pagination.to = meta.to
-      pagination.total = meta.total
-      pagination.per_page = meta.per_page
-      pagination.links = meta.links
-    }
-  } catch (error) {
-    
-  } finally {
-    loading.value = false
-  }
-}
 
 // Filter handlers
 function handleFilterChange(newFilters) {
-  Object.assign(filters, newFilters)
-  fetchProducts(1)
+  updateFilters(newFilters)
 }
 
 // Modal handlers
@@ -262,20 +242,22 @@ function closeDeleteModal() {
 
 // Action handlers
 async function handleProductCreated() {
-  await fetchProducts()
+  await fetchData()
   closeCreateModal()
+  showSuccess('Tạo sản phẩm thành công!')
 }
 async function handleProductUpdated() {
-  await fetchProducts()
+  await fetchData()
   closeEditModal()
+  showSuccess('Cập nhật sản phẩm thành công!')
 }
 async function deleteProduct() {
   try {
-    await axios.delete(endpoints.products.delete(selectedProduct.value.id))
-    await fetchProducts()
+    await deleteItem(selectedProduct.value.id)
     closeDeleteModal()
+    showSuccess('Xóa sản phẩm thành công!')
   } catch (error) {
-    
+    showError('Có lỗi xảy ra khi xóa sản phẩm')
   }
 }
 
@@ -283,7 +265,7 @@ function changePage(url) {
   if (!url) return
   const urlObj = new URL(url)
   const page = urlObj.searchParams.get('page')
-  fetchProducts(page)
+  fetchData({ page })
 }
 
 // Helper functions

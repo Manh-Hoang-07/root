@@ -12,13 +12,14 @@
 
     <!-- Bộ lọc -->
     <UserFilter 
-      :initial-filters="currentFilters"
+      :initial-filters="filters"
       @update:filters="handleFilterUpdate" 
     />
 
     <!-- Bảng dữ liệu -->
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200">
+      <SkeletonLoader v-if="loading" type="table" :rows="5" :columns="5" />
+      <table v-else class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên đăng nhập</th>
@@ -29,7 +30,7 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="user in users" :key="user.id">
+          <tr v-for="user in items" :key="user.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ user.username || 'N/A' }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.email }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.phone || 'N/A' }}</td>
@@ -70,7 +71,7 @@
               </Actions>
             </td>
           </tr>
-          <tr v-if="users.length === 0">
+          <tr v-if="items.length === 0">
             <td colspan="5" class="px-6 py-4 text-center text-gray-500">
               Không có dữ liệu
             </td>
@@ -156,45 +157,46 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, defineAsyncComponent } from 'vue'
 import { getEnumSync, getEnumLabel } from '@/constants/enums'
-import CreateUser from './create.vue'
-import EditUser from './edit.vue'
-import ChangePassword from './change-password.vue'
-import AssignRole from './assign-role.vue'
-import UserFilter from './filter.vue'
+import { useDataTable } from '@/composables/useDataTable'
+import { useToast } from '@/composables/useToast'
+import SkeletonLoader from '@/components/Core/SkeletonLoader.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
 import endpoints from '@/api/endpoints'
-import apiClient from '@/api/apiClient'
+
+// Lazy load components
+const CreateUser = defineAsyncComponent(() => import('./create.vue'))
+const EditUser = defineAsyncComponent(() => import('./edit.vue'))
+const ChangePassword = defineAsyncComponent(() => import('./change-password.vue'))
+const AssignRole = defineAsyncComponent(() => import('./assign-role.vue'))
+const UserFilter = defineAsyncComponent(() => import('./filter.vue'))
+
+// Use composables
+const { 
+  items, 
+  loading, 
+  pagination, 
+  filters, 
+  fetchData, 
+  updateFilters, 
+  deleteItem 
+} = useDataTable(endpoints.users.list, {
+  defaultFilters: {
+    search: '',
+    status: '',
+    sort_by: 'created_at_desc'
+  }
+})
+
+const { showSuccess, showError } = useToast()
 
 // State
-const users = ref([])
 const selectedUser = ref(null)
-const currentFilters = ref({
-  search: '',
-  status: '',
-  sort_by: 'created_at_desc'
-})
-const statusEnums = ref([
-  { value: 1, name: 'Hoạt động' },
-  { value: 2, name: 'Chờ xác nhận' },
-  { value: 3, name: 'Đã khóa' }
-])
-const genderEnums = ref([
-  { value: 1, name: 'Nam' },
-  { value: 2, name: 'Nữ' },
-  { value: 3, name: 'Khác' }
-])
+const statusEnums = ref([])
+const genderEnums = ref([])
 const roleEnums = ref([])
-const pagination = reactive({
-  current_page: 1,
-  from: 0,
-  to: 0,
-  total: 0,
-  per_page: 10,
-  links: []
-})
 
 // Modal state
 const showCreateModal = ref(false)
@@ -212,35 +214,12 @@ onMounted(async () => {
   await loadRoles()
   
   // Fetch users
-  await fetchUsers()
+  await fetchData()
 })
 
-async function fetchUsers(page = 1) {
-  try {
-    const response = await apiClient.get(endpoints.users.list, {
-      params: { 
-        page,
-        ...currentFilters.value
-      }
-    })
-    users.value = response.data.data
-    
-    // Update pagination
-    const meta = response.data.meta
-    pagination.current_page = meta.current_page
-    pagination.from = meta.from
-    pagination.to = meta.to
-    pagination.total = meta.total
-    pagination.per_page = meta.per_page
-    pagination.links = meta.links
-  } catch (error) {
-    
-  }
-}
-
-function handleFilterUpdate(filters) {
-  currentFilters.value = filters
-  fetchUsers(1)
+function handleFilterUpdate(newFilters) {
+  updateFilters(newFilters)
+  fetchData({ page: 1 })
 }
 
 function fetchEnums() {
@@ -251,14 +230,14 @@ function fetchEnums() {
 
 async function loadRoles() {
   try {
-    const response = await apiClient.get(endpoints.roles.list)
-    console.log('Roles API response:', response.data)
-    if (response.data.success) {
-      roleEnums.value = response.data.data
-      console.log('roleEnums loaded:', roleEnums.value)
+    const response = await fetch(endpoints.roles.list)
+    const data = await response.json()
+    if (data.success) {
+      roleEnums.value = data.data
     }
   } catch (error) {
     console.error('Error loading roles:', error)
+    showError('Không thể tải danh sách vai trò')
   }
 }
 
@@ -319,31 +298,35 @@ function closeDeleteModal() {
 
 // Action handlers
 async function handleUserCreated() {
-  await fetchUsers()
+  await fetchData()
   closeCreateModal()
+  showSuccess('Người dùng đã được tạo thành công')
 }
 
 async function handleUserUpdated() {
-  await fetchUsers()
+  await fetchData()
   closeEditModal()
+  showSuccess('Người dùng đã được cập nhật thành công')
 }
 
 async function handlePasswordChanged() {
   closeChangePasswordModal()
+  showSuccess('Mật khẩu đã được thay đổi thành công')
 }
 
 async function handleRoleAssigned() {
-  await fetchUsers()
+  await fetchData()
   closeAssignRoleModal()
+  showSuccess('Vai trò đã được phân công thành công')
 }
 
 async function deleteUser() {
   try {
-    await apiClient.delete(endpoints.users.delete(selectedUser.value.id))
-    await fetchUsers()
+    await deleteItem(selectedUser.value.id)
     closeDeleteModal()
+    showSuccess('Người dùng đã được xóa thành công')
   } catch (error) {
-    
+    showError('Không thể xóa người dùng')
   }
 }
 
@@ -352,7 +335,7 @@ function changePage(url) {
   
   const urlObj = new URL(url)
   const page = urlObj.searchParams.get('page')
-  fetchUsers(page)
+  fetchData({ page })
 }
 
 // Helper functions

@@ -12,13 +12,14 @@
 
     <!-- Bộ lọc -->
     <RoleFilter 
-      :initial-filters="currentFilters"
+      :initial-filters="filters"
       @update:filters="handleFilterUpdate" 
     />
 
     <!-- Bảng dữ liệu -->
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200">
+      <SkeletonLoader v-if="loading" type="table" :rows="5" :columns="7" />
+      <table v-else class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
@@ -31,7 +32,7 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="role in roles" :key="role.id">
+          <tr v-for="role in items" :key="role.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ role.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ role.name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ role.display_name }}</td>
@@ -53,9 +54,9 @@
               />
             </td>
           </tr>
-          <tr v-if="roles.length === 0">
+          <tr v-if="items.length === 0">
             <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-              {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
+              Không có dữ liệu
             </td>
           </tr>
         </tbody>
@@ -117,34 +118,42 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed } from 'vue'
+import { ref, onMounted, computed, defineAsyncComponent } from 'vue'
 import { getEnumSync, getEnumLabel } from '@/constants/enums'
-import CreateRole from './create.vue'
-import EditRole from './edit.vue'
-import RoleFilter from './filter.vue'
+import { useDataTable } from '@/composables/useDataTable'
+import { useToast } from '@/composables/useToast'
+import SkeletonLoader from '@/components/Core/SkeletonLoader.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
 import endpoints from '@/api/endpoints'
-import axios from 'axios'
+
+// Lazy load components
+const CreateRole = defineAsyncComponent(() => import('./create.vue'))
+const EditRole = defineAsyncComponent(() => import('./edit.vue'))
+const RoleFilter = defineAsyncComponent(() => import('./filter.vue'))
+
+// Use composables
+const { 
+  items, 
+  loading, 
+  pagination, 
+  filters, 
+  fetchData, 
+  updateFilters, 
+  deleteItem 
+} = useDataTable(endpoints.roles.list, {
+  defaultFilters: {
+    search: '',
+    status: '',
+    sort_by: 'created_at_desc'
+  }
+})
+
+const { showSuccess, showError } = useToast()
 
 // State
-const roles = ref([])
 const selectedRole = ref(null)
-const currentFilters = ref({
-  search: '',
-  status: '',
-  sort_by: 'created_at_desc'
-})
 const statusEnums = ref([])
-const pagination = reactive({
-  current_page: 1,
-  from: 0,
-  to: 0,
-  total: 0,
-  per_page: 10,
-  links: []
-})
-const loading = ref(false)
 
 // Modal state
 const showCreateModal = ref(false)
@@ -157,38 +166,12 @@ onMounted(async () => {
   fetchEnums()
   
   // Fetch roles
-  await fetchRoles()
+  await fetchData()
 })
 
-async function fetchRoles(page = 1) {
-  loading.value = true
-  try {
-    const response = await axios.get(endpoints.roles.list, {
-      params: { 
-        page,
-        ...currentFilters.value
-      }
-    })
-    roles.value = response.data.data
-    
-    // Update pagination
-    const meta = response.data.meta
-    pagination.current_page = meta.current_page
-    pagination.from = meta.from
-    pagination.to = meta.to
-    pagination.total = meta.total
-    pagination.per_page = meta.per_page
-    pagination.links = meta.links
-  } catch (error) {
-    
-  } finally {
-    loading.value = false
-  }
-}
-
-function handleFilterUpdate(filters) {
-  currentFilters.value = filters
-  fetchRoles(1)
+function handleFilterUpdate(newFilters) {
+  updateFilters(newFilters)
+  fetchData({ page: 1 })
 }
 
 function fetchEnums() {
@@ -227,22 +210,24 @@ function closeDeleteModal() {
 
 // Action handlers
 async function handleRoleCreated() {
-  await fetchRoles()
+  await fetchData()
   closeCreateModal()
+  showSuccess('Vai trò đã được tạo thành công')
 }
 
 async function handleRoleUpdated() {
-  await fetchRoles()
+  await fetchData()
   closeEditModal()
+  showSuccess('Vai trò đã được cập nhật thành công')
 }
 
 async function deleteRole() {
   try {
-    await axios.delete(endpoints.roles.delete(selectedRole.value.id))
-    await fetchRoles()
+    await deleteItem(selectedRole.value.id)
     closeDeleteModal()
+    showSuccess('Vai trò đã được xóa thành công')
   } catch (error) {
-    
+    showError('Không thể xóa vai trò')
   }
 }
 
@@ -251,7 +236,7 @@ function changePage(url) {
   
   const urlObj = new URL(url)
   const page = urlObj.searchParams.get('page')
-  fetchRoles(page)
+  fetchData({ page })
 }
 
 // Status helper functions
@@ -268,7 +253,7 @@ function getStatusClass(status) {
 // Map id -> vai trò để tra nhanh tên vai trò cha
 const roleMap = computed(() => {
   const map = {}
-  roles.value.forEach(r => { map[r.id] = r })
+  items.value.forEach(r => { map[r.id] = r })
   return map
 })
 

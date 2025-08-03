@@ -151,11 +151,12 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import FormField from '../components/Core/FormField.vue'
 import validateForm from '../utils/validateForm'
+import { debugLogin, checkFormStructure, testFormDataPersistence, testValidationWithoutClearing, monitorFormChanges } from '../utils/debugLogin'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -184,46 +185,90 @@ const validationRules = {
   ]
 }
 
+// Debug on mount
+onMounted(() => {
+  console.log('Login component mounted')
+  debugLogin()
+  checkFormStructure(form)
+  
+  // KHÔNG chạy test functions tự động - sẽ ghi đè dữ liệu user
+  // setTimeout(() => {
+  //   testFormDataPersistence(form)
+  //   testValidationWithoutClearing(form, validationRules)
+  //   monitorFormChanges(form)
+  // }, 1000)
+})
+
 // Clear specific error
 function clearError(field) {
-  if (errors[field]) {
+  if (errors && errors[field]) {
     delete errors[field]
   }
 }
 
 // Clear all errors
 function clearAllErrors() {
-  Object.keys(errors).forEach(key => delete errors[key])
+  if (errors) {
+    Object.keys(errors).forEach(key => delete errors[key])
+  }
   generalError.value = ''
 }
 
 // Validate form
 function validate() {
+  console.log('=== VALIDATION START ===')
+  console.log('Form before validation:', { ...form })
+  
+  // KHÔNG clear form data, chỉ clear errors
   clearAllErrors()
   
-  const validationErrors = validateForm(form, validationRules)
-  if (Object.keys(validationErrors).length > 0) {
-    Object.assign(errors, validationErrors)
+  // Đảm bảo form tồn tại
+  if (!form) {
+    console.error('Form data is not initialized')
     return false
   }
   
+  const validationErrors = validateForm(form, validationRules)
+  console.log('Validation result:', validationErrors)
+  
+  if (Object.keys(validationErrors).length > 0) {
+    Object.assign(errors, validationErrors)
+    console.log('Validation failed, errors:', errors)
+    return false
+  }
+  
+  console.log('Validation passed')
   return true
 }
 
 // Handle login
 const handleLogin = async () => {
-  if (!validate()) return
+  console.log('=== LOGIN ATTEMPT START ===')
+  console.log('Form data before validation:', { ...form })
+  
+  if (!validate()) {
+    console.log('Validation failed, stopping login')
+    return
+  }
+  
+  console.log('Form data after validation:', { ...form })
   
   isSubmitting.value = true
   generalError.value = ''
-  clearAllErrors()
+  // KHÔNG clear form data ở đây
   
   try {
-    const res = await auth.login({
+    const loginData = {
       email: form.email,
       password: form.password,
       remember: form.remember
-    })
+    }
+    
+    console.log('Sending login data:', loginData)
+    
+    const res = await auth.login(loginData)
+    
+    console.log('Login response:', res)
     
     if (res.success) {
       // Redirect based on user role
@@ -241,7 +286,7 @@ const handleLogin = async () => {
       }
     }
   } catch (error) {
-    
+    console.error('Login error:', error)
     generalError.value = 'Lỗi kết nối. Vui lòng thử lại.'
   } finally {
     isSubmitting.value = false

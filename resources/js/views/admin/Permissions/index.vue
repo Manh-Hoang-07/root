@@ -12,13 +12,14 @@
 
     <!-- Bộ lọc -->
     <PermissionFilter 
-      :initial-filters="currentFilters"
+      :initial-filters="filters"
       @update:filters="handleFilterUpdate" 
     />
 
     <!-- Bảng dữ liệu -->
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200">
+      <SkeletonLoader v-if="loading" type="table" :rows="5" :columns="7" />
+      <table v-else class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
@@ -31,7 +32,7 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="permission in permissions" :key="permission.id">
+          <tr v-for="permission in items" :key="permission.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ permission.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ permission.name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ permission.display_name }}</td>
@@ -59,7 +60,7 @@
               </span>
             </td>
           </tr>
-          <tr v-if="permissions.length === 0">
+          <tr v-if="items.length === 0">
             <td colspan="7" class="px-6 py-4 text-center text-gray-500">
               Không có dữ liệu
             </td>
@@ -121,37 +122,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
-import CreatePermission from './create.vue'
-import EditPermission from './edit.vue'
-import PermissionFilter from './filter.vue'
+import { ref, onMounted, defineAsyncComponent } from 'vue'
+import { useDataTable } from '@/composables/useDataTable'
+import { useToast } from '@/composables/useToast'
+import SkeletonLoader from '@/components/Core/SkeletonLoader.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
 import { getEnumLabel } from '@/constants/enums'
 import endpoints from '@/api/endpoints'
-import axios from 'axios'
+
+// Lazy load components
+const CreatePermission = defineAsyncComponent(() => import('./create.vue'))
+const EditPermission = defineAsyncComponent(() => import('./edit.vue'))
+const PermissionFilter = defineAsyncComponent(() => import('./filter.vue'))
+
+// Use composables
+const { 
+  items, 
+  loading, 
+  pagination, 
+  filters, 
+  fetchData, 
+  updateFilters, 
+  deleteItem 
+} = useDataTable(endpoints.permissions.list, {
+  defaultFilters: {
+    search: '',
+    status: '',
+    sort_by: 'created_at_desc'
+  }
+})
+
+const { showSuccess, showError } = useToast()
 
 // State
-const permissions = ref([])
 const selectedPermission = ref(null)
-const loading = ref(false)
-
-// Filter state
-const currentFilters = ref({
-  search: '',
-  status: '',
-  sort_by: 'created_at_desc'
-})
-
-// Pagination state
-const pagination = reactive({
-  current_page: 1,
-  from: 0,
-  to: 0,
-  total: 0,
-  per_page: 20,
-  links: []
-})
 
 // Modal state
 const showCreateModal = ref(false)
@@ -160,40 +165,13 @@ const showDeleteModal = ref(false)
 
 // Fetch data
 onMounted(async () => {
-  await fetchPermissions()
+  await fetchData()
 })
 
-async function fetchPermissions(page = 1) {
-  loading.value = true
-  try {
-    const response = await axios.get(endpoints.permissions.list, {
-      params: { 
-        page,
-        ...currentFilters.value
-      }
-    })
-    permissions.value = response.data.data
-    // Update pagination
-    const meta = response.data.meta
-    if (meta) {
-      pagination.current_page = meta.current_page
-      pagination.from = meta.from
-      pagination.to = meta.to
-      pagination.total = meta.total
-      pagination.per_page = meta.per_page
-      pagination.links = meta.links
-    }
-  } catch (error) {
-    
-  } finally {
-    loading.value = false
-  }
-}
-
 // Filter handlers
-function handleFilterUpdate(filters) {
-  currentFilters.value = filters
-  fetchPermissions(1)
+function handleFilterUpdate(newFilters) {
+  updateFilters(newFilters)
+  fetchData({ page: 1 })
 }
 
 // Modal handlers
@@ -227,22 +205,24 @@ function closeDeleteModal() {
 
 // Action handlers
 async function handlePermissionCreated() {
-  await fetchPermissions()
+  await fetchData()
   closeCreateModal()
+  showSuccess('Quyền đã được tạo thành công')
 }
 
 async function handlePermissionUpdated() {
-  await fetchPermissions()
+  await fetchData()
   closeEditModal()
+  showSuccess('Quyền đã được cập nhật thành công')
 }
 
 async function deletePermission() {
   try {
-    await axios.delete(endpoints.permissions.delete(selectedPermission.value.id))
-    await fetchPermissions()
+    await deleteItem(selectedPermission.value.id)
     closeDeleteModal()
+    showSuccess('Quyền đã được xóa thành công')
   } catch (error) {
-    
+    showError('Không thể xóa quyền')
   }
 }
 
@@ -250,7 +230,7 @@ function changePage(url) {
   if (!url) return
   const urlObj = new URL(url)
   const page = urlObj.searchParams.get('page')
-  fetchPermissions(page)
+  fetchData({ page })
 }
 
 // Status helper functions

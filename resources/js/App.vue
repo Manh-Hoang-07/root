@@ -110,6 +110,12 @@
     <template v-else>
       <router-view />
     </template>
+    
+    <!-- Toast Container -->
+    <ToastContainer />
+    
+    <!-- Auth Debug Component (chỉ hiển thị trong development) -->
+    <AuthDebug v-if="isDevelopment" />
   </div>
 </template>
 
@@ -118,12 +124,17 @@ import { computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from './stores/auth.js';
 import { useAuthInit } from './composables/useAuthInit.js';
+import ToastContainer from './components/Core/ToastContainer.vue';
+import AuthDebug from './components/Core/AuthDebug.vue';
 
 const router = useRouter();
 const route = useRoute();
 
 // Initialize auth store
 const { authStore } = useAuthInit();
+
+// Development mode check
+const isDevelopment = computed(() => process.env.NODE_ENV === 'development');
 
 // Computed
 const isAuthenticated = computed(() => authStore.isAuthenticated);

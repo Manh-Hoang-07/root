@@ -12,7 +12,7 @@
       :name="name"
       :type="type"
       :value="modelValue"
-      @input="updateValue($event.target.value)"
+      @input="updateValue"
       :placeholder="placeholder"
       :disabled="disabled"
       :maxlength="maxlength"
@@ -33,7 +33,7 @@
       :id="fieldId"
       :name="name"
       :value="modelValue"
-      @input="updateValue($event.target.value)"
+      @input="updateValue"
       :placeholder="placeholder"
       :disabled="disabled"
       :maxlength="maxlength"
@@ -228,6 +228,16 @@ const fieldId = computed(() => {
 
 // Update value and emit event
 function updateValue(event) {
+  console.log('FormField updateValue called with:', event)
+  
+  // Đảm bảo event tồn tại
+  if (!event) {
+    console.warn('FormField: No event provided')
+    return
+  }
+
+  let newValue
+  
   if (props.multiple && props.type === 'select') {
     // For multiple select, we need to handle the selected options
     const select = event.target
@@ -237,9 +247,20 @@ function updateValue(event) {
         selectedValues.push(select.options[i].value)
       }
     }
-    emit('update:modelValue', selectedValues)
+    newValue = selectedValues
+  } else if (props.type === 'checkbox') {
+    // Checkbox returns boolean
+    newValue = event.target.checked
+  } else if (props.type === 'radio') {
+    // Radio returns the value directly
+    newValue = event
   } else {
-    emit('update:modelValue', event.target.value)
+    // Input, textarea, select return value from target
+    newValue = event.target && event.target.value !== undefined ? event.target.value : ''
   }
+  
+  console.log(`FormField updateValue: field="${props.name}", type="${props.type}", newValue="${newValue}"`)
+  
+  emit('update:modelValue', newValue)
 }
 </script> 

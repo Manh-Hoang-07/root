@@ -6,11 +6,25 @@ const api = axios.create({
   // Thêm interceptor nếu cần
 })
 
+// Helper function để lấy token từ cookie
+function getTokenFromCookie() {
+  const cookies = document.cookie.split(';');
+  
+  for (let cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'auth_token') {
+      const token = decodeURIComponent(value);
+      return token;
+    }
+  }
+  return null;
+}
+
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Tự động thêm token vào header nếu có
-    const token = localStorage.getItem('auth_token')
+    // Tự động thêm token vào header nếu có trong cookie
+    const token = getTokenFromCookie()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -38,6 +52,7 @@ api.interceptors.response.use(
     // Xử lý lỗi authentication
     if (error.response?.status === 401 || error.response?.status === 403) {
       // Không cần xóa localStorage nữa, chỉ log
+      console.warn('Authentication error detected:', error.response?.data)
     }
     
     return Promise.reject(error)

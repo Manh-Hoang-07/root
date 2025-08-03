@@ -18,7 +18,8 @@
 
     <!-- Bảng dữ liệu -->
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200">
+      <SkeletonLoader v-if="loading" type="table" :rows="5" :columns="4" />
+      <table v-else class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
@@ -28,7 +29,7 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="brand in brands" :key="brand.id">
+          <tr v-for="brand in items" :key="brand.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ brand.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ brand.name }}</td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -47,9 +48,9 @@
               />
             </td>
           </tr>
-          <tr v-if="brands.length === 0">
+          <tr v-if="items.length === 0">
             <td colspan="4" class="px-6 py-4 text-center text-gray-500">
-              {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
+              Không có dữ liệu
             </td>
           </tr>
         </tbody>
@@ -57,7 +58,7 @@
     </div>
 
     <!-- Phân trang -->
-    <div v-if="brands.length > 0" class="mt-4 flex justify-between items-center">
+    <div v-if="items.length > 0" class="mt-4 flex justify-between items-center">
       <div class="text-sm text-gray-700">
         Hiển thị {{ pagination.from || 0 }} đến {{ pagination.to || 0 }} trên tổng số {{ pagination.total || 0 }} bản ghi
       </div>
@@ -109,33 +110,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
-import CreateBrand from './create.vue'
-import EditBrand from './edit.vue'
-import BrandFilter from './filter.vue'
+import { ref, onMounted, defineAsyncComponent } from 'vue'
+import { useDataTable } from '@/composables/useDataTable'
+import { useToast } from '@/composables/useToast'
+import SkeletonLoader from '@/components/Core/SkeletonLoader.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
 import { getEnumLabel } from '@/constants/enums'
 import endpoints from '@/api/endpoints'
-import axios from 'axios'
+
+// Lazy load components
+const CreateBrand = defineAsyncComponent(() => import('./create.vue'))
+const EditBrand = defineAsyncComponent(() => import('./edit.vue'))
+const BrandFilter = defineAsyncComponent(() => import('./filter.vue'))
+
+// Use composables
+const { 
+  items, 
+  loading, 
+  pagination, 
+  filters, 
+  fetchData, 
+  updateFilters, 
+  deleteItem 
+} = useDataTable(endpoints.brands.list, {
+  defaultFilters: {
+    search: '',
+    status: '',
+    sort_by: 'created_at_desc'
+  }
+})
+
+const { showSuccess, showError } = useToast()
 
 // State
-const brands = ref([])
 const selectedBrand = ref(null)
-const pagination = reactive({
-  current_page: 1,
-  from: 0,
-  to: 0,
-  total: 0,
-  per_page: 10,
-  links: []
-})
-const filters = reactive({
-  search: '',
-  status: '',
-  sort_by: 'created_at_desc'
-})
-const loading = ref(false)
 
 // Modal state
 const showCreateModal = ref(false)
@@ -144,43 +153,13 @@ const showDeleteModal = ref(false)
 
 // Fetch data
 onMounted(async () => {
-  await fetchBrands()
+  await fetchData()
 })
-
-async function fetchBrands(page = 1) {
-  loading.value = true
-  try {
-    const response = await axios.get(endpoints.brands.list, {
-      params: { 
-        page,
-        search: filters.search,
-        status: filters.status,
-        sort_by: filters.sort_by
-      }
-    })
-    brands.value = response.data.data
-    
-    // Update pagination
-    const meta = response.data.meta
-    if (meta) {
-      pagination.current_page = meta.current_page
-      pagination.from = meta.from
-      pagination.to = meta.to
-      pagination.total = meta.total
-      pagination.per_page = meta.per_page
-      pagination.links = meta.links
-    }
-  } catch (error) {
-    
-  } finally {
-    loading.value = false
-  }
-}
 
 // Filter handlers
 function handleFilterChange(newFilters) {
-  Object.assign(filters, newFilters)
-  fetchBrands(1)
+  updateFilters(newFilters)
+  fetchData({ page: 1 })
 }
 
 // Modal handlers
@@ -214,22 +193,24 @@ function closeDeleteModal() {
 
 // Action handlers
 async function handleBrandCreated() {
-  await fetchBrands()
+  await fetchData()
   closeCreateModal()
+  showSuccess('Thương hiệu đã được tạo thành công')
 }
 
 async function handleBrandUpdated() {
-  await fetchBrands()
+  await fetchData()
   closeEditModal()
+  showSuccess('Thương hiệu đã được cập nhật thành công')
 }
 
 async function deleteBrand() {
   try {
-    await axios.delete(endpoints.brands.delete(selectedBrand.value.id))
-    await fetchBrands()
+    await deleteItem(selectedBrand.value.id)
     closeDeleteModal()
+    showSuccess('Thương hiệu đã được xóa thành công')
   } catch (error) {
-    
+    showError('Không thể xóa thương hiệu')
   }
 }
 
@@ -238,7 +219,7 @@ function changePage(url) {
   
   const urlObj = new URL(url)
   const page = urlObj.searchParams.get('page')
-  fetchBrands(page)
+  fetchData({ page })
 }
 
 // Helper functions

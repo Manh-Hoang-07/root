@@ -2,7 +2,21 @@ export default function validateForm(form, rules) {
   const newErrors = {}
 
   for (const field in rules) {
-    const value = (form[field] ?? '').toString().trim()
+    // Đảm bảo form[field] không undefined và convert sang string an toàn
+    const fieldValue = form && form[field] !== undefined && form[field] !== null ? form[field] : ''
+    
+    // Xử lý khác nhau cho từng loại field
+    let value
+    if (field === 'password') {
+      // Password không nên trim
+      value = fieldValue.toString()
+    } else {
+      // Các field khác có thể trim
+      value = fieldValue.toString().trim()
+    }
+    
+    console.log(`Validating field: ${field}, value: "${value}", original: "${fieldValue}"`)
+    
     for (const ruleObj of rules[field]) {
       if (typeof ruleObj === 'string') {
         // Dạng ngắn, không custom message
@@ -35,7 +49,9 @@ export default function validateForm(form, rules) {
           }
           if (rule === 'match' && value) {
             const [otherField, matchMsg] = Array.isArray(msg) ? msg : [msg, 'Giá trị xác nhận không khớp.']
-            if (value !== (form[otherField] ?? '').toString().trim()) {
+            const otherValue = form && form[otherField] !== undefined && form[otherField] !== null ? form[otherField] : ''
+            const otherValueStr = otherField === 'password' ? otherValue.toString() : otherValue.toString().trim()
+            if (value !== otherValueStr) {
               newErrors[field] = matchMsg
               break
             }
@@ -54,5 +70,6 @@ export default function validateForm(form, rules) {
     // if (newErrors[field]) break // chỉ báo lỗi đầu tiên (xoá dòng này để báo tất cả lỗi)
   }
 
+  console.log('Validation errors:', newErrors)
   return newErrors
 } 

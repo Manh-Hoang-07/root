@@ -18,22 +18,21 @@
 
     <!-- Bảng dữ liệu -->
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200">
+      <SkeletonLoader v-if="loading" type="table" :rows="5" :columns="5" />
+      <table v-else class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên danh mục</th>
-    
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Danh mục cha</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="category in categories" :key="category.id">
+          <tr v-for="category in items" :key="category.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ category.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ category.name }}</td>
-            
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ category.parent_name || 'Danh mục gốc' }}</td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span 
@@ -51,17 +50,17 @@
               />
             </td>
           </tr>
-          <tr v-if="categories.length === 0">
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-          {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
-        </td>
+          <tr v-if="items.length === 0">
+            <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+              Không có dữ liệu
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- Phân trang -->
-    <div v-if="categories.length > 0" class="mt-4 flex justify-between items-center">
+    <div v-if="items.length > 0" class="mt-4 flex justify-between items-center">
       <div class="text-sm text-gray-700">
         Hiển thị {{ pagination.from || 0 }} đến {{ pagination.to || 0 }} trên tổng số {{ pagination.total || 0 }} bản ghi
       </div>
@@ -113,34 +112,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
-import CreateCategory from './create.vue'
-import EditCategory from './edit.vue'
-import CategoryFilter from './filter.vue'
+import { ref, onMounted, defineAsyncComponent } from 'vue'
+import { useDataTable } from '@/composables/useDataTable'
+import { useToast } from '@/composables/useToast'
+import SkeletonLoader from '@/components/Core/SkeletonLoader.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
 import { getEnumLabel } from '@/constants/enums'
-
 import endpoints from '@/api/endpoints'
-import axios from 'axios'
+
+// Lazy load components
+const CreateCategory = defineAsyncComponent(() => import('./create.vue'))
+const EditCategory = defineAsyncComponent(() => import('./edit.vue'))
+const CategoryFilter = defineAsyncComponent(() => import('./filter.vue'))
+
+// Use composables
+const { 
+  items, 
+  loading, 
+  pagination, 
+  filters, 
+  fetchData, 
+  updateFilters, 
+  deleteItem 
+} = useDataTable(endpoints.categories.list, {
+  defaultFilters: {
+    search: '',
+    status: '',
+    sort_by: 'created_at_desc'
+  }
+})
+
+const { showSuccess, showError } = useToast()
 
 // State
-const categories = ref([])
 const selectedCategory = ref(null)
-const pagination = reactive({
-  current_page: 1,
-  from: 0,
-  to: 0,
-  total: 0,
-  per_page: 10,
-  links: []
-})
-const filters = reactive({
-  search: '',
-  status: '',
-  sort_by: 'created_at_desc'
-})
-const loading = ref(false)
 
 // Modal state
 const showCreateModal = ref(false)
@@ -149,42 +155,13 @@ const showDeleteModal = ref(false)
 
 // Fetch data
 onMounted(async () => {
-  await fetchCategories()
+  await fetchData()
 })
-
-async function fetchCategories(page = 1) {
-  loading.value = true
-  try {
-    const response = await axios.get(endpoints.categories.list, {
-      params: { 
-        page,
-        search: filters.search,
-        status: filters.status,
-        sort_by: filters.sort_by
-      }
-    })
-    categories.value = response.data.data
-    // Update pagination
-    const meta = response.data.meta
-    if (meta) {
-      pagination.current_page = meta.current_page
-      pagination.from = meta.from
-      pagination.to = meta.to
-      pagination.total = meta.total
-      pagination.per_page = meta.per_page
-      pagination.links = meta.links
-    }
-  } catch (error) {
-    
-  } finally {
-    loading.value = false
-  }
-}
 
 // Filter handlers
 function handleFilterChange(newFilters) {
-  Object.assign(filters, newFilters)
-  fetchCategories(1)
+  updateFilters(newFilters)
+  fetchData({ page: 1 })
 }
 
 // Modal handlers
@@ -218,22 +195,24 @@ function closeDeleteModal() {
 
 // Action handlers
 async function handleCategoryCreated() {
-  await fetchCategories()
+  await fetchData()
   closeCreateModal()
+  showSuccess('Danh mục đã được tạo thành công')
 }
 
 async function handleCategoryUpdated() {
-  await fetchCategories()
+  await fetchData()
   closeEditModal()
+  showSuccess('Danh mục đã được cập nhật thành công')
 }
 
 async function deleteCategory() {
   try {
-    await axios.delete(endpoints.categories.delete(selectedCategory.value.id))
-    await fetchCategories()
+    await deleteItem(selectedCategory.value.id)
     closeDeleteModal()
+    showSuccess('Danh mục đã được xóa thành công')
   } catch (error) {
-    
+    showError('Không thể xóa danh mục')
   }
 }
 
@@ -241,7 +220,7 @@ function changePage(url) {
   if (!url) return
   const urlObj = new URL(url)
   const page = urlObj.searchParams.get('page')
-  fetchCategories(page)
+  fetchData({ page })
 }
 
 // Helper functions
@@ -262,10 +241,7 @@ function getStatusClass(status) {
   if (status === 'inactive') return 'bg-red-100 text-red-800'
   return 'bg-gray-100 text-gray-800'
 }
-
-
 </script>
 
 <style scoped>
-
 </style> 

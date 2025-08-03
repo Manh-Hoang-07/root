@@ -18,7 +18,8 @@
 
     <!-- Bảng dữ liệu -->
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200">
+      <SkeletonLoader v-if="loading" type="table" :rows="5" :columns="10" />
+      <table v-else class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
@@ -34,7 +35,7 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="warehouse in warehouses" :key="warehouse.id">
+          <tr v-for="warehouse in items" :key="warehouse.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ warehouse.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ warehouse.name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ warehouse.address }}</td>
@@ -59,9 +60,9 @@
               />
             </td>
           </tr>
-          <tr v-if="warehouses.length === 0">
+          <tr v-if="items.length === 0">
             <td colspan="10" class="px-6 py-4 text-center text-gray-500">
-              {{ loading ? 'Đang tải dữ liệu...' : 'Không có dữ liệu' }}
+              Không có dữ liệu
             </td>
           </tr>
         </tbody>
@@ -69,7 +70,7 @@
     </div>
 
     <!-- Phân trang -->
-    <div v-if="warehouses.length > 0" class="mt-4 flex justify-between items-center">
+    <div v-if="items.length > 0" class="mt-4 flex justify-between items-center">
       <div class="text-sm text-gray-700">
         Hiển thị {{ pagination.from || 0 }} đến {{ pagination.to || 0 }} trên tổng số {{ pagination.total || 0 }} bản ghi
       </div>
@@ -121,34 +122,42 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
-import CreateWarehouse from './create.vue'
-import EditWarehouse from './edit.vue'
-import WarehouseFilter from './filter.vue'
+import { ref, onMounted, defineAsyncComponent } from 'vue'
+import { useDataTable } from '@/composables/useDataTable'
+import { useToast } from '@/composables/useToast'
+import SkeletonLoader from '@/components/Core/SkeletonLoader.vue'
 import ConfirmModal from '@/components/Core/ConfirmModal.vue'
 import Actions from '@/components/Core/Actions.vue'
 import { getEnumLabel } from '@/constants/enums'
 import endpoints from '@/api/endpoints'
-import axios from 'axios'
 import { formatDate } from '@/utils/formatDate'
 
+// Lazy load components
+const CreateWarehouse = defineAsyncComponent(() => import('./create.vue'))
+const EditWarehouse = defineAsyncComponent(() => import('./edit.vue'))
+const WarehouseFilter = defineAsyncComponent(() => import('./filter.vue'))
+
+// Use composables
+const { 
+  items, 
+  loading, 
+  pagination, 
+  filters, 
+  fetchData, 
+  updateFilters, 
+  deleteItem 
+} = useDataTable(endpoints.warehouses.list, {
+  defaultFilters: {
+    search: '',
+    status: '',
+    sort_by: 'created_at_desc'
+  }
+})
+
+const { showSuccess, showError } = useToast()
+
 // State
-const warehouses = ref([])
 const selectedWarehouse = ref(null)
-const pagination = reactive({
-  current_page: 1,
-  from: 0,
-  to: 0,
-  total: 0,
-  per_page: 10,
-  links: []
-})
-const filters = reactive({
-  search: '',
-  status: '',
-  sort_by: 'created_at_desc'
-})
-const loading = ref(false)
 
 // Modal state
 const showCreateModal = ref(false)
@@ -157,90 +166,72 @@ const showDeleteModal = ref(false)
 
 // Fetch data
 onMounted(async () => {
-  await fetchWarehouses()
+  await fetchData()
 })
-
-async function fetchWarehouses(page = 1) {
-  loading.value = true
-  try {
-    const response = await axios.get(endpoints.warehouses.list, {
-      params: { 
-        page,
-        search: filters.search,
-        status: filters.status,
-        sort_by: filters.sort_by
-      }
-    })
-    warehouses.value = response.data.data
-    // Update pagination
-    const meta = response.data.meta
-    if (meta) {
-      pagination.current_page = meta.current_page
-      pagination.from = meta.from
-      pagination.to = meta.to
-      pagination.total = meta.total
-      pagination.per_page = meta.per_page
-      pagination.links = meta.links
-    }
-  } catch (error) {
-    
-  } finally {
-    loading.value = false
-  }
-}
 
 // Filter handlers
 function handleFilterChange(newFilters) {
-  Object.assign(filters, newFilters)
-  fetchWarehouses(1)
+  updateFilters(newFilters)
+  fetchData({ page: 1 })
 }
 
 // Modal handlers
 function openCreateModal() {
   showCreateModal.value = true
 }
+
 function closeCreateModal() {
   showCreateModal.value = false
 }
+
 function openEditModal(warehouse) {
   selectedWarehouse.value = warehouse
   showEditModal.value = true
 }
+
 function closeEditModal() {
   showEditModal.value = false
   selectedWarehouse.value = null
 }
+
 function confirmDelete(warehouse) {
   selectedWarehouse.value = warehouse
   showDeleteModal.value = true
 }
+
 function closeDeleteModal() {
   showDeleteModal.value = false
   selectedWarehouse.value = null
 }
+
 // Action handlers
 async function handleWarehouseCreated() {
-  await fetchWarehouses()
+  await fetchData()
   closeCreateModal()
+  showSuccess('Kho hàng đã được tạo thành công')
 }
+
 async function handleWarehouseUpdated() {
-  await fetchWarehouses()
+  await fetchData()
   closeEditModal()
+  showSuccess('Kho hàng đã được cập nhật thành công')
 }
+
 async function deleteWarehouse() {
   try {
-    await axios.delete(endpoints.warehouses.delete(selectedWarehouse.value.id))
-    await fetchWarehouses()
+    await deleteItem(selectedWarehouse.value.id)
     closeDeleteModal()
+    showSuccess('Kho hàng đã được xóa thành công')
   } catch (error) {
-    
+    showError('Không thể xóa kho hàng')
   }
 }
+
 function changePage(url) {
   if (!url) return
   const urlObj = new URL(url)
   const page = urlObj.searchParams.get('page')
-  fetchWarehouses(page)
+  fetchData({ page })
 }
 
 // Status helper functions
