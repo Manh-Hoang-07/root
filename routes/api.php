@@ -18,6 +18,15 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\User\User\UserController as ApiUserController;
 use App\Http\Controllers\Api\Admin\Inventory\InventoryController;
 
+// CORS preflight route
+Route::options('{any}', function () {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-XSRF-TOKEN')
+        ->header('Access-Control-Allow-Credentials', 'true');
+})->where('any', '.*');
+
 // Public routes - không cần authentication
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);

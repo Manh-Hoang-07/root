@@ -12,11 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-                    $middleware->alias([
-                'auth.sanctum' => \App\Http\Middleware\Api\Authenticate::class,
-                'role' => \App\Http\Middleware\Api\RoleMiddleware::class,
-                'auto.auth' => \App\Http\Middleware\Api\AutoAuthMiddleware::class,
-            ]);
+        $middleware->alias([
+            'auth.sanctum' => \App\Http\Middleware\Api\Authenticate::class,
+            'role' => \App\Http\Middleware\Api\RoleMiddleware::class,
+            'auto.auth' => \App\Http\Middleware\Api\AutoAuthMiddleware::class,
+            'cors' => \App\Http\Middleware\CorsMiddleware::class,
+        ]);
+        
+        // Sử dụng middleware CORS tùy chỉnh
+        $middleware->prepend(\App\Http\Middleware\CorsMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
