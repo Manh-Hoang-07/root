@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('categories', function (Blueprint $table) {
-            // Thay đổi từ text thành longtext để hỗ trợ nội dung dài hơn từ CKEditor Ultimate
+            // Thay đổi từ text thành longtext để hỗ trợ nội dung dài hơn
             $table->longText('description')->nullable()->change();
         });
     }
