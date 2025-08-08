@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Traits\ResponseTrait;
 use App\Traits\LoggingTrait;
-use App\Libraries\CacheManager;
+use App\Libraries\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -71,8 +71,8 @@ abstract class BaseController extends Controller
     /** @var int Default search limit */
     protected static $defaultSearchLimit = 10;
     
-    /** @var CacheManager Cache manager instance */
-    protected $cacheManager;
+    /** @var CacheService Cache service instance */
+    protected $cacheService;
 
     /**
      * Constructor
@@ -85,8 +85,8 @@ abstract class BaseController extends Controller
         $this->service = $service;
         $this->resource = $resource;
         
-        // Initialize cache manager
-        $this->cacheManager = new CacheManager(
+        // Initialize cache service
+        $this->cacheService = new CacheService(
             $this->enableCaching ?? false,
             $this->cacheTtl ?? 300,
             'api'
@@ -214,9 +214,9 @@ abstract class BaseController extends Controller
     protected function getOptimizedData(array $filters, int $limit, string $context = 'index', bool $single = false)
     {
         // Check caching
-        if ($this->cacheManager->shouldCache()) {
-            $cacheKey = $this->cacheManager->generateKey($filters, $limit, $context, $single, static::class);
-            $cachedData = $this->cacheManager->get($cacheKey);
+        if ($this->cacheService->shouldCache()) {
+            $cacheKey = $this->cacheService->generateKey($filters, $limit, $context, $single, static::class);
+            $cachedData = $this->cacheService->get($cacheKey);
             if ($cachedData !== null) {
                 return $cachedData;
             }
@@ -248,8 +248,8 @@ abstract class BaseController extends Controller
         }
 
         // Cache the response if enabled
-        if ($this->cacheManager->shouldCache()) {
-            $this->cacheManager->put($cacheKey, $data);
+        if ($this->cacheService->shouldCache()) {
+            $this->cacheService->put($cacheKey, $data);
         }
 
         return $data;

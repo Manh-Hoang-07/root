@@ -5,14 +5,14 @@ namespace App\Libraries;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Cache Manager Library
+ * Cache Service Library
  * 
  * Provides flexible caching functionality that can be used anywhere
  * without requiring traits or inheritance.
  * 
  * @package App\Libraries
  */
-class CacheManager
+class CacheService
 {
     /** @var bool Enable caching for responses */
     private bool $enableCaching;
