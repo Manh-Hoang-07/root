@@ -411,7 +411,7 @@ abstract class BaseController extends Controller
             
             $results = $this->service->list($filters, $limit, $relations, $fields);
             
-            return $this->successResponse($results);
+            return $this->formatResponse($results);
         } catch (Exception $e) {
             $this->logError('Search', $e);
             
