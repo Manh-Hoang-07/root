@@ -4,8 +4,8 @@
 
 Hệ thống cung cấp 2 cách để tạo API responses:
 
-1. **ResponseTrait** - Sử dụng trong controllers
-2. **ApiResponse Helper** - Sử dụng ở bất kỳ đâu
+1. **ResponseTrait** - Sử dụng trong controllers (nằm trong `app/Traits/`)
+2. **ApiResponse Helper** - Sử dụng ở bất kỳ đâu (nằm trong `app/Helpers/`)
 
 ## 1. ResponseTrait
 
@@ -17,7 +17,7 @@ Hệ thống cung cấp 2 cách để tạo API responses:
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Http\Controllers\Api\ResponseTrait;
+use App\Traits\ResponseTrait;
 
 class ExampleController extends BaseController
 {
@@ -237,7 +237,23 @@ Tất cả responses đều có format chuẩn:
 5. **Validation errors** nên có chi tiết lỗi
 6. **Paginated data** sử dụng `ApiResponse::paginated()`
 
-## 6. Ví dụ thực tế
+## 6. File Structure
+
+```
+app/
+├── Traits/
+│   └── ResponseTrait.php          # Trait cho response methods
+├── Helpers/
+│   └── ApiResponse.php            # Helper class cho API responses
+└── Http/
+    └── Controllers/
+        └── Api/
+            ├── BaseController.php  # Base controller với ResponseTrait
+            └── Auth/
+                └── AuthController.php
+```
+
+## 7. Ví dụ thực tế
 
 ```php
 // Controller với ResponseTrait

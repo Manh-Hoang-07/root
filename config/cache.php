@@ -49,15 +49,16 @@ return [
 
         'database' => [
             'driver' => 'database',
-            'table' => 'cache',
-            'connection' => null,
-            'lock_connection' => null,
+            'connection' => env('DB_CACHE_CONNECTION'),
+            'table' => env('DB_CACHE_TABLE', 'cache'),
+            'lock_connection' => env('DB_CACHE_LOCK_CONNECTION'),
+            'lock_table' => env('DB_CACHE_LOCK_TABLE'),
         ],
 
-        'redis' => [
-            'driver' => 'redis',
-            'connection' => 'cache',
-            'lock_connection' => 'default',
+        'file' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/data'),
+            'lock_path' => storage_path('framework/cache/data'),
         ],
 
         'memcached' => [
@@ -77,6 +78,12 @@ return [
                     'weight' => 100,
                 ],
             ],
+        ],
+
+        'redis' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
+            'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'default'),
         ],
 
         'dynamodb' => [
@@ -99,8 +106,8 @@ return [
     | Cache Key Prefix
     |--------------------------------------------------------------------------
     |
-    | When utilizing the APC, database, memcached, Redis, or DynamoDB cache
-    | stores there might be other applications using the same cache. For
+    | When utilizing the APC, database, memcached, Redis, and DynamoDB cache
+    | stores, there might be other applications using the same cache. For
     | that reason, you may prefix every cache key to avoid collisions.
     |
     */

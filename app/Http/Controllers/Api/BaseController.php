@@ -3,33 +3,75 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Traits\ResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Exception;
 
+/**
+ * Abstract Base Controller for API endpoints
+ * 
+ * Provides common CRUD operations with optimized data loading,
+ * flexible relations handling, and standardized response formatting.
+ * 
+ * @package App\Http\Controllers\Api
+ */
 abstract class BaseController extends Controller
 {
     use ResponseTrait;
 
+    /** @var mixed Service instance for business logic */
     protected $service;
+    
+    /** @var string Resource class for single item responses */
     protected $resource;
+    
+    /** @var string Resource class for collection responses */
     protected $listResource;
+    
+    /** @var string Request class for store operations */
     protected $storeRequestClass = Request::class;
+    
+    /** @var string Request class for update operations */
     protected $updateRequestClass = Request::class;
     
-    // Context-specific relations - tối ưu mặc định
+    /** @var array Default relations to load for index operations */
     protected $indexRelations = [];
+    
+    /** @var array Default relations to load for show operations */
     protected $showRelations = [];
     
-    // Pagination defaults
+    /** @var int Default number of items per page */
     protected $defaultPerPage = 20;
+    
+    /** @var int Maximum number of items per page */
     protected $maxPerPage = 100;
     
-    // Response format
-    protected $responseFormat = 'json'; // json, resource, collection
+    /** @var string Response format type */
+    protected $responseFormat = 'json';
+    
+    /** @var bool Enable caching for responses */
+    protected $enableCaching = false;
+    
+    /** @var int Cache TTL in seconds */
+    protected $cacheTtl = 300; // 5 minutes
+    
+    /** @var bool Enable rate limiting */
+    protected $enableRateLimiting = false;
+    
+    /** @var int Rate limit attempts per minute */
+    protected $rateLimitAttempts = 60;
 
-    public function __construct($service, $resource)
+    /**
+     * Constructor
+     * 
+     * @param mixed $service Service instance
+     * @param string $resource Resource class name
+     */
+    public function __construct($service, string $resource)
     {
         $this->service = $service;
         $this->resource = $resource;
@@ -47,107 +89,292 @@ abstract class BaseController extends Controller
         }
     }
 
-    protected function getStoreRequestClass()
+    /**
+     * Get the store request class
+     * 
+     * @return string
+     */
+    protected function getStoreRequestClass(): string
     {
         return $this->storeRequestClass;
     }
 
-    protected function getUpdateRequestClass()
+    /**
+     * Get the update request class
+     * 
+     * @return string
+     */
+    protected function getUpdateRequestClass(): string
     {
         return $this->updateRequestClass;
     }
 
+    /**
+     * Display a listing of the resource
+     * 
+     * @param Request $request
+     * @return JsonResponse|JsonResource
+     */
     public function index(Request $request)
     {
-        return $this->getIndexData($request);
+        try {
+            // Check rate limiting
+            if ($this->enableRateLimiting && !$this->checkRateLimit($request)) {
+                return $this->errorResponse('Quá nhiều yêu cầu. Vui lòng thử lại sau.', 429);
+            }
+            
+            return $this->getIndexData($request);
+        } catch (Exception $e) {
+            Log::error('Index operation failed', [
+                'controller' => static::class,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse('Không thể tải danh sách dữ liệu');
+        }
     }
     
+    /**
+     * Get index data with optimized loading
+     * 
+     * @param Request $request
+     * @return JsonResponse|JsonResource
+     */
     protected function getIndexData(Request $request)
     {
-        // Parse relations từ request
-        $requestRelations = $this->parseRelations($request->get('relations'));
-        
-        // Sử dụng indexRelations nếu không có relations được yêu cầu
-        $relations = !empty($requestRelations) ? $requestRelations : $this->indexRelations;
-        
-        $fields = $this->parseFields($request->get('fields'));
+        $filters = $request->all();
         $perPage = min($request->get('per_page', $this->defaultPerPage), $this->maxPerPage);
         
-        // Tối ưu: Chỉ load fields cần thiết cho list view
-        if (empty($fields) || $fields === ['*']) {
-            $fields = $this->getDefaultListFields();
-        }
-        
-        $data = $this->service->list($request->all(), $perPage, $relations, $fields);
+        $data = $this->getOptimizedData($filters, $perPage, 'index');
         
         return $this->formatResponse($data);
     }
 
+    /**
+     * Display the specified resource
+     * 
+     * @param int|string $id
+     * @param Request|null $request
+     * @return JsonResponse|JsonResource
+     */
     public function show($id, Request $request = null)
     {
-        return $this->getShowData($id, $request);
+        try {
+            return $this->getShowData($id, $request);
+        } catch (Exception $e) {
+            Log::error('Show operation failed', [
+                'controller' => static::class,
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse('Không thể tải thông tin chi tiết');
+        }
     }
     
+    /**
+     * Get show data with optimized loading
+     * 
+     * @param int|string $id
+     * @param Request|null $request
+     * @return JsonResponse|JsonResource
+     */
     protected function getShowData($id, Request $request = null)
     {
-        // Parse relations từ request
-        $requestRelations = $request ? $this->parseRelations($request->get('relations')) : [];
+        $filters = $request ? $request->all() : [];
+        $filters['id'] = $id;
         
-        // Sử dụng showRelations nếu không có relations được yêu cầu
-        $relations = !empty($requestRelations) ? $requestRelations : $this->showRelations;
+        $item = $this->getOptimizedData($filters, 1, 'show', true);
         
-        $fields = $request ? $this->parseFields($request->get('fields')) : ['*'];
-        $item = $this->service->find($id, $relations, $fields);
+        if (!$item) {
+            return $this->errorResponse('Không tìm thấy dữ liệu', 404);
+        }
         
         return $this->formatResponse($item, 'single');
     }
 
-    public function store()
+    /**
+     * Get optimized data with common logic
+     * 
+     * @param array $filters
+     * @param int $limit
+     * @param string $context
+     * @param bool $single
+     * @return mixed
+     */
+    protected function getOptimizedData(array $filters, int $limit, string $context = 'index', bool $single = false)
     {
-        $request = app($this->getStoreRequestClass());
-        $data = $this->service->create($request->validated());
+        // Check if caching should be applied
+        $shouldCache = $this->enableCaching && $this->cacheTtl > 0;
         
-        return $this->formatResponse($data, 'single');
-    }
+        // Check caching
+        if ($shouldCache) {
+            $cacheKey = $this->generateCacheKey($filters, $limit, $context, $single);
+            if (Cache::has($cacheKey)) {
+                return Cache::get($cacheKey);
+            }
+        }
 
-    public function update($id)
-    {
-        $request = app($this->getUpdateRequestClass());
-        $data = $this->service->update($id, $request->validated());
+        // Parse relations from request
+        $requestRelations = $this->parseRelations($filters['relations'] ?? null);
         
-        return $this->formatResponse($data, 'single');
-    }
-
-    public function destroy($id)
-    {
-        $result = $this->service->delete($id);
+        // Use context-specific relations if no relations requested
+        $defaultRelations = $context === 'show' ? $this->showRelations : $this->indexRelations;
+        $relations = !empty($requestRelations) ? $requestRelations : $defaultRelations;
         
-        if ($result) {
-            return $this->deletedResponse();
+        // Parse fields from request
+        $requestFields = $filters['fields'] ?? null;
+        $fields = $this->parseFields($requestFields);
+        
+        // Optimize: Use default fields if none specified
+        if (empty($fields) || $fields === ['*']) {
+            $fields = $context === 'show' ? $this->getDefaultShowFields() : $this->getDefaultListFields();
         }
         
-        return $this->errorResponse('Không thể xóa dữ liệu');
+        // Remove non-filter parameters
+        unset($filters['relations'], $filters['fields'], $filters['per_page']);
+        
+        if ($single) {
+            $data = $this->service->find($filters['id'], $relations, $fields);
+        } else {
+            $data = $this->service->list($filters, $limit, $relations, $fields);
+        }
+
+        // Cache the response if enabled
+        if ($shouldCache) {
+            Cache::put($cacheKey, $data, $this->cacheTtl);
+        }
+
+        return $data;
     }
 
-    protected function parseRelations($relations)
+    /**
+     * Store a newly created resource
+     * 
+     * @return JsonResponse|JsonResource
+     */
+    public function store()
     {
-        if (is_array($relations)) return $relations;
+        try {
+            $request = app($this->getStoreRequestClass());
+            $data = $this->service->create($request->validated());
+            
+            return $this->formatResponse($data, 'single');
+        } catch (Exception $e) {
+            Log::error('Store operation failed', [
+                'controller' => static::class,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse('Không thể tạo dữ liệu');
+        }
+    }
+
+    /**
+     * Update the specified resource
+     * 
+     * @param int|string $id
+     * @return JsonResponse|JsonResource
+     */
+    public function update($id)
+    {
+        try {
+            $request = app($this->getUpdateRequestClass());
+            $data = $this->service->update($id, $request->validated());
+            
+            if (!$data) {
+                return $this->errorResponse('Không tìm thấy dữ liệu để cập nhật', 404);
+            }
+            
+            return $this->formatResponse($data, 'single');
+        } catch (Exception $e) {
+            Log::error('Update operation failed', [
+                'controller' => static::class,
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse('Không thể cập nhật dữ liệu');
+        }
+    }
+
+    /**
+     * Remove the specified resource
+     * 
+     * @param int|string $id
+     * @return JsonResponse
+     */
+    public function destroy($id)
+    {
+        try {
+            $result = $this->service->delete($id);
+            
+            if ($result) {
+                return $this->deletedResponse();
+            }
+            
+            return $this->errorResponse('Không thể xóa dữ liệu');
+        } catch (Exception $e) {
+            Log::error('Destroy operation failed', [
+                'controller' => static::class,
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse('Không thể xóa dữ liệu');
+        }
+    }
+
+    /**
+     * Parse relations from request
+     * 
+     * @param mixed $relations
+     * @return array
+     */
+    protected function parseRelations($relations): array
+    {
+        if (is_array($relations)) {
+            return $relations;
+        }
+        
         if (is_string($relations)) {
             return array_filter(array_map('trim', explode(',', $relations)));
         }
+        
         return [];
     }
 
-    protected function parseFields($fields)
+    /**
+     * Parse fields from request
+     * 
+     * @param mixed $fields
+     * @return array
+     */
+    protected function parseFields($fields): array
     {
-        if (is_array($fields)) return $fields;
+        if (is_array($fields)) {
+            return $fields;
+        }
+        
         if (is_string($fields)) {
             return array_filter(array_map('trim', explode(',', $fields)));
         }
+        
         return ['*'];
     }
 
-    protected function parseRequestData(Request $request)
+    /**
+     * Parse and clean request data
+     * 
+     * @param Request $request
+     * @return array
+     */
+    protected function parseRequestData(Request $request): array
     {
         $data = $request->all();
         
@@ -159,7 +386,14 @@ abstract class BaseController extends Controller
         return $data;
     }
 
-    protected function formatResponse($data, $type = 'collection')
+    /**
+     * Format response based on type
+     * 
+     * @param mixed $data
+     * @param string $type
+     * @return JsonResponse|JsonResource
+     */
+    protected function formatResponse($data, string $type = 'collection')
     {
         if ($type === 'single') {
             return new $this->resource($data);
@@ -168,25 +402,131 @@ abstract class BaseController extends Controller
         return $this->listResource::collection($data);
     }
 
+    /**
+     * Search resources with flexible configuration
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function search(Request $request)
     {
-        $filters = $this->parseRequestData($request);
-        $limit = min($request->get('limit', 10), 100);
-        
-        // Tối ưu: Chỉ load fields cần thiết cho search
-        $fields = ['id', 'name'];
-        $relations = [];
-        
-        $results = $this->service->list($filters, $limit, $relations, $fields);
-        
-        return $this->successResponse($results);
+        try {
+            $filters = $this->parseRequestData($request);
+            $limit = min($request->get('limit', $this->getDefaultSearchLimit()), $this->maxPerPage);
+            
+            // Get search-specific configuration
+            $fields = $this->getSearchFields();
+            $relations = $this->getSearchRelations();
+            
+            $results = $this->service->list($filters, $limit, $relations, $fields);
+            
+            return $this->successResponse($results);
+        } catch (Exception $e) {
+            Log::error('Search operation failed', [
+                'controller' => static::class,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse('Không thể tìm kiếm dữ liệu');
+        }
     }
 
     /**
-     * Tối ưu: Lấy fields mặc định cho list view
+     * Get default fields for list view
+     * 
+     * @return array
      */
-    protected function getDefaultListFields()
+    protected function getDefaultListFields(): array
     {
         return ['id', 'name', 'status', 'created_at'];
+    }
+
+    /**
+     * Get default fields for show view
+     * 
+     * @return array
+     */
+    protected function getDefaultShowFields(): array
+    {
+        return ['*'];
+    }
+
+    /**
+     * Get fields for search operation
+     * 
+     * @return array
+     */
+    protected function getSearchFields(): array
+    {
+        return ['id', 'name'];
+    }
+
+    /**
+     * Get relations for search operation
+     * 
+     * @return array
+     */
+    protected function getSearchRelations(): array
+    {
+        return [];
+    }
+
+    /**
+     * Get default search limit
+     * 
+     * @return int
+     */
+    protected function getDefaultSearchLimit(): int
+    {
+        return 10;
+    }
+
+    /**
+     * Check rate limiting
+     * 
+     * @param Request $request
+     * @return bool
+     */
+    protected function checkRateLimit(Request $request): bool
+    {
+        $key = $this->generateRateLimiterKey($request);
+        
+        // Simple rate limiting implementation
+        $attempts = Cache::get($key, 0);
+        
+        if ($attempts >= $this->rateLimitAttempts) {
+            return false;
+        }
+        
+        Cache::put($key, $attempts + 1, 60); // 1 minute window
+        return true;
+    }
+
+    /**
+     * Generate a unique key for rate limiter
+     * 
+     * @param Request $request
+     * @return string
+     */
+    protected function generateRateLimiterKey(Request $request): string
+    {
+        return 'rate_limit:' . $request->ip() . ':' . $request->path();
+    }
+
+    /**
+     * Generate a unique key for caching
+     * 
+     * @param array $filters
+     * @param int $limit
+     * @param string $context
+     * @param bool $single
+     * @return string
+     */
+    protected function generateCacheKey(array $filters, int $limit, string $context, bool $single): string
+    {
+        $key = 'api:' . static::class . ':' . $context . ':';
+        $key .= md5(json_encode($filters) . $limit . $context . $single);
+        return $key;
     }
 } 
