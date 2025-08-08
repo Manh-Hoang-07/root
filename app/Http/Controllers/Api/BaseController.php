@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Traits\ResponseTrait;
+use App\Traits\LoggingTrait;
+use App\Libraries\CacheManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -22,6 +24,7 @@ use Exception;
 abstract class BaseController extends Controller
 {
     use ResponseTrait;
+    use LoggingTrait;
 
     /** @var mixed Service instance for business logic */
     protected $service;
@@ -64,6 +67,12 @@ abstract class BaseController extends Controller
     
     /** @var int Rate limit attempts per minute */
     protected $rateLimitAttempts = 60;
+    
+    /** @var int Default search limit */
+    protected static $defaultSearchLimit = 10;
+    
+    /** @var CacheManager Cache manager instance */
+    protected $cacheManager;
 
     /**
      * Constructor
@@ -75,6 +84,13 @@ abstract class BaseController extends Controller
     {
         $this->service = $service;
         $this->resource = $resource;
+        
+        // Initialize cache manager
+        $this->cacheManager = new CacheManager(
+            $this->enableCaching ?? false,
+            $this->cacheTtl ?? 300,
+            'api'
+        );
         
         // Auto-generate listResource if not set
         if (!$this->listResource) {
@@ -125,11 +141,7 @@ abstract class BaseController extends Controller
             
             return $this->getIndexData($request);
         } catch (Exception $e) {
-            Log::error('Index operation failed', [
-                'controller' => static::class,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->logError('Index', $e);
             
             return $this->errorResponse('Không thể tải danh sách dữ liệu');
         }
@@ -163,12 +175,7 @@ abstract class BaseController extends Controller
         try {
             return $this->getShowData($id, $request);
         } catch (Exception $e) {
-            Log::error('Show operation failed', [
-                'controller' => static::class,
-                'id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->logError('Show', $e, ['id' => $id]);
             
             return $this->errorResponse('Không thể tải thông tin chi tiết');
         }
@@ -206,14 +213,12 @@ abstract class BaseController extends Controller
      */
     protected function getOptimizedData(array $filters, int $limit, string $context = 'index', bool $single = false)
     {
-        // Check if caching should be applied
-        $shouldCache = $this->enableCaching && $this->cacheTtl > 0;
-        
         // Check caching
-        if ($shouldCache) {
-            $cacheKey = $this->generateCacheKey($filters, $limit, $context, $single);
-            if (Cache::has($cacheKey)) {
-                return Cache::get($cacheKey);
+        if ($this->cacheManager->shouldCache()) {
+            $cacheKey = $this->cacheManager->generateKey($filters, $limit, $context, $single, static::class);
+            $cachedData = $this->cacheManager->get($cacheKey);
+            if ($cachedData !== null) {
+                return $cachedData;
             }
         }
 
@@ -243,8 +248,8 @@ abstract class BaseController extends Controller
         }
 
         // Cache the response if enabled
-        if ($shouldCache) {
-            Cache::put($cacheKey, $data, $this->cacheTtl);
+        if ($this->cacheManager->shouldCache()) {
+            $this->cacheManager->put($cacheKey, $data);
         }
 
         return $data;
@@ -263,11 +268,7 @@ abstract class BaseController extends Controller
             
             return $this->formatResponse($data, 'single');
         } catch (Exception $e) {
-            Log::error('Store operation failed', [
-                'controller' => static::class,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->logError('Store', $e);
             
             return $this->errorResponse('Không thể tạo dữ liệu');
         }
@@ -291,12 +292,7 @@ abstract class BaseController extends Controller
             
             return $this->formatResponse($data, 'single');
         } catch (Exception $e) {
-            Log::error('Update operation failed', [
-                'controller' => static::class,
-                'id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->logError('Update', $e, ['id' => $id]);
             
             return $this->errorResponse('Không thể cập nhật dữ liệu');
         }
@@ -319,12 +315,7 @@ abstract class BaseController extends Controller
             
             return $this->errorResponse('Không thể xóa dữ liệu');
         } catch (Exception $e) {
-            Log::error('Destroy operation failed', [
-                'controller' => static::class,
-                'id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->logError('Destroy', $e, ['id' => $id]);
             
             return $this->errorResponse('Không thể xóa dữ liệu');
         }
@@ -412,7 +403,7 @@ abstract class BaseController extends Controller
     {
         try {
             $filters = $this->parseRequestData($request);
-            $limit = min($request->get('limit', $this->getDefaultSearchLimit()), $this->maxPerPage);
+            $limit = min($request->get('limit', static::$defaultSearchLimit), $this->maxPerPage);
             
             // Get search-specific configuration
             $fields = $this->getSearchFields();
@@ -422,11 +413,7 @@ abstract class BaseController extends Controller
             
             return $this->successResponse($results);
         } catch (Exception $e) {
-            Log::error('Search operation failed', [
-                'controller' => static::class,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            $this->logError('Search', $e);
             
             return $this->errorResponse('Không thể tìm kiếm dữ liệu');
         }
@@ -472,15 +459,7 @@ abstract class BaseController extends Controller
         return [];
     }
 
-    /**
-     * Get default search limit
-     * 
-     * @return int
-     */
-    protected function getDefaultSearchLimit(): int
-    {
-        return 10;
-    }
+
 
     /**
      * Check rate limiting
@@ -512,21 +491,5 @@ abstract class BaseController extends Controller
     protected function generateRateLimiterKey(Request $request): string
     {
         return 'rate_limit:' . $request->ip() . ':' . $request->path();
-    }
-
-    /**
-     * Generate a unique key for caching
-     * 
-     * @param array $filters
-     * @param int $limit
-     * @param string $context
-     * @param bool $single
-     * @return string
-     */
-    protected function generateCacheKey(array $filters, int $limit, string $context, bool $single): string
-    {
-        $key = 'api:' . static::class . ':' . $context . ':';
-        $key .= md5(json_encode($filters) . $limit . $context . $single);
-        return $key;
     }
 } 
