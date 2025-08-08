@@ -9,13 +9,13 @@ abstract class BaseRepository
 {
     protected $model;
     
-    // Cache configuration
+    // Cache configuration - tối ưu cho development
     protected $enableCache = true;
-    protected $cacheTtl = 3600; // 1 hour
+    protected $cacheTtl = 300; // Giảm từ 1 giờ xuống 5 phút
     
     // Query optimization
-    protected $maxRelations = 10; // Prevent too many relations
-    protected $maxFields = 50; // Prevent too many fields
+    protected $maxRelations = 5; // Giảm từ 10 xuống 5
+    protected $maxFields = 20; // Giảm từ 50 xuống 20
 
     public function __construct()
     {
@@ -29,8 +29,8 @@ abstract class BaseRepository
         // Generate cache key
         $cacheKey = $this->generateCacheKey($filters, $perPage, $relations, $fields);
         
-        // Try to get from cache
-        if ($this->enableCache && !$this->shouldSkipCache($filters)) {
+        // Try to get from cache - chỉ cache cho production
+        if ($this->enableCache && !$this->shouldSkipCache($filters) && app()->environment('production')) {
             $cached = Cache::get($cacheKey);
             if ($cached) {
                 return $cached;
@@ -39,15 +39,15 @@ abstract class BaseRepository
         
         $query = $this->model->query();
         
-        // Optimize relations loading
+        // Optimize relations loading - giới hạn số lượng
         if (!empty($relations)) {
-            $optimizedRelations = $this->optimizeRelations($relations);
+            $optimizedRelations = $this->optimizeRelations(array_slice($relations, 0, $this->maxRelations));
             $query->with($optimizedRelations);
         }
         
         // Optimize field selection
         if (!empty($fields) && $fields !== ['*']) {
-            $optimizedFields = $this->optimizeFields($fields);
+            $optimizedFields = $this->optimizeFields(array_slice($fields, 0, $this->maxFields));
             $query->select($optimizedFields);
         }
         
@@ -59,8 +59,8 @@ abstract class BaseRepository
         
         $result = $query->paginate($perPage);
         
-        // Cache the result
-        if ($this->enableCache && !$this->shouldSkipCache($filters)) {
+        // Cache the result - chỉ cache cho production
+        if ($this->enableCache && !$this->shouldSkipCache($filters) && app()->environment('production')) {
             Cache::put($cacheKey, $result, $this->cacheTtl);
         }
         
@@ -109,7 +109,7 @@ abstract class BaseRepository
     {
         $idsArray = is_array($value) ? $value : explode(',', $value);
         // Limit to prevent too many IDs
-        $idsArray = array_slice($idsArray, 0, 1000);
+        $idsArray = array_slice($idsArray, 0, 500); // Giảm từ 1000 xuống 500
         $query->whereIn('id', $idsArray);
     }
     
@@ -151,133 +151,120 @@ abstract class BaseRepository
             $this->applyRelationshipSearch($q, $searchValue);
         });
     }
-    
+
     protected function getSearchableFields()
     {
-        return ['name', 'username', 'email', 'phone', 'display_name'];
+        return ['name', 'description', 'title', 'content'];
     }
-    
+
     protected function applyRelationshipSearch($query, $searchValue)
     {
         // Override in child classes if needed
-        // Example: search in profile relationship
-        if (method_exists($this->model, 'profile')) {
-            $query->orWhereHas('profile', function($q) use ($searchValue) {
-                $q->where('name', 'like', "%$searchValue%");
-            });
-        }
     }
-    
+
     protected function applySorting($query, $sortBy)
     {
-        $parts = explode('_', $sortBy);
-        if (count($parts) >= 2) {
-            $direction = array_pop($parts);
-            $field = implode('_', $parts);
-            
-            if (in_array($direction, ['asc', 'desc']) && 
-                (in_array($field, $this->model->getFillable()) || 
-                 in_array($field, ['id', 'created_at', 'updated_at', 'username', 'email']))) {
-                $query->orderBy($field, $direction);
-            }
+        switch ($sortBy) {
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'created_at_asc':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'created_at_desc':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'updated_at_asc':
+                $query->orderBy('updated_at', 'asc');
+                break;
+            case 'updated_at_desc':
+                $query->orderBy('updated_at', 'desc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
         }
     }
 
-    /**
-     * Advanced relation optimization with field selection
-     */
     protected function optimizeRelations($relations)
     {
-        // Limit number of relations to prevent performance issues
-        if (count($relations) > $this->maxRelations) {
-            $relations = array_slice($relations, 0, $this->maxRelations);
-        }
-        
         $optimizedRelations = [];
         foreach ($relations as $relation) {
             if (strpos($relation, ':') !== false) {
-                // Already has field selection
+                // Nếu đã có select fields thì giữ nguyên
                 $optimizedRelations[] = $relation;
             } else {
-                // Add default field selection based on relation type
+                // Tối ưu cho các relation chung
                 $optimizedRelations[] = $this->getDefaultRelationFields($relation);
             }
         }
         return $optimizedRelations;
     }
-    
-    /**
-     * Get default fields for common relations
-     */
+
     protected function getDefaultRelationFields($relation)
     {
-        $defaultFields = [
-            'brand' => 'brand:id,name',
-            'category' => 'category:id,name',
-            'categories' => 'categories:id,name',
-            'user' => 'user:id,name,email',
-            'profile' => 'profile:id,user_id,name',
-            'images' => 'images:id,imageable_id,url',
-            'variants' => 'variants:id,product_id,name,sku,price',
-            'inventory' => 'inventory:id,product_id,quantity,warehouse_id',
-        ];
-        
-        return $defaultFields[$relation] ?? $relation;
+        // Default optimization cho các relation chung
+        switch ($relation) {
+            case 'brand':
+                return 'brand:id,name';
+            case 'category':
+                return 'category:id,name';
+            case 'categories':
+                return 'categories:id,name';
+            case 'user':
+                return 'user:id,name,email';
+            case 'created_by':
+                return 'created_by:id,name,email';
+            case 'updated_by':
+                return 'updated_by:id,name,email';
+            default:
+                return $relation;
+        }
     }
-    
-    /**
-     * Optimize field selection
-     */
+
     protected function optimizeFields($fields)
     {
-        // Always include id and timestamps
-        $requiredFields = ['id', 'created_at', 'updated_at'];
-        $fields = array_merge($fields, $requiredFields);
-        
-        // Remove duplicates
-        $fields = array_unique($fields);
-        
-        // Limit number of fields
-        if (count($fields) > $this->maxFields) {
-            $fields = array_slice($fields, 0, $this->maxFields);
+        $optimizedFields = [];
+        foreach ($fields as $field) {
+            if (strpos($field, '.') !== false) {
+                // Nếu là field của relation thì giữ nguyên
+                $optimizedFields[] = $field;
+            } else {
+                // Kiểm tra field có tồn tại trong model không
+                if (in_array($field, $this->model->getFillable()) || in_array($field, ['id', 'created_at', 'updated_at'])) {
+                    $optimizedFields[] = $field;
+                }
+            }
         }
-        
-        return $fields;
+        return $optimizedFields;
     }
-    
-    /**
-     * Generate cache key for query
-     */
+
     protected function generateCacheKey($filters, $perPage, $relations, $fields)
     {
-        $key = sprintf(
-            '%s_%s_%s_%s_%s',
-            get_class($this->model),
-            md5(serialize($filters)),
-            $perPage,
-            md5(serialize($relations)),
-            md5(serialize($fields))
-        );
+        $key = get_class($this->model) . '_' . md5(serialize([
+            'filters' => $filters,
+            'per_page' => $perPage,
+            'relations' => $relations,
+            'fields' => $fields
+        ]));
         
         return 'repository_' . $key;
     }
-    
-    /**
-     * Determine if cache should be skipped
-     */
+
     protected function shouldSkipCache($filters)
     {
-        // Skip cache for real-time data or admin operations
-        return isset($filters['skip_cache']) || 
-               isset($filters['realtime']) || 
-               isset($filters['admin']);
+        // Skip cache cho các filter động
+        return isset($filters['search']) || isset($filters['date_range']);
     }
 
     public function find($id, $relations = [], $fields = ['*'])
     {
-        $cacheKey = "find_{$this->model->getTable()}_{$id}_" . md5(serialize($relations));
+        $cacheKey = "repository_find_{$id}_" . md5(serialize([$relations, $fields]));
         
-        if ($this->enableCache) {
+        // Try to get from cache - chỉ cache cho production
+        if ($this->enableCache && app()->environment('production')) {
             $cached = Cache::get($cacheKey);
             if ($cached) {
                 return $cached;
@@ -286,19 +273,22 @@ abstract class BaseRepository
         
         $query = $this->model->query();
         
+        // Optimize relations loading
         if (!empty($relations)) {
             $optimizedRelations = $this->optimizeRelations($relations);
             $query->with($optimizedRelations);
         }
         
+        // Optimize field selection
         if (!empty($fields) && $fields !== ['*']) {
             $optimizedFields = $this->optimizeFields($fields);
             $query->select($optimizedFields);
         }
         
-        $result = $query->findOrFail($id);
+        $result = $query->find($id);
         
-        if ($this->enableCache) {
+        // Cache the result - chỉ cache cho production
+        if ($this->enableCache && app()->environment('production')) {
             Cache::put($cacheKey, $result, $this->cacheTtl);
         }
         
@@ -308,47 +298,40 @@ abstract class BaseRepository
     public function create(array $data)
     {
         $result = $this->model->create($data);
-        
-        // Clear related caches
         $this->clearRelatedCaches();
-        
         return $result;
     }
 
     public function update($id, array $data)
     {
-        $item = $this->find($id);
-        $item->update($data);
-        
-        // Clear related caches
-        $this->clearRelatedCaches();
-        
-        return $item;
+        $model = $this->model->find($id);
+        if ($model) {
+            $model->update($data);
+            $this->clearRelatedCaches();
+            return $model;
+        }
+        return null;
     }
 
     public function delete($id)
     {
-        $item = $this->find($id);
-        $result = $item->delete();
-        
-        // Clear related caches
-        $this->clearRelatedCaches();
-        
-        return $result;
+        $model = $this->model->find($id);
+        if ($model) {
+            $result = $model->delete();
+            $this->clearRelatedCaches();
+            return $result;
+        }
+        return false;
     }
-    
-    /**
-     * Clear related caches
-     */
+
     protected function clearRelatedCaches()
     {
-        $pattern = 'repository_' . get_class($this->model) . '*';
-        Cache::flush($pattern);
+        // Clear cache khi có thay đổi dữ liệu
+        if (app()->environment('production')) {
+            Cache::flush();
+        }
     }
-    
-    /**
-     * Get model instance
-     */
+
     public function getModel()
     {
         return $this->model;

@@ -19,17 +19,44 @@ class CategoryController extends BaseController
         $this->storeRequestClass = CategoryRequest::class;
         $this->updateRequestClass = CategoryRequest::class;
         
-        // Chỉ load parent relation cho list view
-        $this->indexRelations = ['parent:id,name'];
+        // Tối ưu: Chỉ load parent relation khi cần thiết
+        $this->indexRelations = []; // Không load relations mặc định cho list
         
         // Load đầy đủ thông tin cho show/edit
-        $this->showRelations = ['parent', 'children'];
+        $this->showRelations = ['parent:id,name', 'children:id,name,parent_id'];
     }
 
-    public function index(\Illuminate\Http\Request $request)
+    /**
+     * Override index method với tối ưu hiệu suất
+     */
+    public function index(Request $request)
     {
-        return parent::index($request);
+        // Parse relations từ request
+        $requestRelations = $this->parseRelations($request->get('relations'));
+        
+        // Nếu có relations được yêu cầu thì dùng, không thì dùng default tối ưu
+        $relations = !empty($requestRelations) 
+            ? $requestRelations 
+            : $this->indexRelations;
+        
+        $fields = $this->parseFields($request->get('fields'));
+        
+        // Tối ưu: Chỉ load fields cần thiết cho list
+        if (empty($fields) || $fields === ['*']) {
+            $fields = ['id', 'name', 'parent_id', 'status', 'created_at'];
+        }
+        
+        $perPage = min($request->get('per_page', $this->defaultPerPage), $this->maxPerPage);
+        $data = $this->service->list($request->all(), $perPage, $relations, $fields);
+        
+        return $this->listResource::collection($data);
     }
 
-
+    /**
+     * Override getDefaultListFields cho Category
+     */
+    protected function getDefaultListFields()
+    {
+        return ['id', 'name', 'parent_id', 'status', 'created_at'];
+    }
 } 

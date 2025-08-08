@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\ResponseTrait;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ChangePasswordRequest;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    use ResponseTrait;
+
     protected $authService;
 
     public function __construct(AuthService $authService)
@@ -57,7 +60,7 @@ class AuthController extends Controller
         $result = $this->authService->register($request->validated());
         
         if ($result['success']) {
-            return $this->successResponse(
+            return $this->createdResponse(
                 $result['data'],
                 $result['message']
             );
@@ -77,7 +80,7 @@ class AuthController extends Controller
         $user = $request->user();
         
         if (!$user) {
-            return $this->errorResponse('Unauthorized', 401);
+            return $this->unauthorizedResponse();
         }
         
         // Lấy role đầu tiên của user (nếu có)
@@ -122,10 +125,7 @@ class AuthController extends Controller
             $user = Auth::user();
             
             if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized'
-                ], 401);
+                return $this->unauthorizedResponse();
             }
 
             // Sử dụng AuthService để refresh token
@@ -152,48 +152,7 @@ class AuthController extends Controller
             );
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to refresh token'
-            ], 500);
+            return $this->serverErrorResponse('Failed to refresh token');
         }
-    }
-
-
-    /**
-     * Success response
-     */
-    protected function successResponse($data = null, string $message = 'Thành công', int $status = 200): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data' => $data
-        ], $status);
-    }
-
-    /**
-     * Error response
-     */
-    protected function errorResponse(string $message = 'Có lỗi xảy ra', int $status = 400, $errors = null): JsonResponse
-    {
-        $response = [
-            'success' => false,
-            'message' => $message
-        ];
-
-        if ($errors) {
-            $response['errors'] = $errors;
-        }
-
-        return response()->json($response, $status);
-    }
-
-    /**
-     * Validation error response
-     */
-    protected function validationErrorResponse($errors, string $message = 'Dữ liệu không hợp lệ'): JsonResponse
-    {
-        return $this->errorResponse($message, 422, $errors);
     }
 } 

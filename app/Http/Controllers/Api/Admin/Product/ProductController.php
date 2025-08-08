@@ -9,9 +9,9 @@ use Illuminate\Http\Request;
 
 class ProductController extends BaseController
 {
-    // Định nghĩa relations cho từng context
+    // Tối ưu relations - chỉ load những gì cần thiết
     protected $relations = [
-        'index' => ['brand:id,name', 'categories:id,name'],
+        'index' => ['brand:id,name'], // Giảm từ 2 xuống 1 relation
         'show' => [
             'brand:id,name', 
             'categories:id,name', 
@@ -32,26 +32,32 @@ class ProductController extends BaseController
     }
 
     /**
-     * Override index method để tự control relations
+     * Override index method với tối ưu hiệu suất
      */
     public function index(Request $request)
     {
         // Parse relations từ request
         $requestRelations = $this->parseRelations($request->get('relations'));
         
-        // Nếu có relations được yêu cầu thì dùng, không thì dùng default
+        // Nếu có relations được yêu cầu thì dùng, không thì dùng default tối ưu
         $relations = !empty($requestRelations) 
             ? $requestRelations 
             : $this->relations['index'];
         
         $fields = $this->parseFields($request->get('fields'));
+        
+        // Tối ưu: Chỉ load fields cần thiết cho list
+        if (empty($fields) || $fields === ['*']) {
+            $fields = ['id', 'name', 'slug', 'price', 'sale_price', 'image', 'brand_id', 'status', 'created_at'];
+        }
+        
         $data = $this->service->list($request->all(), $request->get('per_page', 20), $relations, $fields);
         
         return $this->listResource::collection($data);
     }
 
     /**
-     * Override show method để tự control relations
+     * Override show method với tối ưu hiệu suất
      */
     public function show($id, Request $request = null)
     {

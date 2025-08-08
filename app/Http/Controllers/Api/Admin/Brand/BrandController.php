@@ -6,6 +6,7 @@ use App\Services\Brand\BrandService;
 use App\Http\Resources\Admin\Brand\BrandResource;
 use App\Http\Resources\Admin\Brand\BrandListResource;
 use App\Http\Requests\Admin\Brand\BrandRequest;
+use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 
 class BrandController extends BaseController
@@ -16,8 +17,14 @@ class BrandController extends BaseController
         $this->listResource = BrandListResource::class;
         $this->storeRequestClass = BrandRequest::class;
         $this->updateRequestClass = BrandRequest::class;
+        
+        // Tối ưu: Không load relations mặc định cho list
+        $this->indexRelations = [];
     }
 
+    /**
+     * Tối ưu search method
+     */
     public function search(Request $request)
     {
         $search = $request->get('search', '');
@@ -25,26 +32,36 @@ class BrandController extends BaseController
         $ids = $request->get('ids');
         $limit = min($request->get('limit', 10), 100); // Max 100 items
 
-        $query = app($this->service->getRepo()->model())->query();
-
+        // Tối ưu: Sử dụng service thay vì query trực tiếp
+        $filters = [];
+        
         if ($id) {
-            $query->where('id', $id);
+            $filters['id'] = $id;
         } elseif ($ids) {
-            $idsArray = explode(',', $ids);
-            $query->whereIn('id', $idsArray);
+            $filters['ids'] = $ids;
         } elseif ($search) {
-            $query->where('name', 'like', "%{$search}%");
+            $filters['search'] = $search;
         }
 
-        $brands = $query->limit($limit)->get(['id', 'name']);
+        // Chỉ load fields cần thiết cho search
+        $fields = ['id', 'name'];
+        $relations = [];
+        
+        $results = $this->service->list($filters, $limit, $relations, $fields);
 
-        return response()->json([
-            'data' => $brands->map(function ($brand) {
-                return [
-                    'value' => $brand->id,
-                    'label' => $brand->name
-                ];
-            })
-        ]);
+        return ApiResponse::success($results->map(function ($brand) {
+            return [
+                'value' => $brand->id,
+                'label' => $brand->name
+            ];
+        }));
+    }
+
+    /**
+     * Override getDefaultListFields cho Brand
+     */
+    protected function getDefaultListFields()
+    {
+        return ['id', 'name', 'status', 'created_at'];
     }
 } 

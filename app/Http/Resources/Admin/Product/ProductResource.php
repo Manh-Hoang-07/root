@@ -8,7 +8,8 @@ class ProductResource extends JsonResource
 {
     public function toArray($request)
     {
-        return [
+        // Tối ưu: Chỉ transform những gì cần thiết
+        $data = [
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
@@ -17,58 +18,88 @@ class ProductResource extends JsonResource
             'price' => $this->price,
             'sale_price' => $this->sale_price,
             'image' => $this->image,
-            'product_images' => $this->whenLoaded('images', function() {
-                return $this->images->map(function($image) {
-                    return [
-                        'id' => $image->id,
-                        'url' => $image->url,
-                        'alt' => $image->alt ?? null,
-                    ];
-                });
-            }),
             'weight' => $this->weight,
             'length' => $this->length,
             'width' => $this->width,
             'height' => $this->height,
             'brand_id' => $this->brand_id,
-            'brand_name' => $this->brand_name,
             'status' => $this->status,
-            'sku' => $this->main_sku,
-            'category_names' => $this->category_names,
-            'total_quantity' => $this->total_quantity,
-            'attributes' => $this->attributes,
-            'has_variants' => $this->hasVariants(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            
-            // Relationships
-            'brand' => $this->whenLoaded('brand'),
-            'categories' => $this->whenLoaded('categories'),
-            'variants' => $this->whenLoaded('variants', function() {
-                return $this->variants->map(function($variant) {
-                    return [
-                        'id' => $variant->id,
-                        'sku' => $variant->sku,
-                        'barcode' => $variant->barcode,
-                        'price' => $variant->price,
-                        'sale_price' => $variant->sale_price,
-                        'quantity' => $variant->quantity,
-                        'image' => $variant->image,
-                        'status' => $variant->status,
-                        'attribute_values' => $variant->whenLoaded('attributeValues', function() use ($variant) {
-                            return $variant->attributeValues->map(function($attrValue) {
-                                return [
-                                    'id' => $attrValue->id,
-                                    'attribute_id' => $attrValue->attribute_id,
-                                    'attribute_name' => $attrValue->attribute->name ?? null,
-                                    'value' => $attrValue->value,
-                                ];
-                            });
-                        }, []),
-                    ];
-                });
-            }),
-            'inventory' => $this->whenLoaded('inventory'),
         ];
+
+        // Lazy load brand name nếu có brand relation
+        if ($this->relationLoaded('brand')) {
+            $data['brand_name'] = $this->brand ? $this->brand->name : null;
+        }
+
+        // Lazy load category names nếu có categories relation
+        if ($this->relationLoaded('categories')) {
+            $data['category_names'] = $this->categories->pluck('name')->implode(', ');
+        }
+
+        // Lazy load images nếu có images relation
+        if ($this->relationLoaded('images')) {
+            $data['product_images'] = $this->images->map(function($image) {
+                return [
+                    'id' => $image->id,
+                    'url' => $image->url,
+                    'alt' => $image->alt ?? null,
+                ];
+            });
+        }
+
+        // Lazy load variants nếu có variants relation - tối ưu transformation
+        if ($this->relationLoaded('variants')) {
+            $data['variants'] = $this->variants->map(function($variant) {
+                $variantData = [
+                    'id' => $variant->id,
+                    'sku' => $variant->sku,
+                    'barcode' => $variant->barcode,
+                    'price' => $variant->price,
+                    'sale_price' => $variant->sale_price,
+                    'quantity' => $variant->quantity,
+                    'image' => $variant->image,
+                    'status' => $variant->status,
+                ];
+
+                // Chỉ load attribute values nếu cần
+                if ($variant->relationLoaded('attributeValues')) {
+                    $variantData['attribute_values'] = $variant->attributeValues->map(function($attrValue) {
+                        return [
+                            'id' => $attrValue->id,
+                            'attribute_id' => $attrValue->attribute_id,
+                            'value' => $attrValue->value,
+                            'attribute_name' => $attrValue->relationLoaded('attribute') ? $attrValue->attribute->name : null,
+                        ];
+                    });
+                }
+
+                return $variantData;
+            });
+        }
+
+        // Lazy load inventory nếu có inventory relation
+        if ($this->relationLoaded('inventory')) {
+            $data['inventory'] = $this->inventory;
+            $data['total_quantity'] = $this->inventory->sum('quantity');
+        }
+
+        // Lazy load main SKU từ variants
+        if ($this->relationLoaded('variants') && $this->variants->isNotEmpty()) {
+            $data['sku'] = $this->variants->first()->sku;
+        }
+
+        // Lazy load has_variants
+        if ($this->relationLoaded('variants')) {
+            $data['has_variants'] = $this->variants->isNotEmpty();
+        }
+
+        // Lazy load attributes
+        if ($this->attributes) {
+            $data['attributes'] = $this->attributes;
+        }
+
+        return $data;
     }
 } 

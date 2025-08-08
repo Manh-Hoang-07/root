@@ -10,13 +10,15 @@ use Illuminate\Support\Facades\Log;
 
 abstract class BaseController extends Controller
 {
+    use ResponseTrait;
+
     protected $service;
     protected $resource;
     protected $listResource;
     protected $storeRequestClass = Request::class;
     protected $updateRequestClass = Request::class;
     
-    // Context-specific relations
+    // Context-specific relations - tối ưu mặc định
     protected $indexRelations = [];
     protected $showRelations = [];
     
@@ -71,6 +73,11 @@ abstract class BaseController extends Controller
         $fields = $this->parseFields($request->get('fields'));
         $perPage = min($request->get('per_page', $this->defaultPerPage), $this->maxPerPage);
         
+        // Tối ưu: Chỉ load fields cần thiết cho list view
+        if (empty($fields) || $fields === ['*']) {
+            $fields = $this->getDefaultListFields();
+        }
+        
         $data = $this->service->list($request->all(), $perPage, $relations, $fields);
         
         return $this->formatResponse($data);
@@ -98,33 +105,28 @@ abstract class BaseController extends Controller
     public function store()
     {
         $request = app($this->getStoreRequestClass());
-        $data = $this->parseRequestData($request);
-        $item = $this->service->create($data);
+        $data = $this->service->create($request->validated());
         
-        return $this->formatResponse($item, 'single');
+        return $this->formatResponse($data, 'single');
     }
 
     public function update($id)
     {
         $request = app($this->getUpdateRequestClass());
-        $data = $this->parseRequestData($request);
+        $data = $this->service->update($id, $request->validated());
         
-        try {
-            $item = $this->service->update($id, $data);
-            return $this->formatResponse($item, 'single');
-        } catch (\InvalidArgumentException $e) {
-            return $this->errorResponse($e->getMessage(), 422);
-        }
+        return $this->formatResponse($data, 'single');
     }
 
     public function destroy($id)
     {
-        try {
-            $this->service->delete($id);
-            return $this->successResponse(null, 'Xóa thành công');
-        } catch (\InvalidArgumentException $e) {
-            return $this->errorResponse($e->getMessage(), 422);
+        $result = $this->service->delete($id);
+        
+        if ($result) {
+            return $this->deletedResponse();
         }
+        
+        return $this->errorResponse('Không thể xóa dữ liệu');
     }
 
     protected function parseRelations($relations)
@@ -145,35 +147,20 @@ abstract class BaseController extends Controller
         return ['*'];
     }
 
-    /**
-     * Parse request data to handle both FormData and JSON
-     */
     protected function parseRequestData(Request $request)
     {
-        if ($request instanceof \Illuminate\Foundation\Http\FormRequest) {
-            $data = $request->validated();
-        } else {
-            $data = $request->all();
-        }
-
-        if (empty($data) && $request->header('Content-Type') && str_contains($request->header('Content-Type'), 'multipart/form-data')) {
-            $data = $request->input();
-        }
+        $data = $request->all();
         
-        return array_filter($data, function($value) {
-            return $value !== '' && $value !== [];
+        // Remove empty values
+        $data = array_filter($data, function($value) {
+            return $value !== '' && $value !== null;
         });
+        
+        return $data;
     }
 
-    /**
-     * Format response based on type
-     */
     protected function formatResponse($data, $type = 'collection')
     {
-        if ($this->responseFormat === 'json') {
-            return response()->json($data);
-        }
-        
         if ($type === 'single') {
             return new $this->resource($data);
         }
@@ -181,114 +168,25 @@ abstract class BaseController extends Controller
         return $this->listResource::collection($data);
     }
 
-    /**
-     * Trả về response thành công
-     */
-    protected function successResponse($data = null, string $message = 'Thành công', int $statusCode = 200): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data' => $data
-        ], $statusCode);
-    }
-
-    /**
-     * Trả về response lỗi
-     */
-    protected function errorResponse(string $message = 'Có lỗi xảy ra', int $statusCode = 500): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message,
-            'data' => null
-        ], $statusCode);
-    }
-
-    /**
-     * Trả về response không tìm thấy
-     */
-    protected function notFoundResponse(string $message = 'Không tìm thấy dữ liệu'): JsonResponse
-    {
-        return $this->errorResponse($message, 404);
-    }
-
-    /**
-     * Trả về response validation error
-     */
-    protected function validationErrorResponse(array $errors, string $message = 'Dữ liệu không hợp lệ'): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message,
-            'errors' => $errors,
-            'data' => null
-        ], 422);
-    }
-
-    /**
-     * Trả về response unauthorized
-     */
-    protected function unauthorizedResponse(string $message = 'Không có quyền truy cập'): JsonResponse
-    {
-        return $this->errorResponse($message, 401);
-    }
-
-    /**
-     * Trả về response forbidden
-     */
-    protected function forbiddenResponse(string $message = 'Truy cập bị từ chối'): JsonResponse
-    {
-        return $this->errorResponse($message, 403);
-    }
-
-    /**
-     * Simple search method for all controllers
-     */
     public function search(Request $request)
     {
-        $filters = [];
-        
-        // Xử lý search text
-        if ($request->get('search')) {
-            $filters['search'] = $request->get('search');
-        }
-        
-        // Xử lý ID
-        if ($request->get('id')) {
-            $filters['id'] = $request->get('id');
-        }
-        
-        // Xử lý IDs
-        if ($request->get('ids')) {
-            $filters['ids'] = $request->get('ids');
-        }
-        
-        // Xử lý các filters khác
-        if ($request->get('filters')) {
-            $filters = array_merge($filters, $request->get('filters'));
-        }
-        
+        $filters = $this->parseRequestData($request);
         $limit = min($request->get('limit', 10), 100);
-        $fields = $request->get('fields', ['id', 'name']);
         
-        // Sử dụng service để lấy data
-        $results = $this->service->list($filters, $limit, [], $fields);
+        // Tối ưu: Chỉ load fields cần thiết cho search
+        $fields = ['id', 'name'];
+        $relations = [];
         
-        // Format kết quả cho select dropdown
-        $data = $results->map(function ($item) {
-            $valueField = request('value_field', 'id');
-            $labelField = request('label_field', 'name');
-            
-            return [
-                'value' => $item->{$valueField},
-                'label' => $item->{$labelField}
-            ];
-        });
+        $results = $this->service->list($filters, $limit, $relations, $fields);
+        
+        return $this->successResponse($results);
+    }
 
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
+    /**
+     * Tối ưu: Lấy fields mặc định cho list view
+     */
+    protected function getDefaultListFields()
+    {
+        return ['id', 'name', 'status', 'created_at'];
     }
 } 

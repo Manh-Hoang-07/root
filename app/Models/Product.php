@@ -37,6 +37,9 @@ class Product extends Model
         'attributes' => 'array',
     ];
 
+    // Tối ưu: Thêm appends để tránh accessor overhead
+    protected $appends = [];
+
     // Relationships
     public function brand()
     {
@@ -68,37 +71,41 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    // Accessors
+    // Tối ưu: Giảm accessor overhead bằng cách chỉ tính khi cần
     public function getBrandNameAttribute()
     {
-        if ($this->relationLoaded('brand')) {
-            return $this->brand ? $this->brand->name : null;
+        // Chỉ tính khi có brand relation và chưa có brand_name
+        if ($this->relationLoaded('brand') && !isset($this->attributes['brand_name'])) {
+            $this->attributes['brand_name'] = $this->brand ? $this->brand->name : null;
         }
-        return null; // Không load relationship nếu chưa được load
+        return $this->attributes['brand_name'] ?? null;
     }
 
     public function getCategoryNamesAttribute()
     {
-        if ($this->relationLoaded('categories')) {
-            return $this->categories->pluck('name')->implode(', ');
+        // Chỉ tính khi có categories relation và chưa có category_names
+        if ($this->relationLoaded('categories') && !isset($this->attributes['category_names'])) {
+            $this->attributes['category_names'] = $this->categories->pluck('name')->implode(', ');
         }
-        return null; // Không load relationship nếu chưa được load
+        return $this->attributes['category_names'] ?? null;
     }
 
     public function getTotalQuantityAttribute()
     {
-        if ($this->relationLoaded('inventory')) {
-            return $this->inventory->sum('quantity');
+        // Chỉ tính khi có inventory relation và chưa có total_quantity
+        if ($this->relationLoaded('inventory') && !isset($this->attributes['total_quantity'])) {
+            $this->attributes['total_quantity'] = $this->inventory->sum('quantity');
         }
-        return 0; // Không load relationship nếu chưa được load
+        return $this->attributes['total_quantity'] ?? 0;
     }
 
     public function getMainSkuAttribute()
     {
-        if ($this->relationLoaded('variants')) {
-            return $this->variants->first() ? $this->variants->first()->sku : null;
+        // Chỉ tính khi có variants relation và chưa có main_sku
+        if ($this->relationLoaded('variants') && !isset($this->attributes['main_sku'])) {
+            $this->attributes['main_sku'] = $this->variants->first() ? $this->variants->first()->sku : null;
         }
-        return null; // Không load relationship nếu chưa được load
+        return $this->attributes['main_sku'] ?? null;
     }
 
     /**
@@ -120,15 +127,19 @@ class Product extends Model
     }
 
     /**
-     * Check if product has variants
+     * Tối ưu: Check if product has variants - cache result
      */
     public function hasVariants()
     {
         if ($this->relationLoaded('variants')) {
             return $this->variants->count() > 0;
         }
-        // Nếu chưa load relationship thì dùng count query
-        return $this->variants()->count() > 0;
+        
+        // Cache kết quả để tránh query nhiều lần
+        $cacheKey = "product_has_variants_{$this->id}";
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () {
+            return $this->variants()->count() > 0;
+        });
     }
 
     // Scopes
@@ -140,5 +151,17 @@ class Product extends Model
     public function scopeInactive($query)
     {
         return $query->where('status', 'inactive');
+    }
+
+    /**
+     * Tối ưu: Scope để load relations hiệu quả
+     */
+    public function scopeWithOptimizedRelations($query)
+    {
+        return $query->with([
+            'brand:id,name',
+            'categories:id,name',
+            'images:id,imageable_id,url'
+        ]);
     }
 }
