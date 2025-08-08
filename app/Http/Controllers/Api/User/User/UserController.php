@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\User\User;
 
-use App\Http\Controllers\Api\User\BaseController;
+use App\Http\Controllers\Api\BaseController;
 use App\Http\Resources\Auth\AuthResource;
 use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Services\Auth\AuthService;
@@ -15,6 +15,7 @@ class UserController extends BaseController
 
     public function __construct(AuthService $authService)
     {
+        parent::__construct($authService, AuthResource::class);
         $this->authService = $authService;
     }
 

@@ -55,7 +55,7 @@ class CategoryController extends BaseController
     /**
      * Override getDefaultListFields cho Category
      */
-    protected function getDefaultListFields()
+    protected function getDefaultListFields(): array
     {
         return ['id', 'name', 'parent_id', 'status', 'created_at'];
     }

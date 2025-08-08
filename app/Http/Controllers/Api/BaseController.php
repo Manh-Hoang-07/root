@@ -80,7 +80,7 @@ abstract class BaseController extends Controller
      * @param mixed $service Service instance
      * @param string $resource Resource class name
      */
-    public function __construct($service, string $resource)
+    public function __construct($service, string $resource = '')
     {
         $this->service = $service;
         $this->resource = $resource;
@@ -170,7 +170,7 @@ abstract class BaseController extends Controller
      * @param Request|null $request
      * @return JsonResponse|JsonResource
      */
-    public function show($id, Request $request = null)
+    public function show($id, ?Request $request = null)
     {
         try {
             return $this->getShowData($id, $request);
@@ -188,7 +188,7 @@ abstract class BaseController extends Controller
      * @param Request|null $request
      * @return JsonResponse|JsonResource
      */
-    protected function getShowData($id, Request $request = null)
+    protected function getShowData($id, ?Request $request = null)
     {
         $filters = $request ? $request->all() : [];
         $filters['id'] = $id;

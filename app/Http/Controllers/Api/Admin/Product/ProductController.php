@@ -159,7 +159,7 @@ class ProductController extends BaseController
     /**
      * Parse relations từ string thành array
      */
-    protected function parseRelations($relations)
+    protected function parseRelations($relations): array
     {
         if (is_array($relations)) return $relations;
         if (is_string($relations)) {
@@ -171,7 +171,7 @@ class ProductController extends BaseController
     /**
      * Parse fields từ string thành array
      */
-    protected function parseFields($fields)
+    protected function parseFields($fields): array
     {
         if (is_array($fields)) return $fields;
         if (is_string($fields)) {

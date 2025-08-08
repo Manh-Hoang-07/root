@@ -28,7 +28,7 @@ class OrderController extends BaseController
     /**
      * Override getDefaultListFields cho Order
      */
-    protected function getDefaultListFields()
+    protected function getDefaultListFields(): array
     {
         return ['id', 'order_number', 'user_id', 'total_amount', 'status', 'created_at'];
     }
