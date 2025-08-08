@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Admin;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -12,36 +12,35 @@ abstract class BaseController extends Controller
 {
     protected $service;
     protected $resource;
-    protected $listResource; // Thêm listResource
+    protected $listResource;
     protected $storeRequestClass = Request::class;
     protected $updateRequestClass = Request::class;
     
-    // Tự động load relationships cho tất cả requests
-    protected $defaultRelations = [];
-    
-    // Tự động load relationships cho index method
+    // Context-specific relations
     protected $indexRelations = [];
-    
-    // Tự động load relationships cho show method
     protected $showRelations = [];
     
-
+    // Pagination defaults
+    protected $defaultPerPage = 20;
+    protected $maxPerPage = 100;
+    
+    // Response format
+    protected $responseFormat = 'json'; // json, resource, collection
 
     public function __construct($service, $resource)
     {
         $this->service = $service;
         $this->resource = $resource;
         
-        // Tự động tạo listResource nếu không được set
+        // Auto-generate listResource if not set
         if (!$this->listResource) {
             $resourceClass = $resource;
             $listResourceClass = str_replace('Resource', 'ListResource', $resourceClass);
             
-            // Kiểm tra xem ListResource có tồn tại không
             if (class_exists($listResourceClass)) {
                 $this->listResource = $listResourceClass;
             } else {
-                $this->listResource = $resource; // Fallback về resource gốc
+                $this->listResource = $resource;
             }
         }
     }
@@ -70,10 +69,11 @@ abstract class BaseController extends Controller
         $relations = !empty($requestRelations) ? $requestRelations : $this->indexRelations;
         
         $fields = $this->parseFields($request->get('fields'));
-        $data = $this->service->list($request->all(), $request->get('per_page', 20), $relations, $fields);
+        $perPage = min($request->get('per_page', $this->defaultPerPage), $this->maxPerPage);
         
-        // Sử dụng listResource cho index
-        return $this->listResource::collection($data);
+        $data = $this->service->list($request->all(), $perPage, $relations, $fields);
+        
+        return $this->formatResponse($data);
     }
 
     public function show($id, Request $request = null)
@@ -91,7 +91,8 @@ abstract class BaseController extends Controller
         
         $fields = $request ? $this->parseFields($request->get('fields')) : ['*'];
         $item = $this->service->find($id, $relations, $fields);
-        return new $this->resource($item);
+        
+        return $this->formatResponse($item, 'single');
     }
 
     public function store()
@@ -100,35 +101,19 @@ abstract class BaseController extends Controller
         $data = $this->parseRequestData($request);
         $item = $this->service->create($data);
         
-        // Load relations cho response nếu cần
-        if (!empty($this->defaultRelations)) {
-            $item->load($this->defaultRelations);
-        }
-        
-        // Invalidate cache
-        return new $this->resource($item);
+        return $this->formatResponse($item, 'single');
     }
 
     public function update($id)
     {
         $request = app($this->getUpdateRequestClass());
-        
         $data = $this->parseRequestData($request);
         
         try {
             $item = $this->service->update($id, $data);
-            
-            // Load relations cho response nếu cần
-            if (!empty($this->defaultRelations)) {
-                $item->load($this->defaultRelations);
-            }
-            
-            // Invalidate cache
-            return new $this->resource($item);
+            return $this->formatResponse($item, 'single');
         } catch (\InvalidArgumentException $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 422);
+            return $this->errorResponse($e->getMessage(), 422);
         }
     }
 
@@ -136,24 +121,11 @@ abstract class BaseController extends Controller
     {
         try {
             $this->service->delete($id);
-            
-            // Invalidate cache
-            return response()->json(['success' => true]);
+            return $this->successResponse(null, 'Xóa thành công');
         } catch (\InvalidArgumentException $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 422);
+            return $this->errorResponse($e->getMessage(), 422);
         }
     }
-    
-    /**
-     * Generate cache key for requests
-     */
-
-    
-
-    
-
 
     protected function parseRelations($relations)
     {
@@ -188,10 +160,25 @@ abstract class BaseController extends Controller
             $data = $request->input();
         }
         
-        // Chỉ loại bỏ empty string và empty array, giữ lại null
         return array_filter($data, function($value) {
             return $value !== '' && $value !== [];
         });
+    }
+
+    /**
+     * Format response based on type
+     */
+    protected function formatResponse($data, $type = 'collection')
+    {
+        if ($this->responseFormat === 'json') {
+            return response()->json($data);
+        }
+        
+        if ($type === 'single') {
+            return new $this->resource($data);
+        }
+        
+        return $this->listResource::collection($data);
     }
 
     /**
@@ -257,7 +244,6 @@ abstract class BaseController extends Controller
 
     /**
      * Simple search method for all controllers
-     * Sử dụng method all() của repository với filters
      */
     public function search(Request $request)
     {
@@ -305,6 +291,4 @@ abstract class BaseController extends Controller
             'data' => $data
         ]);
     }
-
-
 } 

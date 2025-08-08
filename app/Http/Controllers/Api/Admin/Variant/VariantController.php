@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin\Variant;
 
-use App\Http\Controllers\Api\Admin\BaseController;
+use App\Http\Controllers\Api\BaseController;
 use App\Services\Variant\VariantService;
 use App\Http\Resources\Admin\Variant\VariantResource;
 use App\Http\Requests\Admin\Variant\VariantRequest;

@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\User;
 
-use App\Http\Controllers\Api\Admin\BaseController;
+use App\Http\Controllers\Api\BaseController;
 use App\Services\User\UserService;
 use App\Http\Resources\Admin\User\UserResource;
 use App\Http\Resources\Admin\User\UserListResource;

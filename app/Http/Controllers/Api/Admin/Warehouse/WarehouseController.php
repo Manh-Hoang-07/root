@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\Warehouse;
 
-use App\Http\Controllers\Api\Admin\BaseController;
+use App\Http\Controllers\Api\BaseController;
 use App\Services\Warehouse\WarehouseService;
 use App\Http\Resources\Admin\Warehouse\WarehouseResource;
 use App\Http\Resources\Admin\Warehouse\WarehouseListResource;

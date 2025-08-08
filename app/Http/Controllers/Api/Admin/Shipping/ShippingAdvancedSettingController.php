@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\Shipping;
 
-use App\Http\Controllers\Api\Admin\BaseController;
+use App\Http\Controllers\Api\BaseController;
 use App\Services\Shipping\ShippingAdvancedSettingService;
 use App\Http\Resources\Admin\Shipping\ShippingAdvancedSettingResource;
 use App\Http\Requests\Admin\Shipping\ShippingAdvancedSettingRequest;

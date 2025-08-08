@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\Attribute;
 
-use App\Http\Controllers\Api\Admin\BaseController;
+use App\Http\Controllers\Api\BaseController;
 use App\Services\Attribute\AttributeValueService;
 use App\Http\Resources\Admin\Attribute\AttributeValueResource;
 use App\Http\Resources\Admin\Attribute\AttributeValueListResource;

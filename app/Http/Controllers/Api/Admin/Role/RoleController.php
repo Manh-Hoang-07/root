@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\Role;
 
-use App\Http\Controllers\Api\Admin\BaseController;
+use App\Http\Controllers\Api\BaseController;
 use App\Services\Role\RoleService;
 use App\Http\Resources\Admin\Role\RoleResource;
 use App\Http\Resources\Admin\Role\RoleListResource;

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin\Inventory;
 
-use App\Http\Controllers\Api\Admin\BaseController;
+use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Admin\Inventory\InventoryRequest;
 use App\Http\Requests\Admin\Inventory\ImportInventoryRequest;
 use App\Http\Requests\Admin\Inventory\ExportInventoryRequest;

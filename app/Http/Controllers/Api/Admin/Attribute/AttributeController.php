@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Admin\Attribute;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Api\Admin\BaseController;
+use App\Http\Controllers\Api\BaseController;
 use App\Services\Attribute\AttributeService;
 use App\Http\Resources\Admin\Attribute\AttributeResource;
 use App\Http\Resources\Admin\Attribute\AttributeListResource;
