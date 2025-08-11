@@ -14,14 +14,23 @@ class DatabaseSeeder extends Seeder
         // Chạy AuthSeeder trước
         $this->call([
             AuthSeeder::class,
+            RolePermissionSeeder::class,
+            BrandSeeder::class,
+            CategorySeeder::class,
+            WarehouseSeeder::class,
+            ShippingZoneSeeder::class,
+            ProductSeeder::class,
+            VariantSeeder::class,
+            AttributeSeeder::class,
+            PromotionSeeder::class,
+            OrderSeeder::class,
+            AddressSeeder::class,
+            PaymentSeeder::class,
+            ShippingInfoSeeder::class,
+            OrderStatusHistorySeeder::class,
+            InventorySeeder::class,
+            ImageSeeder::class,
         ]);
-
-        // $this->call([
-        //     WarehouseSeeder::class,
-        //     ShippingZoneSeeder::class,
-        //     ProductSeeder::class,
-        //     OrderSeeder::class,
-        // ]);
 
         // Seeder cho 100 role, 100 permission, 100 user (nếu cần)
         // \App\Models\Permission::factory()->count(100)->create([

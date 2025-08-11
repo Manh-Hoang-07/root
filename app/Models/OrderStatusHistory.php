@@ -16,7 +16,10 @@ class OrderStatusHistory extends Model
         'status',
         'note',
         'changed_by',
+        'changed_at',
     ];
+
+    public $timestamps = false;
 
     public function order()
     {

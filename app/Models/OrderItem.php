@@ -12,17 +12,22 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
-        'warehouse_id',
+        'variant_id',
         'product_name',
-        'product_price',
+        'variant_sku',
         'quantity',
-        'subtotal',
+        'price',
+        'discount',
+        'final_price',
+        'total',
     ];
 
     protected $casts = [
-        'product_price' => 'decimal:2',
+        'price' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'final_price' => 'decimal:2',
+        'total' => 'decimal:2',
         'quantity' => 'integer',
-        'subtotal' => 'decimal:2',
     ];
 
     public function order()
@@ -35,9 +40,9 @@ class OrderItem extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function warehouse()
+    public function variant()
     {
-        return $this->belongsTo(Warehouse::class);
+        return $this->belongsTo(Variant::class);
     }
 
     protected static function boot()
@@ -45,7 +50,7 @@ class OrderItem extends Model
         parent::boot();
 
         static::saving(function ($item) {
-            $item->subtotal = $item->product_price * $item->quantity;
+            $item->total = $item->price * $item->quantity;
         });
     }
 }

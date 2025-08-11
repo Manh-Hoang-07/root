@@ -10,29 +10,27 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'order_number',
         'user_id',
-        'warehouse_id',
-        'total_amount',
-        'shipping_fee',
-        'discount_amount',
-        'final_amount',
         'status',
-        'payment_status',
-        'payment_method',
-        'shipping_address',
-        'billing_address',
-        'shipping_zone_id',
-        'notes',
+        'total_price',
+        'shipping_fee',
+        'shipping_discount',
+        'promotion_discount',
+        'final_price',
+        'shipping_address_id',
+        'note',
+        'cancelled_at',
+        'completed_at',
     ];
 
     protected $casts = [
-        'total_amount' => 'decimal:2',
+        'total_price' => 'decimal:2',
         'shipping_fee' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
-        'final_amount' => 'decimal:2',
-        'shipping_address' => 'array',
-        'billing_address' => 'array',
+        'shipping_discount' => 'decimal:2',
+        'promotion_discount' => 'decimal:2',
+        'final_price' => 'decimal:2',
+        'cancelled_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     public function user()
@@ -40,14 +38,9 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function warehouse()
+    public function shippingAddress()
     {
-        return $this->belongsTo(Warehouse::class);
-    }
-
-    public function shippingZone()
-    {
-        return $this->belongsTo(ShippingZone::class);
+        return $this->belongsTo(Address::class, 'shipping_address_id');
     }
 
     public function items()
@@ -69,14 +62,8 @@ class Order extends Model
     {
         parent::boot();
 
-        static::creating(function ($order) {
-            if (empty($order->order_number)) {
-                $order->order_number = 'ORD-' . date('Ymd') . '-' . str_pad(static::whereDate('created_at', today())->count() + 1, 4, '0', STR_PAD_LEFT);
-            }
-        });
-
         static::saving(function ($order) {
-            $order->final_amount = $order->total_amount + $order->shipping_fee - $order->discount_amount;
+            $order->final_price = $order->total_price + $order->shipping_fee - $order->shipping_discount - $order->promotion_discount;
         });
     }
 }

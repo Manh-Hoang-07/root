@@ -26,7 +26,32 @@ class PermissionRepository extends BaseRepository
         $query->leftJoin('permissions as parent_permissions', 'permissions.parent_id', '=', 'parent_permissions.id')
               ->addSelect('parent_permissions.display_name as parent_name');
         
-
+        // Select fields với table prefix để tránh ambiguous column
+        if ($fields !== ['*']) {
+            $selectFields = [];
+            foreach ($fields as $field) {
+                if ($field === 'id' || $field === 'name' || $field === 'display_name' || 
+                    $field === 'guard_name' || $field === 'parent_id' || $field === 'status' ||
+                    $field === 'created_at' || $field === 'updated_at') {
+                    $selectFields[] = 'permissions.' . $field;
+                } else {
+                    $selectFields[] = $field;
+                }
+            }
+            $query->select($selectFields);
+        } else {
+            // Select tất cả fields từ permissions table với prefix
+            $query->select([
+                'permissions.id',
+                'permissions.name',
+                'permissions.display_name',
+                'permissions.guard_name',
+                'permissions.parent_id',
+                'permissions.status',
+                'permissions.created_at',
+                'permissions.updated_at'
+            ]);
+        }
         
         // Apply filters
         if (!empty($filters['search'])) {
@@ -50,14 +75,7 @@ class PermissionRepository extends BaseRepository
             $query->with($relations);
         }
         
-        // Select fields
-        if ($fields !== ['*']) {
-            $query->select($fields);
-        }
-        
         $result = $query->paginate($perPage);
-        
-
         
         return $result;
     }

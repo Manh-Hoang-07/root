@@ -211,11 +211,11 @@ abstract class BaseController extends Controller
      * @param bool $single
      * @return mixed
      */
-    protected function getOptimizedData(array $filters, int $limit, string $context = 'index', bool $single = false)
+    protected function getOptimizedData(array $filters, int $perPage, string $context = 'index', bool $single = false)
     {
         // Check caching
         if ($this->cacheService->shouldCache()) {
-            $cacheKey = $this->cacheService->generateKey($filters, $limit, $context, $single, static::class);
+            $cacheKey = $this->cacheService->generateKey($filters, $perPage, $context, $single, static::class);
             $cachedData = $this->cacheService->get($cacheKey);
             if ($cachedData !== null) {
                 return $cachedData;
@@ -244,7 +244,7 @@ abstract class BaseController extends Controller
         if ($single) {
             $data = $this->service->find($filters['id'], $relations, $fields);
         } else {
-            $data = $this->service->list($filters, $limit, $relations, $fields);
+            $data = $this->service->list($filters, $perPage, $relations, $fields);
         }
 
         // Cache the response if enabled
