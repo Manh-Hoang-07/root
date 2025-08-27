@@ -145,6 +145,26 @@ class AuthService extends BaseService
     }
 
     /**
+     * Lấy thông tin user hiện tại
+     */
+    public function me(User $user): array
+    {
+        try {
+            return [
+                'success' => true,
+                'message' => 'Lấy thông tin user thành công',
+                'data' => $user
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy thông tin user: ' . $e->getMessage(),
+                'status' => 500
+            ];
+        }
+    }
+
+    /**
      * Đổi mật khẩu
      */
     public function changePassword(User $user, array $data): array

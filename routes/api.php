@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Admin\Product\ProductController;
 use App\Http\Controllers\Api\Admin\Warehouse\WarehouseController;
@@ -18,14 +17,8 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\User\User\UserController as ApiUserController;
 use App\Http\Controllers\Api\Admin\Inventory\InventoryController;
 
-// CORS preflight route
-Route::options('{any}', function () {
-    return response('', 200)
-        ->header('Access-Control-Allow-Origin', '*')
-        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        ->header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-XSRF-TOKEN')
-        ->header('Access-Control-Allow-Credentials', 'true');
-})->where('any', '.*');
+// Áp dụng CORS middleware cho tất cả routes
+Route::middleware(['cors'])->group(function () {
 
 // Public routes - không cần authentication
 Route::post('/login', [AuthController::class, 'login']);
@@ -130,7 +123,6 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
         Route::apiResource('advanced', App\Http\Controllers\Api\Admin\Shipping\ShippingAdvancedSettingController::class);
     });
 }); 
+});
 
- 
-
- 
+// Đóng CORS middleware group

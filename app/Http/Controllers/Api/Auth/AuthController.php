@@ -2,26 +2,21 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Traits\ResponseTrait;
+use App\Http\Controllers\Api\BaseController;
+use App\Services\Auth\AuthService;
+use App\Http\Resources\Auth\AuthResource;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ChangePasswordRequest;
-use App\Http\Resources\Auth\AuthResource;
-use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
-class AuthController extends Controller
+class AuthController extends BaseController
 {
-    use ResponseTrait;
-
-    protected $authService;
-
-    public function __construct(AuthService $authService)
+    public function __construct(AuthService $service)
     {
-        $this->authService = $authService;
+        parent::__construct($service, AuthResource::class);
     }
 
     /**
@@ -29,7 +24,7 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $result = $this->authService->login($request->validated());
+        $result = $this->service->login($request->validated());
         
         if ($result['success']) {
             $response = $this->successResponse(
@@ -57,7 +52,7 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request): JsonResponse
     {
-        $result = $this->authService->register($request->validated());
+        $result = $this->service->register($request->validated());
         
         if ($result['success']) {
             return $this->createdResponse(
@@ -83,19 +78,19 @@ class AuthController extends Controller
             return $this->unauthorizedResponse();
         }
         
-        // Lấy role đầu tiên của user (nếu có)
-        $role = $user->roles->first();
-        $roleName = $role ? $role->name : null;
+        $result = $this->service->me($user);
         
-        return $this->successResponse([
-            'id' => $user->id,
-            'username' => $user->username,
-            'email' => $user->email,
-            'role' => $roleName,
-            'status' => $user->status,
-            'created_at' => $user->created_at,
-            'updated_at' => $user->updated_at
-        ], 'Thông tin user');
+        if ($result['success']) {
+            return $this->successResponse(
+                $result['data'],
+                $result['message']
+            );
+        }
+
+        return $this->errorResponse(
+            $result['message'],
+            $result['status'] ?? 500
+        );
     }
 
     /**
@@ -103,7 +98,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        $result = $this->authService->logout($request->user());
+        $result = $this->service->logout($request->user());
         
         $response = $this->successResponse(
             null,
@@ -129,7 +124,7 @@ class AuthController extends Controller
             }
 
             // Sử dụng AuthService để refresh token
-            $result = $this->authService->refreshToken($user);
+            $result = $this->service->refreshToken($user);
             
             if ($result['success']) {
                 $response = $this->successResponse(
