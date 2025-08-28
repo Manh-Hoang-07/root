@@ -1,0 +1,60 @@
+<?php
+
+namespace App\Services\Post;
+
+use App\Services\BaseService;
+use App\Repositories\Post\PostRepository;
+
+class PostService extends BaseService
+{
+    public function __construct(PostRepository $repo)
+    {
+        parent::__construct($repo);
+    }
+
+    public function create($data)
+    {
+        $data = $this->ensureSlug($data);
+        $tagIds = $data['tag_ids'] ?? null;
+        $categoryIds = $data['category_ids'] ?? null;
+        unset($data['tag_ids'], $data['category_ids']);
+
+        $post = parent::create($data);
+
+        if ($post && is_array($tagIds)) {
+            $post->tags()->sync($tagIds);
+        }
+        if ($post && is_array($categoryIds)) {
+            $post->categories()->sync($categoryIds);
+        }
+
+        return $post->load(['categories:id,name,slug', 'tags:id,name,slug']);
+    }
+
+    public function update($id, $data)
+    {
+        $data = $this->ensureSlug($data);
+        $tagIds = $data['tag_ids'] ?? null;
+        $categoryIds = $data['category_ids'] ?? null;
+        unset($data['tag_ids'], $data['category_ids']);
+
+        $post = parent::update($id, $data);
+        if (!$post) return null;
+
+        if (is_array($tagIds)) {
+            $post->tags()->sync($tagIds);
+        }
+        if (is_array($categoryIds)) {
+            $post->categories()->sync($categoryIds);
+        }
+
+        return $post->load(['categories:id,name,slug', 'tags:id,name,slug']);
+    }
+
+    public function findBySlug(string $slug, $relations = [], $fields = ['*'])
+    {
+        return $this->repo->findBySlug($slug, $relations, $fields);
+    }
+}
+
+

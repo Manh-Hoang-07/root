@@ -37,6 +37,17 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/brands', [BrandController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
+// Public API - posts
+Route::get('/posts', [App\Http\Controllers\Api\Public\Post\PublicPostController::class, 'index']);
+Route::get('/posts/{id}', [App\Http\Controllers\Api\Public\Post\PublicPostController::class, 'show']);
+Route::get('/posts/slug/{slug}', [App\Http\Controllers\Api\Public\Post\PublicPostController::class, 'showBySlug']);
+Route::get('/post-categories', [App\Http\Controllers\Api\Public\PostCategory\PublicPostCategoryController::class, 'index']);
+Route::get('/post-categories/{id}', [App\Http\Controllers\Api\Public\PostCategory\PublicPostCategoryController::class, 'show']);
+Route::get('/post-categories/slug/{slug}', [App\Http\Controllers\Api\Public\PostCategory\PublicPostCategoryController::class, 'showBySlug']);
+Route::get('/post-tags', [App\Http\Controllers\Api\Public\PostTag\PublicPostTagController::class, 'index']);
+Route::get('/post-tags/{id}', [App\Http\Controllers\Api\Public\PostTag\PublicPostTagController::class, 'show']);
+Route::get('/post-tags/slug/{slug}', [App\Http\Controllers\Api\Public\PostTag\PublicPostTagController::class, 'showBySlug']);
+
 // Protected routes - cần authentication
 Route::middleware(['auto.auth'])->group(function () {
     // User routes
@@ -96,17 +107,20 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('brands', BrandController::class);
     Route::apiResource('attributes', AttributeController::class);
-    Route::apiResource('attribute-values', AttributeValueController::class);
     Route::patch('users/toggle-status/{id}', [UserController::class, 'toggleStatus']);
     Route::get('users/statuses', [UserController::class, 'statuses']);
     Route::post('users/{id}/change-password', [UserController::class, 'changePassword']);
     Route::get('users/{id}/with-roles', [UserController::class, 'showWithRoles']);
     Route::post('users/{id}/assign-roles', [UserController::class, 'assignRoles']);
+
+    // Admin - Posts module
+    Route::apiResource('posts', App\Http\Controllers\Api\Admin\Post\PostController::class);
+    Route::apiResource('post-categories', App\Http\Controllers\Api\Admin\PostCategory\PostCategoryController::class);
+    Route::apiResource('posttags', App\Http\Controllers\Api\Admin\PostTag\PostTagController::class);
 });
 
 Route::get('/enums/{type}', [EnumController::class, 'get']); 
 Route::post('/upload-image', [ImageController::class, 'upload']);
-
 
 
 

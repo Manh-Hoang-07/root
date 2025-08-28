@@ -13,14 +13,38 @@ class DatabaseSeeder extends Seeder
     {
         // Chạy AuthSeeder trước
         $this->call([
+            AddressSeeder::class,
+            AdminUserSeeder::class,
+            AttributeSeeder::class,
             AuthSeeder::class,
+            BrandSeeder::class,
+            CategorySeeder::class,
+            ImageSeeder::class,
+            InventorySeeder::class,
+            LargeDataSeeder::class,
+            OrderSeeder::class,
+            OrderStatusHistorySeeder::class,
+            PaymentSeeder::class,
+            ProductSeeder::class,
+            PromotionSeeder::class,
             RolePermissionSeeder::class,
+            RoleSeeder::class,
+            ShippingInfoSeeder::class,
+            ShippingZoneSeeder::class,
+            TenSeeder::class,
+            VariantSeeder::class,
+            WarehouseSeeder::class,
+
+            // New content seeders
+            PostCategorySeeder::class,
+            PostTagSeeder::class,
+            PostSeeder::class,
         ]);
 
         // Chạy LargeDataSeeder để tạo 1000 bản ghi cho mỗi bảng
-        $this->call([
-            LargeDataSeeder::class,
-        ]);
+        // $this->call([
+        //     LargeDataSeeder::class,
+        // ]);
 
         // Seeder cho 100 role, 100 permission, 100 user (nếu cần)
         // \App\Models\Permission::factory()->count(100)->create([

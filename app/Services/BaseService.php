@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 
 
 abstract class BaseService
@@ -69,5 +70,39 @@ abstract class BaseService
             $data['image'] = $data['image']->store('categories', 'public');
         }
         return $data;
+    }
+
+    /**
+     * Generate a unique slug for a model based on name if slug is empty.
+     */
+    protected function ensureSlug(array $data)
+    {
+        if (!isset($data['slug']) || !$data['slug']) {
+            if (isset($data['name']) && $data['name']) {
+                $base = Str::slug($data['name']);
+                $data['slug'] = $this->generateUniqueSlug($base);
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Ensure slug uniqueness within repository's model table.
+     */
+    protected function generateUniqueSlug(string $baseSlug): string
+    {
+        $slug = $baseSlug ?: Str::random(8);
+        $model = $this->repo->getModel();
+        $exists = $model->newQuery()->where('slug', $slug)->exists();
+        if (!$exists) return $slug;
+
+        $counter = 2;
+        while (true) {
+            $candidate = $baseSlug . '-' . $counter;
+            if (!$model->newQuery()->where('slug', $candidate)->exists()) {
+                return $candidate;
+            }
+            $counter++;
+        }
     }
 } 
