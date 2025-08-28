@@ -107,6 +107,7 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('brands', BrandController::class);
     Route::apiResource('attributes', AttributeController::class);
+    Route::apiResource('attribute-values', AttributeValueController::class);
     Route::patch('users/toggle-status/{id}', [UserController::class, 'toggleStatus']);
     Route::get('users/statuses', [UserController::class, 'statuses']);
     Route::post('users/{id}/change-password', [UserController::class, 'changePassword']);

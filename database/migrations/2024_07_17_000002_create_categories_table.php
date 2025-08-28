@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->unsignedBigInteger('parent_id')->nullable();
-            $table->text('description')->nullable();
+            $table->longText('description')->nullable();
             $table->string('image');
             $table->enum('status', ['active', 'inactive']);
             $table->timestamps();

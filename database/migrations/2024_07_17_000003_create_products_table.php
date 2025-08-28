@@ -27,6 +27,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->foreign('brand_id')->references('id')->on('brands')->onDelete('set null');
+            $table->index('deleted_at');
         });
     }
 

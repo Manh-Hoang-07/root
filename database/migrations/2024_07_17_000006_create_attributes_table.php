@@ -13,6 +13,10 @@ return new class extends Migration
             $table->string('name');
             $table->string('type'); // text, select, color, ...
             $table->text('description')->nullable();
+            $table->boolean('is_required')->default(false);
+            $table->boolean('is_unique')->default(false);
+            $table->boolean('is_filterable')->default(true);
+            $table->boolean('is_searchable')->default(true);
             $table->string('status')->default('active');
             $table->timestamps();
         });
