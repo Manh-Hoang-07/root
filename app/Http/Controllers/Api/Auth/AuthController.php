@@ -82,7 +82,7 @@ class AuthController extends BaseController
         
         if ($result['success']) {
             return $this->successResponse(
-                $result['data'],
+                new AuthResource($result['data']),
                 $result['message']
             );
         }

@@ -150,6 +150,9 @@ class AuthService extends BaseService
     public function me(User $user): array
     {
         try {
+            // Load permissions và roles
+            $user->load(['permissions']);
+            
             return [
                 'success' => true,
                 'message' => 'Lấy thông tin user thành công',

@@ -32,7 +32,7 @@ class RolePermissionSeeder extends Seeder
         foreach ($permissions as $name => $displayName) {
             Permission::firstOrCreate([
                 'name' => $name,
-                'guard_name' => 'web'
+                'guard_name' => 'sanctum'
             ], [
                 'display_name' => $displayName,
                 'status' => 'active'
@@ -42,7 +42,7 @@ class RolePermissionSeeder extends Seeder
         // Tạo roles
         $adminRole = Role::firstOrCreate([
             'name' => 'admin',
-            'guard_name' => 'web'
+            'guard_name' => 'sanctum'
         ], [
             'display_name' => 'Administrator',
             'status' => 'active'
@@ -50,7 +50,7 @@ class RolePermissionSeeder extends Seeder
 
         $userRole = Role::firstOrCreate([
             'name' => 'user',
-            'guard_name' => 'web'
+            'guard_name' => 'sanctum'
         ], [
             'display_name' => 'User',
             'status' => 'active'
