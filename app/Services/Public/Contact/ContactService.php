@@ -3,7 +3,7 @@
 namespace App\Services\Public\Contact;
 
 use App\Services\BaseService;
-use App\Repositories\Public\Contact\ContactRepository;
+use App\Repositories\Contact\ContactRepository;
 use App\Enums\ContactStatus;
 use Illuminate\Support\Facades\Log;
 use Exception;
