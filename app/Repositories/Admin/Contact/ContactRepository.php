@@ -34,28 +34,6 @@ class ContactRepository extends BaseRepository
     }
 
 
-    /**
-     * Get contacts by admin
-     */
-    public function getByAdmin($adminId, $perPage = 20, $relations = [], $fields = ['*'])
-    {
-        $filters = ['admin_id' => $adminId];
-        return $this->all($filters, $perPage, $relations, $fields);
-    }
-
-    /**
-     * Get contacts by date range
-     */
-    public function getByDateRange($startDate, $endDate, $perPage = 20, $relations = [], $fields = ['*'])
-    {
-        $filters = [
-            'date_range' => [
-                'start' => $startDate,
-                'end' => $endDate
-            ]
-        ];
-        return $this->all($filters, $perPage, $relations, $fields);
-    }
 
 
     /**
@@ -95,62 +73,4 @@ class ContactRepository extends BaseRepository
         return $this->update($id, $data);
     }
 
-    /**
-     * Get contacts with admin notes
-     */
-    public function getWithAdminNotes($perPage = 20, $relations = [], $fields = ['*'])
-    {
-        $query = $this->model->query();
-        
-        if (!empty($relations)) {
-            $query->with($relations);
-        }
-        
-        if (!empty($fields) && $fields !== ['*']) {
-            $query->select($fields);
-        }
-        
-        $query->whereNotNull('admin_notes');
-        
-        return $query->paginate($perPage);
-    }
-
-    /**
-     * Get contacts without admin notes
-     */
-    public function getWithoutAdminNotes($perPage = 20, $relations = [], $fields = ['*'])
-    {
-        $query = $this->model->query();
-        
-        if (!empty($relations)) {
-            $query->with($relations);
-        }
-        
-        if (!empty($fields) && $fields !== ['*']) {
-            $query->select($fields);
-        }
-        
-        $query->whereNull('admin_notes');
-        
-        return $query->paginate($perPage);
-    }
-
-
-    /**
-     * Get contacts by email
-     */
-    public function getByEmail($email, $perPage = 20, $relations = [], $fields = ['*'])
-    {
-        $filters = ['email' => $email];
-        return $this->all($filters, $perPage, $relations, $fields);
-    }
-
-    /**
-     * Get contacts by phone
-     */
-    public function getByPhone($phone, $perPage = 20, $relations = [], $fields = ['*'])
-    {
-        $filters = ['phone' => $phone];
-        return $this->all($filters, $perPage, $relations, $fields);
-    }
 }

@@ -48,21 +48,6 @@ class ContactService extends BaseService
     }
 
 
-    /**
-     * Get contacts by email
-     */
-    public function getByEmail($email, $perPage = 20, $relations = [], $fields = ['*'])
-    {
-        return $this->repo->getByEmail($email, $perPage, $relations, $fields);
-    }
-
-    /**
-     * Get contacts by phone
-     */
-    public function getByPhone($phone, $perPage = 20, $relations = [], $fields = ['*'])
-    {
-        return $this->repo->getByPhone($phone, $perPage, $relations, $fields);
-    }
 
     /**
      * Mark contact as responded
@@ -81,21 +66,6 @@ class ContactService extends BaseService
         }
     }
 
-    /**
-     * Get contacts with admin notes
-     */
-    public function getWithAdminNotes($perPage = 20, $relations = [], $fields = ['*'])
-    {
-        return $this->repo->getWithAdminNotes($perPage, $relations, $fields);
-    }
-
-    /**
-     * Get contacts without admin notes
-     */
-    public function getWithoutAdminNotes($perPage = 20, $relations = [], $fields = ['*'])
-    {
-        return $this->repo->getWithoutAdminNotes($perPage, $relations, $fields);
-    }
 
     /**
      * Send response email to customer
