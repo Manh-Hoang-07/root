@@ -33,9 +33,6 @@ class ContactRepository extends BaseRepository
         });
     }
 
-
-
-
     /**
      * Update contact status
      */

@@ -99,7 +99,7 @@ class ContactController extends BaseController
     {
         try {
             $request = app($this->getUpdateRequestClass());
-            $data = $this->service->update($id, $request->validated());
+            $data = $this->service->update($id, $request->all());
             
             if (!$data) {
                 return $this->errorResponse('Không tìm thấy liên hệ để cập nhật', 404);
@@ -130,7 +130,6 @@ class ContactController extends BaseController
             return $this->errorResponse('Không thể xóa liên hệ');
         }
     }
-
 
     /**
      * Update contact status
@@ -175,9 +174,6 @@ class ContactController extends BaseController
             return $this->errorResponse('Không thể đánh dấu liên hệ đã phản hồi');
         }
     }
-
-
-
 
     /**
      * Bulk update contact status
