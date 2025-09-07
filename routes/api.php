@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\Admin\Role\RoleController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\User\User\UserController as ApiUserController;
 use App\Http\Controllers\Api\Admin\Inventory\InventoryController;
+use App\Http\Controllers\Api\Public\Contact\ContactController as PublicContactController;
+use App\Http\Controllers\Api\Admin\Contact\ContactController;
 
 // CORS preflight route
 Route::options('{any}', function () {
@@ -47,6 +49,9 @@ Route::get('/post-categories/slug/{slug}', [App\Http\Controllers\Api\Public\Post
 Route::get('/post-tags', [App\Http\Controllers\Api\Public\PostTag\PublicPostTagController::class, 'index']);
 Route::get('/post-tags/{id}', [App\Http\Controllers\Api\Public\PostTag\PublicPostTagController::class, 'show']);
 Route::get('/post-tags/slug/{slug}', [App\Http\Controllers\Api\Public\PostTag\PublicPostTagController::class, 'showBySlug']);
+
+// Public API - Contact (không cần authentication)
+Route::post('/contacts', [PublicContactController::class, 'store']);
 
 // Protected routes - cần authentication
 Route::middleware(['auto.auth'])->group(function () {
@@ -117,7 +122,19 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     // Admin - Posts module
     Route::apiResource('posts', App\Http\Controllers\Api\Admin\Post\PostController::class);
     Route::apiResource('post-categories', App\Http\Controllers\Api\Admin\PostCategory\PostCategoryController::class);
-    Route::apiResource('posttags', App\Http\Controllers\Api\Admin\PostTag\PostTagController::class);
+    Route::apiResource('post-tags', App\Http\Controllers\Api\Admin\PostTag\PostTagController::class);
+    
+    // Admin - Contact module
+    Route::apiResource('contacts', ContactController::class);
+    
+    // Contact additional routes - phải đặt sau apiResource
+    Route::prefix('contacts')->group(function () {
+        // Status management
+        Route::patch('/{id}/status', [ContactController::class, 'updateStatus']);
+        Route::patch('/{id}/mark-responded', [ContactController::class, 'markAsResponded']);
+        Route::post('/bulk-update-status', [ContactController::class, 'bulkUpdateStatus']);
+        
+    });
 });
 
 Route::get('/enums/{type}', [EnumController::class, 'get']); 
