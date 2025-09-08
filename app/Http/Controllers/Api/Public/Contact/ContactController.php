@@ -22,13 +22,13 @@ class ContactController extends BaseController
     }
 
     /**
-     * Store a newly created contact (Public API)
+     * Override store method to use createContact service method
      */
     public function store()
     {
         try {
             $request = app($this->getStoreRequestClass());
-            $data = $this->service->createContact($request->all());
+            $data = $this->service->createContact($request->validated());
             
             return $this->formatResponse($data, 'single');
         } catch (Exception $e) {
