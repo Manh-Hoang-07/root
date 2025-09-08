@@ -28,7 +28,7 @@ class ContactController extends BaseController
     {
         try {
             $request = app($this->getStoreRequestClass());
-            $data = $this->service->createContact($request->validated());
+            $data = $this->service->createContact($request->all());
             
             return $this->formatResponse($data, 'single');
         } catch (Exception $e) {
