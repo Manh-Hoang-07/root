@@ -89,14 +89,6 @@ class UserController extends BaseController
     }
 
     /**
-     * Override default list fields for User model
-     */
-    protected function getDefaultListFields(): array
-    {
-        return ['id', 'username', 'email', 'status', 'created_at'];
-    }
-
-    /**
      * Override default search fields for User model
      */
     protected function getSearchFields(): array

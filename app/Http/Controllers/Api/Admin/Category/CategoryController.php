@@ -48,12 +48,4 @@ class CategoryController extends BaseController
         
         return $this->successResponse($this->formatCollectionData($data), 'Lấy danh sách thành công');
     }
-
-    /**
-     * Override getDefaultListFields cho Category
-     */
-    protected function getDefaultListFields(): array
-    {
-        return ['id', 'name', 'parent_id', 'status', 'created_at'];
-    }
 } 

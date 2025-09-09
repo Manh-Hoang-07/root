@@ -53,12 +53,4 @@ class BrandController extends BaseController
             ];
         }));
     }
-
-    /**
-     * Override getDefaultListFields cho Brand
-     */
-    protected function getDefaultListFields(): array
-    {
-        return ['id', 'name', 'status', 'created_at'];
-    }
 } 

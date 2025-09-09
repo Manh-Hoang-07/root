@@ -19,11 +19,6 @@ class PostController extends BaseController
         $this->storeRequestClass = PostRequest::class;
         $this->updateRequestClass = PostRequest::class;
     }
-
-    protected function getDefaultListFields(): array
-    {
-        return ['id','name','slug','image','status','published_at','created_at'];
-    }
 }
 
 

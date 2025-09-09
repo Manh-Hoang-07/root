@@ -583,7 +583,7 @@ abstract class BaseController extends Controller
      */
     protected function getDefaultListFields(): array
     {
-        return ['id', 'name', 'status', 'created_at'];
+        return ['*'];
     }
 
     /**

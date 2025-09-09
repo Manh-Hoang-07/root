@@ -24,12 +24,4 @@ class OrderController extends BaseController
             'orderItems.product:id,name,sku'
         ];
     }
-
-    /**
-     * Override getDefaultListFields cho Order
-     */
-    protected function getDefaultListFields(): array
-    {
-        return ['id', 'order_number', 'user_id', 'total_amount', 'status', 'created_at'];
-    }
 } 

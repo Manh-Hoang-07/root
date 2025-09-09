@@ -18,9 +18,4 @@ class PostTagController extends BaseController
         $this->storeRequestClass = PostTagRequest::class;
         $this->updateRequestClass = PostTagRequest::class;
     }
-
-    protected function getDefaultListFields(): array
-    {
-        return ['id','name','slug','status','created_at'];
-    }
 }
