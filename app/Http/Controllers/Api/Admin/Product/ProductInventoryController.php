@@ -10,7 +10,7 @@ class ProductInventoryController extends BaseController
 {
     public function __construct(ProductInventoryService $service)
     {
-        parent::__construct($service, InventoryResource::class);
+        parent::__construct($service);
         $this->storeRequestClass = ProductInventoryRequest::class;
         $this->updateRequestClass = ProductInventoryRequest::class;
     }

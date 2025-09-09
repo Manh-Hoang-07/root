@@ -11,7 +11,7 @@ class ImageController extends BaseController
 {
     public function __construct(ImageService $service)
     {
-        parent::__construct($service, ImageResource::class);
+        parent::__construct($service);
         $this->storeRequestClass = ImageRequest::class;
         $this->updateRequestClass = ImageRequest::class;
     }
@@ -22,6 +22,6 @@ class ImageController extends BaseController
     public function getProductImages($productId)
     {
         $images = $this->service->getImagesByProduct($productId);
-        return ImageResource::collection($images);
+        return $this->successResponse($this->formatCollectionData($images), 'Lấy danh sách thành công');
     }
 } 

@@ -9,6 +9,6 @@ class ShippingInfoController extends BaseController
 {
     public function __construct(ShippingInfoService $service)
     {
-        parent::__construct($service, ShippingInfoResource::class);
+        parent::__construct($service);
     }
 } 

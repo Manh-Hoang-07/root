@@ -12,12 +12,11 @@ use Exception;
 class ContactController extends BaseController
 {
     protected $service;
-    protected $resource = ContactResource::class;
-    protected $storeRequestClass = ContactRequest::class;
+        protected $storeRequestClass = ContactRequest::class;
 
     public function __construct(ContactService $service)
     {
-        parent::__construct($service, ContactResource::class);
+        parent::__construct($service);
         $this->service = $service;
     }
 

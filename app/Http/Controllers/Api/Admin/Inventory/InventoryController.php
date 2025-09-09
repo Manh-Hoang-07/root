@@ -6,8 +6,6 @@ use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Admin\Inventory\InventoryRequest;
 use App\Http\Requests\Admin\Inventory\ImportInventoryRequest;
 use App\Http\Requests\Admin\Inventory\ExportInventoryRequest;
-use App\Http\Resources\Admin\Inventory\InventoryResource;
-use App\Http\Resources\Admin\Inventory\InventoryListResource;
 use App\Services\Inventory\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -16,9 +14,8 @@ class InventoryController extends BaseController
 {
     public function __construct(InventoryService $service)
     {
-        parent::__construct($service, InventoryResource::class);
-        $this->listResource = InventoryListResource::class;
-        $this->storeRequestClass = InventoryRequest::class;
+        parent::__construct($service);
+                $this->storeRequestClass = InventoryRequest::class;
         $this->updateRequestClass = InventoryRequest::class;
                                                 $this->indexRelations = ['product:id,name,code', 'variant:id,sku,name', 'warehouse:id,name'];
                     $this->showRelations = ['product', 'variant', 'warehouse'];
@@ -42,7 +39,7 @@ class InventoryController extends BaseController
             $inventories = $this->service->getInventories($filters, $perPage);
             
             return $this->successResponse(
-                $this->listResource::collection($inventories),
+                $this->formatCollectionData($inventories),
                 'Lấy danh sách tồn kho thành công'
             );
         } catch (\Exception $e) {
@@ -63,7 +60,7 @@ class InventoryController extends BaseController
             }
 
             return $this->successResponse(
-                new InventoryResource($inventory),
+                $this->formatSingleData($inventory),
                 'Lấy thông tin tồn kho thành công'
             );
         } catch (\Exception $e) {
@@ -81,7 +78,7 @@ class InventoryController extends BaseController
             $inventory = $this->service->create($request->validated());
 
             return $this->successResponse(
-                new InventoryResource($inventory),
+                $this->formatSingleData($inventory),
                 'Tạo tồn kho thành công',
                 201
             );
@@ -100,7 +97,7 @@ class InventoryController extends BaseController
             $inventory = $this->service->update($id, $request->validated());
 
             return $this->successResponse(
-                new InventoryResource($inventory),
+                $this->formatSingleData($inventory),
                 'Cập nhật tồn kho thành công'
             );
         } catch (\Exception $e) {
@@ -143,7 +140,7 @@ class InventoryController extends BaseController
             );
 
             return $this->successResponse(
-                new InventoryResource($inventory),
+                $this->formatSingleData($inventory),
                 'Nhập kho thành công'
             );
         } catch (\Exception $e) {
@@ -167,7 +164,7 @@ class InventoryController extends BaseController
             );
 
             return $this->successResponse(
-                new InventoryResource($inventory),
+                $this->formatSingleData($inventory),
                 'Xuất kho thành công'
             );
         } catch (\Exception $e) {
@@ -187,7 +184,7 @@ class InventoryController extends BaseController
             $inventories = $this->service->getExpiringSoon($days);
 
             return $this->successResponse(
-                $this->listResource::collection($inventories),
+                $this->formatCollectionData($inventories),
                 'Lấy danh sách hàng sắp hết hạn thành công'
             );
         } catch (\Exception $e) {
@@ -204,7 +201,7 @@ class InventoryController extends BaseController
             $inventories = $this->service->getExpired();
 
             return $this->successResponse(
-                $this->listResource::collection($inventories),
+                $this->formatCollectionData($inventories),
                 'Lấy danh sách hàng đã hết hạn thành công'
             );
         } catch (\Exception $e) {
@@ -222,7 +219,7 @@ class InventoryController extends BaseController
             $inventories = $this->service->getLowStock($threshold);
 
             return $this->successResponse(
-                $this->listResource::collection($inventories),
+                $this->formatCollectionData($inventories),
                 'Lấy danh sách hàng sắp hết thành công'
             );
         } catch (\Exception $e) {

@@ -15,7 +15,7 @@ class PostController extends BaseController
 
     public function __construct(PostService $service)
     {
-        parent::__construct($service, PostResource::class);
+        parent::__construct($service);
         $this->storeRequestClass = PostRequest::class;
         $this->updateRequestClass = PostRequest::class;
     }

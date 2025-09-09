@@ -3,8 +3,6 @@ namespace App\Http\Controllers\Api\Admin\Brand;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Brand\BrandService;
-use App\Http\Resources\Admin\Brand\BrandResource;
-use App\Http\Resources\Admin\Brand\BrandListResource;
 use App\Http\Requests\Admin\Brand\BrandRequest;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
@@ -13,9 +11,8 @@ class BrandController extends BaseController
 {
     public function __construct(BrandService $service)
     {
-        parent::__construct($service, BrandResource::class);
-        $this->listResource = BrandListResource::class;
-        $this->storeRequestClass = BrandRequest::class;
+        parent::__construct($service);
+                $this->storeRequestClass = BrandRequest::class;
         $this->updateRequestClass = BrandRequest::class;
         
         // Tối ưu: Không load relations mặc định cho list

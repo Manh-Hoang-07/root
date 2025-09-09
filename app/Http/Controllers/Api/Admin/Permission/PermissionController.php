@@ -11,9 +11,8 @@ class PermissionController extends BaseController
 {
     public function __construct(PermissionService $service)
     {
-        parent::__construct($service, PermissionResource::class);
-        $this->listResource = PermissionListResource::class;
-        $this->storeRequestClass = PermissionRequest::class;
+        parent::__construct($service);
+                $this->storeRequestClass = PermissionRequest::class;
         $this->updateRequestClass = PermissionRequest::class;
     }
 } 

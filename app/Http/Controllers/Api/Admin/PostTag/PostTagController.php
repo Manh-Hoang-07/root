@@ -14,7 +14,7 @@ class PostTagController extends BaseController
 
     public function __construct(PostTagService $service)
     {
-        parent::__construct($service, PostTagResource::class);
+        parent::__construct($service);
         $this->storeRequestClass = PostTagRequest::class;
         $this->updateRequestClass = PostTagRequest::class;
     }

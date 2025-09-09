@@ -13,7 +13,7 @@ class PublicPostCategoryController extends BaseController
 
     public function __construct(PostCategoryService $service)
     {
-        parent::__construct($service, PostCategoryResource::class);
+        parent::__construct($service);
     }
 
     protected function getDefaultListFields(): array

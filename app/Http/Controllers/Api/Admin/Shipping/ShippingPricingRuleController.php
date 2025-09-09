@@ -10,7 +10,7 @@ class ShippingPricingRuleController extends BaseController
 {
     public function __construct(ShippingPricingRuleService $service)
     {
-        parent::__construct($service, ShippingPricingRuleResource::class);
+        parent::__construct($service);
         $this->storeRequestClass = ShippingPricingRuleRequest::class;
         $this->updateRequestClass = ShippingPricingRuleRequest::class;
     }

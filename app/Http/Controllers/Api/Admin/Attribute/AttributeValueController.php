@@ -11,9 +11,8 @@ class AttributeValueController extends BaseController
 {
     public function __construct(AttributeValueService $service)
     {
-        parent::__construct($service, AttributeValueResource::class);
-        $this->listResource = AttributeValueListResource::class;
-        $this->storeRequestClass = AttributeValueRequest::class;
+        parent::__construct($service);
+                $this->storeRequestClass = AttributeValueRequest::class;
         $this->updateRequestClass = AttributeValueRequest::class;
         $this->indexRelations = ['attribute:id,name'];
         $this->showRelations = ['attribute'];

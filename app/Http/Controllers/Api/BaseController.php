@@ -29,12 +29,6 @@ abstract class BaseController extends Controller
     /** @var mixed Service instance for business logic */
     protected $service;
     
-    /** @var string Resource class for single item responses */
-    protected $resource;
-    
-    /** @var string Resource class for collection responses */
-    protected $listResource;
-    
     /** @var string Request class for store operations */
     protected $storeRequestClass = Request::class;
     
@@ -78,12 +72,10 @@ abstract class BaseController extends Controller
      * Constructor
      * 
      * @param mixed $service Service instance
-     * @param string $resource Resource class name
      */
-    public function __construct($service, string $resource = '')
+    public function __construct($service)
     {
         $this->service = $service;
-        $this->resource = $resource;
         
         // Initialize cache service
         $this->cacheService = new CacheService(
@@ -91,18 +83,6 @@ abstract class BaseController extends Controller
             $this->cacheTtl ?? 300,
             'api'
         );
-        
-        // Auto-generate listResource if not set
-        if (!$this->listResource) {
-            $resourceClass = $resource;
-            $listResourceClass = str_replace('Resource', 'ListResource', $resourceClass);
-            
-            if (class_exists($listResourceClass)) {
-                $this->listResource = $listResourceClass;
-            } else {
-                $this->listResource = $resource;
-            }
-        }
     }
 
     /**
@@ -160,7 +140,35 @@ abstract class BaseController extends Controller
         
         $data = $this->getOptimizedData($filters, $perPage, 'index');
         
-        return $this->formatResponse($data);
+        // Check if data is paginated (Laravel pagination object)
+        if (method_exists($data, 'toArray')) {
+            $dataArray = $data->toArray();
+            // Check for Laravel pagination structure
+            if (isset($dataArray['data']) && (isset($dataArray['links']) || isset($dataArray['meta']))) {
+                // Format the data array within pagination
+                $dataArray['data'] = $this->formatCollectionData($dataArray['data']);
+                
+                // If meta data is at top level, move it to meta key
+                if (!isset($dataArray['meta']) && isset($dataArray['current_page'])) {
+                    $metaKeys = ['current_page', 'from', 'last_page', 'last_page_url', 'next_page_url', 'path', 'per_page', 'prev_page_url', 'to', 'total'];
+                    $meta = [];
+                    foreach ($metaKeys as $key) {
+                        if (isset($dataArray[$key])) {
+                            $meta[$key] = $dataArray[$key];
+                            unset($dataArray[$key]);
+                        }
+                    }
+                    $dataArray['meta'] = $meta;
+                }
+                
+                return response()->json($dataArray);
+            }
+        }
+        
+        return $this->successResponse(
+            $this->formatResponse($data),
+            'Lấy danh sách dữ liệu thành công'
+        );
     }
 
     /**
@@ -199,7 +207,10 @@ abstract class BaseController extends Controller
             return $this->errorResponse('Không tìm thấy dữ liệu', 404);
         }
         
-        return $this->formatResponse($item, 'single');
+        return $this->successResponse(
+            $this->formatResponse($item, 'single'),
+            'Lấy thông tin chi tiết thành công'
+        );
     }
 
     /**
@@ -266,7 +277,10 @@ abstract class BaseController extends Controller
             $request = app($this->getStoreRequestClass());
             $data = $this->service->create($request->validated());
             
-            return $this->formatResponse($data, 'single');
+            return $this->successResponse(
+                $this->formatResponse($data, 'single'),
+                'Tạo dữ liệu thành công'
+            );
         } catch (Exception $e) {
             $this->logError('Store', $e);
             
@@ -290,7 +304,10 @@ abstract class BaseController extends Controller
                 return $this->errorResponse('Không tìm thấy dữ liệu để cập nhật', 404);
             }
             
-            return $this->formatResponse($data, 'single');
+            return $this->successResponse(
+                $this->formatResponse($data, 'single'),
+                'Cập nhật dữ liệu thành công'
+            );
         } catch (Exception $e) {
             $this->logError('Update', $e, ['id' => $id]);
             
@@ -382,15 +399,152 @@ abstract class BaseController extends Controller
      * 
      * @param mixed $data
      * @param string $type
-     * @return JsonResponse|JsonResource
+     * @return array
      */
     protected function formatResponse($data, string $type = 'collection')
     {
         if ($type === 'single') {
-            return new $this->resource($data);
+            return $this->formatSingleData($data);
         }
         
-        return $this->listResource::collection($data);
+        // Check if data is a paginated collection (Laravel pagination object)
+        if (method_exists($data, 'toArray')) {
+            $dataArray = $data->toArray();
+            // Check for Laravel pagination structure
+            if (isset($dataArray['data']) && (isset($dataArray['links']) || isset($dataArray['meta']))) {
+                // Format the data array within pagination
+                $dataArray['data'] = $this->formatCollectionData($dataArray['data']);
+                
+                // If meta data is at top level, move it to meta key
+                if (!isset($dataArray['meta']) && isset($dataArray['current_page'])) {
+                    $metaKeys = ['current_page', 'from', 'last_page', 'last_page_url', 'next_page_url', 'path', 'per_page', 'prev_page_url', 'to', 'total'];
+                    $meta = [];
+                    foreach ($metaKeys as $key) {
+                        if (isset($dataArray[$key])) {
+                            $meta[$key] = $dataArray[$key];
+                            unset($dataArray[$key]);
+                        }
+                    }
+                    $dataArray['meta'] = $meta;
+                }
+                
+                return $dataArray;
+            }
+        }
+        
+        return $this->formatCollectionData($data);
+    }
+
+    /**
+     * Format single data without Resource
+     * 
+     * @param mixed $data
+     * @return array
+     */
+    protected function formatSingleData($data)
+    {
+        if (!$data) {
+            return null;
+        }
+
+        // If data is already an array, return as is
+        if (is_array($data)) {
+            return $data;
+        }
+
+        // Convert model to array with proper formatting
+        $formatted = $data->toArray();
+
+        // Format timestamps consistently
+        $formatted = $this->formatTimestamps($formatted);
+
+        // Format relationships if they exist
+        $formatted = $this->formatRelationships($formatted, $data);
+
+        return $formatted;
+    }
+
+    /**
+     * Format collection data without Resource
+     * 
+     * @param mixed $data
+     * @return array
+     */
+    protected function formatCollectionData($data)
+    {
+        if (!$data) {
+            return [];
+        }
+
+        // If data is already an array, return as is
+        if (is_array($data)) {
+            return $data;
+        }
+
+        // Convert collection to array
+        if (method_exists($data, 'map')) {
+            $formatted = $data->map(function ($item) {
+                return $this->formatSingleData($item);
+            })->toArray();
+        } else {
+            $formatted = $data;
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * Format timestamps in data
+     * 
+     * @param array $data
+     * @return array
+     */
+    protected function formatTimestamps(array $data): array
+    {
+        $timestampFields = ['created_at', 'updated_at', 'deleted_at', 'email_verified_at', 'phone_verified_at', 'last_login_at'];
+        
+        foreach ($timestampFields as $field) {
+            if (isset($data[$field]) && $data[$field]) {
+                if (is_string($data[$field])) {
+                    $data[$field] = date('Y-m-d H:i:s', strtotime($data[$field]));
+                } elseif (is_object($data[$field]) && method_exists($data[$field], 'toDateTimeString')) {
+                    $data[$field] = $data[$field]->toDateTimeString();
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Format relationships in data
+     * 
+     * @param array $data
+     * @param mixed $originalData
+     * @return array
+     */
+    protected function formatRelationships(array $data, $originalData): array
+    {
+        // Handle common relationships
+        $relationshipFields = ['profile', 'roles', 'brand', 'categories', 'variants', 'images'];
+        
+        foreach ($relationshipFields as $field) {
+            if (isset($data[$field]) && is_object($data[$field])) {
+                if (method_exists($data[$field], 'toArray')) {
+                    $data[$field] = $data[$field]->toArray();
+                }
+            } elseif (isset($data[$field]) && is_array($data[$field])) {
+                // Handle collection relationships
+                $data[$field] = array_map(function ($item) {
+                    if (is_object($item) && method_exists($item, 'toArray')) {
+                        return $item->toArray();
+                    }
+                    return $item;
+                }, $data[$field]);
+            }
+        }
+
+        return $data;
     }
 
     /**
@@ -411,7 +565,10 @@ abstract class BaseController extends Controller
             
             $results = $this->service->list($filters, $limit, $relations, $fields);
             
-            return $this->formatResponse($results);
+            return $this->successResponse(
+                $this->formatResponse($results),
+                'Tìm kiếm dữ liệu thành công'
+            );
         } catch (Exception $e) {
             $this->logError('Search', $e);
             

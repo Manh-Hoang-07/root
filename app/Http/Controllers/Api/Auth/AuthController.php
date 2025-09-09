@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Auth\AuthService;
-use App\Http\Resources\Auth\AuthResource;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ChangePasswordRequest;
@@ -16,7 +15,7 @@ class AuthController extends BaseController
 {
     public function __construct(AuthService $service)
     {
-        parent::__construct($service, AuthResource::class);
+        parent::__construct($service);
     }
 
     /**
@@ -82,7 +81,7 @@ class AuthController extends BaseController
         
         if ($result['success']) {
             return $this->successResponse(
-                new AuthResource($result['data']),
+                $this->formatSingleData($result['data']),
                 $result['message']
             );
         }

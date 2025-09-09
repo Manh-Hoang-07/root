@@ -3,7 +3,6 @@ namespace App\Http\Controllers\Api\Admin\Product;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Product\ProductService;
-use App\Http\Resources\Admin\Product\ProductResource;
 use App\Http\Requests\Admin\Product\ProductRequest;
 use Illuminate\Http\Request;
 
@@ -26,7 +25,7 @@ class ProductController extends BaseController
 
     public function __construct(ProductService $service)
     {
-        parent::__construct($service, ProductResource::class);
+        parent::__construct($service);
         $this->storeRequestClass = ProductRequest::class;
         $this->updateRequestClass = ProductRequest::class;
     }
@@ -53,7 +52,10 @@ class ProductController extends BaseController
         
         $data = $this->service->list($request->all(), $request->get('per_page', 20), $relations, $fields);
         
-        return $this->listResource::collection($data);
+        return $this->successResponse(
+            $this->formatCollectionData($data),
+            'Lấy danh sách sản phẩm thành công'
+        );
     }
 
     /**
@@ -72,7 +74,10 @@ class ProductController extends BaseController
         $fields = $request ? $this->parseFields($request->get('fields')) : ['*'];
         $item = $this->service->find($id, $relations, $fields);
         
-        return new $this->resource($item);
+        return $this->successResponse(
+            $this->formatSingleData($item),
+            'Lấy thông tin sản phẩm thành công'
+        );
     }
 
     /**
@@ -86,7 +91,10 @@ class ProductController extends BaseController
         // Load minimal relations cho response
         $product->load(['brand:id,name']);
         
-        return new ProductResource($product);
+        return $this->successResponse(
+            $this->formatSingleData($product),
+            'Tạo sản phẩm thành công'
+        );
     }
 
     /**
@@ -100,7 +108,10 @@ class ProductController extends BaseController
         // Load minimal relations cho response
         $product->load(['brand:id,name']);
         
-        return new ProductResource($product);
+        return $this->successResponse(
+            $this->formatSingleData($product),
+            'Cập nhật sản phẩm thành công'
+        );
     }
 
     /**

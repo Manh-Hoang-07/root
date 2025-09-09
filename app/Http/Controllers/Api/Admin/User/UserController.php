@@ -3,8 +3,6 @@ namespace App\Http\Controllers\Api\Admin\User;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\User\UserService;
-use App\Http\Resources\Admin\User\UserResource;
-use App\Http\Resources\Admin\User\UserListResource;
 use App\Http\Requests\Admin\User\UserRequest;
 use App\Http\Requests\Admin\User\ChangePasswordRequest;
 use App\Http\Requests\Admin\User\AssignRoleRequest;
@@ -14,8 +12,7 @@ class UserController extends BaseController
 {
     public function __construct(UserService $service)
     {
-        parent::__construct($service, UserResource::class);
-        $this->listResource = UserListResource::class;
+        parent::__construct($service);
         $this->storeRequestClass = UserRequest::class;
         $this->updateRequestClass = UserRequest::class;
     }
@@ -33,7 +30,7 @@ class UserController extends BaseController
             }
 
             return $this->successResponse(
-                new UserResource($user),
+                $this->formatSingleData($user),
                 'Lấy thông tin người dùng thành công'
             );
         } catch (\Exception $e) {
@@ -65,7 +62,7 @@ class UserController extends BaseController
             }
 
             return $this->successResponse(
-                new UserResource($user),
+                $this->formatSingleData($user),
                 'Lấy thông tin người dùng thành công'
             );
         } catch (\Exception $e) {

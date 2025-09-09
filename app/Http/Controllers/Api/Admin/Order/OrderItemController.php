@@ -9,6 +9,6 @@ class OrderItemController extends BaseController
 {
     public function __construct(OrderItemService $service)
     {
-        parent::__construct($service, OrderItemResource::class);
+        parent::__construct($service);
     }
 } 

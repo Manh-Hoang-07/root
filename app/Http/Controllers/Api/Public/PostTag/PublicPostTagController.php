@@ -13,7 +13,7 @@ class PublicPostTagController extends BaseController
 
     public function __construct(PostTagService $service)
     {
-        parent::__construct($service, PostTagResource::class);
+        parent::__construct($service);
     }
 
     protected function getDefaultListFields(): array

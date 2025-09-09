@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Admin\Variant;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Variant\VariantService;
-use App\Http\Resources\Admin\Variant\VariantResource;
 use App\Http\Requests\Admin\Variant\VariantRequest;
 use Illuminate\Http\Request;
 
@@ -12,7 +11,7 @@ class VariantController extends BaseController
 {
     public function __construct(VariantService $service)
     {
-        parent::__construct($service, VariantResource::class);
+        parent::__construct($service);
         $this->storeRequestClass = VariantRequest::class;
         $this->updateRequestClass = VariantRequest::class;
     }
@@ -28,7 +27,7 @@ class VariantController extends BaseController
         $variants = $this->service->getVariantsByProduct($productId);
         
         return $this->successResponse(
-            VariantResource::collection($variants),
+            $this->formatCollectionData($variants),
             'Lấy danh sách biến thể thành công'
         );
     }
@@ -41,7 +40,7 @@ class VariantController extends BaseController
         $request = app($this->getStoreRequestClass());
         $variant = $this->service->createVariant($request->validated());
         
-        return new VariantResource($variant);
+        return $this->successResponse($this->formatSingleData($variant), 'Lấy thông tin thành công');
     }
 
     /**
@@ -52,6 +51,6 @@ class VariantController extends BaseController
         $request = app($this->getUpdateRequestClass());
         $variant = $this->service->updateVariant($id, $request->validated());
         
-        return new VariantResource($variant);
+        return $this->successResponse($this->formatSingleData($variant), 'Lấy thông tin thành công');
     }
 } 

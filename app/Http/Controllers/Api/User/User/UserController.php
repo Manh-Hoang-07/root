@@ -34,7 +34,7 @@ class UserController extends BaseController
         }
         
         return $this->successResponse(
-            new AuthResource($user),
+            $this->formatSingleData($user),
             'Lấy thông tin user thành công.'
         );
     }

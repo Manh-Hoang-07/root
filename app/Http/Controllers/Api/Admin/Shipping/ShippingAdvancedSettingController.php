@@ -10,7 +10,7 @@ class ShippingAdvancedSettingController extends BaseController
 {
     public function __construct(ShippingAdvancedSettingService $service)
     {
-        parent::__construct($service, ShippingAdvancedSettingResource::class);
+        parent::__construct($service);
         $this->storeRequestClass = ShippingAdvancedSettingRequest::class;
         $this->updateRequestClass = ShippingAdvancedSettingRequest::class;
     }

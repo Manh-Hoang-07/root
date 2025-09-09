@@ -10,7 +10,7 @@ class ShippingZoneController extends BaseController
 {
     public function __construct(ShippingZoneService $service)
     {
-        parent::__construct($service, ShippingZoneResource::class);
+        parent::__construct($service);
         $this->storeRequestClass = ShippingZoneRequest::class;
         $this->updateRequestClass = ShippingZoneRequest::class;
     }

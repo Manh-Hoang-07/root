@@ -10,7 +10,7 @@ class ShippingApiConfigController extends BaseController
 {
     public function __construct(ShippingApiConfigService $service)
     {
-        parent::__construct($service, ShippingApiConfigResource::class);
+        parent::__construct($service);
         $this->storeRequestClass = ShippingApiConfigRequest::class;
         $this->updateRequestClass = ShippingApiConfigRequest::class;
     }

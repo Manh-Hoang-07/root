@@ -10,7 +10,7 @@ class OrderController extends BaseController
 {
     public function __construct(OrderService $service)
     {
-        parent::__construct($service, OrderResource::class);
+        parent::__construct($service);
         $this->storeRequestClass = OrderRequest::class;
         $this->updateRequestClass = OrderRequest::class;
         

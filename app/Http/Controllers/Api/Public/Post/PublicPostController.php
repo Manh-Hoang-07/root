@@ -14,7 +14,7 @@ class PublicPostController extends BaseController
 
     public function __construct(PostService $service)
     {
-        parent::__construct($service, PostResource::class);
+        parent::__construct($service);
     }
 
     protected function getDefaultListFields(): array
@@ -36,7 +36,7 @@ class PublicPostController extends BaseController
         if (!$item) {
             return $this->errorResponse('Không tìm thấy dữ liệu', 404);
         }
-        return new PostResource($item);
+        return $this->successResponse($this->formatSingleData($item), 'Lấy thông tin thành công');
     }
 }
 
