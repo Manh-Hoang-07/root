@@ -30,33 +30,6 @@ class ProductController extends BaseController
         $this->updateRequestClass = ProductRequest::class;
     }
 
-    /**
-     * Override index method với tối ưu hiệu suất
-     */
-    public function index(Request $request)
-    {
-        // Parse relations từ request
-        $requestRelations = $this->parseRelations($request->get('relations'));
-        
-        // Nếu có relations được yêu cầu thì dùng, không thì dùng default tối ưu
-        $relations = !empty($requestRelations) 
-            ? $requestRelations 
-            : $this->relations['index'];
-        
-        $fields = $this->parseFields($request->get('fields'));
-        
-        // Tối ưu: Chỉ load fields cần thiết cho list
-        if (empty($fields) || $fields === ['*']) {
-            $fields = ['id', 'name', 'slug', 'price', 'sale_price', 'image', 'brand_id', 'status', 'created_at'];
-        }
-        
-        $data = $this->service->list($request->all(), $request->get('per_page', 20), $relations, $fields);
-        
-        return $this->successResponse(
-            $this->formatCollectionData($data),
-            'Lấy danh sách sản phẩm thành công'
-        );
-    }
 
     /**
      * Override show method với tối ưu hiệu suất

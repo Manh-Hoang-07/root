@@ -15,37 +15,37 @@ class InventoryController extends BaseController
     public function __construct(InventoryService $service)
     {
         parent::__construct($service);
-                $this->storeRequestClass = InventoryRequest::class;
+        $this->storeRequestClass = InventoryRequest::class;
         $this->updateRequestClass = InventoryRequest::class;
-                                                $this->indexRelations = ['product:id,name,code', 'variant:id,sku,name', 'warehouse:id,name'];
-                    $this->showRelations = ['product', 'variant', 'warehouse'];
+        $this->indexRelations = ['product:id,name,code', 'variant:id,sku,name', 'warehouse:id,name'];
+        $this->showRelations = ['product', 'variant', 'warehouse'];
     }
 
-    /**
-     * Lấy danh sách tồn kho với phân trang và bộ lọc
-     */
-    public function index(Request $request)
-    {
-        try {
-            $filters = $request->only([
-                'search', 'warehouse_id', 'product_id', 'brand_id', 'category_id',
-                'low_stock', 'expiring_soon', 'expired', 'out_of_stock',
-                'sort_by', 'sort_direction'
-            ]);
+    // /**
+    //  * Lấy danh sách tồn kho với phân trang và bộ lọc
+    //  */
+    // public function index(Request $request)
+    // {
+    //     try {
+    //         $filters = $request->only([
+    //             'search', 'warehouse_id', 'product_id', 'brand_id', 'category_id',
+    //             'low_stock', 'expiring_soon', 'expired', 'out_of_stock',
+    //             'sort_by', 'sort_direction'
+    //         ]);
 
-            $perPage = $request->get('per_page', 15);
+    //         $perPage = $request->get('per_page', 15);
             
-            // Load relations manually
-            $inventories = $this->service->getInventories($filters, $perPage);
+    //         // Load relations manually
+    //         $inventories = $this->service->getInventories($filters, $perPage);
             
-            return $this->successResponse(
-                $this->formatCollectionData($inventories),
-                'Lấy danh sách tồn kho thành công'
-            );
-        } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-    }
+    //         return $this->successResponse(
+    //             $this->formatCollectionData($inventories),
+    //             'Lấy danh sách tồn kho thành công'
+    //         );
+    //     } catch (\Exception $e) {
+    //         return $this->errorResponse($e->getMessage());
+    //     }
+    // }
 
     /**
      * Lấy thông tin chi tiết tồn kho
