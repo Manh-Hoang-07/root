@@ -79,8 +79,8 @@ abstract class BaseController extends Controller
         
         // Initialize cache service
         $this->cacheService = new CacheService(
-            $this->enableCaching ?? false,
-            $this->cacheTtl ?? 300,
+            $this->enableCaching,
+            $this->cacheTtl,
             'api'
         );
     }
@@ -136,39 +136,85 @@ abstract class BaseController extends Controller
     protected function getIndexData(Request $request)
     {
         $filters = $request->all();
-        $perPage = min($request->get('per_page', $this->defaultPerPage), $this->maxPerPage);
+        $perPage = $this->getValidatedPerPage($request);
         
         $data = $this->getOptimizedData($filters, $perPage, 'index');
         
-        // Check if data is paginated (Laravel pagination object)
-        if (method_exists($data, 'toArray')) {
-            $dataArray = $data->toArray();
-            // Check for Laravel pagination structure
-            if (isset($dataArray['data']) && (isset($dataArray['links']) || isset($dataArray['meta']))) {
-                // Format the data array within pagination
-                $dataArray['data'] = $this->formatCollectionData($dataArray['data']);
-                
-                // If meta data is at top level, move it to meta key
-                if (!isset($dataArray['meta']) && isset($dataArray['current_page'])) {
-                    $metaKeys = ['current_page', 'from', 'last_page', 'last_page_url', 'next_page_url', 'path', 'per_page', 'prev_page_url', 'to', 'total'];
-                    $meta = [];
-                    foreach ($metaKeys as $key) {
-                        if (isset($dataArray[$key])) {
-                            $meta[$key] = $dataArray[$key];
-                            unset($dataArray[$key]);
-                        }
-                    }
-                    $dataArray['meta'] = $meta;
-                }
-                
-                return response()->json($dataArray);
-            }
+        if ($this->isPaginatedData($data)) {
+            return $this->formatPaginatedResponse($data);
         }
         
         return $this->successResponse(
             $this->formatResponse($data),
             'Lấy danh sách dữ liệu thành công'
         );
+    }
+
+    /**
+     * Get validated per page value
+     * 
+     * @param Request $request
+     * @return int
+     */
+    private function getValidatedPerPage(Request $request): int
+    {
+        return min($request->get('per_page', $this->defaultPerPage), $this->maxPerPage);
+    }
+
+    /**
+     * Check if data is paginated
+     * 
+     * @param mixed $data
+     * @return bool
+     */
+    private function isPaginatedData($data): bool
+    {
+        if (!method_exists($data, 'toArray')) {
+            return false;
+        }
+        
+        $dataArray = $data->toArray();
+        return isset($dataArray['data']) && (isset($dataArray['links']) || isset($dataArray['meta']));
+    }
+
+    /**
+     * Format paginated response
+     * 
+     * @param mixed $data
+     * @return JsonResponse
+     */
+    private function formatPaginatedResponse($data)
+    {
+        $dataArray = $data->toArray();
+        $dataArray['data'] = $this->formatCollectionData($dataArray['data']);
+        $dataArray = $this->normalizePaginationMeta($dataArray);
+        
+        return response()->json($dataArray);
+    }
+
+    /**
+     * Normalize pagination meta data
+     * 
+     * @param array $dataArray
+     * @return array
+     */
+    private function normalizePaginationMeta(array $dataArray): array
+    {
+        if (!isset($dataArray['meta']) && isset($dataArray['current_page'])) {
+            $metaKeys = ['current_page', 'from', 'last_page', 'last_page_url', 'next_page_url', 'path', 'per_page', 'prev_page_url', 'to', 'total'];
+            $meta = [];
+            
+            foreach ($metaKeys as $key) {
+                if (isset($dataArray[$key])) {
+                    $meta[$key] = $dataArray[$key];
+                    unset($dataArray[$key]);
+                }
+            }
+            
+            $dataArray['meta'] = $meta;
+        }
+        
+        return $dataArray;
     }
 
     /**
@@ -529,18 +575,21 @@ abstract class BaseController extends Controller
         $relationshipFields = ['profile', 'roles', 'brand', 'categories', 'variants', 'images'];
         
         foreach ($relationshipFields as $field) {
-            if (isset($data[$field]) && is_object($data[$field])) {
-                if (method_exists($data[$field], 'toArray')) {
-                    $data[$field] = $data[$field]->toArray();
-                }
-            } elseif (isset($data[$field]) && is_array($data[$field])) {
-                // Handle collection relationships
-                $data[$field] = array_map(function ($item) {
-                    if (is_object($item) && method_exists($item, 'toArray')) {
-                        return $item->toArray();
+            if (isset($data[$field])) {
+                // Chỉ format nếu relation đã được eager loaded để tránh N+1 query
+                if ($originalData && method_exists($originalData, 'relationLoaded') && $originalData->relationLoaded($field)) {
+                    if (is_object($data[$field]) && method_exists($data[$field], 'toArray')) {
+                        $data[$field] = $data[$field]->toArray();
+                    } elseif (is_array($data[$field])) {
+                        // Handle collection relationships
+                        $data[$field] = array_map(function ($item) {
+                            if (is_object($item) && method_exists($item, 'toArray')) {
+                                return $item->toArray();
+                            }
+                            return $item;
+                        }, $data[$field]);
                     }
-                    return $item;
-                }, $data[$field]);
+                }
             }
         }
 

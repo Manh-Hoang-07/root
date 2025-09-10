@@ -2,20 +2,12 @@
 
 namespace App\Repositories;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 abstract class BaseRepository
 {
     protected $model;
     
-    // Cache configuration - tối ưu cho development
-    protected $enableCache = true;
-    protected $cacheTtl = 300; // Giảm từ 1 giờ xuống 5 phút
-    
-    // Query optimization
-    protected $maxRelations = 5; // Giảm từ 10 xuống 5
-    protected $maxFields = 20; // Giảm từ 50 xuống 20
 
     public function __construct()
     {
@@ -26,29 +18,16 @@ abstract class BaseRepository
 
     public function all($filters = [], $perPage = 20, $relations = [], $fields = ['*'])
     {
-        // Generate cache key
-        $cacheKey = $this->generateCacheKey($filters, $perPage, $relations, $fields);
-        
-        // Try to get from cache - chỉ cache cho production
-        if ($this->enableCache && !$this->shouldSkipCache($filters) && app()->environment('production')) {
-            $cached = Cache::get($cacheKey);
-            if ($cached) {
-                return $cached;
-            }
-        }
-        
         $query = $this->model->query();
         
-        // Optimize relations loading - giới hạn số lượng
+        // Load relations if specified
         if (!empty($relations)) {
-            $optimizedRelations = $this->optimizeRelations(array_slice($relations, 0, $this->maxRelations));
-            $query->with($optimizedRelations);
+            $query->with($relations);
         }
         
-        // Optimize field selection
+        // Select specific fields if specified
         if (!empty($fields) && $fields !== ['*']) {
-            $optimizedFields = $this->optimizeFields(array_slice($fields, 0, $this->maxFields));
-            $query->select($optimizedFields);
+            $query->select($fields);
         }
         
         // Apply filters with optimization
@@ -57,14 +36,7 @@ abstract class BaseRepository
         // Apply sorting
         $this->applyOptimizedSorting($query, $filters);
         
-        $result = $query->paginate($perPage);
-        
-        // Cache the result - chỉ cache cho production
-        if ($this->enableCache && !$this->shouldSkipCache($filters) && app()->environment('production')) {
-            Cache::put($cacheKey, $result, $this->cacheTtl);
-        }
-        
-        return $result;
+        return $query->paginate($perPage);
     }
     
     /**
@@ -164,142 +136,57 @@ abstract class BaseRepository
 
     protected function applySorting($query, $sortBy)
     {
-        switch ($sortBy) {
-            case 'name_asc':
-                $query->orderBy('name', 'asc');
-                break;
-            case 'name_desc':
-                $query->orderBy('name', 'desc');
-                break;
-            case 'created_at_asc':
-                $query->orderBy('created_at', 'asc');
-                break;
-            case 'created_at_desc':
-                $query->orderBy('created_at', 'desc');
-                break;
-            case 'updated_at_asc':
-                $query->orderBy('updated_at', 'asc');
-                break;
-            case 'updated_at_desc':
-                $query->orderBy('updated_at', 'desc');
-                break;
-            default:
-                $query->orderBy('created_at', 'desc');
+        if (empty($sortBy)) {
+            $query->orderBy('created_at', 'desc');
+            return;
         }
-    }
 
-    protected function optimizeRelations($relations)
-    {
-        $optimizedRelations = [];
-        foreach ($relations as $relation) {
-            if (strpos($relation, ':') !== false) {
-                // Nếu đã có select fields thì giữ nguyên
-                $optimizedRelations[] = $relation;
-            } else {
-                // Tối ưu cho các relation chung
-                $optimizedRelations[] = $this->getDefaultRelationFields($relation);
-            }
-        }
-        return $optimizedRelations;
-    }
-
-    protected function getDefaultRelationFields($relation)
-    {
-        // Default optimization cho các relation chung
-        switch ($relation) {
-            case 'brand':
-                return 'brand:id,name';
-            case 'category':
-                return 'category:id,name';
-            case 'categories':
-                return 'categories:id,name';
-            case 'user':
-                return 'user:id,name,email';
-            case 'created_by':
-                return 'created_by:id,name,email';
-            case 'updated_by':
-                return 'updated_by:id,name,email';
-            default:
-                return $relation;
-        }
-    }
-
-    protected function optimizeFields($fields)
-    {
-        $optimizedFields = [];
-        foreach ($fields as $field) {
-            if (strpos($field, '.') !== false) {
-                // Nếu là field của relation thì giữ nguyên
-                $optimizedFields[] = $field;
-            } else {
-                // Kiểm tra field có tồn tại trong model không
-                if (in_array($field, $this->model->getFillable()) || in_array($field, ['id', 'created_at', 'updated_at'])) {
-                    $optimizedFields[] = $field;
-                }
-            }
-        }
-        return $optimizedFields;
-    }
-
-    protected function generateCacheKey($filters, $perPage, $relations, $fields)
-    {
-        $key = get_class($this->model) . '_' . md5(serialize([
-            'filters' => $filters,
-            'per_page' => $perPage,
-            'relations' => $relations,
-            'fields' => $fields
-        ]));
+        // Parse sorting string: "field:direction" or "field"
+        $parts = explode(':', $sortBy);
+        $field = $parts[0];
+        $direction = isset($parts[1]) ? strtolower($parts[1]) : 'asc';
         
-        return 'repository_' . $key;
+        // Validate direction
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'asc';
+        }
+        
+        // Check if field exists in model's fillable or common fields
+        $allowedFields = array_merge(
+            $this->model->getFillable(),
+            ['id', 'created_at', 'updated_at', 'name', 'title', 'email', 'status']
+        );
+        
+        if (in_array($field, $allowedFields)) {
+            $query->orderBy($field, $direction);
+        } else {
+            // Fallback to default sorting
+            $query->orderBy('created_at', 'desc');
+        }
     }
 
-    protected function shouldSkipCache($filters)
-    {
-        // Skip cache cho các filter động
-        return isset($filters['search']) || isset($filters['date_range']);
-    }
+
 
     public function find($id, $relations = [], $fields = ['*'])
     {
-        $cacheKey = "repository_find_{$id}_" . md5(serialize([$relations, $fields]));
-        
-        // Try to get from cache - chỉ cache cho production
-        if ($this->enableCache && app()->environment('production')) {
-            $cached = Cache::get($cacheKey);
-            if ($cached) {
-                return $cached;
-            }
-        }
-        
         $query = $this->model->query();
         
-        // Optimize relations loading
+        // Load relations if specified
         if (!empty($relations)) {
-            $optimizedRelations = $this->optimizeRelations($relations);
-            $query->with($optimizedRelations);
+            $query->with($relations);
         }
         
-        // Optimize field selection
+        // Select specific fields if specified
         if (!empty($fields) && $fields !== ['*']) {
-            $optimizedFields = $this->optimizeFields($fields);
-            $query->select($optimizedFields);
+            $query->select($fields);
         }
         
-        $result = $query->find($id);
-        
-        // Cache the result - chỉ cache cho production
-        if ($this->enableCache && app()->environment('production')) {
-            Cache::put($cacheKey, $result, $this->cacheTtl);
-        }
-        
-        return $result;
+        return $query->find($id);
     }
 
     public function create(array $data)
     {
-        $result = $this->model->create($data);
-        $this->clearRelatedCaches();
-        return $result;
+        return $this->model->create($data);
     }
 
     public function update($id, array $data)
@@ -307,7 +194,6 @@ abstract class BaseRepository
         $model = $this->model->find($id);
         if ($model) {
             $model->update($data);
-            $this->clearRelatedCaches();
             return $model;
         }
         return null;
@@ -317,19 +203,9 @@ abstract class BaseRepository
     {
         $model = $this->model->find($id);
         if ($model) {
-            $result = $model->delete();
-            $this->clearRelatedCaches();
-            return $result;
+            return $model->delete();
         }
         return false;
-    }
-
-    protected function clearRelatedCaches()
-    {
-        // Clear cache khi có thay đổi dữ liệu
-        if (app()->environment('production')) {
-            Cache::flush();
-        }
     }
 
     public function getModel()

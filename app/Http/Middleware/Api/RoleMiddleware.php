@@ -15,7 +15,6 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        return $next($request);
         if (!$request->user()) {
             return response()->json([
                 'success' => false,
