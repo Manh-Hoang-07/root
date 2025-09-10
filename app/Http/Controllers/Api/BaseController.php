@@ -70,13 +70,11 @@ abstract class BaseController extends Controller
 
     /**
      * Constructor
-     * 
      * @param mixed $service Service instance
      */
     public function __construct($service)
     {
         $this->service = $service;
-        
         // Initialize cache service
         $this->cacheService = new CacheService(
             $this->enableCaching,
@@ -87,7 +85,6 @@ abstract class BaseController extends Controller
 
     /**
      * Get the store request class
-     * 
      * @return string
      */
     protected function getStoreRequestClass(): string
@@ -97,7 +94,6 @@ abstract class BaseController extends Controller
 
     /**
      * Get the update request class
-     * 
      * @return string
      */
     protected function getUpdateRequestClass(): string
@@ -107,7 +103,6 @@ abstract class BaseController extends Controller
 
     /**
      * Display a listing of the resource
-     * 
      * @param Request $request
      * @return JsonResponse|JsonResource
      */
@@ -118,18 +113,15 @@ abstract class BaseController extends Controller
             if ($this->enableRateLimiting && !$this->checkRateLimit($request)) {
                 return $this->errorResponse('Quá nhiều yêu cầu. Vui lòng thử lại sau.', 429);
             }
-            
             return $this->getIndexData($request);
         } catch (Exception $e) {
             $this->logError('Index', $e);
-            
             return $this->errorResponse('Không thể tải danh sách dữ liệu');
         }
     }
     
     /**
      * Get index data with optimized loading
-     * 
      * @param Request $request
      * @return JsonResponse|JsonResource
      */
@@ -137,13 +129,10 @@ abstract class BaseController extends Controller
     {
         $filters = $request->all();
         $perPage = $this->getValidatedPerPage($request);
-        
         $data = $this->getOptimizedData($filters, $perPage, 'index');
-        
         if ($this->isPaginatedData($data)) {
             return $this->formatPaginatedResponse($data);
         }
-        
         return $this->successResponse(
             $this->formatResponse($data),
             'Lấy danh sách dữ liệu thành công'
@@ -152,7 +141,6 @@ abstract class BaseController extends Controller
 
     /**
      * Get validated per page value
-     * 
      * @param Request $request
      * @return int
      */
@@ -163,7 +151,6 @@ abstract class BaseController extends Controller
 
     /**
      * Check if data is paginated
-     * 
      * @param mixed $data
      * @return bool
      */
@@ -172,14 +159,12 @@ abstract class BaseController extends Controller
         if (!method_exists($data, 'toArray')) {
             return false;
         }
-        
         $dataArray = $data->toArray();
         return isset($dataArray['data']) && (isset($dataArray['links']) || isset($dataArray['meta']));
     }
 
     /**
      * Format paginated response
-     * 
      * @param mixed $data
      * @return JsonResponse
      */
@@ -188,13 +173,11 @@ abstract class BaseController extends Controller
         $dataArray = $data->toArray();
         $dataArray['data'] = $this->formatCollectionData($dataArray['data']);
         $dataArray = $this->normalizePaginationMeta($dataArray);
-        
         return response()->json($dataArray);
     }
 
     /**
      * Normalize pagination meta data
-     * 
      * @param array $dataArray
      * @return array
      */
@@ -203,23 +186,19 @@ abstract class BaseController extends Controller
         if (!isset($dataArray['meta']) && isset($dataArray['current_page'])) {
             $metaKeys = ['current_page', 'from', 'last_page', 'last_page_url', 'next_page_url', 'path', 'per_page', 'prev_page_url', 'to', 'total'];
             $meta = [];
-            
             foreach ($metaKeys as $key) {
                 if (isset($dataArray[$key])) {
                     $meta[$key] = $dataArray[$key];
                     unset($dataArray[$key]);
                 }
             }
-            
             $dataArray['meta'] = $meta;
         }
-        
         return $dataArray;
     }
 
     /**
      * Display the specified resource
-     * 
      * @param int|string $id
      * @param Request|null $request
      * @return JsonResponse|JsonResource
@@ -230,14 +209,12 @@ abstract class BaseController extends Controller
             return $this->getShowData($id, $request);
         } catch (Exception $e) {
             $this->logError('Show', $e, ['id' => $id]);
-            
             return $this->errorResponse('Không thể tải thông tin chi tiết');
         }
     }
     
     /**
      * Get show data with optimized loading
-     * 
      * @param int|string $id
      * @param Request|null $request
      * @return JsonResponse|JsonResource
@@ -246,13 +223,10 @@ abstract class BaseController extends Controller
     {
         $filters = $request ? $request->all() : [];
         $filters['id'] = $id;
-        
         $item = $this->getOptimizedData($filters, 1, 'show', true);
-        
         if (!$item) {
             return $this->errorResponse('Không tìm thấy dữ liệu', 404);
         }
-        
         return $this->successResponse(
             $this->formatResponse($item, 'single'),
             'Lấy thông tin chi tiết thành công'
@@ -261,7 +235,6 @@ abstract class BaseController extends Controller
 
     /**
      * Get optimized data with common logic
-     * 
      * @param array $filters
      * @param int $limit
      * @param string $context
@@ -278,43 +251,34 @@ abstract class BaseController extends Controller
                 return $cachedData;
             }
         }
-
         // Parse relations from request
         $requestRelations = $this->parseRelations($filters['relations'] ?? null);
-        
         // Use context-specific relations if no relations requested
         $defaultRelations = $context === 'show' ? $this->showRelations : $this->indexRelations;
         $relations = !empty($requestRelations) ? $requestRelations : $defaultRelations;
-        
         // Parse fields from request
         $requestFields = $filters['fields'] ?? null;
         $fields = $this->parseFields($requestFields);
-        
         // Optimize: Use default fields if none specified
         if (empty($fields) || $fields === ['*']) {
             $fields = $context === 'show' ? $this->getDefaultShowFields() : $this->getDefaultListFields();
         }
-        
         // Remove non-filter parameters
         unset($filters['relations'], $filters['fields'], $filters['per_page']);
-        
         if ($single) {
             $data = $this->service->find($filters['id'], $relations, $fields);
         } else {
             $data = $this->service->list($filters, $perPage, $relations, $fields);
         }
-
         // Cache the response if enabled
         if ($this->cacheService->shouldCache()) {
             $this->cacheService->put($cacheKey, $data);
         }
-
         return $data;
     }
 
     /**
      * Store a newly created resource
-     * 
      * @return JsonResponse|JsonResource
      */
     public function store()
@@ -322,21 +286,18 @@ abstract class BaseController extends Controller
         try {
             $request = app($this->getStoreRequestClass());
             $data = $this->service->create($request->validated());
-            
             return $this->successResponse(
                 $this->formatResponse($data, 'single'),
                 'Tạo dữ liệu thành công'
             );
         } catch (Exception $e) {
             $this->logError('Store', $e);
-            
             return $this->errorResponse('Không thể tạo dữ liệu');
         }
     }
 
     /**
      * Update the specified resource
-     * 
      * @param int|string $id
      * @return JsonResponse|JsonResource
      */
@@ -345,25 +306,21 @@ abstract class BaseController extends Controller
         try {
             $request = app($this->getUpdateRequestClass());
             $data = $this->service->update($id, $request->validated());
-            
             if (!$data) {
                 return $this->errorResponse('Không tìm thấy dữ liệu để cập nhật', 404);
             }
-            
             return $this->successResponse(
                 $this->formatResponse($data, 'single'),
                 'Cập nhật dữ liệu thành công'
             );
         } catch (Exception $e) {
             $this->logError('Update', $e, ['id' => $id]);
-            
             return $this->errorResponse('Không thể cập nhật dữ liệu');
         }
     }
 
     /**
      * Remove the specified resource
-     * 
      * @param int|string $id
      * @return JsonResponse
      */
@@ -371,22 +328,18 @@ abstract class BaseController extends Controller
     {
         try {
             $result = $this->service->delete($id);
-            
             if ($result) {
                 return $this->deletedResponse();
             }
-            
             return $this->errorResponse('Không thể xóa dữ liệu');
         } catch (Exception $e) {
             $this->logError('Destroy', $e, ['id' => $id]);
-            
             return $this->errorResponse('Không thể xóa dữ liệu');
         }
     }
 
     /**
      * Parse relations from request
-     * 
      * @param mixed $relations
      * @return array
      */
@@ -395,17 +348,14 @@ abstract class BaseController extends Controller
         if (is_array($relations)) {
             return $relations;
         }
-        
         if (is_string($relations)) {
             return array_filter(array_map('trim', explode(',', $relations)));
         }
-        
         return [];
     }
 
     /**
      * Parse fields from request
-     * 
      * @param mixed $fields
      * @return array
      */
@@ -414,35 +364,29 @@ abstract class BaseController extends Controller
         if (is_array($fields)) {
             return $fields;
         }
-        
         if (is_string($fields)) {
             return array_filter(array_map('trim', explode(',', $fields)));
         }
-        
         return ['*'];
     }
 
     /**
      * Parse and clean request data
-     * 
      * @param Request $request
      * @return array
      */
     protected function parseRequestData(Request $request): array
     {
         $data = $request->all();
-        
         // Remove empty values
         $data = array_filter($data, function($value) {
             return $value !== '' && $value !== null;
         });
-        
         return $data;
     }
 
     /**
      * Format response based on type
-     * 
      * @param mixed $data
      * @param string $type
      * @return array
@@ -452,7 +396,6 @@ abstract class BaseController extends Controller
         if ($type === 'single') {
             return $this->formatSingleData($data);
         }
-        
         // Check if data is a paginated collection (Laravel pagination object)
         if (method_exists($data, 'toArray')) {
             $dataArray = $data->toArray();
@@ -460,7 +403,6 @@ abstract class BaseController extends Controller
             if (isset($dataArray['data']) && (isset($dataArray['links']) || isset($dataArray['meta']))) {
                 // Format the data array within pagination
                 $dataArray['data'] = $this->formatCollectionData($dataArray['data']);
-                
                 // If meta data is at top level, move it to meta key
                 if (!isset($dataArray['meta']) && isset($dataArray['current_page'])) {
                     $metaKeys = ['current_page', 'from', 'last_page', 'last_page_url', 'next_page_url', 'path', 'per_page', 'prev_page_url', 'to', 'total'];
@@ -473,17 +415,14 @@ abstract class BaseController extends Controller
                     }
                     $dataArray['meta'] = $meta;
                 }
-                
                 return $dataArray;
             }
         }
-        
         return $this->formatCollectionData($data);
     }
 
     /**
      * Format single data without Resource
-     * 
      * @param mixed $data
      * @return array
      */
@@ -492,27 +431,21 @@ abstract class BaseController extends Controller
         if (!$data) {
             return null;
         }
-
         // If data is already an array, return as is
         if (is_array($data)) {
             return $data;
         }
-
         // Convert model to array with proper formatting
         $formatted = $data->toArray();
-
         // Format timestamps consistently
         $formatted = $this->formatTimestamps($formatted);
-
         // Format relationships if they exist
         $formatted = $this->formatRelationships($formatted, $data);
-
         return $formatted;
     }
 
     /**
      * Format collection data without Resource
-     * 
      * @param mixed $data
      * @return array
      */
@@ -521,12 +454,10 @@ abstract class BaseController extends Controller
         if (!$data) {
             return [];
         }
-
         // If data is already an array, return as is
         if (is_array($data)) {
             return $data;
         }
-
         // Convert collection to array
         if (method_exists($data, 'map')) {
             $formatted = $data->map(function ($item) {
@@ -535,20 +466,17 @@ abstract class BaseController extends Controller
         } else {
             $formatted = $data;
         }
-
         return $formatted;
     }
 
     /**
      * Format timestamps in data
-     * 
      * @param array $data
      * @return array
      */
     protected function formatTimestamps(array $data): array
     {
         $timestampFields = ['created_at', 'updated_at', 'deleted_at', 'email_verified_at', 'phone_verified_at', 'last_login_at'];
-        
         foreach ($timestampFields as $field) {
             if (isset($data[$field]) && $data[$field]) {
                 if (is_string($data[$field])) {
@@ -558,13 +486,11 @@ abstract class BaseController extends Controller
                 }
             }
         }
-
         return $data;
     }
 
     /**
      * Format relationships in data
-     * 
      * @param array $data
      * @param mixed $originalData
      * @return array
@@ -573,7 +499,6 @@ abstract class BaseController extends Controller
     {
         // Handle common relationships
         $relationshipFields = ['profile', 'roles', 'brand', 'categories', 'variants', 'images'];
-        
         foreach ($relationshipFields as $field) {
             if (isset($data[$field])) {
                 // Chỉ format nếu relation đã được eager loaded để tránh N+1 query
@@ -592,13 +517,11 @@ abstract class BaseController extends Controller
                 }
             }
         }
-
         return $data;
     }
 
     /**
      * Search resources with flexible configuration
-     * 
      * @param Request $request
      * @return JsonResponse
      */
@@ -607,27 +530,22 @@ abstract class BaseController extends Controller
         try {
             $filters = $this->parseRequestData($request);
             $limit = min($request->get('limit', static::$defaultSearchLimit), $this->maxPerPage);
-            
             // Get search-specific configuration
             $fields = $this->getSearchFields();
             $relations = $this->getSearchRelations();
-            
             $results = $this->service->list($filters, $limit, $relations, $fields);
-            
             return $this->successResponse(
                 $this->formatResponse($results),
                 'Tìm kiếm dữ liệu thành công'
             );
         } catch (Exception $e) {
             $this->logError('Search', $e);
-            
             return $this->errorResponse('Không thể tìm kiếm dữ liệu');
         }
     }
 
     /**
      * Get default fields for list view
-     * 
      * @return array
      */
     protected function getDefaultListFields(): array
@@ -637,7 +555,6 @@ abstract class BaseController extends Controller
 
     /**
      * Get default fields for show view
-     * 
      * @return array
      */
     protected function getDefaultShowFields(): array
@@ -647,7 +564,6 @@ abstract class BaseController extends Controller
 
     /**
      * Get fields for search operation
-     * 
      * @return array
      */
     protected function getSearchFields(): array
@@ -657,7 +573,6 @@ abstract class BaseController extends Controller
 
     /**
      * Get relations for search operation
-     * 
      * @return array
      */
     protected function getSearchRelations(): array
@@ -665,32 +580,25 @@ abstract class BaseController extends Controller
         return [];
     }
 
-
-
     /**
      * Check rate limiting
-     * 
      * @param Request $request
      * @return bool
      */
     protected function checkRateLimit(Request $request): bool
     {
         $key = $this->generateRateLimiterKey($request);
-        
         // Simple rate limiting implementation
         $attempts = Cache::get($key, 0);
-        
         if ($attempts >= $this->rateLimitAttempts) {
             return false;
         }
-        
         Cache::put($key, $attempts + 1, 60); // 1 minute window
         return true;
     }
 
     /**
      * Generate a unique key for rate limiter
-     * 
      * @param Request $request
      * @return string
      */
