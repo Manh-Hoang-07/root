@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\DB;
 abstract class BaseRepository
 {
     protected $model;
-    
 
     public function __construct()
     {
@@ -19,23 +18,18 @@ abstract class BaseRepository
     public function all($filters = [], $perPage = 20, $relations = [], $fields = ['*'])
     {
         $query = $this->model->query();
-        
         // Load relations if specified
         if (!empty($relations)) {
             $query->with($relations);
         }
-        
         // Select specific fields if specified
         if (!empty($fields) && $fields !== ['*']) {
             $query->select($fields);
         }
-        
         // Apply filters with optimization
         $this->applyOptimizedFilters($query, $filters);
-        
         // Apply sorting
         $this->applyOptimizedSorting($query, $filters);
-        
         return $query->paginate($perPage);
     }
     
@@ -46,25 +40,20 @@ abstract class BaseRepository
     {
         foreach ($filters as $key => $value) {
             if ($value === '' || $value === null) continue;
-            
             switch ($key) {
                 case 'search':
                     $this->applySearchFilter($query, $value);
                     break;
-                    
                 case 'ids':
                     $this->applyIdsFilter($query, $value);
                     break;
-                    
                 case 'date_range':
                     $this->applyDateRangeFilter($query, $value);
                     break;
-                    
                 case 'status':
                 case 'is_active':
                     $query->where($key, $value);
                     break;
-                    
                 default:
                     // Check if field exists in model
                     if (in_array($key, $this->model->getFillable()) || in_array($key, ['id', 'created_at', 'updated_at'])) {
@@ -118,7 +107,6 @@ abstract class BaseRepository
                     $q->orWhere($field, 'like', "%$searchValue%");
                 }
             }
-            
             // Search in relationships if they exist
             $this->applyRelationshipSearch($q, $searchValue);
         });
@@ -140,23 +128,19 @@ abstract class BaseRepository
             $query->orderBy('created_at', 'desc');
             return;
         }
-
         // Parse sorting string: "field:direction" or "field"
         $parts = explode(':', $sortBy);
         $field = $parts[0];
         $direction = isset($parts[1]) ? strtolower($parts[1]) : 'asc';
-        
         // Validate direction
         if (!in_array($direction, ['asc', 'desc'])) {
             $direction = 'asc';
         }
-        
         // Check if field exists in model's fillable or common fields
         $allowedFields = array_merge(
             $this->model->getFillable(),
             ['id', 'created_at', 'updated_at', 'name', 'title', 'email', 'status']
         );
-        
         if (in_array($field, $allowedFields)) {
             $query->orderBy($field, $direction);
         } else {
@@ -165,22 +149,17 @@ abstract class BaseRepository
         }
     }
 
-
-
     public function find($id, $relations = [], $fields = ['*'])
     {
         $query = $this->model->query();
-        
         // Load relations if specified
         if (!empty($relations)) {
             $query->with($relations);
         }
-        
         // Select specific fields if specified
         if (!empty($fields) && $fields !== ['*']) {
             $query->select($fields);
         }
-        
         return $query->find($id);
     }
 
