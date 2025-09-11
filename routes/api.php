@@ -161,6 +161,32 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
         Route::apiResource('delivery', App\Http\Controllers\Api\Admin\Shipping\ShippingDeliverySettingController::class);
         Route::apiResource('advanced', App\Http\Controllers\Api\Admin\Shipping\ShippingAdvancedSettingController::class);
     });
+    
+    // System Config routes
+    Route::prefix('system-configs')->group(function () {
+        // Specific routes phải đặt trước generic routes
+        Route::get('/groups/list', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'getGroups']);
+        Route::get('/search', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'search']);
+        
+        // Theo nhóm - phải đặt trước {id} route
+        Route::get('/group/{group}', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'getByGroup']);
+        Route::put('/group/{group}', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'updateGroup']);
+        Route::get('/group/{group}/form', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'getGroupForm']);
+        
+        // Bulk operations
+        Route::post('/bulk-update', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'bulkUpdate']);
+        Route::post('/bulk-delete', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'bulkDelete']);
+        
+        // Cache management
+        Route::post('/clear-cache', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'clearCache']);
+        
+        // CRUD cơ bản - đặt cuối cùng
+        Route::get('/', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'index']);
+        Route::get('/{id}', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'show']);
+        Route::post('/', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'store']);
+        Route::put('/{id}', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'destroy']);
+    });
 }); 
 
  
