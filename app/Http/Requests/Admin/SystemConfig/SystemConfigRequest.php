@@ -38,7 +38,7 @@ class SystemConfigRequest extends FormRequest
 
         // Update rules
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
-            $rules['config_key'] = 'required|string|max:255|unique:system_configs,config_key,' . $this->route('system_config');
+            $rules['config_key'] = 'required|string|max:255|unique:system_configs,config_key,' . $this->route('id');
         }
 
         return $rules;
