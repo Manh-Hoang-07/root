@@ -47,9 +47,7 @@ class SystemConfigController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'configs' => 'required|array',
-                'configs.*.config_key' => 'required|string',
-                'configs.*.config_value' => 'nullable|string'
+                'configs' => 'required|array'
             ]);
 
             if ($validator->fails()) {
@@ -59,8 +57,9 @@ class SystemConfigController extends BaseController
             $configs = $request->input('configs', []);
             $configData = [];
             
-            foreach ($configs as $config) {
-                $configData[$config['config_key']] = $config['config_value'] ?? '';
+            // Xử lý dữ liệu dạng key-value
+            foreach ($configs as $key => $value) {
+                $configData[$key] = $value;
             }
 
             $result = $this->service->updateGroup($group, $configData);
