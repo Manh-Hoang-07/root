@@ -12,9 +12,8 @@ class BrandController extends BaseController
     public function __construct(BrandService $service)
     {
         parent::__construct($service);
-                $this->storeRequestClass = BrandRequest::class;
+        $this->storeRequestClass = BrandRequest::class;
         $this->updateRequestClass = BrandRequest::class;
-        
         // Tối ưu: Không load relations mặc định cho list
         $this->indexRelations = [];
     }
