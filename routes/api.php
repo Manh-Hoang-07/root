@@ -53,6 +53,15 @@ Route::get('/post-tags/slug/{slug}', [App\Http\Controllers\Api\Public\PostTag\Pu
 // Public API - Contact (không cần authentication)
 Route::post('/contacts', [PublicContactController::class, 'store']);
 
+// Public API - Config (không cần authentication)
+Route::prefix('config')->group(function () {
+    Route::get('/public', [App\Http\Controllers\Api\Public\Config\ConfigController::class, 'getPublicConfigs']);
+    Route::get('/group/{group}', [App\Http\Controllers\Api\Public\Config\ConfigController::class, 'getGroupConfig']);
+    Route::post('/groups', [App\Http\Controllers\Api\Public\Config\ConfigController::class, 'getMultipleGroups']);
+    Route::get('/key', [App\Http\Controllers\Api\Public\Config\ConfigController::class, 'getConfigByKey']);
+    Route::post('/keys', [App\Http\Controllers\Api\Public\Config\ConfigController::class, 'getMultipleConfigs']);
+});
+
 // Protected routes - cần authentication
 Route::middleware(['auto.auth'])->group(function () {
     // User routes
