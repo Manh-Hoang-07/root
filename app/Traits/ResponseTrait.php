@@ -7,169 +7,30 @@ use Illuminate\Http\JsonResponse;
 trait ResponseTrait
 {
     /**
-     * Success response
+     * Universal response method
      */
-    protected function successResponse($data = null, string $message = 'Thành công', int $statusCode = 200): JsonResponse
+    protected function apiResponse(bool $success = true, $data = null, string $message = '', int $statusCode = 200, array $errors = [], array $links = [], array $meta = []): JsonResponse
     {
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data' => $data
-        ], $statusCode);
-    }
-
-    /**
-     * Error response
-     */
-    protected function errorResponse(string $message = 'Có lỗi xảy ra', int $statusCode = 500): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
+        $response = [
+            'success' => $success,
             'message' => $message
-        ], $statusCode);
-    }
+        ];
 
-    /**
-     * Not found response
-     */
-    protected function notFoundResponse(string $message = 'Không tìm thấy dữ liệu'): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message
-        ], 404);
-    }
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
 
-    /**
-     * Validation error response
-     */
-    protected function validationErrorResponse(array $errors, string $message = 'Dữ liệu không hợp lệ'): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message,
-            'errors' => $errors
-        ], 422);
-    }
+        if (!empty($errors)) {
+            $response['errors'] = $errors;
+        }
 
-    /**
-     * Unauthorized response
-     */
-    protected function unauthorizedResponse(string $message = 'Không có quyền truy cập'): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message
-        ], 401);
-    }
+        // For success responses, add links and meta for consistency
+        if ($success) {
+            $response['links'] = $links;
+            $response['meta'] = $meta;
+        }
 
-    /**
-     * Forbidden response
-     */
-    protected function forbiddenResponse(string $message = 'Truy cập bị từ chối'): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message
-        ], 403);
-    }
-
-    /**
-     * Bad request response
-     */
-    protected function badRequestResponse(string $message = 'Yêu cầu không hợp lệ'): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message
-        ], 400);
-    }
-
-    /**
-     * Server error response
-     */
-    protected function serverErrorResponse(string $message = 'Lỗi máy chủ'): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message
-        ], 500);
-    }
-
-    /**
-     * Created response
-     */
-    protected function createdResponse($data = null, string $message = 'Tạo thành công'): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data' => $data
-        ], 201);
-    }
-
-    /**
-     * Updated response
-     */
-    protected function updatedResponse($data = null, string $message = 'Cập nhật thành công'): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data' => $data
-        ], 200);
-    }
-
-    /**
-     * Deleted response
-     */
-    protected function deletedResponse(string $message = 'Xóa thành công'): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'message' => $message
-        ], 200);
-    }
-
-    /**
-     * No content response
-     */
-    protected function noContentResponse(): JsonResponse
-    {
-        return response()->json([], 204);
-    }
-
-    /**
-     * Conflict response
-     */
-    protected function conflictResponse(string $message = 'Xung đột dữ liệu'): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message
-        ], 409);
-    }
-
-    /**
-     * Too many requests response
-     */
-    protected function tooManyRequestsResponse(string $message = 'Quá nhiều yêu cầu'): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message
-        ], 429);
-    }
-
-    /**
-     * Service unavailable response
-     */
-    protected function serviceUnavailableResponse(string $message = 'Dịch vụ không khả dụng'): JsonResponse
-    {
-        return response()->json([
-            'success' => false,
-            'message' => $message
-        ], 503);
+        return response()->json($response, $statusCode);
     }
 
     /**
@@ -178,14 +39,89 @@ trait ResponseTrait
     protected function successResponseWithFormat($data = null, string $message = 'Thành công', int $statusCode = 200): JsonResponse
     {
         $formattedData = $this->formatResponse($data);
-        // Always return unified structure with success, message, data, links, meta
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data' => $formattedData['data'] ?? $formattedData,
-            'links' => $formattedData['links'] ?? [],
-            'meta' => $formattedData['meta'] ?? []
-        ], $statusCode);
+        
+        // Check if data has pagination structure
+        if (isset($formattedData['data']) && (isset($formattedData['links']) || isset($formattedData['meta']))) {
+            return $this->apiResponse(true, $formattedData['data'], $message, $statusCode, [], $formattedData['links'] ?? [], $formattedData['meta'] ?? []);
+        }
+        
+        return $this->apiResponse(true, $formattedData, $message, $statusCode);
+    }
+
+    // Convenience methods for common responses
+    protected function successResponse($data = null, string $message = 'Thành công', int $statusCode = 200): JsonResponse
+    {
+        return $this->apiResponse(true, $data, $message, $statusCode);
+    }
+
+    protected function errorResponse(string $message = 'Có lỗi xảy ra', int $statusCode = 500): JsonResponse
+    {
+        return $this->apiResponse(false, null, $message, $statusCode);
+    }
+
+    protected function notFoundResponse(string $message = 'Không tìm thấy dữ liệu'): JsonResponse
+    {
+        return $this->apiResponse(false, null, $message, 404);
+    }
+
+    protected function validationErrorResponse(array $errors, string $message = 'Dữ liệu không hợp lệ'): JsonResponse
+    {
+        return $this->apiResponse(false, null, $message, 422, $errors);
+    }
+
+    protected function unauthorizedResponse(string $message = 'Không có quyền truy cập'): JsonResponse
+    {
+        return $this->apiResponse(false, null, $message, 401);
+    }
+
+    protected function forbiddenResponse(string $message = 'Truy cập bị từ chối'): JsonResponse
+    {
+        return $this->apiResponse(false, null, $message, 403);
+    }
+
+    protected function badRequestResponse(string $message = 'Yêu cầu không hợp lệ'): JsonResponse
+    {
+        return $this->apiResponse(false, null, $message, 400);
+    }
+
+    protected function createdResponse($data = null, string $message = 'Tạo thành công'): JsonResponse
+    {
+        return $this->apiResponse(true, $data, $message, 201);
+    }
+
+    protected function updatedResponse($data = null, string $message = 'Cập nhật thành công'): JsonResponse
+    {
+        return $this->apiResponse(true, $data, $message, 200);
+    }
+
+    protected function deletedResponse(string $message = 'Xóa thành công'): JsonResponse
+    {
+        return $this->apiResponse(true, null, $message, 200);
+    }
+
+    protected function noContentResponse(): JsonResponse
+    {
+        return response()->json([], 204);
+    }
+
+    protected function conflictResponse(string $message = 'Xung đột dữ liệu'): JsonResponse
+    {
+        return $this->apiResponse(false, null, $message, 409);
+    }
+
+    protected function tooManyRequestsResponse(string $message = 'Quá nhiều yêu cầu'): JsonResponse
+    {
+        return $this->apiResponse(false, null, $message, 429);
+    }
+
+    protected function serverErrorResponse(string $message = 'Lỗi máy chủ'): JsonResponse
+    {
+        return $this->apiResponse(false, null, $message, 500);
+    }
+
+    protected function serviceUnavailableResponse(string $message = 'Dịch vụ không khả dụng'): JsonResponse
+    {
+        return $this->apiResponse(false, null, $message, 503);
     }
 
     /**

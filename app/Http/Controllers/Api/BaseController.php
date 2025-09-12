@@ -9,13 +9,11 @@ use App\Libraries\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Exception;
 
 /**
  * Abstract Base Controller for API endpoints
- * 
  * Provides common CRUD operations with optimized data loading,
  * flexible relations handling, and standardized response formatting.
  * 
@@ -142,7 +140,6 @@ abstract class BaseController extends Controller
     {
         return min($request->get('per_page', $this->defaultPerPage), $this->maxPerPage);
     }
-
 
     /**
      * Display the specified resource
@@ -322,7 +319,6 @@ abstract class BaseController extends Controller
         });
         return $data;
     }
-
 
     /**
      * Search resources with flexible configuration
