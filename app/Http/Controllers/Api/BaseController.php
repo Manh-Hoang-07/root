@@ -8,7 +8,6 @@ use App\Traits\LoggingTrait;
 use App\Libraries\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Cache;
 use Exception;
 
@@ -102,7 +101,7 @@ abstract class BaseController extends Controller
     /**
      * Display a listing of the resource
      * @param Request $request
-     * @return JsonResponse|JsonResource
+     * @return JsonResponse
      */
     public function index(Request $request)
     {
@@ -121,7 +120,7 @@ abstract class BaseController extends Controller
     /**
      * Get index data with optimized loading
      * @param Request $request
-     * @return JsonResponse|JsonResource
+     * @return JsonResponse
      */
     protected function getIndexData(Request $request)
     {
@@ -145,7 +144,7 @@ abstract class BaseController extends Controller
      * Display the specified resource
      * @param int|string $id
      * @param Request|null $request
-     * @return JsonResponse|JsonResource
+     * @return JsonResponse
      */
     public function show($id, ?Request $request = null)
     {
@@ -161,7 +160,7 @@ abstract class BaseController extends Controller
      * Get show data with optimized loading
      * @param int|string $id
      * @param Request|null $request
-     * @return JsonResponse|JsonResource
+     * @return JsonResponse
      */
     protected function getShowData($id, ?Request $request = null)
     {
@@ -220,7 +219,7 @@ abstract class BaseController extends Controller
 
     /**
      * Store a newly created resource
-     * @return JsonResponse|JsonResource
+     * @return JsonResponse
      */
     public function store()
     {
@@ -237,7 +236,7 @@ abstract class BaseController extends Controller
     /**
      * Update the specified resource
      * @param int|string $id
-     * @return JsonResponse|JsonResource
+     * @return JsonResponse
      */
     public function update($id)
     {

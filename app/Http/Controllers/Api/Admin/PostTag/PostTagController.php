@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Admin\PostTag;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\PostTag\PostTagService;
-use App\Http\Resources\Admin\PostTag\PostTagResource;
 use App\Http\Requests\Admin\PostTag\PostTagRequest;
 
 class PostTagController extends BaseController

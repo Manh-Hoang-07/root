@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Admin\SystemConfig;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Admin\SystemConfig\SystemConfigRequest;
-use App\Http\Resources\SystemConfig\SystemConfigResource;
 use App\Services\SystemConfig\SystemConfigService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,7 +29,7 @@ class SystemConfigController extends BaseController
         try {
             $data = $this->service->getByGroup($group);
             
-            return $this->apiResponse(true, SystemConfigResource::collection($data), "Lấy cấu hình nhóm {$group} thành công");
+            return $this->apiResponse(true, $this->formatSystemConfigData($data), "Lấy cấu hình nhóm {$group} thành công");
         } catch (\Exception $e) {
             $this->logError('GetByGroup', $e);
             return $this->apiResponse(false, null, 'Không thể tải cấu hình nhóm', 500);
@@ -209,12 +208,49 @@ class SystemConfigController extends BaseController
             $data = $this->service->search($filters);
             
             return $this->apiResponse(true,
-                SystemConfigResource::collection($data),
+                $this->formatSystemConfigData($data),
                 'Tìm kiếm cấu hình thành công'
             );
         } catch (\Exception $e) {
             $this->logError('Search', $e);
             return $this->apiResponse(false, null, 'Không thể tìm kiếm cấu hình', 500);
         }
+    }
+
+    /**
+     * Format SystemConfig data giống như SystemConfigResource
+     */
+    private function formatSystemConfigData($data)
+    {
+        if (is_array($data)) {
+            return array_map([$this, 'formatSystemConfigData'], $data);
+        }
+        
+        if (is_object($data) && method_exists($data, 'toArray')) {
+            $dataArray = $data->toArray();
+        } else {
+            $dataArray = (array) $data;
+        }
+        
+        return [
+            'id' => $dataArray['id'] ?? null,
+            'config_key' => $dataArray['config_key'] ?? null,
+            'config_value' => $dataArray['config_value'] ?? null,
+            'value' => $dataArray['value'] ?? null, // Computed value with type casting
+            'config_type' => $dataArray['config_type'] ?? null,
+            'config_group' => $dataArray['config_group'] ?? null,
+            'display_name' => $dataArray['display_name'] ?? null,
+            'description' => $dataArray['description'] ?? null,
+            'is_public' => $dataArray['is_public'] ?? null,
+            'is_required' => $dataArray['is_required'] ?? null,
+            'validation_rules' => $dataArray['validation_rules'] ?? null,
+            'default_value' => $dataArray['default_value'] ?? null,
+            'sort_order' => $dataArray['sort_order'] ?? null,
+            'status' => $dataArray['status'] ?? null,
+            'created_at' => isset($dataArray['created_at']) ? 
+                (is_string($dataArray['created_at']) ? $dataArray['created_at'] : $dataArray['created_at']->format('Y-m-d H:i:s')) : null,
+            'updated_at' => isset($dataArray['updated_at']) ? 
+                (is_string($dataArray['updated_at']) ? $dataArray['updated_at'] : $dataArray['updated_at']->format('Y-m-d H:i:s')) : null,
+        ];
     }
 }

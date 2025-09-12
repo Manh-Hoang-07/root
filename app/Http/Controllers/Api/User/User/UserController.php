@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\User\User;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Http\Resources\Auth\AuthResource;
 use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
@@ -15,7 +14,7 @@ class UserController extends BaseController
 
     public function __construct(AuthService $authService)
     {
-        parent::__construct($authService, AuthResource::class);
+        parent::__construct($authService);
         $this->authService = $authService;
     }
 
@@ -27,10 +26,21 @@ class UserController extends BaseController
         $user = $request->user();
         
         if (!$user) {
-        return $this->apiResponse(false, null, 'Không tìm thấy thông tin user.', 401);
+            return $this->apiResponse(false, null, 'Không tìm thấy thông tin user.', 401);
         }
         
-        return $this->successResponseWithFormat($user, 'Lấy thông tin user thành công.');
+        // Format data giống như AuthResource
+        $userData = [
+            'id' => $user->id,
+            'username' => $user->username,
+            'email' => $user->email,
+            'name' => $user->profile?->name ?? $user->username,
+            'phone' => $user->phone,
+            'status' => $user->status,
+            'permissions' => $user->getAllPermissions()->pluck('name'),
+        ];
+        
+        return $this->successResponseWithFormat($userData, 'Lấy thông tin user thành công.');
     }
 
     /**

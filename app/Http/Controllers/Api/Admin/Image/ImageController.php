@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Admin\Image;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Image\ImageService;
-use App\Http\Resources\Admin\Image\ImageResource;
 use App\Http\Requests\Admin\Image\ImageRequest;
 
 class ImageController extends BaseController

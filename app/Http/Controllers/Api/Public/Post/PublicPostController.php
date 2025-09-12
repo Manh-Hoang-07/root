@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Public\Post;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Post\PostService;
-use App\Http\Resources\Admin\Post\PostResource;
 use Illuminate\Http\Request;
 
 class PublicPostController extends BaseController

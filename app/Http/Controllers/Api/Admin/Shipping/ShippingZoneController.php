@@ -3,7 +3,6 @@ namespace App\Http\Controllers\Api\Admin\Shipping;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Shipping\ShippingZoneService;
-use App\Http\Resources\Admin\Shipping\ShippingZoneResource;
 use App\Http\Requests\Admin\Shipping\ShippingZoneRequest;
 
 class ShippingZoneController extends BaseController

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Admin\Contact;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Admin\Contact\ContactService;
-use App\Http\Resources\Admin\Contact\ContactResource;
 use App\Http\Requests\Admin\Contact\ContactRequest;
 use App\Http\Requests\Admin\Contact\ContactStatusUpdateRequest;
 use App\Enums\ContactStatus;

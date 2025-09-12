@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Public\Contact;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Public\Contact\ContactService;
-use App\Http\Resources\Public\Contact\ContactResource;
 use App\Http\Requests\Public\Contact\ContactRequest;
 use Illuminate\Http\JsonResponse;
 use Exception;

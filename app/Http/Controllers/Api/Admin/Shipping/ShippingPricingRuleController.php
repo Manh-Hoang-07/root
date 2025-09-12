@@ -3,7 +3,6 @@ namespace App\Http\Controllers\Api\Admin\Shipping;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Shipping\ShippingPricingRuleService;
-use App\Http\Resources\Admin\Shipping\ShippingPricingRuleResource;
 use App\Http\Requests\Admin\Shipping\ShippingPricingRuleRequest;
 
 class ShippingPricingRuleController extends BaseController

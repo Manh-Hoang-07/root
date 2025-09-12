@@ -3,7 +3,6 @@ namespace App\Http\Controllers\Api\Admin\Shipping;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Shipping\ShippingDeliverySettingService;
-use App\Http\Resources\Admin\Shipping\ShippingDeliverySettingResource;
 use App\Http\Requests\Admin\Shipping\ShippingDeliverySettingRequest;
 
 class ShippingDeliverySettingController extends BaseController
