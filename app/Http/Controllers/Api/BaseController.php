@@ -109,12 +109,12 @@ abstract class BaseController extends Controller
         try {
             // Check rate limiting
             if ($this->enableRateLimiting && !$this->checkRateLimit($request)) {
-                return $this->errorResponse('Quá nhiều yêu cầu. Vui lòng thử lại sau.', 429);
+                return $this->apiResponse(false, null, '', 429);
             }
             return $this->getIndexData($request);
         } catch (Exception $e) {
             $this->logError('Index', $e);
-            return $this->errorResponse('Không thể tải danh sách dữ liệu');
+            return $this->apiResponse(false, null, 'Không thể tải danh sách dữ liệu', 500);
         }
     }
     
@@ -153,7 +153,7 @@ abstract class BaseController extends Controller
             return $this->getShowData($id, $request);
         } catch (Exception $e) {
             $this->logError('Show', $e, ['id' => $id]);
-            return $this->errorResponse('Không thể tải thông tin chi tiết');
+            return $this->apiResponse(false, null, 'Không thể tải thông tin chi tiết', 500);
         }
     }
     
@@ -169,7 +169,7 @@ abstract class BaseController extends Controller
         $filters['id'] = $id;
         $item = $this->getOptimizedData($filters, 1, 'show', true);
         if (!$item) {
-            return $this->errorResponse('Không tìm thấy dữ liệu', 404);
+            return $this->apiResponse(false, null, '', 404);
         }
         return $this->successResponseWithFormat($item, 'Lấy thông tin chi tiết thành công', 200);
     }
@@ -230,7 +230,7 @@ abstract class BaseController extends Controller
             return $this->successResponseWithFormat($data, 'Tạo dữ liệu thành công', 201);
         } catch (Exception $e) {
             $this->logError('Store', $e);
-            return $this->errorResponse('Không thể tạo dữ liệu');
+            return $this->apiResponse(false, null, 'Không thể tạo dữ liệu', 500);
         }
     }
 
@@ -245,12 +245,12 @@ abstract class BaseController extends Controller
             $request = app($this->getUpdateRequestClass());
             $data = $this->service->update($id, $request->validated());
             if (!$data) {
-                return $this->errorResponse('Không tìm thấy dữ liệu để cập nhật', 404);
+                return $this->apiResponse(false, null, '', 404);
             }
             return $this->successResponseWithFormat($data, 'Cập nhật dữ liệu thành công', 200);
         } catch (Exception $e) {
             $this->logError('Update', $e, ['id' => $id]);
-            return $this->errorResponse('Không thể cập nhật dữ liệu');
+            return $this->apiResponse(false, null, 'Không thể cập nhật dữ liệu', 500);
         }
     }
 
@@ -264,12 +264,12 @@ abstract class BaseController extends Controller
         try {
             $result = $this->service->delete($id);
             if ($result) {
-                return $this->deletedResponse();
+                return $this->apiResponse(true, null, '', 200);
             }
-            return $this->errorResponse('Không thể xóa dữ liệu');
+            return $this->apiResponse(false, null, 'Không thể xóa dữ liệu', 500);
         } catch (Exception $e) {
             $this->logError('Destroy', $e, ['id' => $id]);
-            return $this->errorResponse('Không thể xóa dữ liệu');
+            return $this->apiResponse(false, null, 'Không thể xóa dữ liệu', 500);
         }
     }
 
@@ -337,7 +337,7 @@ abstract class BaseController extends Controller
             return $this->successResponseWithFormat($results, 'Tìm kiếm dữ liệu thành công');
         } catch (Exception $e) {
             $this->logError('Search', $e);
-            return $this->errorResponse('Không thể tìm kiếm dữ liệu');
+            return $this->apiResponse(false, null, 'Không thể tìm kiếm dữ liệu', 500);
         }
     }
 
