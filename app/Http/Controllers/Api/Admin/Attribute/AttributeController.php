@@ -12,7 +12,7 @@ class AttributeController extends BaseController
     public function __construct(AttributeService $service)
     {
         parent::__construct($service);
-                $this->storeRequestClass = AttributeRequest::class;
+        $this->storeRequestClass = AttributeRequest::class;
         $this->updateRequestClass = AttributeRequest::class;
     }
 
