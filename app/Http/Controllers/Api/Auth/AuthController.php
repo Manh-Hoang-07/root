@@ -26,10 +26,7 @@ class AuthController extends BaseController
         $result = $this->service->login($request->validated());
         
         if ($result['success']) {
-            $response = $this->successResponse(
-                $result['data'],
-                $result['message']
-            );
+            $response = $this->apiResponse(true, $result['data'], $result['message']);
             
             // Set cookie với token
             if (isset($result['data']['token'])) {
@@ -40,10 +37,7 @@ class AuthController extends BaseController
             return $response;
         }
 
-        return $this->errorResponse(
-            $result['message'],
-            $result['status'] ?? 401
-        );
+        return $this->apiResponse(false, null, $result['message'], $result['status'] ?? 401);
     }
 
     /**
@@ -54,16 +48,10 @@ class AuthController extends BaseController
         $result = $this->service->register($request->validated());
         
         if ($result['success']) {
-            return $this->createdResponse(
-                $result['data'],
-                $result['message']
-            );
+            return $this->apiResponse(true, $result['data'], $result['message'], 201);
         }
 
-        return $this->errorResponse(
-            $result['message'],
-            $result['status'] ?? 422
-        );
+        return $this->apiResponse(false, null, $result['message'], $result['status'] ?? 422);
     }
 
     /**
@@ -74,22 +62,16 @@ class AuthController extends BaseController
         $user = $request->user();
         
         if (!$user) {
-            return $this->unauthorizedResponse();
+            return $this->apiResponse(false, null, '', 401);
         }
         
         $result = $this->service->me($user);
         
         if ($result['success']) {
-            return $this->successResponse(
-                $this->formatSingleData($result['data']),
-                $result['message']
-            );
+            return $this->successResponseWithFormat($result['data'], $result['message']);
         }
 
-        return $this->errorResponse(
-            $result['message'],
-            $result['status'] ?? 500
-        );
+        return $this->apiResponse(false, null, $result['message'], $result['status'] ?? 500);
     }
 
     /**
@@ -99,10 +81,7 @@ class AuthController extends BaseController
     {
         $result = $this->service->logout($request->user());
         
-        $response = $this->successResponse(
-            null,
-            $result['message']
-        );
+        $response = $this->apiResponse(true, null, $result['message']);
         
         // Xóa cookie auth_token
         $response->cookie('auth_token', '', -1, '/', null, false, false);
@@ -119,17 +98,14 @@ class AuthController extends BaseController
             $user = Auth::user();
             
             if (!$user) {
-                return $this->unauthorizedResponse();
+                return $this->apiResponse(false, null, '', 401);
             }
 
             // Sử dụng AuthService để refresh token
             $result = $this->service->refreshToken($user);
             
             if ($result['success']) {
-                $response = $this->successResponse(
-                    $result['data'],
-                    $result['message']
-                );
+                $response = $this->apiResponse(true, $result['data'], $result['message']);
                 
                 // Set cookie với token mới
                 if (isset($result['data']['token'])) {
@@ -140,13 +116,10 @@ class AuthController extends BaseController
                 return $response;
             }
 
-            return $this->errorResponse(
-                $result['message'],
-                $result['status'] ?? 500
-            );
+            return $this->apiResponse(false, null, $result['message'], $result['status'] ?? 500);
             
         } catch (\Exception $e) {
-            return $this->serverErrorResponse('Failed to refresh token');
+            return $this->apiResponse(false, null, 'Failed to refresh token', 500);
         }
     }
 } 

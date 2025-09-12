@@ -46,13 +46,13 @@ class ContactController extends BaseController
             $data = $this->service->updateStatus($id, $status, $adminId, $adminNotes);
             
             if (!$data) {
-                return $this->errorResponse('Không tìm thấy liên hệ để cập nhật', 404);
+                return $this->apiResponse(false, null, 'Không tìm thấy liên hệ để cập nhật', 404);
             }
             
-            return $this->formatResponse($data, 'single');
+            return $this->successResponseWithFormat($data, 'single');
         } catch (Exception $e) {
             $this->logError('UpdateStatus', $e, ['id' => $id]);
-            return $this->errorResponse('Không thể cập nhật trạng thái liên hệ');
+            return $this->apiResponse(false, null, 'Không thể cập nhật trạng thái liên hệ', 500);
         }
     }
 
@@ -66,13 +66,13 @@ class ContactController extends BaseController
             $data = $this->service->markAsResponded($id, $adminId);
             
             if (!$data) {
-                return $this->errorResponse('Không tìm thấy liên hệ để cập nhật', 404);
+                return $this->apiResponse(false, null, 'Không tìm thấy liên hệ để cập nhật', 404);
             }
             
-            return $this->formatResponse($data, 'single');
+            return $this->successResponseWithFormat($data, 'single');
         } catch (Exception $e) {
             $this->logError('MarkAsResponded', $e, ['id' => $id]);
-            return $this->errorResponse('Không thể đánh dấu liên hệ đã phản hồi');
+            return $this->apiResponse(false, null, 'Không thể đánh dấu liên hệ đã phản hồi', 500);
         }
     }
 
@@ -96,10 +96,10 @@ class ContactController extends BaseController
             
             $results = $this->service->bulkUpdateStatus($contactIds, $status, $adminId, $adminNotes);
             
-            return $this->successResponse($results, 'Cập nhật trạng thái hàng loạt');
+            return $this->apiResponse(true, $results, 'Cập nhật trạng thái hàng loạt');
         } catch (Exception $e) {
             $this->logError('BulkUpdateStatus', $e);
-            return $this->errorResponse('Không thể cập nhật trạng thái hàng loạt');
+            return $this->apiResponse(false, null, 'Không thể cập nhật trạng thái hàng loạt', 500);
         }
     }
 

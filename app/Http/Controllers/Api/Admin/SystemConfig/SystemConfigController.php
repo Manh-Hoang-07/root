@@ -30,13 +30,10 @@ class SystemConfigController extends BaseController
         try {
             $data = $this->service->getByGroup($group);
             
-            return $this->successResponse(
-                SystemConfigResource::collection($data),
-                "Lấy cấu hình nhóm {$group} thành công"
-            );
+            return $this->apiResponse(true, SystemConfigResource::collection($data), "Lấy cấu hình nhóm {$group} thành công");
         } catch (\Exception $e) {
             $this->logError('GetByGroup', $e);
-            return $this->errorResponse('Không thể tải cấu hình nhóm');
+            return $this->apiResponse(false, null, 'Không thể tải cấu hình nhóm', 500);
         }
     }
 
@@ -51,7 +48,7 @@ class SystemConfigController extends BaseController
             ]);
 
             if ($validator->fails()) {
-                return $this->errorResponse('Dữ liệu không hợp lệ', 422, $validator->errors());
+                return $this->apiResponse(false, null,'Dữ liệu không hợp lệ', 422, $validator->errors()->toArray());
             }
 
             $configs = $request->input('configs', []);
@@ -65,16 +62,13 @@ class SystemConfigController extends BaseController
             $result = $this->service->updateGroup($group, $configData);
             
             if ($result) {
-                return $this->successResponse(
-                    null,
-                    "Cập nhật cấu hình nhóm {$group} thành công"
-                );
+            return $this->apiResponse(true, null, "Cập nhật cấu hình nhóm {$group} thành công");
             }
             
-            return $this->errorResponse('Không thể cập nhật cấu hình nhóm');
+            return $this->apiResponse(false, null, 'Không thể cập nhật cấu hình nhóm', 500);
         } catch (\Exception $e) {
             $this->logError('UpdateGroup', $e);
-            return $this->errorResponse('Không thể cập nhật cấu hình nhóm');
+            return $this->apiResponse(false, null, 'Không thể cập nhật cấu hình nhóm', 500);
         }
     }
 
@@ -102,13 +96,13 @@ class SystemConfigController extends BaseController
                 ];
             }
 
-            return $this->successResponse(
+            return $this->apiResponse(true,
                 $formData,
                 "Lấy form cấu hình nhóm {$group} thành công"
             );
         } catch (\Exception $e) {
             $this->logError('GetGroupForm', $e);
-            return $this->errorResponse('Không thể tải form cấu hình nhóm');
+            return $this->apiResponse(false, null, 'Không thể tải form cấu hình nhóm', 500);
         }
     }
 
@@ -125,19 +119,19 @@ class SystemConfigController extends BaseController
             ]);
 
             if ($validator->fails()) {
-                return $this->errorResponse('Dữ liệu không hợp lệ', 422, $validator->errors());
+                return $this->apiResponse(false, null,'Dữ liệu không hợp lệ', 422, $validator->errors()->toArray());
             }
 
             $configs = $request->input('configs', []);
             $updated = $this->service->bulkUpdate($configs);
             
-            return $this->successResponse(
+            return $this->apiResponse(true,
                 ['updated_count' => $updated],
                 "Cập nhật hàng loạt {$updated} cấu hình thành công"
             );
         } catch (\Exception $e) {
             $this->logError('BulkUpdate', $e);
-            return $this->errorResponse('Không thể cập nhật hàng loạt cấu hình');
+            return $this->apiResponse(false, null, 'Không thể cập nhật hàng loạt cấu hình', 500);
         }
     }
 
@@ -153,19 +147,19 @@ class SystemConfigController extends BaseController
             ]);
 
             if ($validator->fails()) {
-                return $this->errorResponse('Dữ liệu không hợp lệ', 422, $validator->errors());
+                return $this->apiResponse(false, null,'Dữ liệu không hợp lệ', 422, $validator->errors()->toArray());
             }
 
             $ids = $request->input('ids', []);
             $deleted = $this->service->bulkDelete($ids);
             
-            return $this->successResponse(
+            return $this->apiResponse(true,
                 ['deleted_count' => $deleted],
                 "Xóa hàng loạt {$deleted} cấu hình thành công"
             );
         } catch (\Exception $e) {
             $this->logError('BulkDelete', $e);
-            return $this->errorResponse('Không thể xóa hàng loạt cấu hình');
+            return $this->apiResponse(false, null, 'Không thể xóa hàng loạt cấu hình', 500);
         }
     }
 
@@ -177,13 +171,13 @@ class SystemConfigController extends BaseController
         try {
             Cache::flush();
             
-            return $this->successResponse(
+            return $this->apiResponse(true,
                 null,
                 'Xóa cache thành công'
             );
         } catch (\Exception $e) {
             $this->logError('ClearCache', $e);
-            return $this->errorResponse('Không thể xóa cache');
+            return $this->apiResponse(false, null, 'Không thể xóa cache', 500);
         }
     }
 
@@ -195,13 +189,13 @@ class SystemConfigController extends BaseController
         try {
             $groups = $this->service->getGroups();
             
-            return $this->successResponse(
+            return $this->apiResponse(true,
                 $groups,
                 'Lấy danh sách nhóm cấu hình thành công'
             );
         } catch (\Exception $e) {
             $this->logError('GetGroups', $e);
-            return $this->errorResponse('Không thể tải danh sách nhóm cấu hình');
+            return $this->apiResponse(false, null, 'Không thể tải danh sách nhóm cấu hình', 500);
         }
     }
 
@@ -214,13 +208,13 @@ class SystemConfigController extends BaseController
             $filters = $request->all();
             $data = $this->service->search($filters);
             
-            return $this->successResponse(
+            return $this->apiResponse(true,
                 SystemConfigResource::collection($data),
                 'Tìm kiếm cấu hình thành công'
             );
         } catch (\Exception $e) {
             $this->logError('Search', $e);
-            return $this->errorResponse('Không thể tìm kiếm cấu hình');
+            return $this->apiResponse(false, null, 'Không thể tìm kiếm cấu hình', 500);
         }
     }
 }

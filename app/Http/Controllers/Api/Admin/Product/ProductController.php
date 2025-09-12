@@ -47,10 +47,7 @@ class ProductController extends BaseController
         $fields = $request ? $this->parseFields($request->get('fields')) : ['*'];
         $item = $this->service->find($id, $relations, $fields);
         
-        return $this->successResponse(
-            $this->formatSingleData($item),
-            'Lấy thông tin sản phẩm thành công'
-        );
+        return $this->successResponseWithFormat($item, 'Lấy thông tin sản phẩm thành công');
     }
 
     /**
@@ -64,10 +61,7 @@ class ProductController extends BaseController
         // Load minimal relations cho response
         $product->load(['brand:id,name']);
         
-        return $this->successResponse(
-            $this->formatSingleData($product),
-            'Tạo sản phẩm thành công'
-        );
+        return $this->successResponseWithFormat($product, 'Tạo sản phẩm thành công');
     }
 
     /**
@@ -81,10 +75,7 @@ class ProductController extends BaseController
         // Load minimal relations cho response
         $product->load(['brand:id,name']);
         
-        return $this->successResponse(
-            $this->formatSingleData($product),
-            'Cập nhật sản phẩm thành công'
-        );
+        return $this->successResponseWithFormat($product, 'Cập nhật sản phẩm thành công');
     }
 
     /**

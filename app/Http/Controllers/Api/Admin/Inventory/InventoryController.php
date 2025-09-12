@@ -21,32 +21,6 @@ class InventoryController extends BaseController
         $this->showRelations = ['product', 'variant', 'warehouse'];
     }
 
-    // /**
-    //  * Lấy danh sách tồn kho với phân trang và bộ lọc
-    //  */
-    // public function index(Request $request)
-    // {
-    //     try {
-    //         $filters = $request->only([
-    //             'search', 'warehouse_id', 'product_id', 'brand_id', 'category_id',
-    //             'low_stock', 'expiring_soon', 'expired', 'out_of_stock',
-    //             'sort_by', 'sort_direction'
-    //         ]);
-
-    //         $perPage = $request->get('per_page', 15);
-            
-    //         // Load relations manually
-    //         $inventories = $this->service->getInventories($filters, $perPage);
-            
-    //         return $this->successResponse(
-    //             $this->formatCollectionData($inventories),
-    //             'Lấy danh sách tồn kho thành công'
-    //         );
-    //     } catch (\Exception $e) {
-    //         return $this->errorResponse($e->getMessage());
-    //     }
-    // }
-
     /**
      * Lấy thông tin chi tiết tồn kho
      */
@@ -56,15 +30,12 @@ class InventoryController extends BaseController
             $inventory = $this->service->findById($id);
             
             if (!$inventory) {
-                return $this->notFoundResponse('Không tìm thấy tồn kho');
+                return $this->apiResponse(false, null, 'Không tìm thấy tồn kho', 404);
             }
 
-            return $this->successResponse(
-                $this->formatSingleData($inventory),
-                'Lấy thông tin tồn kho thành công'
-            );
+            return $this->successResponseWithFormat($inventory, 'Lấy thông tin tồn kho thành công');
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null,$e->getMessage());
         }
     }
 
@@ -77,13 +48,9 @@ class InventoryController extends BaseController
             $request = app($this->getStoreRequestClass());
             $inventory = $this->service->create($request->validated());
 
-            return $this->successResponse(
-                $this->formatSingleData($inventory),
-                'Tạo tồn kho thành công',
-                201
-            );
+            return $this->successResponseWithFormat($inventory, 'Tạo tồn kho thành công', 201);
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null,$e->getMessage());
         }
     }
 
@@ -96,12 +63,9 @@ class InventoryController extends BaseController
             $request = app($this->getUpdateRequestClass());
             $inventory = $this->service->update($id, $request->validated());
 
-            return $this->successResponse(
-                $this->formatSingleData($inventory),
-                'Cập nhật tồn kho thành công'
-            );
+            return $this->successResponseWithFormat($inventory, 'Cập nhật tồn kho thành công');
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null,$e->getMessage());
         }
     }
 
@@ -113,12 +77,9 @@ class InventoryController extends BaseController
         try {
             $this->service->delete($id);
 
-            return $this->successResponse(
-                null,
-                'Xóa tồn kho thành công'
-            );
+            return $this->apiResponse(true, null, 'Xóa tồn kho thành công');
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null,$e->getMessage());
         }
     }
 
@@ -139,12 +100,9 @@ class InventoryController extends BaseController
                 }, ARRAY_FILTER_USE_KEY)
             );
 
-            return $this->successResponse(
-                $this->formatSingleData($inventory),
-                'Nhập kho thành công'
-            );
+            return $this->successResponseWithFormat($inventory, 'Nhập kho thành công');
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null,$e->getMessage());
         }
     }
 
@@ -163,12 +121,9 @@ class InventoryController extends BaseController
                 $validated['batch_no'] ?? null
             );
 
-            return $this->successResponse(
-                $this->formatSingleData($inventory),
-                'Xuất kho thành công'
-            );
+            return $this->successResponseWithFormat($inventory, 'Xuất kho thành công');
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null,$e->getMessage());
         }
     }
 
@@ -183,12 +138,9 @@ class InventoryController extends BaseController
             $days = $request->get('days', 30);
             $inventories = $this->service->getExpiringSoon($days);
 
-            return $this->successResponse(
-                $this->formatCollectionData($inventories),
-                'Lấy danh sách hàng sắp hết hạn thành công'
-            );
+            return $this->successResponseWithFormat($inventories, 'Lấy danh sách hàng sắp hết hạn thành công');
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null,$e->getMessage());
         }
     }
 
@@ -200,12 +152,9 @@ class InventoryController extends BaseController
         try {
             $inventories = $this->service->getExpired();
 
-            return $this->successResponse(
-                $this->formatCollectionData($inventories),
-                'Lấy danh sách hàng đã hết hạn thành công'
-            );
+            return $this->successResponseWithFormat($inventories, 'Lấy danh sách hàng đã hết hạn thành công');
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null,$e->getMessage());
         }
     }
 
@@ -218,12 +167,9 @@ class InventoryController extends BaseController
             $threshold = $request->get('threshold', 10);
             $inventories = $this->service->getLowStock($threshold);
 
-            return $this->successResponse(
-                $this->formatCollectionData($inventories),
-                'Lấy danh sách hàng sắp hết thành công'
-            );
+            return $this->successResponseWithFormat($inventories, 'Lấy danh sách hàng sắp hết thành công');
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null,$e->getMessage());
         }
     }
 
@@ -235,14 +181,11 @@ class InventoryController extends BaseController
         try {
             $options = $this->service->getFilterOptions();
 
-            return $this->successResponse(
-                $options,
-                'Lấy tùy chọn bộ lọc thành công'
-            );
+            return $this->apiResponse(true, $options, 'Lấy tùy chọn bộ lọc thành công');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Filter options error: ' . $e->getMessage());
             \Illuminate\Support\Facades\Log::error('Stack trace: ' . $e->getTraceAsString());
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null,$e->getMessage());
         }
     }
 }

@@ -29,10 +29,10 @@ class ContactController extends BaseController
             $request = app($this->getStoreRequestClass());
             $data = $this->service->createContact($request->all());
             
-            return $this->formatResponse($data, 'single');
+            return $this->successResponseWithFormat($data, 'single');
         } catch (Exception $e) {
             $this->logError('Store', $e);
-            return $this->errorResponse('Không thể gửi liên hệ. Vui lòng thử lại sau.');
+            return $this->apiResponse(false, null, 'Không thể gửi liên hệ. Vui lòng thử lại sau.', 500);
         }
     }
 }

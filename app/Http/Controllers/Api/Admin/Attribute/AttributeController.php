@@ -24,7 +24,7 @@ class AttributeController extends BaseController
         // Nếu có parameter relations=values, load với attributeValues
         if ($request->get('relations') === 'values' || $request->get('with_values')) {
             $attributes = $this->service->getAttributesWithValues();
-            return $this->successResponse($this->formatCollectionData($attributes), 'Lấy danh sách thành công');
+            return $this->successResponseWithFormat($attributes, 'Lấy danh sách thành công');
         }
         
         // Nếu không, sử dụng method của BaseController

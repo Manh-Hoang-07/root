@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api\Core;
 
 use App\Http\Controllers\Controller;
+use App\Traits\ResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
 class EnumController extends Controller
 {
+    use ResponseTrait;
     /**
      * Lấy danh sách enum theo type
      */
@@ -62,40 +64,12 @@ class EnumController extends Controller
 
         // Nếu data là null (enum type không hợp lệ), trả về error
         if ($data === null) {
-            return $this->errorResponse('Loại enum không hợp lệ.', 400);
+            return $this->apiResponse(false, null, 'Loại enum không hợp lệ.', 400);
         }
 
-        return $this->successResponse($data, 'Lấy danh sách enum thành công.');
+        return $this->apiResponse(true, $data, 'Lấy danh sách enum thành công.');
     }
 
-    /**
-     * Success response
-     */
-    protected function successResponse($data = null, string $message = 'Thành công', int $status = 200): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data' => $data
-        ], $status);
-    }
-
-    /**
-     * Error response
-     */
-    protected function errorResponse(string $message = 'Có lỗi xảy ra', int $status = 400, $errors = null): JsonResponse
-    {
-        $response = [
-            'success' => false,
-            'message' => $message
-        ];
-
-        if ($errors) {
-            $response['errors'] = $errors;
-        }
-
-        return response()->json($response, $status);
-    }
 
     /**
      * Clear cache cho một enum type cụ thể
@@ -105,7 +79,7 @@ class EnumController extends Controller
         $cacheKey = "enums_{$type}";
         Cache::forget($cacheKey);
         
-        return $this->successResponse(null, "Đã xóa cache cho enum type: {$type}");
+        return $this->apiResponse(true, null, "Đã xóa cache cho enum type: {$type}");
     }
 
     /**
@@ -120,6 +94,6 @@ class EnumController extends Controller
             Cache::forget($cacheKey);
         }
         
-        return $this->successResponse(null, 'Đã xóa tất cả cache enum');
+        return $this->apiResponse(true, null, 'Đã xóa tất cả cache enum');
     }
 } 

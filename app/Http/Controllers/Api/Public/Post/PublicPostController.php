@@ -34,9 +34,9 @@ class PublicPostController extends BaseController
         $fields = $this->getDefaultShowFields();
         $item = $this->service->findBySlug($slug, $relations, $fields);
         if (!$item) {
-            return $this->errorResponse('Không tìm thấy dữ liệu', 404);
+            return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu', 404);
         }
-        return $this->successResponse($this->formatSingleData($item), 'Lấy thông tin thành công');
+        return $this->successResponseWithFormat($item, 'Lấy thông tin thành công');
     }
 }
 

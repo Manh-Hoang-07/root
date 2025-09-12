@@ -22,6 +22,6 @@ class ImageController extends BaseController
     public function getProductImages($productId)
     {
         $images = $this->service->getImagesByProduct($productId);
-        return $this->successResponse($this->formatCollectionData($images), 'Lấy danh sách thành công');
+        return $this->successResponseWithFormat($images, 'Lấy danh sách thành công');
     }
 } 

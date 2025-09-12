@@ -26,10 +26,7 @@ class VariantController extends BaseController
         
         $variants = $this->service->getVariantsByProduct($productId);
         
-        return $this->successResponse(
-            $this->formatCollectionData($variants),
-            'Lấy danh sách biến thể thành công'
-        );
+        return $this->successResponseWithFormat($variants, 'Lấy danh sách biến thể thành công');
     }
 
     /**
@@ -40,7 +37,7 @@ class VariantController extends BaseController
         $request = app($this->getStoreRequestClass());
         $variant = $this->service->createVariant($request->validated());
         
-        return $this->successResponse($this->formatSingleData($variant), 'Lấy thông tin thành công');
+        return $this->successResponseWithFormat($variant, 'Tạo biến thể thành công');
     }
 
     /**
@@ -51,6 +48,6 @@ class VariantController extends BaseController
         $request = app($this->getUpdateRequestClass());
         $variant = $this->service->updateVariant($id, $request->validated());
         
-        return $this->successResponse($this->formatSingleData($variant), 'Lấy thông tin thành công');
+        return $this->successResponseWithFormat($variant, 'Cập nhật biến thể thành công');
     }
 } 

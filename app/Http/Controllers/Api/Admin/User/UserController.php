@@ -26,27 +26,25 @@ class UserController extends BaseController
             $user = $this->service->findById($id);
             
             if (!$user) {
-                return $this->notFoundResponse('Không tìm thấy người dùng');
+                return $this->apiResponse(false, null, 'Không tìm thấy người dùng', 404);
             }
 
-            return $this->successResponse(
-                $this->formatSingleData($user),
-                'Lấy thông tin người dùng thành công'
-            );
+            return $this->successResponseWithFormat($user, 'Lấy thông tin người dùng thành công');
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
     }
 
     public function changePassword(ChangePasswordRequest $request, $id)
     {
-        $data = $request->validated();
-        $result = $this->service->changePassword($id, $data['password']);
-        
-        return response()->json([
-            'message' => 'Mật khẩu đã được thay đổi thành công.',
-            'data' => $result
-        ]);
+        try {
+            $data = $request->validated();
+            $result = $this->service->changePassword($id, $data['password']);
+            
+            return $this->apiResponse(true, $result, 'Mật khẩu đã được thay đổi thành công');
+        } catch (\Exception $e) {
+            return $this->apiResponse(false, null, $e->getMessage(), 500);
+        }
     }
 
     /**
@@ -58,15 +56,12 @@ class UserController extends BaseController
             $user = $this->service->findByIdWithRoles($id);
             
             if (!$user) {
-                return $this->notFoundResponse('Không tìm thấy người dùng');
+                return $this->apiResponse(false, null, 'Không tìm thấy người dùng', 404);
             }
 
-            return $this->successResponse(
-                $this->formatSingleData($user),
-                'Lấy thông tin người dùng thành công'
-            );
+            return $this->successResponseWithFormat($user, 'Lấy thông tin người dùng thành công');
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
     }
 
@@ -79,12 +74,9 @@ class UserController extends BaseController
             $data = $request->validated();
             $result = $this->service->assignRoles($id, $data['role_ids']);
             
-            return $this->successResponse(
-                $result,
-                'Phân quyền thành công'
-            );
+            return $this->apiResponse(true, $result, 'Phân quyền thành công');
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
     }
 

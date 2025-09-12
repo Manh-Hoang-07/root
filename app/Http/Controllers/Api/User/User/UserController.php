@@ -27,16 +27,10 @@ class UserController extends BaseController
         $user = $request->user();
         
         if (!$user) {
-            return $this->errorResponse(
-                'Không tìm thấy thông tin user.',
-                401
-            );
+        return $this->apiResponse(false, null, 'Không tìm thấy thông tin user.', 401);
         }
         
-        return $this->successResponse(
-            $this->formatSingleData($user),
-            'Lấy thông tin user thành công.'
-        );
+        return $this->successResponseWithFormat($user, 'Lấy thông tin user thành công.');
     }
 
     /**
@@ -50,15 +44,9 @@ class UserController extends BaseController
         );
         
         if ($result['success']) {
-            return $this->successResponse(
-                null,
-                $result['message']
-            );
+            return $this->apiResponse(true, null, $result['message']);
         }
 
-        return $this->errorResponse(
-            $result['message'],
-            $result['status'] ?? 400
-        );
+        return $this->apiResponse(false, null, $result['message'], $result['status'] ?? 400);
     }
 } 
