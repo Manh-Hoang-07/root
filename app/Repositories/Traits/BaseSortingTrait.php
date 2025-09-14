@@ -47,10 +47,17 @@ trait BaseSortingTrait
         }
         
         // Check if field exists in model's fillable or common fields
-        $allowedFields = array_merge(
-            $this->model->getFillable(),
-            ['id', 'created_at', 'updated_at', 'name', 'title', 'email', 'status']
-        );
+        $modelClass = get_class($this->model);
+        static $allowedFieldsCache = [];
+        
+        if (!isset($allowedFieldsCache[$modelClass])) {
+            $allowedFieldsCache[$modelClass] = array_merge(
+                $this->model->getFillable(),
+                ['id', 'created_at', 'updated_at', 'name', 'title', 'email', 'status']
+            );
+        }
+        
+        $allowedFields = $allowedFieldsCache[$modelClass];
         
         if (in_array($field, $allowedFields)) {
             $query->orderBy($field, $direction);

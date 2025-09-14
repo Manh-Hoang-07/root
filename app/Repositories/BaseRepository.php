@@ -2,10 +2,7 @@
 
 namespace App\Repositories;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use App\Repositories\Traits\BaseFilterTrait;
 use App\Repositories\Traits\BaseSearchTrait;
@@ -34,7 +31,6 @@ abstract class BaseRepository
 
     /**
      * Get the model class name
-     * 
      * @return string
      */
     abstract public function model();
@@ -76,8 +72,11 @@ abstract class BaseRepository
         if (!$model) {
             return null;
         }
+        
         $model->update($data);
-        return $model->fresh()->toArray();
+        // Reload model to get updated data without extra query
+        $model->refresh();
+        return $model->toArray();
     }
 
     /**
@@ -128,14 +127,11 @@ abstract class BaseRepository
     }
 
     /**
-     * Search records with advanced filtering
+     * Search records with advanced filtering (alias for all method)
      */
     public function search(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*']): array
     {
-        $query = $this->buildQuery($relations, $fields);
-        $this->applyFilters($query, $filters);
-        $this->applySorting($query, $filters);
-        return $this->formatPagination($query->paginate($perPage));
+        return $this->all($filters, $perPage, $relations, $fields);
     }
 
     /**
@@ -174,9 +170,15 @@ abstract class BaseRepository
     public function softDelete($id): bool
     {
         $model = $this->model->find($id);
-        if (!$model || !method_exists($model, 'delete')) {
+        if (!$model) {
             return false;
         }
+        
+        // Check if model uses SoftDeletes trait
+        if (!in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($model))) {
+            return false;
+        }
+        
         return $model->delete();
     }
 
@@ -186,9 +188,15 @@ abstract class BaseRepository
     public function restore($id): bool
     {
         $model = $this->model->withTrashed()->find($id);
-        if (!$model || !method_exists($model, 'restore')) {
+        if (!$model) {
             return false;
         }
+        
+        // Check if model uses SoftDeletes trait
+        if (!in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($model))) {
+            return false;
+        }
+        
         return $model->restore();
     }
 } 

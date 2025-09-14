@@ -178,7 +178,17 @@ trait BaseFilterTrait
      */
     protected function applyDefaultFilter(Builder $query, string $key, $value): void
     {
-        if (in_array($key, $this->model->getFillable()) || in_array($key, ['id', 'created_at', 'updated_at'])) {
+        // Cache fillable fields per model class to avoid repeated calls
+        $modelClass = get_class($this->model);
+        static $fillableCache = [];
+        
+        if (!isset($fillableCache[$modelClass])) {
+            $fillableCache[$modelClass] = $this->model->getFillable();
+        }
+        
+        $allowedFields = array_merge($fillableCache[$modelClass], ['id', 'created_at', 'updated_at']);
+        
+        if (in_array($key, $allowedFields)) {
             if (is_array($value)) {
                 $query->whereIn($key, $value);
             } else {

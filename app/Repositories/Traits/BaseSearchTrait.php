@@ -17,9 +17,13 @@ trait BaseSearchTrait
     {
         $query->where(function($q) use ($searchValue) {
             $searchableFields = $this->getSearchableFields();
+            $modelFillable = $this->model->getFillable();
             
             foreach ($searchableFields as $field) {
-                $q->orWhere($field, 'like', "%{$searchValue}%");
+                // Only search in fields that exist in the model
+                if (in_array($field, $modelFillable) || in_array($field, ['id', 'name', 'title', 'description', 'content'])) {
+                    $q->orWhere($field, 'like', "%{$searchValue}%");
+                }
             }
             
             // Apply relationship search if needed
