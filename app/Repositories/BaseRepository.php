@@ -49,10 +49,6 @@ abstract class BaseRepository
         $this->applySorting($query, $filters);
         return $this->formatPagination($query->paginate($perPage));
     }
-    
-    
-    
-
 
     /**
      * Find a record by ID
@@ -62,7 +58,6 @@ abstract class BaseRepository
         $model = $this->buildQuery($relations, $fields)->find($id);
         return $model ? $model->toArray() : null;
     }
-
 
     /**
      * Create a new record
@@ -78,7 +73,11 @@ abstract class BaseRepository
     public function update($id, array $data): ?array
     {
         $model = $this->model->find($id);
-        return $model ? $model->update($data) ? $model->fresh()->toArray() : null : null;
+        if (!$model) {
+            return null;
+        }
+        $model->update($data);
+        return $model->fresh()->toArray();
     }
 
     /**
@@ -87,12 +86,14 @@ abstract class BaseRepository
     public function delete($id): bool
     {
         $model = $this->model->find($id);
-        return $model ? $model->delete() : false;
+        if (!$model) {
+            return false;
+        }
+        return $model->delete();
     }
 
     /**
      * Check if record exists
-     * 
      * @param mixed $id
      * @return bool
      */
@@ -119,7 +120,6 @@ abstract class BaseRepository
 
     /**
      * Get the model instance
-     * 
      * @return Model
      */
     public function getModel(): Model
@@ -138,7 +138,6 @@ abstract class BaseRepository
         return $this->formatPagination($query->paginate($perPage));
     }
 
-
     /**
      * Update records by condition
      */
@@ -148,7 +147,6 @@ abstract class BaseRepository
         $this->applyConditions($query, $conditions);
         return $query->update($data);
     }
-
 
     /**
      * Get records by condition (without pagination)
@@ -170,14 +168,16 @@ abstract class BaseRepository
         return $query->count();
     }
 
-
     /**
      * Soft delete a record (if model supports it)
      */
     public function softDelete($id): bool
     {
         $model = $this->model->find($id);
-        return $model && method_exists($model, 'delete') ? $model->delete() : false;
+        if (!$model || !method_exists($model, 'delete')) {
+            return false;
+        }
+        return $model->delete();
     }
 
     /**
@@ -186,6 +186,9 @@ abstract class BaseRepository
     public function restore($id): bool
     {
         $model = $this->model->withTrashed()->find($id);
-        return $model && method_exists($model, 'restore') ? $model->restore() : false;
+        if (!$model || !method_exists($model, 'restore')) {
+            return false;
+        }
+        return $model->restore();
     }
 } 
