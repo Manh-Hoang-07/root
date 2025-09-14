@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Admin\Role;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Role\RoleService;
+use App\Services\Admin\Role\RoleService;
 use App\Http\Requests\Admin\Role\RoleRequest;
 use Illuminate\Http\Request;
 

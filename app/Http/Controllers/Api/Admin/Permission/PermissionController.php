@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Admin\Permission;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Permission\PermissionService;
+use App\Services\Admin\Permission\PermissionService;
 use App\Http\Requests\Admin\Permission\PermissionRequest;
 
 class PermissionController extends BaseController

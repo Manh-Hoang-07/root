@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Admin\Attribute;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Attribute\AttributeValueService;
+use App\Services\Admin\Attribute\AttributeValueService;
 use App\Http\Requests\Admin\Attribute\AttributeValueRequest;
 
 class AttributeValueController extends BaseController

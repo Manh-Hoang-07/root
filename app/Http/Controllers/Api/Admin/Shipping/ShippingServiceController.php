@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Admin\Shipping;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Shipping\ShippingServiceService;
+use App\Services\Admin\Shipping\ShippingServiceService;
 use App\Http\Requests\Admin\Shipping\ShippingServiceRequest;
 
 class ShippingServiceController extends BaseController

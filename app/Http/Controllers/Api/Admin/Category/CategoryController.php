@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Admin\Category;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Category\CategoryService;
+use App\Services\Admin\Category\CategoryService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\Admin\Category\CategoryRequest;

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Public\PostCategory;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\PostCategory\PostCategoryService;
+use App\Services\Public\PostCategory\PostCategoryService;
 
 class PublicPostCategoryController extends BaseController
 {

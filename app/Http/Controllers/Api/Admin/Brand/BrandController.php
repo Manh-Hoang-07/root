@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Admin\Brand;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Brand\BrandService;
+use App\Services\Admin\Brand\BrandService;
 use App\Http\Requests\Admin\Brand\BrandRequest;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;

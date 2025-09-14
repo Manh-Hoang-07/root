@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Admin\SystemConfig;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Admin\SystemConfig\SystemConfigRequest;
-use App\Services\SystemConfig\SystemConfigService;
+use App\Services\Admin\SystemConfig\SystemConfigService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;

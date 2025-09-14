@@ -14,7 +14,7 @@ use App\Http\Controllers\Api\Core\Enum\EnumController;
 use App\Http\Controllers\Api\Core\File\FileController;
 use App\Http\Controllers\Api\Admin\Permission\PermissionController;
 use App\Http\Controllers\Api\Admin\Role\RoleController;
-use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Core\Auth\AuthController;
 use App\Http\Controllers\Api\User\User\UserController as ApiUserController;
 use App\Http\Controllers\Api\Admin\Inventory\InventoryController;
 use App\Http\Controllers\Api\Public\Contact\ContactController as PublicContactController;
@@ -55,11 +55,11 @@ Route::post('/contacts', [PublicContactController::class, 'store']);
 
 // Public API - Config (không cần authentication)
 Route::prefix('config')->group(function () {
-    Route::get('/public', [App\Http\Controllers\Api\Public\Config\ConfigController::class, 'getPublicConfigs']);
-    Route::get('/group/{group}', [App\Http\Controllers\Api\Public\Config\ConfigController::class, 'getGroupConfig']);
-    Route::post('/groups', [App\Http\Controllers\Api\Public\Config\ConfigController::class, 'getMultipleGroups']);
-    Route::get('/key', [App\Http\Controllers\Api\Public\Config\ConfigController::class, 'getConfigByKey']);
-    Route::post('/keys', [App\Http\Controllers\Api\Public\Config\ConfigController::class, 'getMultipleConfigs']);
+    Route::get('/public', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getPublicConfigs']);
+    Route::get('/group/{group}', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getGroupConfig']);
+    Route::post('/groups', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getMultipleGroups']);
+    Route::get('/key', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getConfigByKey']);
+    Route::post('/keys', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getMultipleConfigs']);
 });
 
 // Public API - Config V2 (không cần authentication) - Chỉ đọc
@@ -94,7 +94,7 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     Route::apiResource('attributes', App\Http\Controllers\Api\Admin\Attribute\AttributeController::class);
     
     // Image upload
-    Route::post('images/upload', [App\Http\Controllers\Api\Admin\Core\ImageController::class, 'upload']);
+    Route::post('images/upload', [App\Http\Controllers\Api\Core\File\FileController::class, 'upload']);
     // Search endpoints - phải đặt trước resource routes
     Route::get('brands/search', [BrandController::class, 'search']);
     Route::get('categories/search', [CategoryController::class, 'search']);

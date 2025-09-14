@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\User\User;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Auth\ChangePasswordRequest;
-use App\Services\Auth\AuthService;
+use App\Services\Core\Auth\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 

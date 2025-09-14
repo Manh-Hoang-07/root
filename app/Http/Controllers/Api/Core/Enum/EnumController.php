@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Core\Enum;
 
 use App\Http\Controllers\Controller;
-use App\Services\Core\EnumService;
+use App\Services\Core\Enum\EnumService;
 use App\Traits\ResponseTrait;
 use App\Traits\LoggingTrait;
 use Illuminate\Http\JsonResponse;

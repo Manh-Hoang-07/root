@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\Admin\Image;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Image\ImageService;
+use App\Services\Core\File\FileService;
 use App\Http\Requests\Admin\Image\ImageRequest;
 
 class ImageController extends BaseController
 {
-    public function __construct(ImageService $service)
+    public function __construct(FileService $service)
     {
         parent::__construct($service);
         $this->storeRequestClass = ImageRequest::class;

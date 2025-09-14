@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Admin\Order;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Order\OrderService;
+use App\Services\Admin\Order\OrderService;
 use App\Http\Requests\Admin\Order\OrderRequest;
 
 class OrderController extends BaseController

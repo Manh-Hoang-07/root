@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Admin\Shipping;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Shipping\ShippingPricingRuleService;
+use App\Services\Admin\Shipping\ShippingPricingRuleService;
 use App\Http\Requests\Admin\Shipping\ShippingPricingRuleRequest;
 
 class ShippingPricingRuleController extends BaseController

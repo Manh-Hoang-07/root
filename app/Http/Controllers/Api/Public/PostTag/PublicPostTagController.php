@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Public\PostTag;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\PostTag\PostTagService;
+use App\Services\Public\PostTag\PostTagService;
 
 class PublicPostTagController extends BaseController
 {

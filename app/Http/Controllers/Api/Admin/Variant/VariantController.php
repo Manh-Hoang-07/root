@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Admin\Variant;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Variant\VariantService;
+use App\Services\Admin\Variant\VariantService;
 use App\Http\Requests\Admin\Variant\VariantRequest;
 use Illuminate\Http\Request;
 

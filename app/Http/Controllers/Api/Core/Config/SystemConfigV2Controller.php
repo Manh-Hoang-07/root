@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Core\Config;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Services\SystemConfigV2\SystemConfigV2Service;
+use App\Services\Core\SystemConfigV2\SystemConfigV2Service;
 use App\Traits\ResponseTrait;
 use App\Traits\LoggingTrait;
 use Illuminate\Http\JsonResponse;

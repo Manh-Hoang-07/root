@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Admin\Warehouse;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Warehouse\WarehouseService;
+use App\Services\Admin\Warehouse\WarehouseService;
 use App\Http\Requests\Admin\Warehouse\WarehouseRequest;
 
 class WarehouseController extends BaseController

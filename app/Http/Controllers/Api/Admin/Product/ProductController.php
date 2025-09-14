@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Admin\Product;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Product\ProductService;
+use App\Services\Admin\Product\ProductService;
 use App\Http\Requests\Admin\Product\ProductRequest;
 use Illuminate\Http\Request;
 

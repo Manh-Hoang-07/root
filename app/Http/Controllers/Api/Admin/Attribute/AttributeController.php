@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Admin\Attribute;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController;
-use App\Services\Attribute\AttributeService;
+use App\Services\Admin\Attribute\AttributeService;
 use App\Http\Requests\Admin\Attribute\AttributeRequest;
 
 class AttributeController extends BaseController

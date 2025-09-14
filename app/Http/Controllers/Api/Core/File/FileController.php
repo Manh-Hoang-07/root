@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Core\File;
 
 use App\Http\Controllers\Controller;
-use App\Services\Core\FileService;
+use App\Services\Core\File\FileService;
 use App\Http\Requests\Core\File\UploadFileRequest;
 use App\Http\Requests\Core\File\UploadMultipleFilesRequest;
 use App\Http\Requests\Core\File\GetFileInfoRequest;

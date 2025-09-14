@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api\Admin\User;
 
 use App\Http\Controllers\Api\BaseController;
-use App\Services\User\UserService;
+use App\Services\Admin\User\UserService;
 use App\Http\Requests\Admin\User\UserRequest;
 use App\Http\Requests\Admin\User\ChangePasswordRequest;
 use App\Http\Requests\Admin\User\AssignRoleRequest;

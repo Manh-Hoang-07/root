@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\BaseController;
 use App\Http\Requests\Admin\Inventory\InventoryRequest;
 use App\Http\Requests\Admin\Inventory\ImportInventoryRequest;
 use App\Http\Requests\Admin\Inventory\ExportInventoryRequest;
-use App\Services\Inventory\InventoryService;
+use App\Services\Admin\Inventory\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
