@@ -8,7 +8,7 @@ use App\Helpers\ConfigHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class SystemConfigController extends BaseController
+class SystemConfigV2Controller extends BaseController
 {
     protected SystemConfigService $configService;
 
