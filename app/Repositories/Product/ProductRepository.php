@@ -4,10 +4,11 @@ namespace App\Repositories\Product;
 use App\Models\Product;
 use App\Repositories\BaseRepository;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class ProductRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Product::class;
     }
@@ -15,7 +16,7 @@ class ProductRepository extends BaseRepository
     /**
      * Optimize relations for Product model
      */
-    protected function optimizeRelations($relations)
+    protected function optimizeRelations(array $relations): array
     {
         $optimizedRelations = [];
         foreach ($relations as $relation) {
@@ -60,7 +61,7 @@ class ProductRepository extends BaseRepository
     /**
      * Get products with relationships
      */
-    public function getProductsWithRelations($filters = [])
+    public function getProductsWithRelations(array $filters = [])
     {
         $query = $this->model->query();
 
@@ -121,7 +122,7 @@ class ProductRepository extends BaseRepository
     /**
      * Get product with all relationships
      */
-    public function getProductWithRelations($id)
+    public function getProductWithRelations(int $id)
     {
         return $this->model->with([
             'brand:id,name', 
@@ -136,7 +137,7 @@ class ProductRepository extends BaseRepository
     /**
      * Get products for dropdown/select
      */
-    public function getProductsForSelect()
+    public function getProductsForSelect(): Collection
     {
         return $this->model->select('id', 'name', 'sku')
                           ->where('status', 'active')
@@ -147,7 +148,7 @@ class ProductRepository extends BaseRepository
     /**
      * Search products by name or SKU
      */
-    public function searchProducts($term, $limit = 10)
+    public function searchProducts(string $term, int $limit = 10)
     {
         return $this->model->where('name', 'like', "%{$term}%")
                           ->orWhere('sku', 'like', "%{$term}%")
@@ -158,7 +159,7 @@ class ProductRepository extends BaseRepository
     /**
      * Override searchable fields for Product
      */
-    protected function getSearchableFields()
+    protected function getSearchableFields(): array
     {
         return ['name', 'code', 'description', 'short_description'];
     }
@@ -166,7 +167,7 @@ class ProductRepository extends BaseRepository
     /**
      * Override search filter for Product to include brand and category search
      */
-    protected function applySearchFilter($query, $searchValue)
+    protected function applySearchFilter(\Illuminate\Database\Eloquent\Builder $query, string $searchValue): void
     {
         $query->where(function($q) use ($searchValue) {
             // Search in main fields

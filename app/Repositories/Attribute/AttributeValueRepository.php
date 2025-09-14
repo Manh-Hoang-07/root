@@ -6,7 +6,7 @@ use App\Repositories\BaseRepository;
 
 class AttributeValueRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return AttributeValue::class;
     }

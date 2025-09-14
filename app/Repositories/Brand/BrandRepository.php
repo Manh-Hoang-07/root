@@ -6,7 +6,7 @@ use App\Repositories\BaseRepository;
 
 class BrandRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Brand::class;
     }

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return User::class;
     }
@@ -61,7 +61,7 @@ class UserRepository extends BaseRepository
         
         // Apply sorting
         if (!empty($filters['sort_by'])) {
-            $this->applySorting($query, $filters['sort_by']);
+            $this->applyCustomSorting($query, $filters['sort_by']);
         }
         
         // Load relations
@@ -90,7 +90,7 @@ class UserRepository extends BaseRepository
         ];
     }
     
-    protected function applySorting(\Illuminate\Database\Eloquent\Builder $query, string $sortBy): void
+    protected function applyCustomSorting(\Illuminate\Database\Eloquent\Builder $query, string $sortBy): void
     {
         switch ($sortBy) {
             case 'created_at_desc':
@@ -116,7 +116,7 @@ class UserRepository extends BaseRepository
         }
     }
 
-    public function changePassword($id, $newPassword): array
+    public function changePassword($id, string $newPassword): array
     {
         $user = $this->model->find($id);
         if (!$user) {

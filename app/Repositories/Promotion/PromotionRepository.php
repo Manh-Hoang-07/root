@@ -6,7 +6,7 @@ use App\Repositories\BaseRepository;
 
 class PromotionRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Promotion::class;
     }

@@ -7,7 +7,7 @@ use App\Repositories\BaseRepository;
 
 class ImageRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Image::class;
     }
@@ -15,7 +15,7 @@ class ImageRepository extends BaseRepository
     /**
      * Get images by product
      */
-    public function getImagesByProduct($productId)
+    public function getImagesByProduct(int $productId)
     {
         return $this->model->where('imageable_type', 'App\\Models\\Product')
                           ->where('imageable_id', $productId)

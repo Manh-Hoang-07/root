@@ -7,12 +7,12 @@ use Illuminate\Support\Facades\Log;
 
 class PermissionRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Permission::class;
     }
 
-    public function all($filters = [], $perPage = 20, $relations = [], $fields = ['*'])
+    public function all(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*']): array
     {
         $query = $this->model->newQuery();
         
@@ -67,7 +67,7 @@ class PermissionRepository extends BaseRepository
         
         // Apply sorting
         if (!empty($filters['sort_by'])) {
-            $this->applySorting($query, $filters['sort_by']);
+            $this->applyCustomSorting($query, $filters['sort_by']);
         }
         
         // Load relations
@@ -77,10 +77,21 @@ class PermissionRepository extends BaseRepository
         
         $result = $query->paginate($perPage);
         
-        return $result;
+        return [
+            'data' => $result->items(),
+            'pagination' => [
+                'current_page' => $result->currentPage(),
+                'per_page' => $result->perPage(),
+                'total' => $result->total(),
+                'last_page' => $result->lastPage(),
+                'from' => $result->firstItem(),
+                'to' => $result->lastItem(),
+                'has_more_pages' => $result->hasMorePages(),
+            ]
+        ];
     }
     
-    protected function applySorting($query, $sortBy)
+    protected function applyCustomSorting(\Illuminate\Database\Eloquent\Builder $query, string $sortBy): void
     {
         switch ($sortBy) {
             case 'created_at_desc':

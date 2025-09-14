@@ -6,7 +6,7 @@ use App\Models\Image;
 
 class ImageRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Image::class;
     }

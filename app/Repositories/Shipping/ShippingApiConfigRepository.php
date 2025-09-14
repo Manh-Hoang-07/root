@@ -6,7 +6,7 @@ use App\Repositories\BaseRepository;
 
 class ShippingApiConfigRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return ShippingApiConfig::class;
     }

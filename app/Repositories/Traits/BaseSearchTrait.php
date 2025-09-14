@@ -21,7 +21,7 @@ trait BaseSearchTrait
             
             foreach ($searchableFields as $field) {
                 // Only search in fields that exist in the model
-                if (in_array($field, $modelFillable) || in_array($field, ['id', 'name', 'title', 'description', 'content'])) {
+                if (in_array($field, $modelFillable) || in_array($field, ['id', 'username', 'name', 'title', 'description', 'content'])) {
                     $q->orWhere($field, 'like', "%{$searchValue}%");
                 }
             }

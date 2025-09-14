@@ -9,7 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class InventoryRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Inventory::class;
     }
@@ -26,7 +26,7 @@ class InventoryRepository extends BaseRepository
 
         // Sắp xếp
         if (!empty($filters['sort_by'])) {
-            $this->applySorting($query, $filters['sort_by']);
+            $this->applyCustomSorting($query, $filters['sort_by']);
         } else {
             $query->orderBy('updated_at', 'desc');
         }
@@ -279,7 +279,7 @@ class InventoryRepository extends BaseRepository
     /**
      * Áp dụng sắp xếp cho query
      */
-    protected function applySorting($query, $sortBy)
+    protected function applyCustomSorting(\Illuminate\Database\Eloquent\Builder $query, string $sortBy): void
     {
         $parts = explode('_', $sortBy);
         if (count($parts) >= 2) {

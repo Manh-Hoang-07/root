@@ -36,7 +36,7 @@ trait BaseQueryTrait
      * @param \Illuminate\Contracts\Pagination\LengthAwarePaginator $paginator
      * @return array
      */
-    protected function formatPagination($paginator): array
+    protected function formatPagination(\Illuminate\Pagination\LengthAwarePaginator $paginator): array
     {
         return [
             'data' => $paginator->items(),

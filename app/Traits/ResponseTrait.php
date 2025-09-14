@@ -67,7 +67,13 @@ trait ResponseTrait
     {
         $formattedData = $this->formatResponse($data);
         
-        // Check if data has pagination structure
+        // Check if data has pagination structure from repository
+        if (isset($formattedData['data']) && isset($formattedData['pagination'])) {
+            // Repository format: {data: [...], pagination: {...}}
+            return $this->apiResponse(true, $formattedData['data'], $message, $statusCode, [], [], $formattedData['pagination']);
+        }
+        
+        // Check if data has Laravel pagination structure
         if (isset($formattedData['data']) && (isset($formattedData['links']) || isset($formattedData['meta']))) {
             return $this->apiResponse(true, $formattedData['data'], $message, $statusCode, [], $formattedData['links'] ?? [], $formattedData['meta'] ?? []);
         }
@@ -83,10 +89,17 @@ trait ResponseTrait
      */
     protected function formatResponse($data)
     {
+        // Check if data is already formatted from repository
+        if (is_array($data) && isset($data['data']) && isset($data['pagination'])) {
+            // Repository format: {data: [...], pagination: {...}}
+            return $data;
+        }
+        
         // Auto-detect if single item or collection
         if ($this->isSingleItem($data)) {
             return $this->formatSingleData($data);
         }
+        
         // Check if data is a paginated collection (Laravel pagination object)
         if (method_exists($data, 'toArray')) {
             $dataArray = $data->toArray();

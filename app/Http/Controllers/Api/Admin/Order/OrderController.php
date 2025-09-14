@@ -14,11 +14,11 @@ class OrderController extends BaseController
         $this->updateRequestClass = OrderRequest::class;
         
         // Tối ưu: Chỉ load relations cần thiết cho list
-        $this->indexRelations = ['user:id,name,email'];
+        $this->indexRelations = ['user:id,username,email'];
         
         // Load đầy đủ thông tin cho show
         $this->showRelations = [
-            'user:id,name,email',
+            'user:id,username,email',
             'orderItems:id,order_id,product_id,quantity,price',
             'orderItems.product:id,name,sku'
         ];

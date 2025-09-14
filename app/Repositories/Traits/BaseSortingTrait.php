@@ -53,7 +53,7 @@ trait BaseSortingTrait
         if (!isset($allowedFieldsCache[$modelClass])) {
             $allowedFieldsCache[$modelClass] = array_merge(
                 $this->model->getFillable(),
-                ['id', 'created_at', 'updated_at', 'name', 'title', 'email', 'status']
+                ['id', 'created_at', 'updated_at', 'username', 'name', 'title', 'email', 'status']
             );
         }
         

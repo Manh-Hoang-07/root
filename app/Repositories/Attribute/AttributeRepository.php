@@ -4,10 +4,11 @@ namespace App\Repositories\Attribute;
 
 use App\Models\Attribute;
 use App\Repositories\BaseRepository;
+use Illuminate\Database\Eloquent\Collection;
 
 class AttributeRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Attribute::class;
     }
@@ -42,7 +43,7 @@ class AttributeRepository extends BaseRepository
     /**
      * Get attributes with values
      */
-    public function getAttributesWithValues()
+    public function getAttributesWithValues(): Collection
     {
         return $this->model->with('attributeValues')->get();
     }

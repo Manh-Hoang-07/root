@@ -11,7 +11,7 @@ class SystemConfigRepository extends BaseRepository
     /**
      * Get the model instance
      */
-    public function model()
+    public function model(): string
     {
         return SystemConfig::class;
     }

@@ -7,12 +7,12 @@ use App\Repositories\BaseRepository;
 
 class PostTagRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return PostTag::class;
     }
 
-    public function findBySlug(string $slug, $relations = [], $fields = ['*'])
+    public function findBySlug(string $slug, array $relations = [], array $fields = ['*'])
     {
         $query = $this->getModel()->newQuery();
 

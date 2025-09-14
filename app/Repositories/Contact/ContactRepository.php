@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ContactRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Contact::class;
     }
@@ -17,7 +17,7 @@ class ContactRepository extends BaseRepository
     /**
      * Get searchable fields for contact
      */
-    protected function getSearchableFields()
+    protected function getSearchableFields(): array
     {
         return ['name', 'email', 'phone', 'subject', 'content'];
     }
@@ -25,7 +25,7 @@ class ContactRepository extends BaseRepository
     /**
      * Apply relationship search for contacts
      */
-    protected function applyRelationshipSearch($query, $searchValue)
+    protected function applyRelationshipSearch(\Illuminate\Database\Eloquent\Builder $query, string $searchValue): void
     {
         $query->orWhereHas('admin', function ($q) use ($searchValue) {
             $q->where('name', 'like', "%$searchValue%")
@@ -36,7 +36,7 @@ class ContactRepository extends BaseRepository
     /**
      * Update contact status
      */
-    public function updateStatus($id, ContactStatus $status, $adminId = null, $adminNotes = null)
+    public function updateStatus(int $id, ContactStatus $status, $adminId = null, $adminNotes = null)
     {
         $data = ['status' => $status];
         
@@ -59,7 +59,7 @@ class ContactRepository extends BaseRepository
     /**
      * Mark contact as responded
      */
-    public function markAsResponded($id, $adminId = null)
+    public function markAsResponded(int $id, $adminId = null)
     {
         $data = ['responded_at' => now()];
         

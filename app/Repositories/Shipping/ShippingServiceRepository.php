@@ -6,7 +6,7 @@ use App\Repositories\BaseRepository;
 
 class ShippingServiceRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return ShippingService::class;
     }

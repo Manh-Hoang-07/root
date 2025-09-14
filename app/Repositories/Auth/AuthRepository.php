@@ -5,22 +5,23 @@ namespace App\Repositories\Auth;
 use App\Repositories\BaseRepository;
 use App\Models\User;
 use App\Models\Profile;
+use Illuminate\Database\Eloquent\Model;
 
 class AuthRepository extends BaseRepository
 {
-    protected $model;
+    protected Model $model;
 
-    public function __construct(User $model)
+    public function __construct()
     {
-        $this->model = $model;
+        parent::__construct();
     }
 
     /**
-     * Get the model instance
+     * Get the model class name
      */
-    public function model()
+    public function model(): string
     {
-        return $this->model;
+        return User::class;
     }
 
     /**

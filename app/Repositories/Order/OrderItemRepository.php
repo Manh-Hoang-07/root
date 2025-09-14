@@ -6,7 +6,7 @@ use App\Repositories\BaseRepository;
 
 class OrderItemRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return OrderItem::class;
     }

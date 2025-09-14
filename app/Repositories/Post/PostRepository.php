@@ -8,12 +8,12 @@ use Carbon\Carbon;
 
 class PostRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Post::class;
     }
 
-    protected function applyOptimizedFilters($query, $filters)
+    protected function applyOptimizedFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
     {
         parent::applyOptimizedFilters($query, $filters);
 
@@ -52,7 +52,7 @@ class PostRepository extends BaseRepository
         }
     }
 
-    public function findBySlug(string $slug, $relations = [], $fields = ['*'])
+    public function findBySlug(string $slug, array $relations = [], array $fields = ['*'])
     {
         $query = $this->getModel()->newQuery();
 

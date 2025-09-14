@@ -6,12 +6,12 @@ use App\Repositories\BaseRepository;
 
 class RoleRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Role::class;
     }
 
-    public function find($id, $relations = [], $fields = ['*'])
+    public function find($id, array $relations = [], array $fields = ['*']): ?array
     {
         // Thêm permissions vào relations mặc định
         if (empty($relations)) {

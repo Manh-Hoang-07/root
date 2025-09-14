@@ -7,7 +7,7 @@ use App\Repositories\BaseRepository;
 
 class VariantRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Variant::class;
     }
@@ -15,7 +15,7 @@ class VariantRepository extends BaseRepository
     /**
      * Get variants by product with relationships
      */
-    public function getVariantsByProduct($productId)
+    public function getVariantsByProduct(int $productId)
     {
         return $this->model->with(['attributeValues.attribute'])
                           ->where('product_id', $productId)

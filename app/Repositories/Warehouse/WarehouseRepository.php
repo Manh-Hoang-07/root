@@ -6,7 +6,7 @@ use App\Repositories\BaseRepository;
 
 class WarehouseRepository extends BaseRepository
 {
-    public function model()
+    public function model(): string
     {
         return Warehouse::class;
     }
