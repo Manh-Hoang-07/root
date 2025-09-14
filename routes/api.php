@@ -64,9 +64,9 @@ Route::prefix('config')->group(function () {
 
 // Public API - Config V2 (không cần authentication) - Chỉ đọc
 Route::prefix('config-v2')->group(function () {
-    Route::get('/general', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'getGeneralConfig']);
-    Route::get('/email', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'getEmailConfig']);
-    Route::get('/key', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'getByKey']);
+    Route::get('/general', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigV2Controller::class, 'getGeneralConfig']);
+    Route::get('/email', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigV2Controller::class, 'getEmailConfig']);
+    Route::get('/key', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigV2Controller::class, 'getByKey']);
 });
 
 // Protected routes - cần authentication

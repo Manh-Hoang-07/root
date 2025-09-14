@@ -2,7 +2,7 @@
 
 namespace App\Services\Public\SystemConfig;
 
-use App\Services\Core\SystemConfigV2\SystemConfigV2Service;
+use App\Services\Admin\SystemConfig\SystemConfigV2Service;
 use Illuminate\Support\Facades\Cache;
 
 class SystemConfigService
@@ -23,7 +23,10 @@ class SystemConfigService
         $cacheKey = 'public_general_config';
         
         return Cache::remember($cacheKey, $this->cacheTtl, function () {
-            $config = $this->configService->getGeneralConfig();
+            $response = $this->configService->getGeneralConfig();
+            
+            // Lấy data từ JsonResponse
+            $config = $response->getData(true)['data'] ?? [];
             
             // Chỉ trả về các thông tin cần thiết cho public
             return [
@@ -50,7 +53,10 @@ class SystemConfigService
         $cacheKey = 'public_seo_config';
         
         return Cache::remember($cacheKey, $this->cacheTtl, function () {
-            $config = $this->configService->getGeneralConfig();
+            $response = $this->configService->getGeneralConfig();
+            
+            // Lấy data từ JsonResponse
+            $config = $response->getData(true)['data'] ?? [];
             
             return [
                 'meta_title' => $config['meta_title'] ?? '',
@@ -71,7 +77,10 @@ class SystemConfigService
         $cacheKey = 'public_display_config';
         
         return Cache::remember($cacheKey, $this->cacheTtl, function () {
-            $config = $this->configService->getGeneralConfig();
+            $response = $this->configService->getGeneralConfig();
+            
+            // Lấy data từ JsonResponse
+            $config = $response->getData(true)['data'] ?? [];
             
             return [
                 'posts_per_page' => $config['posts_per_page'] ?? 10,
@@ -92,7 +101,12 @@ class SystemConfigService
         $cacheKey = "public_config_{$key}";
         
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($key) {
-            return $this->configService->getByKey($key);
+            $response = $this->configService->getByKey($key);
+            
+            // Lấy data từ JsonResponse
+            $data = $response->getData(true)['data'] ?? null;
+            
+            return $data;
         });
     }
 

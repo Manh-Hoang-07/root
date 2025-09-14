@@ -111,4 +111,56 @@ class SystemConfigV2Controller extends BaseController
         }
     }
 
+    /**
+     * Lấy cấu hình chung (cho Config V2 API)
+     */
+    public function getGeneralConfig(): JsonResponse
+    {
+        try {
+            $configs = $this->configService->getGeneralConfig();
+            
+            return $this->apiResponse(true, $configs, 'Lấy cấu hình chung thành công');
+        } catch (\Exception $e) {
+            $this->logError('GetGeneralConfig', $e);
+            return $this->apiResponse(false, null, 'Không thể tải cấu hình chung', 500);
+        }
+    }
+
+    /**
+     * Lấy cấu hình email (cho Config V2 API)
+     */
+    public function getEmailConfig(): JsonResponse
+    {
+        try {
+            $configs = ConfigHelper::getGroup('email');
+            
+            return $this->apiResponse(true, $configs, 'Lấy cấu hình email thành công');
+        } catch (\Exception $e) {
+            $this->logError('GetEmailConfig', $e);
+            return $this->apiResponse(false, null, 'Không thể tải cấu hình email', 500);
+        }
+    }
+
+    /**
+     * Lấy cấu hình theo key (cho Config V2 API)
+     */
+    public function getByKey(Request $request): JsonResponse
+    {
+        try {
+            $key = $request->input('key');
+            $default = $request->input('default');
+            
+            if (empty($key)) {
+                return $this->apiResponse(false, null, 'Key là bắt buộc', 400);
+            }
+            
+            $value = ConfigHelper::get($key, $default);
+            
+            return $this->apiResponse(true, ['key' => $key, 'value' => $value], "Lấy cấu hình key {$key} thành công");
+        } catch (\Exception $e) {
+            $this->logError('GetByKey', $e);
+            return $this->apiResponse(false, null, 'Không thể tải cấu hình theo key', 500);
+        }
+    }
+
 }
