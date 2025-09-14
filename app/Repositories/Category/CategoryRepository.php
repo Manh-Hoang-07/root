@@ -14,7 +14,7 @@ class CategoryRepository extends BaseRepository
     /**
      * Optimize relations for Category model
      */
-    protected function optimizeRelations($relations)
+    protected function optimizeRelations(array $relations): array
     {
         $optimizedRelations = [];
         foreach ($relations as $relation) {
@@ -44,7 +44,7 @@ class CategoryRepository extends BaseRepository
     /**
      * Override searchable fields for Category
      */
-    protected function getSearchableFields()
+    protected function getSearchableFields(): array
     {
         return ['name', 'description'];
     }
@@ -52,7 +52,7 @@ class CategoryRepository extends BaseRepository
     /**
      * Override applyRelationshipSearch for Category
      */
-    protected function applyRelationshipSearch($query, $searchValue)
+    protected function applyRelationshipSearch(\Illuminate\Database\Eloquent\Builder $query, string $searchValue): void
     {
         // Search in parent category name
         $query->orWhereHas('parent', function($q) use ($searchValue) {

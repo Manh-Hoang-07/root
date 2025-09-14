@@ -16,7 +16,7 @@ class UserRepository extends BaseRepository
     /**
      * Optimize relations for User model
      */
-    protected function optimizeRelations($relations)
+    protected function optimizeRelations(array $relations): array
     {
         $optimizedRelations = [];
         foreach ($relations as $relation) {
@@ -43,7 +43,7 @@ class UserRepository extends BaseRepository
         return $optimizedRelations;
     }
 
-    public function all($filters = [], $perPage = 20, $relations = [], $fields = ['*'])
+    public function all(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*']): array
     {
         $query = $this->model->newQuery();
         
@@ -74,10 +74,23 @@ class UserRepository extends BaseRepository
             $query->select($fields);
         }
         
-        return $query->paginate($perPage);
+        $paginator = $query->paginate($perPage);
+        
+        return [
+            'data' => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+                'from' => $paginator->firstItem(),
+                'to' => $paginator->lastItem(),
+                'has_more_pages' => $paginator->hasMorePages(),
+            ]
+        ];
     }
     
-    protected function applySorting($query, $sortBy)
+    protected function applySorting(\Illuminate\Database\Eloquent\Builder $query, string $sortBy): void
     {
         switch ($sortBy) {
             case 'created_at_desc':
@@ -103,9 +116,9 @@ class UserRepository extends BaseRepository
         }
     }
 
-    public function changePassword($id, $newPassword)
+    public function changePassword($id, $newPassword): array
     {
-        $user = $this->find($id);
+        $user = $this->model->find($id);
         if (!$user) {
             throw new \Exception('User not found');
         }
@@ -113,13 +126,13 @@ class UserRepository extends BaseRepository
         $user->password = Hash::make($newPassword);
         $user->save();
         
-        return $user;
+        return $user->toArray();
     }
 
     /**
      * Override searchable fields for User
      */
-    protected function getSearchableFields()
+    protected function getSearchableFields(): array
     {
         return ['username', 'email', 'display_name'];
     }
@@ -127,7 +140,7 @@ class UserRepository extends BaseRepository
     /**
      * Override search filter for User to include role search
      */
-    protected function applySearchFilter($query, $searchValue)
+    protected function applySearchFilter(\Illuminate\Database\Eloquent\Builder $query, string $searchValue): void
     {
         $query->where(function($q) use ($searchValue) {
             // Search in main fields

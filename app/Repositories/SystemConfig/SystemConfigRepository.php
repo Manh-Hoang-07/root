@@ -24,6 +24,8 @@ class SystemConfigRepository extends BaseRepository
         return $this->model;
     }
 
+    // ==================== BASIC CRUD METHODS ====================
+
     /**
      * Lấy config theo group
      */
@@ -65,38 +67,6 @@ class SystemConfigRepository extends BaseRepository
     }
 
     /**
-     * Cập nhật config theo group
-     */
-    public function updateGroup(string $group, array $data): bool
-    {
-        $updated = 0;
-        
-        foreach ($data as $key => $value) {
-            $result = $this->model
-                ->where('config_key', $key)
-                ->where('config_group', $group)
-                ->update(['config_value' => $value]);
-                
-            if ($result) {
-                $updated++;
-            }
-        }
-        
-        return $updated > 0;
-    }
-
-    /**
-     * Tạo hoặc cập nhật config
-     */
-    public function createOrUpdate(string $key, array $data): SystemConfig
-    {
-        return $this->model->updateOrCreate(
-            ['config_key' => $key],
-            $data
-        );
-    }
-
-    /**
      * Lấy config theo nhiều keys
      */
     public function getByKeys(array $keys): Collection
@@ -131,40 +101,56 @@ class SystemConfigRepository extends BaseRepository
             ->get();
     }
 
+    // ==================== UPDATE METHODS ====================
+
     /**
-     * Tìm kiếm config
+     * Cập nhật config theo group
      */
-    public function search(array $filters): Collection
+    public function updateGroup(string $group, array $data): bool
     {
-        $query = $this->model->newQuery();
-
-        if (isset($filters['group'])) {
-            $query->byGroup($filters['group']);
+        $updated = 0;
+        
+        foreach ($data as $key => $value) {
+            $result = $this->model
+                ->where('config_key', $key)
+                ->where('config_group', $group)
+                ->update(['config_value' => $value]);
+                
+            if ($result) {
+                $updated++;
+            }
         }
-
-        if (isset($filters['type'])) {
-            $query->where('config_type', $filters['type']);
-        }
-
-        if (isset($filters['is_public'])) {
-            $query->where('is_public', $filters['is_public']);
-        }
-
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (isset($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('config_key', 'like', "%{$search}%")
-                  ->orWhere('display_name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        return $query->ordered()->get();
+        
+        return $updated > 0;
     }
+
+    /**
+     * Tạo hoặc cập nhật config
+     */
+    public function createOrUpdate(string $key, array $data): SystemConfig
+    {
+        return $this->model->updateOrCreate(
+            ['config_key' => $key],
+            $data
+        );
+    }
+
+    /**
+     * Cập nhật config theo key
+     */
+    public function updateByKey(string $key, $value): bool
+    {
+        $config = $this->model->where('config_key', $key)->first();
+        
+        if (!$config) {
+            return false;
+        }
+
+        return $config->update(['config_value' => $value]);
+    }
+
+    // ==================== SEARCH METHODS ====================
+
 
     /**
      * Lấy danh sách groups
@@ -178,6 +164,8 @@ class SystemConfigRepository extends BaseRepository
             ->toArray();
     }
 
+    // ==================== BULK OPERATIONS ====================
+
     /**
      * Bulk update configs
      */
@@ -187,12 +175,12 @@ class SystemConfigRepository extends BaseRepository
         
         foreach ($configs as $config) {
             if (isset($config['id']) && isset($config['config_value'])) {
-                $result = $this->model
-                    ->where('id', $config['id'])
-                    ->update(['config_value' => $config['config_value']]);
-                    
-                if ($result) {
-                    $updated++;
+                $configModel = $this->model->find($config['id']);
+                if ($configModel) {
+                    $result = $configModel->update(['config_value' => $config['config_value']]);
+                    if ($result) {
+                        $updated++;
+                    }
                 }
             }
         }
@@ -206,5 +194,41 @@ class SystemConfigRepository extends BaseRepository
     public function bulkDelete(array $ids): int
     {
         return $this->model->whereIn('id', $ids)->delete();
+    }
+
+    // ==================== UTILITY METHODS ====================
+
+    /**
+     * Kiểm tra config key có tồn tại không
+     */
+    public function keyExists(string $key): bool
+    {
+        return $this->model->where('config_key', $key)->exists();
+    }
+
+    /**
+     * Lấy config theo group và type
+     */
+    public function getByGroupAndType(string $group, string $type): Collection
+    {
+        return $this->model
+            ->byGroup($group)
+            ->where('config_type', $type)
+            ->active()
+            ->ordered()
+            ->get();
+    }
+
+    /**
+     * Lấy config theo group và is_public
+     */
+    public function getByGroupAndPublic(string $group, bool $isPublic = true): Collection
+    {
+        return $this->model
+            ->byGroup($group)
+            ->where('is_public', $isPublic)
+            ->active()
+            ->ordered()
+            ->get();
     }
 }

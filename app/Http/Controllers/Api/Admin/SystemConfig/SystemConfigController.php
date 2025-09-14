@@ -7,7 +7,6 @@ use App\Http\Requests\Admin\SystemConfig\SystemConfigRequest;
 use App\Services\Admin\SystemConfig\SystemConfigService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 
 class SystemConfigController extends BaseController
@@ -20,15 +19,13 @@ class SystemConfigController extends BaseController
         parent::__construct($service);
     }
 
-
     /**
-     * Get configs by group
+     * Get configs by group (Admin)
      */
     public function getByGroup(string $group): JsonResponse
     {
         try {
             $data = $this->service->getByGroup($group);
-            
             return $this->apiResponse(true, $this->formatSystemConfigData($data), "Lấy cấu hình nhóm {$group} thành công");
         } catch (\Exception $e) {
             $this->logError('GetByGroup', $e);
@@ -37,7 +34,7 @@ class SystemConfigController extends BaseController
     }
 
     /**
-     * Update configs by group
+     * Update configs by group (Admin)
      */
     public function updateGroup(Request $request, string $group): JsonResponse
     {
@@ -47,13 +44,12 @@ class SystemConfigController extends BaseController
             ]);
 
             if ($validator->fails()) {
-                return $this->apiResponse(false, null,'Dữ liệu không hợp lệ', 422, $validator->errors()->toArray());
+                return $this->apiResponse(false, null, 'Dữ liệu không hợp lệ', 422, $validator->errors()->toArray());
             }
 
             $configs = $request->input('configs', []);
             $configData = [];
             
-            // Xử lý dữ liệu dạng key-value
             foreach ($configs as $key => $value) {
                 $configData[$key] = $value;
             }
@@ -61,7 +57,7 @@ class SystemConfigController extends BaseController
             $result = $this->service->updateGroup($group, $configData);
             
             if ($result) {
-            return $this->apiResponse(true, null, "Cập nhật cấu hình nhóm {$group} thành công");
+                return $this->apiResponse(true, null, "Cập nhật cấu hình nhóm {$group} thành công");
             }
             
             return $this->apiResponse(false, null, 'Không thể cập nhật cấu hình nhóm', 500);
@@ -72,7 +68,7 @@ class SystemConfigController extends BaseController
     }
 
     /**
-     * Get group form structure
+     * Get group form structure (Admin)
      */
     public function getGroupForm(string $group): JsonResponse
     {
@@ -95,10 +91,7 @@ class SystemConfigController extends BaseController
                 ];
             }
 
-            return $this->apiResponse(true,
-                $formData,
-                "Lấy form cấu hình nhóm {$group} thành công"
-            );
+            return $this->apiResponse(true, $formData, "Lấy form cấu hình nhóm {$group} thành công");
         } catch (\Exception $e) {
             $this->logError('GetGroupForm', $e);
             return $this->apiResponse(false, null, 'Không thể tải form cấu hình nhóm', 500);
@@ -106,7 +99,7 @@ class SystemConfigController extends BaseController
     }
 
     /**
-     * Bulk update configs
+     * Bulk update configs (Admin)
      */
     public function bulkUpdate(Request $request): JsonResponse
     {
@@ -135,7 +128,7 @@ class SystemConfigController extends BaseController
     }
 
     /**
-     * Bulk delete configs
+     * Bulk delete configs (Admin)
      */
     public function bulkDelete(Request $request): JsonResponse
     {
@@ -163,35 +156,13 @@ class SystemConfigController extends BaseController
     }
 
     /**
-     * Clear cache
-     */
-    public function clearCache(): JsonResponse
-    {
-        try {
-            Cache::flush();
-            
-            return $this->apiResponse(true,
-                null,
-                'Xóa cache thành công'
-            );
-        } catch (\Exception $e) {
-            $this->logError('ClearCache', $e);
-            return $this->apiResponse(false, null, 'Không thể xóa cache', 500);
-        }
-    }
-
-    /**
-     * Get groups list
+     * Get groups list (Admin)
      */
     public function getGroups(): JsonResponse
     {
         try {
             $groups = $this->service->getGroups();
-            
-            return $this->apiResponse(true,
-                $groups,
-                'Lấy danh sách nhóm cấu hình thành công'
-            );
+            return $this->apiResponse(true, $groups, 'Lấy danh sách nhóm cấu hình thành công');
         } catch (\Exception $e) {
             $this->logError('GetGroups', $e);
             return $this->apiResponse(false, null, 'Không thể tải danh sách nhóm cấu hình', 500);
@@ -199,21 +170,79 @@ class SystemConfigController extends BaseController
     }
 
     /**
-     * Search configs
+     * Search configs (Admin)
      */
     public function search(Request $request): JsonResponse
     {
         try {
             $filters = $request->all();
             $data = $this->service->search($filters);
-            
-            return $this->apiResponse(true,
-                $this->formatSystemConfigData($data),
-                'Tìm kiếm cấu hình thành công'
-            );
+            return $this->apiResponse(true, $this->formatSystemConfigData($data), 'Tìm kiếm cấu hình thành công');
         } catch (\Exception $e) {
             $this->logError('Search', $e);
             return $this->apiResponse(false, null, 'Không thể tìm kiếm cấu hình', 500);
+        }
+    }
+
+    /**
+     * Clear cache (Admin)
+     */
+    public function clearCache(): JsonResponse
+    {
+        try {
+            $result = $this->service->clearCache();
+            return $this->apiResponse(true, null, 'Xóa cache thành công');
+        } catch (\Exception $e) {
+            $this->logError('ClearCache', $e);
+            return $this->apiResponse(false, null, 'Không thể xóa cache', 500);
+        }
+    }
+
+    /**
+     * Config V2 Admin routes
+     */
+    public function updateGeneralConfig(Request $request): JsonResponse
+    {
+        try {
+            $data = $request->all();
+            $result = $this->service->updateGroup('general', $data);
+            
+            return $this->apiResponse(true, $result, 'Cập nhật cấu hình hệ thống thành công');
+        } catch (\Exception $e) {
+            $this->logError('UpdateGeneralConfig', $e);
+            return $this->apiResponse(false, null, 'Không thể cập nhật cấu hình hệ thống', 500);
+        }
+    }
+
+    public function updateEmailConfig(Request $request): JsonResponse
+    {
+        try {
+            $data = $request->all();
+            $result = $this->service->updateGroup('email', $data);
+            
+            return $this->apiResponse(true, $result, 'Cập nhật cấu hình email thành công');
+        } catch (\Exception $e) {
+            $this->logError('UpdateEmailConfig', $e);
+            return $this->apiResponse(false, null, 'Không thể cập nhật cấu hình email', 500);
+        }
+    }
+
+    public function updateByKey(Request $request): JsonResponse
+    {
+        try {
+            $key = $request->input('key');
+            $value = $request->input('value');
+            
+            if (empty($key)) {
+                return $this->apiResponse(false, null, 'Key là bắt buộc', 400);
+            }
+            
+            $result = $this->service->updateByKeyResponse($key, $value);
+            
+            return $result;
+        } catch (\Exception $e) {
+            $this->logError('UpdateByKey', $e);
+            return $this->apiResponse(false, null, 'Không thể cập nhật cấu hình theo key', 500);
         }
     }
 

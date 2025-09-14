@@ -60,13 +60,11 @@ Route::prefix('config')->group(function () {
     Route::post('/groups', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getMultipleGroups']);
     Route::get('/key', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getConfigByKey']);
     Route::post('/keys', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getMultipleConfigs']);
-});
-
-// Public API - Config V2 (không cần authentication) - Chỉ đọc
-Route::prefix('config-v2')->group(function () {
-    Route::get('/general', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigV2Controller::class, 'getGeneralConfig']);
-    Route::get('/email', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigV2Controller::class, 'getEmailConfig']);
-    Route::get('/key', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigV2Controller::class, 'getByKey']);
+    
+    // Config V2 compatibility routes
+    Route::get('/general', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getGeneralConfig']);
+    Route::get('/email', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getEmailConfig']);
+    Route::get('/by-key', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getByKey']);
 });
 
 // Protected routes - cần authentication
@@ -189,7 +187,7 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
         Route::apiResource('advanced', App\Http\Controllers\Api\Admin\Shipping\ShippingAdvancedSettingController::class);
     });
     
-    // System Config routes
+    // System Config routes - Admin
     Route::prefix('system-configs')->group(function () {
         // Specific routes phải đặt trước generic routes
         Route::get('/groups/list', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'getGroups']);
@@ -215,11 +213,11 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
         Route::delete('/{id}', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'destroy']);
     });
     
-    // System Config V2 routes - Admin only
+    // Config V2 Admin routes
     Route::prefix('config-v2')->group(function () {
-        Route::post('/general', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'updateGeneralConfig']);
-        Route::post('/email', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'updateEmailConfig']);
-        Route::post('/key', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'updateByKey']);
+        Route::post('/general', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'updateGeneralConfig']);
+        Route::post('/email', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'updateEmailConfig']);
+        Route::post('/key', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'updateByKey']);
     });
     
 }); 

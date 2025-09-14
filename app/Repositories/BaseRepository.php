@@ -54,10 +54,60 @@ abstract class BaseRepository
                 case 'is_active':
                     $query->where($key, $value);
                     break;
+                case 'like':
+                    // Handle LIKE conditions: ['field' => 'value'] or ['field' => ['value1', 'value2']]
+                    foreach ($value as $field => $likeValue) {
+                        if (is_array($likeValue)) {
+                            $query->where(function($q) use ($field, $likeValue) {
+                                foreach ($likeValue as $val) {
+                                    $q->orWhere($field, 'like', "%$val%");
+                                }
+                            });
+                        } else {
+                            $query->where($field, 'like', "%$likeValue%");
+                        }
+                    }
+                    break;
+                case 'in':
+                    // Handle IN conditions: ['field' => [1,2,3]]
+                    foreach ($value as $field => $inValues) {
+                        if (is_array($inValues)) {
+                            $query->whereIn($field, $inValues);
+                        }
+                    }
+                    break;
+                case 'between':
+                    // Handle BETWEEN conditions: ['field' => ['start', 'end']]
+                    foreach ($value as $field => $betweenValues) {
+                        if (is_array($betweenValues) && count($betweenValues) === 2) {
+                            $query->whereBetween($field, $betweenValues);
+                        }
+                    }
+                    break;
+                case 'not_null':
+                    // Handle NOT NULL conditions: ['field1', 'field2']
+                    if (is_array($value)) {
+                        foreach ($value as $field) {
+                            $query->whereNotNull($field);
+                        }
+                    }
+                    break;
+                case 'is_null':
+                    // Handle IS NULL conditions: ['field1', 'field2']
+                    if (is_array($value)) {
+                        foreach ($value as $field) {
+                            $query->whereNull($field);
+                        }
+                    }
+                    break;
                 default:
                     // Check if field exists in model
                     if (in_array($key, $this->model->getFillable()) || in_array($key, ['id', 'created_at', 'updated_at'])) {
-                        $query->where($key, $value);
+                        if (is_array($value)) {
+                            $query->whereIn($key, $value);
+                        } else {
+                            $query->where($key, $value);
+                        }
                     }
             }
         }
@@ -190,5 +240,149 @@ abstract class BaseRepository
     public function getModel()
     {
         return $this->model;
+    }
+
+    /**
+     * Search records with advanced filtering
+     */
+    public function search(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*'])
+    {
+        $query = $this->model->query();
+        
+        // Load relations if specified
+        if (!empty($relations)) {
+            $query->with($relations);
+        }
+        
+        // Select specific fields if specified
+        if (!empty($fields) && $fields !== ['*']) {
+            $query->select($fields);
+        }
+        
+        // Apply search filters
+        $this->applyOptimizedFilters($query, $filters);
+        
+        // Apply sorting
+        $this->applyOptimizedSorting($query, $filters);
+        
+        // Return paginated results
+        return $query->paginate($perPage);
+    }
+
+
+    /**
+     * Update records by condition
+     */
+    public function updateByCondition(array $conditions, array $data): int
+    {
+        $query = $this->model->query();
+        
+        // Apply conditions
+        $this->applyUpdateConditions($query, $conditions);
+        
+        // Update records
+        return $query->update($data);
+    }
+
+    /**
+     * Apply conditions for update
+     */
+    protected function applyUpdateConditions($query, $conditions)
+    {
+        foreach ($conditions as $key => $value) {
+            if ($value === '' || $value === null) continue;
+            
+            switch ($key) {
+                case 'ids':
+                    $idsArray = is_array($value) ? $value : explode(',', $value);
+                    $query->whereIn('id', $idsArray);
+                    break;
+                case 'like':
+                    foreach ($value as $field => $likeValue) {
+                        if (is_array($likeValue)) {
+                            $query->where(function($q) use ($field, $likeValue) {
+                                foreach ($likeValue as $val) {
+                                    $q->orWhere($field, 'like', "%$val%");
+                                }
+                            });
+                        } else {
+                            $query->where($field, 'like', "%$likeValue%");
+                        }
+                    }
+                    break;
+                case 'in':
+                    foreach ($value as $field => $inValues) {
+                        if (is_array($inValues)) {
+                            $query->whereIn($field, $inValues);
+                        }
+                    }
+                    break;
+                case 'between':
+                    foreach ($value as $field => $betweenValues) {
+                        if (is_array($betweenValues) && count($betweenValues) === 2) {
+                            $query->whereBetween($field, $betweenValues);
+                        }
+                    }
+                    break;
+                case 'not_null':
+                    if (is_array($value)) {
+                        foreach ($value as $field) {
+                            $query->whereNotNull($field);
+                        }
+                    }
+                    break;
+                case 'is_null':
+                    if (is_array($value)) {
+                        foreach ($value as $field) {
+                            $query->whereNull($field);
+                        }
+                    }
+                    break;
+                default:
+                    if (in_array($key, $this->model->getFillable()) || in_array($key, ['id', 'created_at', 'updated_at'])) {
+                        if (is_array($value)) {
+                            $query->whereIn($key, $value);
+                        } else {
+                            $query->where($key, $value);
+                        }
+                    }
+            }
+        }
+    }
+
+    /**
+     * Get records by condition (without pagination)
+     */
+    public function getByCondition(array $conditions = [], array $relations = [], array $fields = ['*'])
+    {
+        $query = $this->model->query();
+        
+        // Load relations if specified
+        if (!empty($relations)) {
+            $query->with($relations);
+        }
+        
+        // Select specific fields if specified
+        if (!empty($fields) && $fields !== ['*']) {
+            $query->select($fields);
+        }
+        
+        // Apply conditions
+        $this->applyUpdateConditions($query, $conditions);
+        
+        return $query->get();
+    }
+
+    /**
+     * Count records by condition
+     */
+    public function countByCondition(array $conditions = []): int
+    {
+        $query = $this->model->query();
+        
+        // Apply conditions
+        $this->applyUpdateConditions($query, $conditions);
+        
+        return $query->count();
     }
 } 

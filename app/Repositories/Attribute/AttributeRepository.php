@@ -15,7 +15,7 @@ class AttributeRepository extends BaseRepository
     /**
      * Optimize relations for Attribute model
      */
-    protected function optimizeRelations($relations)
+    protected function optimizeRelations(array $relations): array
     {
         $optimizedRelations = [];
         foreach ($relations as $relation) {

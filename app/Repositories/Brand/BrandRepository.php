@@ -14,7 +14,7 @@ class BrandRepository extends BaseRepository
     /**
      * Optimize relations for Brand model
      */
-    protected function optimizeRelations($relations)
+    protected function optimizeRelations(array $relations): array
     {
         $optimizedRelations = [];
         foreach ($relations as $relation) {

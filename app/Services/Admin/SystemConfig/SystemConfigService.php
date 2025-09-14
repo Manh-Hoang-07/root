@@ -4,91 +4,104 @@ namespace App\Services\Admin\SystemConfig;
 
 use App\Models\SystemConfig;
 use App\Repositories\SystemConfig\SystemConfigRepository;
+use App\Services\BaseService;
+use App\Helpers\ApiResponse;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
-class SystemConfigService
+class SystemConfigService extends BaseService
 {
-    protected $repository;
+    protected string $cachePrefix = 'system_config_';
+    protected int $cacheTtl = 3600; // 1 giờ
 
     public function __construct(SystemConfigRepository $repository)
     {
-        $this->repository = $repository;
+        parent::__construct($repository);
     }
 
+    // ==================== ADMIN METHODS ====================
+
     /**
-     * Lấy danh sách config với pagination
+     * Lấy config theo group với cache
      */
-    public function list(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*'])
+    public function getByGroup(string $group): Collection
     {
-        $query = $this->repository->getModel()->newQuery();
-
-        // Apply filters
-        if (isset($filters['group'])) {
-            $query->byGroup($filters['group']);
-        }
-
-        if (isset($filters['type'])) {
-            $query->where('config_type', $filters['type']);
-        }
-
-        if (isset($filters['is_public'])) {
-            $query->where('is_public', $filters['is_public']);
-        }
-
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (isset($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('config_key', 'like', "%{$search}%")
-                  ->orWhere('display_name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        // Apply relations
-        if (!empty($relations)) {
-            $query->with($relations);
-        }
-
-        // Apply fields
-        if (!empty($fields) && !in_array('*', $fields)) {
-            $query->select($fields);
-        }
-
-        // Order by
-        $query->ordered();
-
-        return $query->paginate($perPage);
+        $cacheKey = $this->cachePrefix . 'group_' . $group;
+        
+        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($group) {
+            return $this->repo->getByGroup($group);
+        });
     }
 
     /**
-     * Lấy config theo ID
+     * Lấy config theo key với cache
      */
-    public function find($id, array $relations = [], array $fields = ['*'])
+    public function getByKey(string $key, $default = null)
     {
-        $query = $this->repository->getModel()->newQuery();
-
-        if (!empty($relations)) {
-            $query->with($relations);
-        }
-
-        if (!empty($fields) && !in_array('*', $fields)) {
-            $query->select($fields);
-        }
-
-        return $query->find($id);
+        $cacheKey = $this->cachePrefix . 'key_' . $key;
+        
+        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($key, $default) {
+            return $this->repo->getByKey($key, $default);
+        });
     }
 
     /**
-     * Tạo config mới
+     * Lấy config theo group dạng array với cache
      */
-    public function create(array $data): SystemConfig
+    public function getGroupAsArray(string $group): array
+    {
+        $cacheKey = $this->cachePrefix . 'group_array_' . $group;
+        
+        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($group) {
+            return $this->repo->getGroupAsArray($group);
+        });
+    }
+
+    /**
+     * Clear cache cho key
+     */
+    public function clearKeyCache(string $key): void
+    {
+        Cache::forget($this->cachePrefix . 'key_' . $key);
+    }
+
+    /**
+     * Clear cache cho group
+     */
+    public function clearGroupCache(string $group): void
+    {
+        $keys = [
+            $this->cachePrefix . 'group_' . $group,
+            $this->cachePrefix . 'group_array_' . $group,
+        ];
+        
+        foreach ($keys as $key) {
+            Cache::forget($key);
+        }
+    }
+
+    /**
+     * Clear tất cả cache
+     */
+    public function clearAllCache(): void
+    {
+        $groups = $this->repo->getGroups();
+        
+        foreach ($groups as $group) {
+            $this->clearGroupCache($group);
+        }
+        
+        // Clear other caches
+        Cache::forget($this->cachePrefix . 'public');
+        Cache::forget($this->cachePrefix . 'groups');
+    }
+
+    /**
+     * Tạo config mới (Admin)
+     */
+    public function create($data)
     {
         // Validate required fields
         $this->validateRequiredFields($data);
@@ -97,7 +110,7 @@ class SystemConfigService
         $data = $this->setDefaultValues($data);
 
         // Create config
-        $config = $this->repository->create($data);
+        $config = $this->repo->create($data);
 
         // Clear cache
         $this->clearConfigCache($config->config_group);
@@ -113,11 +126,11 @@ class SystemConfigService
     }
 
     /**
-     * Cập nhật config
+     * Cập nhật config (Admin)
      */
-    public function update($id, array $data): ?SystemConfig
+    public function update($id, $data)
     {
-        $config = $this->repository->find($id);
+        $config = $this->repo->find($id);
         
         if (!$config) {
             return null;
@@ -130,7 +143,7 @@ class SystemConfigService
         $this->validateRequiredFields($data, $config);
 
         // Update config
-        $config = $this->repository->update($id, $data);
+        $config = $this->repo->update($id, $data);
 
         // Clear cache
         $this->clearConfigCache($config->config_group);
@@ -148,11 +161,11 @@ class SystemConfigService
     }
 
     /**
-     * Xóa config
+     * Xóa config (Admin)
      */
     public function delete($id): bool
     {
-        $config = $this->repository->find($id);
+        $config = $this->repo->find($id);
         
         if (!$config) {
             return false;
@@ -161,7 +174,7 @@ class SystemConfigService
         $configGroup = $config->config_group;
         $configKey = $config->config_key;
 
-        $result = $this->repository->delete($id);
+        $result = $this->repo->delete($id);
 
         if ($result) {
             // Clear cache
@@ -178,48 +191,13 @@ class SystemConfigService
         return $result;
     }
 
-    /**
-     * Lấy config theo group
-     */
-    public function getByGroup(string $group): Collection
-    {
-        $cacheKey = "system_configs_group_{$group}";
-        
-        return Cache::remember($cacheKey, 3600, function () use ($group) {
-            return $this->repository->getByGroup($group);
-        });
-    }
 
     /**
-     * Lấy config theo group dạng array
-     */
-    public function getGroupAsArray(string $group): array
-    {
-        $cacheKey = "system_configs_group_array_{$group}";
-        
-        return Cache::remember($cacheKey, 3600, function () use ($group) {
-            return $this->repository->getGroupAsArray($group);
-        });
-    }
-
-    /**
-     * Lấy config theo key
-     */
-    public function getByKey(string $key, $default = null)
-    {
-        $cacheKey = "system_config_key_{$key}";
-        
-        return Cache::remember($cacheKey, 3600, function () use ($key, $default) {
-            return $this->repository->getByKey($key, $default);
-        });
-    }
-
-    /**
-     * Cập nhật config theo group
+     * Cập nhật config theo group (Admin)
      */
     public function updateGroup(string $group, array $data): bool
     {
-        $result = $this->repository->updateGroup($group, $data);
+        $result = $this->repo->updateGroup($group, $data);
 
         if ($result) {
             // Clear cache
@@ -237,11 +215,11 @@ class SystemConfigService
     }
 
     /**
-     * Bulk update configs
+     * Bulk update configs (Admin)
      */
     public function bulkUpdate(array $configs): int
     {
-        $updated = $this->repository->bulkUpdate($configs);
+        $updated = $this->repo->bulkUpdate($configs);
 
         if ($updated > 0) {
             // Clear all cache
@@ -258,11 +236,11 @@ class SystemConfigService
     }
 
     /**
-     * Bulk delete configs
+     * Bulk delete configs (Admin)
      */
     public function bulkDelete(array $ids): int
     {
-        $deleted = $this->repository->bulkDelete($ids);
+        $deleted = $this->repo->bulkDelete($ids);
 
         if ($deleted > 0) {
             // Clear all cache
@@ -280,19 +258,75 @@ class SystemConfigService
     }
 
     /**
-     * Lấy danh sách groups
+     * Lấy danh sách groups (Admin)
      */
     public function getGroups(): array
     {
-        return $this->repository->getGroups();
+        return $this->repo->getGroups();
     }
 
     /**
-     * Tìm kiếm config
+     * Tìm kiếm config (Admin)
      */
     public function search(array $filters): Collection
     {
-        return $this->repository->search($filters);
+        return $this->repo->search($filters);
+    }
+
+    // ==================== API RESPONSE METHODS ====================
+
+    /**
+     * Lấy config theo key với API response
+     */
+    public function getByKeyResponse(string $key, $default = null)
+    {
+        try {
+            $value = $this->getByKey($key, $default);
+            return ApiResponse::success($value, 'Lấy cấu hình thành công');
+        } catch (\Exception $e) {
+            return ApiResponse::error('Lỗi khi lấy cấu hình: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cập nhật config theo key với API response
+     */
+    public function updateByKeyResponse(string $key, $value)
+    {
+        try {
+            $config = $this->repo->getModel()
+                ->where('config_key', $key)
+                ->first();
+                
+            if (!$config) {
+                return ApiResponse::error("Config key '{$key}' không tồn tại");
+            }
+
+            $config->update(['config_value' => $value]);
+            
+            // Clear cache
+            $this->clearConfigCache($config->config_group);
+            
+            return ApiResponse::success($config->value, 'Cập nhật cấu hình thành công');
+        } catch (\Exception $e) {
+            return ApiResponse::error('Lỗi khi cập nhật cấu hình: ' . $e->getMessage());
+        }
+    }
+
+    // ==================== CACHE METHODS ====================
+
+    /**
+     * Xóa cache cấu hình
+     */
+    public function clearCache(): bool
+    {
+        try {
+            $this->clearAllConfigCache();
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error clearing config cache: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -300,8 +334,7 @@ class SystemConfigService
      */
     private function clearConfigCache(string $group): void
     {
-        Cache::forget("system_configs_group_{$group}");
-        Cache::forget("system_configs_group_array_{$group}");
+        $this->clearGroupCache($group);
     }
 
     /**
@@ -315,6 +348,8 @@ class SystemConfigService
             $this->clearConfigCache($group);
         }
     }
+
+    // ==================== VALIDATION METHODS ====================
 
     /**
      * Validate required fields
@@ -331,12 +366,12 @@ class SystemConfigService
 
         // Check unique key
         if ($config) {
-            $existing = $this->repository->getModel()
+            $existing = $this->repo->getModel()
                 ->where('config_key', $data['config_key'])
                 ->where('id', '!=', $config->id)
                 ->first();
         } else {
-            $existing = $this->repository->getModel()
+            $existing = $this->repo->getModel()
                 ->where('config_key', $data['config_key'])
                 ->first();
         }

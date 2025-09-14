@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Public\SystemConfig;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Public\SystemConfig\SystemConfigService;
-use App\Helpers\ConfigHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,7 +23,6 @@ class SystemConfigController extends BaseController
     {
         try {
             $configs = $this->configService->getGeneralConfig();
-            
             return $this->apiResponse(true, $configs, 'Lấy cấu hình public thành công');
         } catch (\Exception $e) {
             $this->logError('GetPublicConfigs', $e);
@@ -33,13 +31,12 @@ class SystemConfigController extends BaseController
     }
 
     /**
-     * Lấy cấu hình theo group
+     * Lấy cấu hình theo group (Public)
      */
     public function getGroupConfig(string $group): JsonResponse
     {
         try {
-            $configs = ConfigHelper::getGroup($group);
-            
+            $configs = $this->configService->getByGroup($group);
             return $this->apiResponse(true, $configs, "Lấy cấu hình nhóm {$group} thành công");
         } catch (\Exception $e) {
             $this->logError('GetGroupConfig', $e);
@@ -48,7 +45,7 @@ class SystemConfigController extends BaseController
     }
 
     /**
-     * Lấy cấu hình theo nhiều groups
+     * Lấy cấu hình theo nhiều groups (Public)
      */
     public function getMultipleGroups(Request $request): JsonResponse
     {
@@ -59,7 +56,10 @@ class SystemConfigController extends BaseController
                 return $this->apiResponse(true, [], 'Không có groups nào được truyền');
             }
             
-            $configs = ConfigHelper::getMultipleGroups($groups);
+            $configs = [];
+            foreach ($groups as $group) {
+                $configs[$group] = $this->configService->getByGroup($group);
+            }
             
             return $this->apiResponse(true, $configs, 'Lấy cấu hình nhiều nhóm thành công');
         } catch (\Exception $e) {
@@ -68,9 +68,8 @@ class SystemConfigController extends BaseController
         }
     }
 
-
     /**
-     * Lấy cấu hình theo key
+     * Lấy cấu hình theo key (Public)
      */
     public function getConfigByKey(Request $request): JsonResponse
     {
@@ -81,7 +80,7 @@ class SystemConfigController extends BaseController
                 return $this->apiResponse(true, [], 'Không có key nào được truyền');
             }
             
-            $value = ConfigHelper::get($key);
+            $value = $this->configService->getByKey($key);
             
             return $this->apiResponse(true, ['key' => $key, 'value' => $value], "Lấy cấu hình key {$key} thành công");
         } catch (\Exception $e) {
@@ -91,7 +90,7 @@ class SystemConfigController extends BaseController
     }
 
     /**
-     * Lấy cấu hình theo nhiều keys
+     * Lấy cấu hình theo nhiều keys (Public)
      */
     public function getMultipleConfigs(Request $request): JsonResponse
     {
@@ -102,13 +101,69 @@ class SystemConfigController extends BaseController
                 return $this->apiResponse(true, [], 'Không có keys nào được truyền');
             }
             
-            $configs = ConfigHelper::getMultiple($keys);
+            $configs = $this->configService->getByKeys($keys);
+            $result = [];
             
-            return $this->apiResponse(true, $configs, 'Lấy cấu hình nhiều keys thành công');
+            foreach ($configs as $config) {
+                $result[$config->config_key] = $config->value;
+            }
+            
+            return $this->apiResponse(true, $result, 'Lấy cấu hình nhiều keys thành công');
         } catch (\Exception $e) {
             $this->logError('GetMultipleConfigs', $e);
             return $this->apiResponse(false, null, 'Không thể tải cấu hình nhiều keys', 500);
         }
     }
 
+    /**
+     * Lấy cấu hình chung (cho Config V2 API)
+     */
+    public function getGeneralConfig(): JsonResponse
+    {
+        try {
+            $configs = $this->configService->getGeneralConfig();
+            
+            return $this->apiResponse(true, $configs, 'Lấy cấu hình chung thành công');
+        } catch (\Exception $e) {
+            $this->logError('GetGeneralConfig', $e);
+            return $this->apiResponse(false, null, 'Không thể tải cấu hình chung', 500);
+        }
+    }
+
+    /**
+     * Lấy cấu hình email (cho Config V2 API)
+     */
+    public function getEmailConfig(): JsonResponse
+    {
+        try {
+            $configs = $this->configService->getEmailConfig();
+            
+            return $this->apiResponse(true, $configs, 'Lấy cấu hình email thành công');
+        } catch (\Exception $e) {
+            $this->logError('GetEmailConfig', $e);
+            return $this->apiResponse(false, null, 'Không thể tải cấu hình email', 500);
+        }
+    }
+
+    /**
+     * Lấy cấu hình theo key (cho Config V2 API)
+     */
+    public function getByKey(Request $request): JsonResponse
+    {
+        try {
+            $key = $request->input('key');
+            $default = $request->input('default');
+            
+            if (empty($key)) {
+                return $this->apiResponse(false, null, 'Key là bắt buộc', 400);
+            }
+            
+            $value = $this->configService->getByKey($key, $default);
+            
+            return $this->apiResponse(true, ['key' => $key, 'value' => $value], "Lấy cấu hình key {$key} thành công");
+        } catch (\Exception $e) {
+            $this->logError('GetByKey', $e);
+            return $this->apiResponse(false, null, 'Không thể tải cấu hình theo key', 500);
+        }
+    }
 }
