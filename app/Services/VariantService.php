@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Repositories\VariantRepository;
+use App\Repositories\Variant\VariantRepository;
 
 class VariantService extends BaseService
 {

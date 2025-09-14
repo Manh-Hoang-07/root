@@ -10,8 +10,8 @@ use App\Http\Controllers\Api\Admin\Category\CategoryController;
 use App\Http\Controllers\Api\Admin\Brand\BrandController;
 use App\Http\Controllers\Api\Admin\Attribute\AttributeController;
 use App\Http\Controllers\Api\Admin\Attribute\AttributeValueController;
-use App\Http\Controllers\Api\Core\EnumController;
-use App\Http\Controllers\Api\Core\ImageController;
+use App\Http\Controllers\Api\Core\Enum\EnumController;
+use App\Http\Controllers\Api\Core\File\FileController;
 use App\Http\Controllers\Api\Admin\Permission\PermissionController;
 use App\Http\Controllers\Api\Admin\Role\RoleController;
 use App\Http\Controllers\Api\Auth\AuthController;
@@ -64,9 +64,9 @@ Route::prefix('config')->group(function () {
 
 // Public API - Config V2 (không cần authentication) - Chỉ đọc
 Route::prefix('config-v2')->group(function () {
-    Route::get('/general', [App\Http\Controllers\SystemConfigV2Controller::class, 'getGeneralConfig']);
-    Route::get('/email', [App\Http\Controllers\SystemConfigV2Controller::class, 'getEmailConfig']);
-    Route::get('/key', [App\Http\Controllers\SystemConfigV2Controller::class, 'getByKey']);
+    Route::get('/general', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'getGeneralConfig']);
+    Route::get('/email', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'getEmailConfig']);
+    Route::get('/key', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'getByKey']);
 });
 
 // Protected routes - cần authentication
@@ -153,11 +153,22 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     });
 });
 
-Route::get('/enums/{type}', [EnumController::class, 'get']); 
-Route::post('/upload-image', [ImageController::class, 'upload']);
+// Public API - Enums (không cần authentication)
+Route::prefix('enums')->group(function () {
+    Route::get('/types', [EnumController::class, 'getTypes']);
+    Route::get('/{type}', [EnumController::class, 'get']);
+});
 
-
-
+// Public API - File upload (không cần authentication)
+Route::prefix('files')->group(function () {
+    Route::post('/upload', [FileController::class, 'upload']);
+    Route::post('/upload-multiple', [FileController::class, 'uploadMultiple']);
+    Route::get('/info', [FileController::class, 'getInfo']);
+    Route::get('/list', [FileController::class, 'list']);
+    Route::get('/available-dates', [FileController::class, 'getAvailableDates']);
+    Route::get('/supported-types', [FileController::class, 'getSupportedTypes']);
+    Route::delete('/delete', [FileController::class, 'delete']);
+});
 
 // Admin routes for enum cache management
 Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function () {
@@ -206,9 +217,9 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     
     // System Config V2 routes - Admin only
     Route::prefix('config-v2')->group(function () {
-        Route::post('/general', [App\Http\Controllers\SystemConfigV2Controller::class, 'updateGeneralConfig']);
-        Route::post('/email', [App\Http\Controllers\SystemConfigV2Controller::class, 'updateEmailConfig']);
-        Route::post('/key', [App\Http\Controllers\SystemConfigV2Controller::class, 'updateByKey']);
+        Route::post('/general', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'updateGeneralConfig']);
+        Route::post('/email', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'updateEmailConfig']);
+        Route::post('/key', [App\Http\Controllers\Api\Core\Config\SystemConfigV2Controller::class, 'updateByKey']);
     });
     
 }); 
