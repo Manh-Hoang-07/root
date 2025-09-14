@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\Builder;
 trait BaseFilterTrait
 {
     /**
-     * Apply optimized filters to query
+     * Apply filters to query
      * 
      * @param Builder $query
      * @param array $filters
      * @return void
      */
-    protected function applyOptimizedFilters(Builder $query, array $filters): void
+    protected function applyFilters(Builder $query, array $filters): void
     {
         foreach ($filters as $key => $value) {
             if ($value === '' || $value === null) continue;

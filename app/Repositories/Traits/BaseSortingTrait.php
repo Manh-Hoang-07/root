@@ -7,29 +7,29 @@ use Illuminate\Database\Eloquent\Builder;
 trait BaseSortingTrait
 {
     /**
-     * Apply optimized sorting
+     * Apply sorting
      * 
      * @param Builder $query
      * @param array $filters
      * @return void
      */
-    protected function applyOptimizedSorting(Builder $query, array $filters): void
+    protected function applySorting(Builder $query, array $filters): void
     {
         if (isset($filters['sort_by'])) {
-            $this->applySorting($query, $filters['sort_by']);
+            $this->applySort($query, $filters['sort_by']);
         } else {
             $query->orderBy('created_at', 'desc');
         }
     }
 
     /**
-     * Apply sorting to query
+     * Apply sort to query
      * 
      * @param Builder $query
      * @param string $sortBy
      * @return void
      */
-    protected function applySorting(Builder $query, string $sortBy): void
+    protected function applySort(Builder $query, string $sortBy): void
     {
         if (empty($sortBy)) {
             $query->orderBy('created_at', 'desc');

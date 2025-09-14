@@ -11,6 +11,7 @@ use App\Repositories\Traits\BaseFilterTrait;
 use App\Repositories\Traits\BaseSearchTrait;
 use App\Repositories\Traits\BaseSortingTrait;
 use App\Repositories\Traits\BaseConditionTrait;
+use App\Repositories\Traits\BaseQueryTrait;
 
 /**
  * Base Repository class providing common database operations
@@ -19,8 +20,8 @@ use App\Repositories\Traits\BaseConditionTrait;
  */
 abstract class BaseRepository
 {
-    use BaseFilterTrait, BaseSearchTrait, BaseSortingTrait, BaseConditionTrait;
-    
+    use BaseFilterTrait, BaseSearchTrait, BaseSortingTrait, BaseConditionTrait, BaseQueryTrait;
+
     protected Model $model;
 
     /**
@@ -40,51 +41,13 @@ abstract class BaseRepository
 
     /**
      * Get all records with pagination and filtering
-     * 
-     * @param array $filters
-     * @param int $perPage
-     * @param array $relations
-     * @param array $fields
-     * @return array
      */
     public function all(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*']): array
     {
-        try {
-            $query = $this->model->query();
-            
-            // Load relations if specified
-            if (!empty($relations)) {
-                $query->with($relations);
-            }
-            
-            // Select specific fields if specified
-            if (!empty($fields) && $fields !== ['*']) {
-                $query->select($fields);
-            }
-            
-            // Apply filters with optimization
-            $this->applyOptimizedFilters($query, $filters);
-            
-            // Apply sorting
-            $this->applyOptimizedSorting($query, $filters);
-            
-            $paginator = $query->paginate($perPage);
-            
-            return [
-                'data' => $paginator->items(),
-                'pagination' => [
-                    'current_page' => $paginator->currentPage(),
-                    'per_page' => $paginator->perPage(),
-                    'total' => $paginator->total(),
-                    'last_page' => $paginator->lastPage(),
-                    'from' => $paginator->firstItem(),
-                    'to' => $paginator->lastItem(),
-                    'has_more_pages' => $paginator->hasMorePages(),
-                ]
-            ];
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to retrieve records: " . $e->getMessage(), 0, $e);
-        }
+        $query = $this->buildQuery($relations, $fields);
+        $this->applyFilters($query, $filters);
+        $this->applySorting($query, $filters);
+        return $this->formatPagination($query->paginate($perPage));
     }
     
     
@@ -93,89 +56,38 @@ abstract class BaseRepository
 
     /**
      * Find a record by ID
-     * 
-     * @param mixed $id
-     * @param array $relations
-     * @param array $fields
-     * @return array|null
      */
     public function find($id, array $relations = [], array $fields = ['*']): ?array
     {
-        try {
-            $query = $this->model->query();
-            
-            // Load relations if specified
-            if (!empty($relations)) {
-                $query->with($relations);
-            }
-            
-            // Select specific fields if specified
-            if (!empty($fields) && $fields !== ['*']) {
-                $query->select($fields);
-            }
-            
-            $model = $query->find($id);
-            return $model ? $model->toArray() : null;
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to find record: " . $e->getMessage(), 0, $e);
-        }
+        $model = $this->buildQuery($relations, $fields)->find($id);
+        return $model ? $model->toArray() : null;
     }
 
 
     /**
      * Create a new record
-     * 
-     * @param array $data
-     * @return array
      */
     public function create(array $data): array
     {
-        try {
-            $model = $this->model->create($data);
-            return $model->toArray();
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to create record: " . $e->getMessage(), 0, $e);
-        }
+        return $this->model->create($data)->toArray();
     }
 
     /**
      * Update a record by ID
-     * 
-     * @param mixed $id
-     * @param array $data
-     * @return array|null
      */
     public function update($id, array $data): ?array
     {
-        try {
-            $model = $this->model->find($id);
-            if ($model) {
-                $model->update($data);
-                return $model->fresh()->toArray();
-            }
-            return null;
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to update record: " . $e->getMessage(), 0, $e);
-        }
+        $model = $this->model->find($id);
+        return $model ? $model->update($data) ? $model->fresh()->toArray() : null : null;
     }
 
     /**
      * Delete a record by ID
-     * 
-     * @param mixed $id
-     * @return bool
      */
     public function delete($id): bool
     {
-        try {
-            $model = $this->model->find($id);
-            if ($model) {
-                return $model->delete();
-            }
-            return false;
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to delete record: " . $e->getMessage(), 0, $e);
-        }
+        $model = $this->model->find($id);
+        return $model ? $model->delete() : false;
     }
 
     /**
@@ -191,33 +103,18 @@ abstract class BaseRepository
 
     /**
      * Get first record or create if not exists
-     * 
-     * @param array $data
-     * @return array
      */
     public function firstOrCreate(array $data): array
     {
-        try {
-            $model = $this->model->firstOrCreate($data);
-            return $model->toArray();
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to find or create record: " . $e->getMessage(), 0, $e);
-        }
+        return $this->model->firstOrCreate($data)->toArray();
     }
 
     /**
      * Bulk insert records
-     * 
-     * @param array $data
-     * @return bool
      */
     public function bulkInsert(array $data): bool
     {
-        try {
-            return $this->model->insert($data);
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to bulk insert records: " . $e->getMessage(), 0, $e);
-        }
+        return $this->model->insert($data);
     }
 
     /**
@@ -232,166 +129,63 @@ abstract class BaseRepository
 
     /**
      * Search records with advanced filtering
-     * 
-     * @param array $filters
-     * @param int $perPage
-     * @param array $relations
-     * @param array $fields
-     * @return array
      */
     public function search(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*']): array
     {
-        try {
-            $query = $this->model->query();
-            
-            // Load relations if specified
-            if (!empty($relations)) {
-                $query->with($relations);
-            }
-            
-            // Select specific fields if specified
-            if (!empty($fields) && $fields !== ['*']) {
-                $query->select($fields);
-            }
-            
-            // Apply search filters
-            $this->applyOptimizedFilters($query, $filters);
-            
-            // Apply sorting
-            $this->applyOptimizedSorting($query, $filters);
-            
-            // Return paginated results
-            $paginator = $query->paginate($perPage);
-            
-            return [
-                'data' => $paginator->items(),
-                'pagination' => [
-                    'current_page' => $paginator->currentPage(),
-                    'per_page' => $paginator->perPage(),
-                    'total' => $paginator->total(),
-                    'last_page' => $paginator->lastPage(),
-                    'from' => $paginator->firstItem(),
-                    'to' => $paginator->lastItem(),
-                    'has_more_pages' => $paginator->hasMorePages(),
-                ]
-            ];
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to search records: " . $e->getMessage(), 0, $e);
-        }
+        $query = $this->buildQuery($relations, $fields);
+        $this->applyFilters($query, $filters);
+        $this->applySorting($query, $filters);
+        return $this->formatPagination($query->paginate($perPage));
     }
 
 
     /**
      * Update records by condition
-     * 
-     * @param array $conditions
-     * @param array $data
-     * @return int
      */
-    public function updateByCondition(array $conditions, array $data): int
+    public function updateBy(array $conditions, array $data): int
     {
-        try {
-            $query = $this->model->query();
-            
-            // Apply conditions
-            $this->applyUpdateConditions($query, $conditions);
-            
-            // Update records
-            return $query->update($data);
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to update records by condition: " . $e->getMessage(), 0, $e);
-        }
+        $query = $this->model->query();
+        $this->applyConditions($query, $conditions);
+        return $query->update($data);
     }
 
 
     /**
      * Get records by condition (without pagination)
-     * 
-     * @param array $conditions
-     * @param array $relations
-     * @param array $fields
-     * @return array
      */
-    public function getByCondition(array $conditions = [], array $relations = [], array $fields = ['*']): array
+    public function getBy(array $conditions = [], array $relations = [], array $fields = ['*']): array
     {
-        try {
-            $query = $this->model->query();
-            
-            // Load relations if specified
-            if (!empty($relations)) {
-                $query->with($relations);
-            }
-            
-            // Select specific fields if specified
-            if (!empty($fields) && $fields !== ['*']) {
-                $query->select($fields);
-            }
-            
-            // Apply conditions
-            $this->applyUpdateConditions($query, $conditions);
-            
-            return $query->get()->toArray();
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to get records by condition: " . $e->getMessage(), 0, $e);
-        }
+        $query = $this->buildQuery($relations, $fields);
+        $this->applyConditions($query, $conditions);
+        return $query->get()->toArray();
     }
 
     /**
      * Count records by condition
-     * 
-     * @param array $conditions
-     * @return int
      */
-    public function countByCondition(array $conditions = []): int
+    public function countBy(array $conditions = []): int
     {
-        try {
-            $query = $this->model->query();
-            
-            // Apply conditions
-            $this->applyUpdateConditions($query, $conditions);
-            
-            return $query->count();
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to count records by condition: " . $e->getMessage(), 0, $e);
-        }
+        $query = $this->model->query();
+        $this->applyConditions($query, $conditions);
+        return $query->count();
     }
 
 
     /**
      * Soft delete a record (if model supports it)
-     * 
-     * @param mixed $id
-     * @return bool
      */
     public function softDelete($id): bool
     {
-        try {
-            $model = $this->model->find($id);
-            if ($model && method_exists($model, 'delete')) {
-                return $model->delete();
-            }
-            return false;
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to soft delete record: " . $e->getMessage(), 0, $e);
-        }
+        $model = $this->model->find($id);
+        return $model && method_exists($model, 'delete') ? $model->delete() : false;
     }
 
     /**
      * Restore a soft deleted record (if model supports it)
-     * 
-     * @param mixed $id
-     * @return bool
      */
     public function restore($id): bool
     {
-        try {
-            $model = $this->model->withTrashed()->find($id);
-            if ($model && method_exists($model, 'restore')) {
-                return $model->restore();
-            }
-            return false;
-        } catch (\Exception $e) {
-            throw new \RuntimeException("Failed to restore record: " . $e->getMessage(), 0, $e);
-        }
+        $model = $this->model->withTrashed()->find($id);
+        return $model && method_exists($model, 'restore') ? $model->restore() : false;
     }
 } 
