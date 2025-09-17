@@ -7,13 +7,9 @@ use App\Services\Public\PostTag\PostTagService;
 
 class PostTagController extends BaseController
 {
+    protected static $serviceClass = PostTagService::class;
     protected $indexRelations = [];
     protected $showRelations = [];
-
-    public function __construct(PostTagService $service)
-    {
-        parent::__construct($service);
-    }
 
     protected function getDefaultListFields(): array
     {

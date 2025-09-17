@@ -8,13 +8,9 @@ use App\Http\Requests\Admin\PostCategory\PostCategoryRequest;
 
 class PostCategoryController extends BaseController
 {
+    protected static $serviceClass = PostCategoryService::class;
     protected $indexRelations = [];
     protected $showRelations = [];
-
-    public function __construct(PostCategoryService $service)
-    {
-        parent::__construct($service);
-        $this->storeRequestClass = PostCategoryRequest::class;
-        $this->updateRequestClass = PostCategoryRequest::class;
-    }
+    protected $storeRequestClass = PostCategoryRequest::class;
+    protected $updateRequestClass = PostCategoryRequest::class;
 }

@@ -9,12 +9,9 @@ use Illuminate\Http\JsonResponse;
 
 class ImageController extends BaseController
 {
-    public function __construct(ImageService $service)
-    {
-        parent::__construct($service);
-        $this->storeRequestClass = ImageRequest::class;
-        $this->updateRequestClass = ImageRequest::class;
-    }
+    protected static $serviceClass = ImageService::class;
+    protected $storeRequestClass = ImageRequest::class;
+    protected $updateRequestClass = ImageRequest::class;
 
     /**
      * Get images for a product

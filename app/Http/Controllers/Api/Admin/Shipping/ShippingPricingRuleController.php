@@ -11,6 +11,4 @@ class ShippingPricingRuleController extends BaseController
     {
         parent::__construct($service);
         $this->storeRequestClass = ShippingPricingRuleRequest::class;
-        $this->updateRequestClass = ShippingPricingRuleRequest::class;
-    }
 } 

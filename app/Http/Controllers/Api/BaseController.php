@@ -26,6 +26,9 @@ abstract class BaseController extends Controller
     /** @var mixed Service instance for business logic */
     protected $service;
     
+    /** @var string Service class to be injected */
+    protected static $serviceClass;
+    
     /** @var string Request class for store operations */
     protected $storeRequestClass = Request::class;
     
@@ -67,11 +70,17 @@ abstract class BaseController extends Controller
 
     /**
      * Constructor
-     * @param mixed $service Service instance
+     * @param mixed|null $service Service instance (optional)
      */
-    public function __construct($service)
+    public function __construct($service = null)
     {
-        $this->service = $service;
+        // Auto-resolve service if not provided and serviceClass is defined
+        if ($service === null && static::$serviceClass) {
+            $this->service = app(static::$serviceClass);
+        } else {
+            $this->service = $service;
+        }
+        
         // Initialize cache service
         $this->cacheService = new CacheService(
             $this->enableCaching,

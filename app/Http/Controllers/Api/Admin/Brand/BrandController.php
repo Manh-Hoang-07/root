@@ -10,14 +10,11 @@ use Illuminate\Http\JsonResponse;
 
 class BrandController extends BaseController
 {
-    public function __construct(BrandService $service)
-    {
-        parent::__construct($service);
-        $this->storeRequestClass = BrandRequest::class;
-        $this->updateRequestClass = BrandRequest::class;
-        // Tối ưu: Không load relations mặc định cho list
-        $this->indexRelations = [];
-    }
+    protected static $serviceClass = BrandService::class;
+    protected $storeRequestClass = BrandRequest::class;
+    protected $updateRequestClass = BrandRequest::class;
+    // Tối ưu: Không load relations mặc định cho list
+    protected $indexRelations = [];
 
     /**
      * Tối ưu search method

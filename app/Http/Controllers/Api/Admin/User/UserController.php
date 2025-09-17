@@ -10,13 +10,10 @@ use Illuminate\Http\JsonResponse;
 
 class UserController extends BaseController
 {
-    public function __construct(UserService $service)
-    {
-        parent::__construct($service);
-        $this->storeRequestClass = UserRequest::class;
-        $this->updateRequestClass = UserRequest::class;
-    }
-
+    protected static $serviceClass = UserService::class;
+    protected $storeRequestClass = UserRequest::class;
+    protected $updateRequestClass = UserRequest::class;
+    
     /**
      * Override default search fields for User model
      */

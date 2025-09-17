@@ -10,12 +10,9 @@ use Illuminate\Http\JsonResponse;
 
 class AttributeController extends BaseController
 {
-    public function __construct(AttributeService $service)
-    {
-        parent::__construct($service);
-        $this->storeRequestClass = AttributeRequest::class;
-        $this->updateRequestClass = AttributeRequest::class;
-    }
+    protected static $serviceClass = AttributeService::class;
+    protected $storeRequestClass = AttributeRequest::class;
+    protected $updateRequestClass = AttributeRequest::class;
 
     /**
      * Get attributes with their values

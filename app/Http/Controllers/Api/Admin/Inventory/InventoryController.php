@@ -12,14 +12,11 @@ use Illuminate\Http\JsonResponse;
 
 class InventoryController extends BaseController
 {
-    public function __construct(InventoryService $service)
-    {
-        parent::__construct($service);
-        $this->storeRequestClass = InventoryRequest::class;
-        $this->updateRequestClass = InventoryRequest::class;
-        $this->indexRelations = ['product:id,name,code', 'variant:id,sku,name', 'warehouse:id,name'];
-        $this->showRelations = ['product', 'variant', 'warehouse'];
-    }
+    protected static $serviceClass = InventoryService::class;
+    protected $storeRequestClass = InventoryRequest::class;
+    protected $updateRequestClass = InventoryRequest::class;
+    protected $indexRelations = ['product:id,name,code', 'variant:id,sku,name', 'warehouse:id,name'];
+    protected $showRelations = ['product', 'variant', 'warehouse'];
 
     /**
      * Lấy thông tin chi tiết tồn kho

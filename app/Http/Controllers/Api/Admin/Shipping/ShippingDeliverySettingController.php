@@ -11,6 +11,4 @@ class ShippingDeliverySettingController extends BaseController
     {
         parent::__construct($service);
         $this->storeRequestClass = ShippingDeliverySettingRequest::class;
-        $this->updateRequestClass = ShippingDeliverySettingRequest::class;
-    }
 } 

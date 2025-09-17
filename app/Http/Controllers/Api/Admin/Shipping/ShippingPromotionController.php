@@ -11,6 +11,4 @@ class ShippingPromotionController extends BaseController
     {
         parent::__construct($service);
         $this->storeRequestClass = ShippingPromotionRequest::class;
-        $this->updateRequestClass = ShippingPromotionRequest::class;
-    }
 } 

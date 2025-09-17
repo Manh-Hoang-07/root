@@ -11,22 +11,19 @@ use App\Repositories\Inventory\InventoryRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Carbon\Carbon;
+use App\Services\BaseService;
 
-class InventoryService
+class InventoryService extends BaseService
 {
-    protected $inventoryRepository;
-
-    public function __construct(InventoryRepository $inventoryRepository)
-    {
-        $this->inventoryRepository = $inventoryRepository;
-    }
+    protected static $repositoryClass = InventoryRepository::class;
 
     /**
      * Lấy danh sách tồn kho với phân trang và bộ lọc
+     * @override
      */
-    public function list(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*']): array
+    public function list($filters = [], $perPage = 20, $relations = [], $fields = ['*']): array
     {
-        return $this->inventoryRepository->all($filters, $perPage, $relations, $fields);
+        return $this->repo->all($filters, $perPage, $relations, $fields);
     }
 
     /**
@@ -34,15 +31,16 @@ class InventoryService
      */
     public function getInventories(array $filters = [], int $perPage = 15): array
     {
-        return $this->inventoryRepository->getInventoriesWithRelations($filters, $perPage);
+        return $this->repo->getInventoriesWithRelations($filters, $perPage);
     }
 
     /**
      * Tìm tồn kho theo ID
+     * @override
      */
-    public function find(int $id, array $relations = [], array $fields = ['*']): ?array
+    public function find($id, $relations = [], $fields = ['*']): ?array
     {
-        return $this->inventoryRepository->find($id, $relations, $fields);
+        return $this->repo->find($id, $relations, $fields);
     }
 
     /**
@@ -56,8 +54,9 @@ class InventoryService
 
     /**
      * Tạo tồn kho mới
+     * @override
      */
-    public function create(array $data): array
+    public function create($data): array
     {
         // Validate business logic
         $this->validateBusinessLogic($data);
@@ -67,13 +66,14 @@ class InventoryService
             $data['available_quantity'] = $data['quantity'] - ($data['reserved_quantity'] ?? 0);
         }
 
-        return $this->inventoryRepository->create($data);
+        return $this->repo->create($data);
     }
 
     /**
      * Cập nhật tồn kho
+     * @override
      */
-    public function update(int $id, array $data): ?array
+    public function update($id, $data): ?array
     {
         // Validate business logic
         $this->validateBusinessLogic($data);
@@ -86,15 +86,16 @@ class InventoryService
             }
         }
 
-        return $this->inventoryRepository->update($id, $data);
+        return $this->repo->update($id, $data);
     }
 
     /**
      * Xóa tồn kho
+     * @override
      */
-    public function delete(int $id): bool
+    public function delete($id): bool
     {
-        return $this->inventoryRepository->delete($id);
+        return $this->repo->delete($id);
     }
 
     /**
@@ -102,7 +103,7 @@ class InventoryService
      */
     public function import(int $productId, int $warehouseId, int $quantity, array $data = []): array
     {
-        $inventory = $this->inventoryRepository->findByProductAndWarehouse($productId, $warehouseId, $data['batch_no'] ?? null);
+        $inventory = $this->repo->findByProductAndWarehouse($productId, $warehouseId, $data['batch_no'] ?? null);
         
         if ($inventory) {
             // Get the model instance for updates
@@ -141,7 +142,7 @@ class InventoryService
      */
     public function export(int $productId, int $warehouseId, int $quantity, ?string $batchNo = null): array
     {
-        $inventory = $this->inventoryRepository->findByProductAndWarehouse($productId, $warehouseId, $batchNo);
+        $inventory = $this->repo->findByProductAndWarehouse($productId, $warehouseId, $batchNo);
         
         if (!$inventory) {
             throw new \Exception('Không tìm thấy tồn kho');
@@ -168,7 +169,7 @@ class InventoryService
      */
     public function getExpiringSoon(int $days = 30): array
     {
-        return $this->inventoryRepository->getExpiringSoon($days);
+        return $this->repo->getExpiringSoon($days);
     }
 
     /**
@@ -176,7 +177,7 @@ class InventoryService
      */
     public function getExpired(): array
     {
-        return $this->inventoryRepository->getExpired();
+        return $this->repo->getExpired();
     }
 
     /**
@@ -184,7 +185,7 @@ class InventoryService
      */
     public function getLowStock(int $threshold = 10): array
     {
-        return $this->inventoryRepository->getLowStock($threshold);
+        return $this->repo->getLowStock($threshold);
     }
 
     /**
@@ -215,7 +216,7 @@ class InventoryService
      */
     public function reserveQuantity(int $productId, int $warehouseId, int $quantity, ?string $batchNo = null): bool
     {
-        $inventory = $this->inventoryRepository->findByProductAndWarehouse($productId, $warehouseId, $batchNo);
+        $inventory = $this->repo->findByProductAndWarehouse($productId, $warehouseId, $batchNo);
         
         if (!$inventory) {
             throw new \Exception('Không tìm thấy tồn kho');
@@ -263,7 +264,7 @@ class InventoryService
      */
     public function releaseQuantity(int $productId, int $warehouseId, int $quantity, ?string $batchNo = null): bool
     {
-        $inventory = $this->inventoryRepository->findByProductAndWarehouse($productId, $warehouseId, $batchNo);
+        $inventory = $this->repo->findByProductAndWarehouse($productId, $warehouseId, $batchNo);
         
         if (!$inventory) {
             throw new \Exception('Không tìm thấy tồn kho');

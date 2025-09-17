@@ -7,10 +7,7 @@ use App\Repositories\Post\PostRepository;
 
 class PostService extends BaseService
 {
-    public function __construct(PostRepository $repo)
-    {
-        parent::__construct($repo);
-    }
+    protected static $repositoryClass = PostRepository::class;
 
     public function create($data): array
     {

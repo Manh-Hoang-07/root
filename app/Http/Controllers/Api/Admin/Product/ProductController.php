@@ -24,12 +24,9 @@ class ProductController extends BaseController
         'search' => ['brand:id,name']
     ];
 
-    public function __construct(ProductService $service)
-    {
-        parent::__construct($service);
-        $this->storeRequestClass = ProductRequest::class;
-        $this->updateRequestClass = ProductRequest::class;
-    }
+    protected static $serviceClass = ProductService::class;
+    protected $storeRequestClass = ProductRequest::class;
+    protected $updateRequestClass = ProductRequest::class;
 
 
     /**

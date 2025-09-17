@@ -7,13 +7,9 @@ use App\Services\Public\PostCategory\PostCategoryService;
 
 class PostCategoryController extends BaseController
 {
+    protected static $serviceClass = PostCategoryService::class;
     protected $indexRelations = [];
     protected $showRelations = [];
-
-    public function __construct(PostCategoryService $service)
-    {
-        parent::__construct($service);
-    }
 
     protected function getDefaultListFields(): array
     {
