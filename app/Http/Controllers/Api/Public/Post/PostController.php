@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\BaseController;
 use App\Services\Public\Post\PostService;
 use Illuminate\Http\Request;
 
-class PublicPostController extends BaseController
+class PostController extends BaseController
 {
     protected $indexRelations = ['categories:id,name,slug', 'tags:id,name,slug'];
     protected $showRelations = ['categories:id,name,slug', 'tags:id,name,slug', 'primaryCategory:id,name,slug'];
@@ -21,7 +21,7 @@ class PublicPostController extends BaseController
         return ['id','name','slug','image','status','published_at','created_at'];
     }
 
-    protected function getOptimizedData(array $filters, int $perPage, string $context = 'index', bool $single = false)
+    protected function getOptimizedData(array $filters, int $perPage, string $context = 'index', bool $single = false): array
     {
         $filters['published_only'] = true;
         return parent::getOptimizedData($filters, $perPage, $context, $single);
@@ -38,5 +38,4 @@ class PublicPostController extends BaseController
         return $this->successResponseWithFormat($item, 'Lấy thông tin thành công');
     }
 }
-
 

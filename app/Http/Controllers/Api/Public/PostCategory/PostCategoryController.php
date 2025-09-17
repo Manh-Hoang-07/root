@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\Public\PostCategory;
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Public\PostCategory\PostCategoryService;
 
-class PublicPostCategoryController extends BaseController
+class PostCategoryController extends BaseController
 {
     protected $indexRelations = [];
     protected $showRelations = [];
@@ -20,7 +20,7 @@ class PublicPostCategoryController extends BaseController
         return ['id','name','slug','status','sort_order','created_at'];
     }
 
-    protected function getOptimizedData(array $filters, int $perPage, string $context = 'index', bool $single = false)
+    protected function getOptimizedData(array $filters, int $perPage, string $context = 'index', bool $single = false): array
     {
         $filters['status'] = 'active';
         return parent::getOptimizedData($filters, $perPage, $context, $single);

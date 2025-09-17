@@ -40,15 +40,15 @@ Route::get('/brands', [BrandController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
 // Public API - posts
-Route::get('/posts', [App\Http\Controllers\Api\Public\Post\PublicPostController::class, 'index']);
-Route::get('/posts/{id}', [App\Http\Controllers\Api\Public\Post\PublicPostController::class, 'show']);
-Route::get('/posts/slug/{slug}', [App\Http\Controllers\Api\Public\Post\PublicPostController::class, 'showBySlug']);
-Route::get('/post-categories', [App\Http\Controllers\Api\Public\PostCategory\PublicPostCategoryController::class, 'index']);
-Route::get('/post-categories/{id}', [App\Http\Controllers\Api\Public\PostCategory\PublicPostCategoryController::class, 'show']);
-Route::get('/post-categories/slug/{slug}', [App\Http\Controllers\Api\Public\PostCategory\PublicPostCategoryController::class, 'showBySlug']);
-Route::get('/post-tags', [App\Http\Controllers\Api\Public\PostTag\PublicPostTagController::class, 'index']);
-Route::get('/post-tags/{id}', [App\Http\Controllers\Api\Public\PostTag\PublicPostTagController::class, 'show']);
-Route::get('/post-tags/slug/{slug}', [App\Http\Controllers\Api\Public\PostTag\PublicPostTagController::class, 'showBySlug']);
+Route::get('/posts', [App\Http\Controllers\Api\Public\Post\PostController::class, 'index']);
+Route::get('/posts/slug/{slug}', [App\Http\Controllers\Api\Public\Post\PostController::class, 'showBySlug']);
+Route::get('/posts/{id}', [App\Http\Controllers\Api\Public\Post\PostController::class, 'show']);
+Route::get('/post-categories', [App\Http\Controllers\Api\Public\PostCategory\PostCategoryController::class, 'index']);
+Route::get('/post-categories/slug/{slug}', [App\Http\Controllers\Api\Public\PostCategory\PostCategoryController::class, 'showBySlug']);
+Route::get('/post-categories/{id}', [App\Http\Controllers\Api\Public\PostCategory\PostCategoryController::class, 'show']);
+Route::get('/post-tags', [App\Http\Controllers\Api\Public\PostTag\PostTagController::class, 'index']);
+Route::get('/post-tags/slug/{slug}', [App\Http\Controllers\Api\Public\PostTag\PostTagController::class, 'showBySlug']);
+Route::get('/post-tags/{id}', [App\Http\Controllers\Api\Public\PostTag\PostTagController::class, 'show']);
 
 // Public API - Contact (không cần authentication)
 Route::post('/contacts', [PublicContactController::class, 'store']);
