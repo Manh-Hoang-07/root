@@ -12,7 +12,7 @@ class RoleService extends BaseService
         parent::__construct($repo);
     }
 
-    public function create($data)
+    public function create($data): array
     {
         $permissions = $data['permissions'] ?? [];
         unset($data['permissions']);
@@ -25,13 +25,14 @@ class RoleService extends BaseService
             // Đảm bảo permissions là array of integers
             $permissionIds = array_map('intval', (array) $permissions);
 
-            $role->permissions()->sync($permissionIds);
+            $roleModel = $this->repo->getModel()->find($role['id']);
+            $roleModel->permissions()->sync($permissionIds);
         }
         
         return $role;
     }
 
-    public function update($id, $data)
+    public function update($id, $data): ?array
     {
         $permissions = $data['permissions'] ?? [];
         unset($data['permissions']);
@@ -40,10 +41,15 @@ class RoleService extends BaseService
         
         $role = parent::update($id, $data);
         
+        if (!$role) {
+            return null;
+        }
+        
         // Đảm bảo permissions là array of integers
         $permissionIds = array_map('intval', (array) $permissions);
 
-        $role->permissions()->sync($permissionIds);
+        $roleModel = $this->repo->getModel()->find($role['id']);
+        $roleModel->permissions()->sync($permissionIds);
         
         return $role;
     }

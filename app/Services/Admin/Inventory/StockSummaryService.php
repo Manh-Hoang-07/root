@@ -55,7 +55,7 @@ class StockSummaryService
     /**
      * Cập nhật tổng hợp cho tất cả sản phẩm
      */
-    public function updateAllSummaries()
+    public function updateAllSummaries(): void
     {
         $productIds = DB::table('products')->pluck('id');
         

@@ -26,7 +26,7 @@ class SystemConfigService extends BaseService
     /**
      * Lấy config theo group với cache
      */
-    public function getByGroup(string $group): Collection
+    public function getByGroup(string $group): array
     {
         $cacheKey = $this->cachePrefix . 'group_' . $group;
         
@@ -38,7 +38,7 @@ class SystemConfigService extends BaseService
     /**
      * Lấy config theo key với cache
      */
-    public function getByKey(string $key, $default = null)
+    public function getByKey(string $key, $default = null): mixed
     {
         $cacheKey = $this->cachePrefix . 'key_' . $key;
         
@@ -101,7 +101,7 @@ class SystemConfigService extends BaseService
     /**
      * Tạo config mới (Admin)
      */
-    public function create($data)
+    public function create($data): array
     {
         // Validate required fields
         $this->validateRequiredFields($data);
@@ -128,7 +128,7 @@ class SystemConfigService extends BaseService
     /**
      * Cập nhật config (Admin)
      */
-    public function update($id, $data)
+    public function update($id, $data): ?array
     {
         $config = $this->repo->find($id);
         
@@ -268,7 +268,7 @@ class SystemConfigService extends BaseService
     /**
      * Tìm kiếm config (Admin)
      */
-    public function search(array $filters): Collection
+    public function search(array $filters): array
     {
         return $this->repo->search($filters);
     }
@@ -278,7 +278,7 @@ class SystemConfigService extends BaseService
     /**
      * Lấy config theo key với API response
      */
-    public function getByKeyResponse(string $key, $default = null)
+    public function getByKeyResponse(string $key, $default = null): \Illuminate\Http\JsonResponse
     {
         try {
             $value = $this->getByKey($key, $default);
@@ -291,7 +291,7 @@ class SystemConfigService extends BaseService
     /**
      * Cập nhật config theo key với API response
      */
-    public function updateByKeyResponse(string $key, $value)
+    public function updateByKeyResponse(string $key, $value): \Illuminate\Http\JsonResponse
     {
         try {
             $config = $this->repo->getModel()

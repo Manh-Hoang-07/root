@@ -12,7 +12,7 @@ class BrandService extends BaseService
         parent::__construct($repo);
     }
 
-    public function create($data)
+    public function create($data): array
     {
         if (!empty($data['name'])) {
             $data['slug'] = Str::slug($data['name']);
@@ -20,7 +20,7 @@ class BrandService extends BaseService
         return parent::create($data);
     }
 
-    public function update($id, $data)
+    public function update($id, $data): ?array
     {
         if (!empty($data['name'])) {
             $data['slug'] = Str::slug($data['name']);

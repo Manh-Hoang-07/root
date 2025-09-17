@@ -15,7 +15,7 @@ class AttributeService extends BaseService
     /**
      * Get attributes with their values
      */
-    public function getAttributesWithValues()
+    public function getAttributesWithValues(): array
     {
         return $this->repo->getAttributesWithValues();
     }

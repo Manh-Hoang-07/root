@@ -12,7 +12,7 @@ class PostService extends BaseService
         parent::__construct($repo);
     }
 
-    public function create($data)
+    public function create($data): array
     {
         $data = $this->ensureSlug($data);
         $tagIds = $data['tag_ids'] ?? null;
@@ -22,16 +22,18 @@ class PostService extends BaseService
         $post = parent::create($data);
 
         if ($post && is_array($tagIds)) {
-            $post->tags()->sync($tagIds);
+            $postModel = $this->repo->getModel()->find($post['id']);
+            $postModel->tags()->sync($tagIds);
         }
         if ($post && is_array($categoryIds)) {
-            $post->categories()->sync($categoryIds);
+            $postModel = $this->repo->getModel()->find($post['id']);
+            $postModel->categories()->sync($categoryIds);
         }
 
-        return $post->load(['categories:id,name,slug', 'tags:id,name,slug']);
+        return $post;
     }
 
-    public function update($id, $data)
+    public function update($id, $data): ?array
     {
         $data = $this->ensureSlug($data);
         $tagIds = $data['tag_ids'] ?? null;
@@ -42,16 +44,18 @@ class PostService extends BaseService
         if (!$post) return null;
 
         if (is_array($tagIds)) {
-            $post->tags()->sync($tagIds);
+            $postModel = $this->repo->getModel()->find($post['id']);
+            $postModel->tags()->sync($tagIds);
         }
         if (is_array($categoryIds)) {
-            $post->categories()->sync($categoryIds);
+            $postModel = $this->repo->getModel()->find($post['id']);
+            $postModel->categories()->sync($categoryIds);
         }
 
-        return $post->load(['categories:id,name,slug', 'tags:id,name,slug']);
+        return $post;
     }
 
-    public function findBySlug(string $slug, $relations = [], $fields = ['*'])
+    public function findBySlug(string $slug, $relations = [], $fields = ['*']): ?array
     {
         return $this->repo->findBySlug($slug, $relations, $fields);
     }

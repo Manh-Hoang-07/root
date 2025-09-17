@@ -16,29 +16,32 @@ class PostTagService extends BaseService
     /**
      * Lấy danh sách tag công khai
      */
-    public function getPublishedTags()
+    public function getPublishedTags(): array
     {
         return $this->repo->getModel()
             ->where('status', 'active')
             ->orderBy('name', 'asc')
-            ->get(['id', 'name', 'slug', 'description']);
+            ->get(['id', 'name', 'slug', 'description'])
+            ->toArray();
     }
 
     /**
      * Lấy tag theo slug
      */
-    public function findBySlug(string $slug)
+    public function findBySlug(string $slug): ?array
     {
-        return $this->repo->getModel()
+        $tag = $this->repo->getModel()
             ->where('status', 'active')
             ->where('slug', $slug)
             ->first(['id', 'name', 'slug', 'description']);
+        
+        return $tag ? $tag->toArray() : null;
     }
 
     /**
      * Lấy tag có bài viết
      */
-    public function getTagsWithPosts()
+    public function getTagsWithPosts(): array
     {
         return $this->repo->getModel()
             ->where('status', 'active')
@@ -47,13 +50,14 @@ class PostTagService extends BaseService
             })
             ->withCount('posts')
             ->orderBy('name', 'asc')
-            ->get(['id', 'name', 'slug', 'description']);
+            ->get(['id', 'name', 'slug', 'description'])
+            ->toArray();
     }
 
     /**
      * Lấy tag phổ biến (có nhiều bài viết nhất)
      */
-    public function getPopularTags($limit = 20)
+    public function getPopularTags($limit = 20): array
     {
         return $this->repo->getModel()
             ->where('status', 'active')
@@ -63,13 +67,14 @@ class PostTagService extends BaseService
             ->withCount('posts')
             ->orderBy('posts_count', 'desc')
             ->limit($limit)
-            ->get(['id', 'name', 'slug', 'description']);
+            ->get(['id', 'name', 'slug', 'description'])
+            ->toArray();
     }
 
     /**
      * Lấy tag cloud (tất cả tag với số lượng bài viết)
      */
-    public function getTagCloud()
+    public function getTagCloud(): array
     {
         return $this->repo->getModel()
             ->where('status', 'active')
@@ -79,6 +84,7 @@ class PostTagService extends BaseService
             ->withCount('posts')
             ->having('posts_count', '>', 0)
             ->orderBy('posts_count', 'desc')
-            ->get(['id', 'name', 'slug', 'posts_count']);
+            ->get(['id', 'name', 'slug', 'posts_count'])
+            ->toArray();
     }
 }

@@ -61,7 +61,7 @@ class ProductRepository extends BaseRepository
     /**
      * Get products with relationships
      */
-    public function getProductsWithRelations(array $filters = [])
+    public function getProductsWithRelations(array $filters = []): array
     {
         $query = $this->model->query();
 
@@ -116,44 +116,48 @@ class ProductRepository extends BaseRepository
         // Chỉ load relationships cần thiết cho list view
         $query->with(['brand:id,name', 'categories:id,name']);
 
-        return $query->paginate($filters['per_page'] ?? 15);
+        return $this->formatPagination($query->paginate($filters['per_page'] ?? 15));
     }
 
     /**
      * Get product with all relationships
      */
-    public function getProductWithRelations(int $id)
+    public function getProductWithRelations(int $id): ?array
     {
-        return $this->model->with([
+        $product = $this->model->with([
             'brand:id,name', 
             'categories:id,name', 
             'variants:id,product_id,name,sku,barcode,price,sale_price,quantity,image,status',
             'variants.attributeValues:id,variant_id,attribute_id,value',
             'variants.attributeValues.attribute:id,name',
             'images:id,imageable_id,url'
-        ])->findOrFail($id);
+        ])->find($id);
+        
+        return $product ? $product->toArray() : null;
     }
 
     /**
      * Get products for dropdown/select
      */
-    public function getProductsForSelect(): Collection
+    public function getProductsForSelect(): array
     {
         return $this->model->select('id', 'name', 'sku')
                           ->where('status', 'active')
                           ->orderBy('name', 'asc')
-                          ->get();
+                          ->get()
+                          ->toArray();
     }
 
     /**
      * Search products by name or SKU
      */
-    public function searchProducts(string $term, int $limit = 10)
+    public function searchProducts(string $term, int $limit = 10): array
     {
         return $this->model->where('name', 'like', "%{$term}%")
                           ->orWhere('sku', 'like', "%{$term}%")
                           ->limit($limit)
-                          ->get();
+                          ->get()
+                          ->toArray();
     }
 
     /**

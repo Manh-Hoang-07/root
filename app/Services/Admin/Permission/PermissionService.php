@@ -13,7 +13,7 @@ class PermissionService extends BaseService
         parent::__construct($repo);
     }
 
-    public function update($id, $data)
+    public function update($id, $data): ?array
     {
 
 
@@ -24,7 +24,8 @@ class PermissionService extends BaseService
         }
 
         // Kiểm tra nếu permission có quyền con thì không cho phép sửa
-        if ($permission->children()->exists()) {
+        $permissionModel = $this->repo->getModel()->find($permission['id']);
+        if ($permissionModel->children()->exists()) {
             throw new \InvalidArgumentException('Không thể sửa quyền này vì nó có quyền con.');
         }
 
@@ -32,7 +33,7 @@ class PermissionService extends BaseService
         return $this->repo->update($id, $data);
     }
 
-    public function delete($id)
+    public function delete($id): bool
     {
         $permission = $this->repo->find($id);
         
@@ -41,7 +42,8 @@ class PermissionService extends BaseService
         }
 
         // Kiểm tra nếu permission có quyền con thì không cho phép xóa
-        if ($permission->children()->exists()) {
+        $permissionModel = $this->repo->getModel()->find($permission['id']);
+        if ($permissionModel->children()->exists()) {
             throw new \InvalidArgumentException('Không thể xóa quyền này vì nó có quyền con.');
         }
 

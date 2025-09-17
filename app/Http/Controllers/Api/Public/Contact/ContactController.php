@@ -22,7 +22,7 @@ class ContactController extends BaseController
     /**
      * Override store method to use createContact service method
      */
-    public function store()
+    public function store(): JsonResponse
     {
         try {
             $request = app($this->getStoreRequestClass());

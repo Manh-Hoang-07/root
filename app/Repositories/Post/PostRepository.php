@@ -13,9 +13,9 @@ class PostRepository extends BaseRepository
         return Post::class;
     }
 
-    protected function applyOptimizedFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
+    protected function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
     {
-        parent::applyOptimizedFilters($query, $filters);
+        parent::applyFilters($query, $filters);
 
         if (!empty($filters['published_only'])) {
             $query->where('status', 'published')
@@ -52,18 +52,19 @@ class PostRepository extends BaseRepository
         }
     }
 
-    public function findBySlug(string $slug, array $relations = [], array $fields = ['*'])
+    public function findBySlug(string $slug, array $relations = [], array $fields = ['*']): ?array
     {
         $query = $this->getModel()->newQuery();
 
         if (!empty($relations)) {
-            $query->with($this->optimizeRelations($relations));
+            $query->with($relations);
         }
         if (!empty($fields) && $fields !== ['*']) {
-            $query->select($this->optimizeFields($fields));
+            $query->select($fields);
         }
 
-        return $query->where('slug', $slug)->first();
+        $post = $query->where('slug', $slug)->first();
+        return $post ? $post->toArray() : null;
     }
 }
 

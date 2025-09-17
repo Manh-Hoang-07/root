@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Admin\Attribute\AttributeService;
 use App\Http\Requests\Admin\Attribute\AttributeRequest;
+use Illuminate\Http\JsonResponse;
 
 class AttributeController extends BaseController
 {
@@ -19,7 +20,7 @@ class AttributeController extends BaseController
     /**
      * Get attributes with their values
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         // Nếu có parameter relations=values, load với attributeValues
         if ($request->get('relations') === 'values' || $request->get('with_values')) {

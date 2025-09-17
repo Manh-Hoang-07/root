@@ -15,7 +15,7 @@ class ProductService extends BaseService
     /**
      * Get products with relationships
      */
-    public function getProductsWithRelations($filters = [])
+    public function getProductsWithRelations($filters = []): array
     {
         return $this->repo->getProductsWithRelations($filters);
     }
@@ -23,7 +23,7 @@ class ProductService extends BaseService
     /**
      * List products with filters and pagination
      */
-    public function list($filters = [], $perPage = 20, $relations = [], $fields = ['*'])
+    public function list($filters = [], $perPage = 20, $relations = [], $fields = ['*']): array
     {
         return $this->repo->all($filters, $perPage, $relations, $fields);
     }
@@ -31,7 +31,7 @@ class ProductService extends BaseService
     /**
      * Create product with categories, variants and images
      */
-    public function createProduct($data)
+    public function createProduct($data): array
     {
         return DB::transaction(function () use ($data) {
             // Auto-generate slug from name if not provided
@@ -52,16 +52,19 @@ class ProductService extends BaseService
             
             $product = $this->repo->create($data);
             
+            // Get the model instance for relationships
+            $productModel = $this->repo->getModel()->find($product['id']);
+            
             // Attach categories if provided
             if (isset($data['categories']) && is_array($data['categories'])) {
-                $product->categories()->attach($data['categories']);
+                $productModel->categories()->attach($data['categories']);
             }
             
             // Create variants if provided
             if (isset($data['variants']) && is_array($data['variants'])) {
                 foreach ($data['variants'] as $variantData) {
-                    $variantData['product_id'] = $product->id;
-                    $variant = $product->variants()->create($variantData);
+                    $variantData['product_id'] = $product['id'];
+                    $variant = $productModel->variants()->create($variantData);
                     
                     // Attach attribute values if provided
                     if (isset($variantData['attribute_values']) && is_array($variantData['attribute_values'])) {
@@ -79,10 +82,10 @@ class ProductService extends BaseService
             // Create images if provided
             if (isset($data['images']) && is_array($data['images'])) {
                 foreach ($data['images'] as $imageData) {
-                    $product->images()->create([
+                    $productModel->images()->create([
                         'url' => $imageData['url'],
                         'imageable_type' => 'App\\Models\\Product',
-                        'imageable_id' => $product->id,
+                        'imageable_id' => $product['id'],
                     ]);
                 }
             }
@@ -94,7 +97,7 @@ class ProductService extends BaseService
     /**
      * Update product with categories, variants and images
      */
-    public function updateProduct($id, $data)
+    public function updateProduct($id, $data): ?array
     {
         return DB::transaction(function () use ($id, $data) {
             // Auto-generate slug from name if not provided
@@ -110,20 +113,27 @@ class ProductService extends BaseService
             
             $product = $this->repo->update($id, $data);
             
+            if (!$product) {
+                return null;
+            }
+            
+            // Get the model instance for relationships
+            $productModel = $this->repo->getModel()->find($product['id']);
+            
             // Sync categories if provided
             if (isset($data['categories']) && is_array($data['categories'])) {
-                $product->categories()->sync($data['categories']);
+                $productModel->categories()->sync($data['categories']);
             }
             
             // Update variants if provided
             if (isset($data['variants']) && is_array($data['variants'])) {
                 // Delete existing variants
-                $product->variants()->delete();
+                $productModel->variants()->delete();
                 
                 // Create new variants
                 foreach ($data['variants'] as $variantData) {
-                    $variantData['product_id'] = $product->id;
-                    $variant = $product->variants()->create($variantData);
+                    $variantData['product_id'] = $product['id'];
+                    $variant = $productModel->variants()->create($variantData);
                     
                     // Attach attribute values if provided
                     if (isset($variantData['attribute_values']) && is_array($variantData['attribute_values'])) {
@@ -140,15 +150,15 @@ class ProductService extends BaseService
             
             // Update images - always process to ensure sync
             // Delete existing images
-            $product->images()->delete();
+            $productModel->images()->delete();
             
             // Create new images if provided
             if (isset($data['images']) && is_array($data['images'])) {
                 foreach ($data['images'] as $imageData) {
-                    $product->images()->create([
+                    $productModel->images()->create([
                         'url' => $imageData['url'],
                         'imageable_type' => 'App\\Models\\Product',
-                        'imageable_id' => $product->id,
+                        'imageable_id' => $product['id'],
                     ]);
                 }
             }
@@ -160,7 +170,7 @@ class ProductService extends BaseService
     /**
      * Get product with all relationships
      */
-    public function getProductWithRelations($id)
+    public function getProductWithRelations($id): ?array
     {
         return $this->repo->getProductWithRelations($id);
     }
@@ -168,7 +178,7 @@ class ProductService extends BaseService
     /**
      * Get products for dropdown/select
      */
-    public function getProductsForSelect()
+    public function getProductsForSelect(): array
     {
         return $this->repo->getProductsForSelect();
     }

@@ -36,7 +36,7 @@ class ContactRepository extends BaseRepository
     /**
      * Update contact status
      */
-    public function updateStatus(int $id, ContactStatus $status, $adminId = null, $adminNotes = null)
+    public function updateStatus(int $id, ContactStatus $status, $adminId = null, $adminNotes = null): ?array
     {
         $data = ['status' => $status];
         
@@ -59,7 +59,7 @@ class ContactRepository extends BaseRepository
     /**
      * Mark contact as responded
      */
-    public function markAsResponded(int $id, $adminId = null)
+    public function markAsResponded(int $id, $adminId = null): ?array
     {
         $data = ['responded_at' => now()];
         

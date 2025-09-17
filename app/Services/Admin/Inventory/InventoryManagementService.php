@@ -166,7 +166,7 @@ class InventoryManagementService
     /**
      * Kiểm tra hàng sắp hết hạn
      */
-    public function getExpiringSoon(int $days = 30): \Illuminate\Database\Eloquent\Collection
+    public function getExpiringSoon(int $days = 30): array
     {
         return Inventory::with(['product', 'warehouse'])
             ->whereNotNull('expiry_date')
@@ -174,32 +174,35 @@ class InventoryManagementService
             ->where('expiry_date', '>', Carbon::now())
             ->where('available_quantity', '>', 0)
             ->orderBy('expiry_date', 'asc')
-            ->get();
+            ->get()
+            ->toArray();
     }
     
     /**
      * Kiểm tra hàng đã hết hạn
      */
-    public function getExpired(): \Illuminate\Database\Eloquent\Collection
+    public function getExpired(): array
     {
         return Inventory::with(['product', 'warehouse'])
             ->whereNotNull('expiry_date')
             ->where('expiry_date', '<', Carbon::now())
             ->where('available_quantity', '>', 0)
             ->orderBy('expiry_date', 'asc')
-            ->get();
+            ->get()
+            ->toArray();
     }
     
     /**
      * Kiểm tra hàng sắp hết
      */
-    public function getLowStock(int $threshold = 10): \Illuminate\Database\Eloquent\Collection
+    public function getLowStock(int $threshold = 10): array
     {
         return Inventory::with(['product', 'warehouse'])
             ->where('available_quantity', '<=', $threshold)
             ->where('available_quantity', '>', 0)
             ->orderBy('available_quantity', 'asc')
-            ->get();
+            ->get()
+            ->toArray();
     }
     
     /**

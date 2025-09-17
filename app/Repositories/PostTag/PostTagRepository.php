@@ -12,18 +12,19 @@ class PostTagRepository extends BaseRepository
         return PostTag::class;
     }
 
-    public function findBySlug(string $slug, array $relations = [], array $fields = ['*'])
+    public function findBySlug(string $slug, array $relations = [], array $fields = ['*']): ?array
     {
         $query = $this->getModel()->newQuery();
 
         if (!empty($relations)) {
-            $query->with($this->optimizeRelations($relations));
+            $query->with($relations);
         }
         if (!empty($fields) && $fields !== ['*']) {
-            $query->select($this->optimizeFields($fields));
+            $query->select($fields);
         }
 
-        return $query->where('slug', $slug)->first();
+        $tag = $query->where('slug', $slug)->first();
+        return $tag ? $tag->toArray() : null;
     }
 }
 

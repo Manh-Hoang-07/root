@@ -103,7 +103,7 @@ abstract class BaseController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         try {
             // Check rate limiting
@@ -122,7 +122,7 @@ abstract class BaseController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    protected function getIndexData(Request $request)
+    protected function getIndexData(Request $request): JsonResponse
     {
         $filters = $request->all();
         $perPage = $this->getValidatedPerPage($request);
@@ -146,7 +146,7 @@ abstract class BaseController extends Controller
      * @param Request|null $request
      * @return JsonResponse
      */
-    public function show($id, ?Request $request = null)
+    public function show($id, ?Request $request = null): JsonResponse
     {
         try {
             return $this->getShowData($id, $request);
@@ -162,7 +162,7 @@ abstract class BaseController extends Controller
      * @param Request|null $request
      * @return JsonResponse
      */
-    protected function getShowData($id, ?Request $request = null)
+    protected function getShowData($id, ?Request $request = null): JsonResponse
     {
         $filters = $request ? $request->all() : [];
         $filters['id'] = $id;
@@ -179,9 +179,9 @@ abstract class BaseController extends Controller
      * @param int $limit
      * @param string $context
      * @param bool $single
-     * @return mixed
+     * @return array
      */
-    protected function getOptimizedData(array $filters, int $perPage, string $context = 'index', bool $single = false)
+    protected function getOptimizedData(array $filters, int $perPage, string $context = 'index', bool $single = false): array
     {
         // Check caching
         if ($this->cacheService->shouldCache()) {
@@ -221,7 +221,7 @@ abstract class BaseController extends Controller
      * Store a newly created resource
      * @return JsonResponse
      */
-    public function store()
+    public function store(): JsonResponse
     {
         try {
             $request = app($this->getStoreRequestClass());
@@ -238,7 +238,7 @@ abstract class BaseController extends Controller
      * @param int|string $id
      * @return JsonResponse
      */
-    public function update($id)
+    public function update($id): JsonResponse
     {
         try {
             $request = app($this->getUpdateRequestClass());
@@ -258,7 +258,7 @@ abstract class BaseController extends Controller
      * @param int|string $id
      * @return JsonResponse
      */
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
         try {
             $result = $this->service->delete($id);
@@ -324,7 +324,7 @@ abstract class BaseController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function search(Request $request)
+    public function search(Request $request): JsonResponse
     {
         try {
             $filters = $this->parseRequestData($request);

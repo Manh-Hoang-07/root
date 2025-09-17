@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\BaseController;
 use App\Services\Admin\Variant\VariantService;
 use App\Http\Requests\Admin\Variant\VariantRequest;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class VariantController extends BaseController
 {
@@ -32,7 +33,7 @@ class VariantController extends BaseController
     /**
      * Store a new variant
      */
-    public function store()
+    public function store(): JsonResponse
     {
         $request = app($this->getStoreRequestClass());
         $variant = $this->service->createVariant($request->validated());
@@ -43,7 +44,7 @@ class VariantController extends BaseController
     /**
      * Update an existing variant
      */
-    public function update($id)
+    public function update($id): JsonResponse
     {
         $request = app($this->getUpdateRequestClass());
         $variant = $this->service->updateVariant($id, $request->validated());

@@ -6,6 +6,7 @@ use App\Services\Admin\Brand\BrandService;
 use App\Http\Requests\Admin\Brand\BrandRequest;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class BrandController extends BaseController
 {
@@ -21,7 +22,7 @@ class BrandController extends BaseController
     /**
      * Tối ưu search method
      */
-    public function search(Request $request)
+    public function search(Request $request): JsonResponse
     {
         $search = $request->get('search', '');
         $id = $request->get('id');
@@ -45,10 +46,10 @@ class BrandController extends BaseController
         
         $results = $this->service->list($filters, $limit, $relations, $fields);
 
-        return ApiResponse::success($results->map(function ($brand) {
+        return ApiResponse::success(collect($results['data'])->map(function ($brand) {
             return [
-                'value' => $brand->id,
-                'label' => $brand->name
+                'value' => $brand['id'],
+                'label' => $brand['name']
             ];
         }));
     }

@@ -15,11 +15,12 @@ class ImageRepository extends BaseRepository
     /**
      * Get images by product
      */
-    public function getImagesByProduct(int $productId)
+    public function getImagesByProduct(int $productId): array
     {
         return $this->model->where('imageable_type', 'App\\Models\\Product')
                           ->where('imageable_id', $productId)
                           ->orderBy('order', 'asc')
-                          ->get();
+                          ->get()
+                          ->toArray();
     }
 } 

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\BaseController;
 use App\Services\Admin\Product\ProductService;
 use App\Http\Requests\Admin\Product\ProductRequest;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class ProductController extends BaseController
 {
@@ -34,7 +35,7 @@ class ProductController extends BaseController
     /**
      * Override show method với tối ưu hiệu suất
      */
-    public function show($id, Request $request = null)
+    public function show($id, ?Request $request = null): JsonResponse
     {
         // Parse relations từ request
         $requestRelations = $request ? $this->parseRelations($request->get('relations')) : [];
@@ -53,13 +54,10 @@ class ProductController extends BaseController
     /**
      * Store a new product
      */
-    public function store()
+    public function store(): JsonResponse
     {
         $request = app($this->getStoreRequestClass());
         $product = $this->service->createProduct($request->validated());
-        
-        // Load minimal relations cho response
-        $product->load(['brand:id,name']);
         
         return $this->successResponseWithFormat($product, 'Tạo sản phẩm thành công');
     }
@@ -67,13 +65,14 @@ class ProductController extends BaseController
     /**
      * Update an existing product
      */
-    public function update($id)
+    public function update($id): JsonResponse
     {
         $request = app($this->getUpdateRequestClass());
         $product = $this->service->updateProduct($id, $request->validated());
         
-        // Load minimal relations cho response
-        $product->load(['brand:id,name']);
+        if (!$product) {
+            return $this->apiResponse(false, null, 'Không tìm thấy sản phẩm', 404);
+        }
         
         return $this->successResponseWithFormat($product, 'Cập nhật sản phẩm thành công');
     }
@@ -81,7 +80,7 @@ class ProductController extends BaseController
     /**
      * Get products for select dropdown
      */
-    public function getForSelect()
+    public function getForSelect(): JsonResponse
     {
         $products = $this->service->getProductsForSelect();
         
@@ -91,7 +90,7 @@ class ProductController extends BaseController
     /**
      * Search products với relations tối ưu
      */
-    public function search(Request $request)
+    public function search(Request $request): JsonResponse
     {
         $filters = [];
         
@@ -116,12 +115,12 @@ class ProductController extends BaseController
         $results = $this->service->list($filters, $limit, $relations, $fields);
         
         // Format cho select dropdown
-        $data = $results->map(function ($item) {
+        $data = collect($results['data'])->map(function ($item) {
             return [
-                'value' => $item->id,
-                'label' => $item->name,
-                'sku' => $item->sku ?? null,
-                'brand' => $item->brand ? $item->brand->name : null
+                'value' => $item['id'],
+                'label' => $item['name'],
+                'sku' => $item['sku'] ?? null,
+                'brand' => $item['brand'] ? $item['brand']['name'] : null
             ];
         });
 

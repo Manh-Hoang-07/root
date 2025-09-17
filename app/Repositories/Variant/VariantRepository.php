@@ -15,11 +15,12 @@ class VariantRepository extends BaseRepository
     /**
      * Get variants by product with relationships
      */
-    public function getVariantsByProduct(int $productId)
+    public function getVariantsByProduct(int $productId): array
     {
         return $this->model->with(['attributeValues.attribute'])
                           ->where('product_id', $productId)
                           ->orderBy('created_at', 'desc')
-                          ->get();
+                          ->get()
+                          ->toArray();
     }
 } 

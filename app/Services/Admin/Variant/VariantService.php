@@ -16,7 +16,7 @@ class VariantService extends BaseService
     /**
      * Get variants by product
      */
-    public function getVariantsByProduct($productId)
+    public function getVariantsByProduct($productId): array
     {
         return $this->repo->getVariantsByProduct($productId);
     }
@@ -24,10 +24,13 @@ class VariantService extends BaseService
     /**
      * Create variant with attribute values
      */
-    public function createVariant($data)
+    public function createVariant($data): array
     {
         return DB::transaction(function () use ($data) {
             $variant = $this->repo->create($data);
+            
+            // Get the model instance for relationships
+            $variantModel = $this->repo->getModel()->find($variant['id']);
             
             // Attach attribute values if provided
             if (isset($data['attribute_values']) && is_array($data['attribute_values'])) {
@@ -37,7 +40,7 @@ class VariantService extends BaseService
                         $attributeValues[] = $valueId;
                     }
                 }
-                $variant->attributeValues()->attach($attributeValues);
+                $variantModel->attributeValues()->attach($attributeValues);
             }
             
             return $variant;
@@ -47,10 +50,17 @@ class VariantService extends BaseService
     /**
      * Update variant with attribute values
      */
-    public function updateVariant($id, $data)
+    public function updateVariant($id, $data): ?array
     {
         return DB::transaction(function () use ($id, $data) {
             $variant = $this->repo->update($id, $data);
+            
+            if (!$variant) {
+                return null;
+            }
+            
+            // Get the model instance for relationships
+            $variantModel = $this->repo->getModel()->find($variant['id']);
             
             // Sync attribute values if provided
             if (isset($data['attribute_values']) && is_array($data['attribute_values'])) {
@@ -60,7 +70,7 @@ class VariantService extends BaseService
                         $attributeValues[] = $valueId;
                     }
                 }
-                $variant->attributeValues()->sync($attributeValues);
+                $variantModel->attributeValues()->sync($attributeValues);
             }
             
             return $variant;

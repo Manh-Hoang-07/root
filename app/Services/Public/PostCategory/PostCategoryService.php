@@ -16,29 +16,32 @@ class PostCategoryService extends BaseService
     /**
      * Lấy danh sách danh mục công khai
      */
-    public function getPublishedCategories()
+    public function getPublishedCategories(): array
     {
         return $this->repo->getModel()
             ->where('status', 'active')
             ->orderBy('name', 'asc')
-            ->get(['id', 'name', 'slug', 'description']);
+            ->get(['id', 'name', 'slug', 'description'])
+            ->toArray();
     }
 
     /**
      * Lấy danh mục theo slug
      */
-    public function findBySlug(string $slug)
+    public function findBySlug(string $slug): ?array
     {
-        return $this->repo->getModel()
+        $category = $this->repo->getModel()
             ->where('status', 'active')
             ->where('slug', $slug)
             ->first(['id', 'name', 'slug', 'description']);
+        
+        return $category ? $category->toArray() : null;
     }
 
     /**
      * Lấy danh mục có bài viết
      */
-    public function getCategoriesWithPosts()
+    public function getCategoriesWithPosts(): array
     {
         return $this->repo->getModel()
             ->where('status', 'active')
@@ -47,13 +50,14 @@ class PostCategoryService extends BaseService
             })
             ->withCount('posts')
             ->orderBy('name', 'asc')
-            ->get(['id', 'name', 'slug', 'description']);
+            ->get(['id', 'name', 'slug', 'description'])
+            ->toArray();
     }
 
     /**
      * Lấy danh mục phổ biến (có nhiều bài viết nhất)
      */
-    public function getPopularCategories($limit = 10)
+    public function getPopularCategories($limit = 10): array
     {
         return $this->repo->getModel()
             ->where('status', 'active')
@@ -63,6 +67,7 @@ class PostCategoryService extends BaseService
             ->withCount('posts')
             ->orderBy('posts_count', 'desc')
             ->limit($limit)
-            ->get(['id', 'name', 'slug', 'description']);
+            ->get(['id', 'name', 'slug', 'description'])
+            ->toArray();
     }
 }

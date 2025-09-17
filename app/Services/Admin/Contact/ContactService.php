@@ -19,7 +19,7 @@ class ContactService extends BaseService
     /**
      * Update contact status
      */
-    public function updateStatus($id, ContactStatus $status, $adminId = null, $adminNotes = null)
+    public function updateStatus($id, ContactStatus $status, $adminId = null, $adminNotes = null): ?array
     {
         try {
             $contact = $this->repo->find($id);
@@ -52,7 +52,7 @@ class ContactService extends BaseService
     /**
      * Mark contact as responded
      */
-    public function markAsResponded($id, $adminId = null)
+    public function markAsResponded($id, $adminId = null): ?array
     {
         try {
             return $this->repo->markAsResponded($id, $adminId);
@@ -70,7 +70,7 @@ class ContactService extends BaseService
     /**
      * Send response email to customer
      */
-    protected function sendResponseEmail($contact)
+    protected function sendResponseEmail($contact): void
     {
         try {
             // This would be implemented based on your email configuration
@@ -95,7 +95,7 @@ class ContactService extends BaseService
     /**
      * Bulk update contact status
      */
-    public function bulkUpdateStatus(array $contactIds, ContactStatus $status, $adminId = null, $adminNotes = null)
+    public function bulkUpdateStatus(array $contactIds, ContactStatus $status, $adminId = null, $adminNotes = null): array
     {
         $results = [];
         

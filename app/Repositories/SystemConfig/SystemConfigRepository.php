@@ -29,13 +29,14 @@ class SystemConfigRepository extends BaseRepository
     /**
      * Lấy config theo group
      */
-    public function getByGroup(string $group): Collection
+    public function getByGroup(string $group): array
     {
         return $this->model
             ->byGroup($group)
             ->active()
             ->ordered()
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     /**
@@ -56,7 +57,7 @@ class SystemConfigRepository extends BaseRepository
     /**
      * Lấy config theo key
      */
-    public function getByKey(string $key, $default = null)
+    public function getByKey(string $key, $default = null): mixed
     {
         $config = $this->model
             ->where('config_key', $key)
@@ -69,36 +70,39 @@ class SystemConfigRepository extends BaseRepository
     /**
      * Lấy config theo nhiều keys
      */
-    public function getByKeys(array $keys): Collection
+    public function getByKeys(array $keys): array
     {
         return $this->model
             ->whereIn('config_key', $keys)
             ->active()
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     /**
      * Lấy config theo type
      */
-    public function getByType(string $type): Collection
+    public function getByType(string $type): array
     {
         return $this->model
             ->where('config_type', $type)
             ->active()
             ->ordered()
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     /**
      * Lấy config public
      */
-    public function getPublicConfigs(): Collection
+    public function getPublicConfigs(): array
     {
         return $this->model
             ->public()
             ->active()
             ->ordered()
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     // ==================== UPDATE METHODS ====================
@@ -127,12 +131,12 @@ class SystemConfigRepository extends BaseRepository
     /**
      * Tạo hoặc cập nhật config
      */
-    public function createOrUpdate(string $key, array $data): SystemConfig
+    public function createOrUpdate(string $key, array $data): array
     {
         return $this->model->updateOrCreate(
             ['config_key' => $key],
             $data
-        );
+        )->toArray();
     }
 
     /**
@@ -209,26 +213,28 @@ class SystemConfigRepository extends BaseRepository
     /**
      * Lấy config theo group và type
      */
-    public function getByGroupAndType(string $group, string $type): Collection
+    public function getByGroupAndType(string $group, string $type): array
     {
         return $this->model
             ->byGroup($group)
             ->where('config_type', $type)
             ->active()
             ->ordered()
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     /**
      * Lấy config theo group và is_public
      */
-    public function getByGroupAndPublic(string $group, bool $isPublic = true): Collection
+    public function getByGroupAndPublic(string $group, bool $isPublic = true): array
     {
         return $this->model
             ->byGroup($group)
             ->where('is_public', $isPublic)
             ->active()
             ->ordered()
-            ->get();
+            ->get()
+            ->toArray();
     }
 }

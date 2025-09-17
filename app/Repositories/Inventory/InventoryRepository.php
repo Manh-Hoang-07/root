@@ -17,7 +17,7 @@ class InventoryRepository extends BaseRepository
     /**
      * Lấy danh sách tồn kho với relationships
      */
-    public function getInventoriesWithRelations(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    public function getInventoriesWithRelations(array $filters = [], int $perPage = 15): array
     {
         $query = $this->model->with(['product', 'variant', 'warehouse']);
 
@@ -31,13 +31,13 @@ class InventoryRepository extends BaseRepository
             $query->orderBy('updated_at', 'desc');
         }
 
-        return $query->paginate($perPage);
+        return $this->formatPagination($query->paginate($perPage));
     }
 
     /**
      * Tìm tồn kho theo product_id và warehouse_id
      */
-    public function findByProductAndWarehouse(int $productId, int $warehouseId, ?string $batchNo = null): ?Inventory
+    public function findByProductAndWarehouse(int $productId, int $warehouseId, ?string $batchNo = null): ?array
     {
         $query = $this->model
             ->where('product_id', $productId)
@@ -47,62 +47,68 @@ class InventoryRepository extends BaseRepository
             $query->where('batch_no', $batchNo);
         }
 
-        return $query->first();
+        $inventory = $query->first();
+        return $inventory ? $inventory->toArray() : null;
     }
 
     /**
      * Lấy tồn kho theo batch_no
      */
-    public function findByBatchNo(string $batchNo): Collection
+    public function findByBatchNo(string $batchNo): array
     {
         return $this->model
             ->where('batch_no', $batchNo)
             ->with(['product', 'warehouse'])
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     /**
      * Lấy tồn kho sắp hết hạn
      */
-    public function getExpiringSoon(int $days = 30): Collection
+    public function getExpiringSoon(int $days = 30): array
     {
         return $this->model
             ->with(['product', 'warehouse'])
             ->expiringSoon($days)
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     /**
      * Lấy tồn kho đã hết hạn
      */
-    public function getExpired(): Collection
+    public function getExpired(): array
     {
         return $this->model
             ->with(['product', 'warehouse'])
             ->expired()
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     /**
      * Lấy tồn kho sắp hết
      */
-    public function getLowStock(int $threshold = 10): Collection
+    public function getLowStock(int $threshold = 10): array
     {
         return $this->model
             ->with(['product', 'warehouse'])
             ->lowStock($threshold)
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     /**
      * Lấy tồn kho hết hàng
      */
-    public function getOutOfStock(): Collection
+    public function getOutOfStock(): array
     {
         return $this->model
             ->with(['product', 'warehouse'])
             ->outOfStock()
-            ->get();
+            ->get()
+            ->toArray();
     }
 
     /**
@@ -110,7 +116,7 @@ class InventoryRepository extends BaseRepository
      */
     public function updateQuantity(int $id, int $quantity): bool
     {
-        $inventory = $this->find($id);
+        $inventory = $this->model->find($id);
         
         if (!$inventory) {
             return false;
@@ -127,7 +133,7 @@ class InventoryRepository extends BaseRepository
      */
     public function updateReservedQuantity(int $id, int $reservedQuantity): bool
     {
-        $inventory = $this->find($id);
+        $inventory = $this->model->find($id);
         
         if (!$inventory) {
             return false;
@@ -144,7 +150,7 @@ class InventoryRepository extends BaseRepository
      */
     public function increaseReservedQuantity(int $id, int $quantity): bool
     {
-        $inventory = $this->find($id);
+        $inventory = $this->model->find($id);
         
         if (!$inventory) {
             return false;
@@ -161,7 +167,7 @@ class InventoryRepository extends BaseRepository
      */
     public function decreaseReservedQuantity(int $id, int $quantity): bool
     {
-        $inventory = $this->find($id);
+        $inventory = $this->model->find($id);
         
         if (!$inventory) {
             return false;
@@ -178,7 +184,7 @@ class InventoryRepository extends BaseRepository
      */
     public function increaseQuantity(int $id, int $quantity): bool
     {
-        $inventory = $this->find($id);
+        $inventory = $this->model->find($id);
         
         if (!$inventory) {
             return false;
@@ -195,7 +201,7 @@ class InventoryRepository extends BaseRepository
      */
     public function decreaseQuantity(int $id, int $quantity): bool
     {
-        $inventory = $this->find($id);
+        $inventory = $this->model->find($id);
         
         if (!$inventory) {
             return false;
@@ -212,7 +218,7 @@ class InventoryRepository extends BaseRepository
     /**
      * Áp dụng filters cho query
      */
-    private function applyFilters($query, array $filters): void
+    protected function applyFilters($query, array $filters): void
     {
         // Tìm kiếm theo tên sản phẩm
         if (!empty($filters['search'])) {

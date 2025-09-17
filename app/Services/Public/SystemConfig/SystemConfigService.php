@@ -187,7 +187,7 @@ class SystemConfigService
     /**
      * Lấy cấu hình chung với API response
      */
-    public function getGeneralConfigResponse()
+    public function getGeneralConfigResponse(): \Illuminate\Http\JsonResponse
     {
         try {
             $configs = $this->getGeneralConfig();
@@ -200,7 +200,7 @@ class SystemConfigService
     /**
      * Lấy cấu hình email với API response
      */
-    public function getEmailConfigResponse()
+    public function getEmailConfigResponse(): \Illuminate\Http\JsonResponse
     {
         try {
             $configs = $this->getEmailConfig();

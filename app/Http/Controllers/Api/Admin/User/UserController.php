@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\User\UserRequest;
 use App\Http\Requests\Admin\User\ChangePasswordRequest;
 use App\Http\Requests\Admin\User\AssignRoleRequest;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class UserController extends BaseController
 {
@@ -20,7 +21,7 @@ class UserController extends BaseController
     /**
      * Lấy thông tin chi tiết user
      */
-    public function show($id, Request $request = null)
+    public function show($id, ?Request $request = null): JsonResponse
     {
         try {
             $user = $this->service->findById($id);
@@ -35,7 +36,7 @@ class UserController extends BaseController
         }
     }
 
-    public function changePassword(ChangePasswordRequest $request, $id)
+    public function changePassword(ChangePasswordRequest $request, $id): JsonResponse
     {
         try {
             $data = $request->validated();
@@ -50,7 +51,7 @@ class UserController extends BaseController
     /**
      * Lấy thông tin user với roles (cho modal phân quyền)
      */
-    public function showWithRoles($id)
+    public function showWithRoles($id): JsonResponse
     {
         try {
             $user = $this->service->findByIdWithRoles($id);
@@ -68,7 +69,7 @@ class UserController extends BaseController
     /**
      * Phân quyền cho user
      */
-    public function assignRoles(AssignRoleRequest $request, $id)
+    public function assignRoles(AssignRoleRequest $request, $id): JsonResponse
     {
         try {
             $data = $request->validated();

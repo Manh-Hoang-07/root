@@ -130,6 +130,35 @@ class UserRepository extends BaseRepository
     }
 
     /**
+     * Get user profile
+     */
+    public function profile($id): ?array
+    {
+        $user = $this->model->with('profile')->find($id);
+        return $user ? $user->toArray() : null;
+    }
+
+    /**
+     * Update user profile
+     */
+    public function updateProfile($id, array $data): ?array
+    {
+        $user = $this->model->find($id);
+        if (!$user) {
+            return null;
+        }
+
+        if ($user->profile) {
+            $user->profile->update($data);
+        } else {
+            $data['user_id'] = $user->id;
+            $user->profile()->create($data);
+        }
+
+        return $user->load('profile')->toArray();
+    }
+
+    /**
      * Override searchable fields for User
      */
     protected function getSearchableFields(): array

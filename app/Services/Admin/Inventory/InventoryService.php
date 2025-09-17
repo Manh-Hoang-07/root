@@ -24,7 +24,7 @@ class InventoryService
     /**
      * Lấy danh sách tồn kho với phân trang và bộ lọc
      */
-    public function list(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*']): LengthAwarePaginator
+    public function list(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*']): array
     {
         return $this->inventoryRepository->all($filters, $perPage, $relations, $fields);
     }
@@ -32,7 +32,7 @@ class InventoryService
     /**
      * Lấy danh sách tồn kho với relationships
      */
-    public function getInventories(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    public function getInventories(array $filters = [], int $perPage = 15): array
     {
         return $this->inventoryRepository->getInventoriesWithRelations($filters, $perPage);
     }
@@ -40,7 +40,7 @@ class InventoryService
     /**
      * Tìm tồn kho theo ID
      */
-    public function find(int $id, array $relations = [], array $fields = ['*']): Inventory
+    public function find(int $id, array $relations = [], array $fields = ['*']): ?array
     {
         return $this->inventoryRepository->find($id, $relations, $fields);
     }
@@ -48,15 +48,16 @@ class InventoryService
     /**
      * Tìm tồn kho theo ID với relationships
      */
-    public function findById(int $id): ?Inventory
+    public function findById(int $id): ?array
     {
-        return Inventory::with(['product.brand', 'variant', 'warehouse'])->find($id);
+        $inventory = Inventory::with(['product.brand', 'variant', 'warehouse'])->find($id);
+        return $inventory ? $inventory->toArray() : null;
     }
 
     /**
      * Tạo tồn kho mới
      */
-    public function create(array $data): Inventory
+    public function create(array $data): array
     {
         // Validate business logic
         $this->validateBusinessLogic($data);
@@ -72,7 +73,7 @@ class InventoryService
     /**
      * Cập nhật tồn kho
      */
-    public function update(int $id, array $data): Inventory
+    public function update(int $id, array $data): ?array
     {
         // Validate business logic
         $this->validateBusinessLogic($data);
@@ -80,7 +81,9 @@ class InventoryService
         // Tự động tính available_quantity nếu không được cung cấp
         if (!isset($data['available_quantity'])) {
             $inventory = $this->find($id);
-            $data['available_quantity'] = $data['quantity'] - ($data['reserved_quantity'] ?? $inventory->reserved_quantity);
+            if ($inventory) {
+                $data['available_quantity'] = $data['quantity'] - ($data['reserved_quantity'] ?? $inventory['reserved_quantity']);
+            }
         }
 
         return $this->inventoryRepository->update($id, $data);
@@ -97,25 +100,30 @@ class InventoryService
     /**
      * Nhập kho (tăng số lượng)
      */
-    public function import(int $productId, int $warehouseId, int $quantity, array $data = []): Inventory
+    public function import(int $productId, int $warehouseId, int $quantity, array $data = []): array
     {
         $inventory = $this->inventoryRepository->findByProductAndWarehouse($productId, $warehouseId, $data['batch_no'] ?? null);
         
         if ($inventory) {
+            // Get the model instance for updates
+            $inventoryModel = Inventory::find($inventory['id']);
+            
             // Cập nhật tồn kho hiện có
-            $inventory->quantity += $quantity;
-            $inventory->available_quantity = $inventory->quantity - $inventory->reserved_quantity;
+            $inventoryModel->quantity += $quantity;
+            $inventoryModel->available_quantity = $inventoryModel->quantity - $inventoryModel->reserved_quantity;
             
             // Cập nhật thông tin lô hàng nếu có
-            if (isset($data['batch_no'])) $inventory->batch_no = $data['batch_no'];
-            if (isset($data['lot_no'])) $inventory->lot_no = $data['lot_no'];
-            if (isset($data['expiry_date'])) $inventory->expiry_date = $data['expiry_date'];
-            if (isset($data['cost_price'])) $inventory->cost_price = $data['cost_price'];
+            if (isset($data['batch_no'])) $inventoryModel->batch_no = $data['batch_no'];
+            if (isset($data['lot_no'])) $inventoryModel->lot_no = $data['lot_no'];
+            if (isset($data['expiry_date'])) $inventoryModel->expiry_date = $data['expiry_date'];
+            if (isset($data['cost_price'])) $inventoryModel->cost_price = $data['cost_price'];
             
-            $inventory->save();
+            $inventoryModel->save();
+            
+            return $inventoryModel->toArray();
         } else {
             // Tạo tồn kho mới
-            $inventory = $this->create([
+            return $this->create([
                 'product_id' => $productId,
                 'warehouse_id' => $warehouseId,
                 'quantity' => $quantity,
@@ -126,14 +134,12 @@ class InventoryService
                 'cost_price' => $data['cost_price'] ?? null,
             ]);
         }
-        
-        return $inventory;
     }
 
     /**
      * Xuất kho (giảm số lượng)
      */
-    public function export(int $productId, int $warehouseId, int $quantity, ?string $batchNo = null): Inventory
+    public function export(int $productId, int $warehouseId, int $quantity, ?string $batchNo = null): array
     {
         $inventory = $this->inventoryRepository->findByProductAndWarehouse($productId, $warehouseId, $batchNo);
         
@@ -141,15 +147,18 @@ class InventoryService
             throw new \Exception('Không tìm thấy tồn kho');
         }
         
-        if ($inventory->quantity < $quantity) {
+        if ($inventory['quantity'] < $quantity) {
             throw new \Exception('Số lượng trong kho không đủ');
         }
         
-        $inventory->quantity -= $quantity;
-        $inventory->available_quantity = $inventory->quantity - $inventory->reserved_quantity;
-        $inventory->save();
+        // Get the model instance for updates
+        $inventoryModel = Inventory::find($inventory['id']);
         
-        return $inventory;
+        $inventoryModel->quantity -= $quantity;
+        $inventoryModel->available_quantity = $inventoryModel->quantity - $inventoryModel->reserved_quantity;
+        $inventoryModel->save();
+        
+        return $inventoryModel->toArray();
     }
 
 
@@ -157,7 +166,7 @@ class InventoryService
     /**
      * Lấy hàng sắp hết hạn
      */
-    public function getExpiringSoon(int $days = 30): Collection
+    public function getExpiringSoon(int $days = 30): array
     {
         return $this->inventoryRepository->getExpiringSoon($days);
     }
@@ -165,7 +174,7 @@ class InventoryService
     /**
      * Lấy hàng đã hết hạn
      */
-    public function getExpired(): Collection
+    public function getExpired(): array
     {
         return $this->inventoryRepository->getExpired();
     }
@@ -173,7 +182,7 @@ class InventoryService
     /**
      * Lấy hàng sắp hết
      */
-    public function getLowStock(int $threshold = 10): Collection
+    public function getLowStock(int $threshold = 10): array
     {
         return $this->inventoryRepository->getLowStock($threshold);
     }
@@ -185,10 +194,10 @@ class InventoryService
     {
         try {
             return [
-                'brands' => Brand::select('id', 'name')->get(),
-                'categories' => Category::select('id', 'name')->get(),
-                'warehouses' => Warehouse::select('id', 'name')->get(),
-                'products' => Product::select('id', 'name', 'code')->get(),
+                'brands' => Brand::select('id', 'name')->get()->toArray(),
+                'categories' => Category::select('id', 'name')->get()->toArray(),
+                'warehouses' => Warehouse::select('id', 'name')->get()->toArray(),
+                'products' => Product::select('id', 'name', 'code')->get()->toArray(),
             ];
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error in getFilterOptions: ' . $e->getMessage());
@@ -212,13 +221,16 @@ class InventoryService
             throw new \Exception('Không tìm thấy tồn kho');
         }
         
-        if ($inventory->available_quantity < $quantity) {
+        if ($inventory['available_quantity'] < $quantity) {
             throw new \Exception('Số lượng có thể bán không đủ');
         }
         
-        $inventory->reserved_quantity += $quantity;
-        $inventory->available_quantity = $inventory->quantity - $inventory->reserved_quantity;
-        $inventory->save();
+        // Get the model instance for updates
+        $inventoryModel = Inventory::find($inventory['id']);
+        
+        $inventoryModel->reserved_quantity += $quantity;
+        $inventoryModel->available_quantity = $inventoryModel->quantity - $inventoryModel->reserved_quantity;
+        $inventoryModel->save();
         
         return true;
     }
@@ -257,13 +269,16 @@ class InventoryService
             throw new \Exception('Không tìm thấy tồn kho');
         }
         
-        if ($inventory->reserved_quantity < $quantity) {
+        if ($inventory['reserved_quantity'] < $quantity) {
             throw new \Exception('Số lượng đã giữ chỗ không đủ');
         }
         
-        $inventory->reserved_quantity -= $quantity;
-        $inventory->available_quantity = $inventory->quantity - $inventory->reserved_quantity;
-        $inventory->save();
+        // Get the model instance for updates
+        $inventoryModel = Inventory::find($inventory['id']);
+        
+        $inventoryModel->reserved_quantity -= $quantity;
+        $inventoryModel->available_quantity = $inventoryModel->quantity - $inventoryModel->reserved_quantity;
+        $inventoryModel->save();
         
         return true;
     }

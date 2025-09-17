@@ -43,8 +43,8 @@ class AttributeRepository extends BaseRepository
     /**
      * Get attributes with values
      */
-    public function getAttributesWithValues(): Collection
+    public function getAttributesWithValues(): array
     {
-        return $this->model->with('attributeValues')->get();
+        return $this->model->with('attributeValues')->get()->toArray();
     }
 } 

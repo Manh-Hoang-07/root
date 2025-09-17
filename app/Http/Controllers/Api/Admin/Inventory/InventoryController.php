@@ -24,7 +24,7 @@ class InventoryController extends BaseController
     /**
      * Lấy thông tin chi tiết tồn kho
      */
-    public function show($id, Request $request = null)
+    public function show($id, ?Request $request = null): JsonResponse
     {
         try {
             $inventory = $this->service->findById($id);
@@ -42,7 +42,7 @@ class InventoryController extends BaseController
     /**
      * Tạo tồn kho mới
      */
-    public function store()
+    public function store(): JsonResponse
     {
         try {
             $request = app($this->getStoreRequestClass());
@@ -57,7 +57,7 @@ class InventoryController extends BaseController
     /**
      * Cập nhật tồn kho
      */
-    public function update($id)
+    public function update($id): JsonResponse
     {
         try {
             $request = app($this->getUpdateRequestClass());
@@ -72,7 +72,7 @@ class InventoryController extends BaseController
     /**
      * Xóa tồn kho
      */
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
         try {
             $this->service->delete($id);
