@@ -19,8 +19,13 @@ class OrderController extends BaseController
         // Load đầy đủ thông tin cho show
         $this->showRelations = [
             'user:id,username,email',
-            'orderItems:id,order_id,product_id,quantity,price',
-            'orderItems.product:id,name,sku'
+            'orderItems:id,order_id,product_id,variant_id,quantity,price,subtotal',
+            'orderItems.product:id,name,sku,image',
+            'orderItems.variant:id,name,sku,image',
+            'orderStatusHistories:id,order_id,status,note,created_at',
+            'orderStatusHistories.user:id,username',
+            'payment:id,order_id,method,amount,status,transaction_id',
+            'shippingInfo:id,order_id,address,city,state,country,postal_code,phone'
         ];
     }
 } 

@@ -27,4 +27,20 @@ class CategoryService extends BaseService
         }
         return parent::update($id, $data);
     }
+    
+    /**
+     * Tìm danh mục theo ID với đầy đủ thông tin liên quan
+     */
+    public function find($id, $relations = [], $fields = ['*']): ?array
+    {
+        if (empty($relations)) {
+            $relations = [
+                'parent:id,name,slug,image',
+                'children:id,name,slug,parent_id,image,sort_order',
+                'products:id,name,sku,image'
+            ];
+        }
+        
+        return parent::find($id, $relations, $fields);
+    }
 } 

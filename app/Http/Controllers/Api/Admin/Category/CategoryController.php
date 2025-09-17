@@ -20,7 +20,11 @@ class CategoryController extends BaseController
         $this->indexRelations = []; // Không load relations mặc định cho list
         
         // Load đầy đủ thông tin cho show/edit
-        $this->showRelations = ['parent:id,name', 'children:id,name,parent_id'];
+        $this->showRelations = [
+            'parent:id,name,slug,image', 
+            'children:id,name,slug,parent_id,image,sort_order',
+            'products:id,name,sku,image'
+        ];
     }
 
 } 

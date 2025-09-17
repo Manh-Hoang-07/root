@@ -6,7 +6,6 @@ use App\Services\Admin\User\UserService;
 use App\Http\Requests\Admin\User\UserRequest;
 use App\Http\Requests\Admin\User\ChangePasswordRequest;
 use App\Http\Requests\Admin\User\AssignRoleRequest;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class UserController extends BaseController
@@ -19,21 +18,17 @@ class UserController extends BaseController
     }
 
     /**
-     * Lấy thông tin chi tiết user
+     * Override default search fields for User model
      */
-    public function show($id, ?Request $request = null): JsonResponse
+    protected $showRelations = [
+        'profile:id,user_id,name,address,gender,birthday,image,about', 
+        'roles:id,name,guard_name', 
+        'permissions:id,name,guard_name'
+    ];
+    
+    protected function getSearchFields(): array
     {
-        try {
-            $user = $this->service->findById($id);
-            
-            if (!$user) {
-                return $this->apiResponse(false, null, 'Không tìm thấy người dùng', 404);
-            }
-
-            return $this->successResponseWithFormat($user, 'Lấy thông tin người dùng thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
+        return ['id', 'username', 'email'];
     }
 
     public function changePassword(ChangePasswordRequest $request, $id): JsonResponse
@@ -41,26 +36,7 @@ class UserController extends BaseController
         try {
             $data = $request->validated();
             $result = $this->service->changePassword($id, $data['password']);
-            
             return $this->apiResponse(true, $result, 'Mật khẩu đã được thay đổi thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
-
-    /**
-     * Lấy thông tin user với roles (cho modal phân quyền)
-     */
-    public function showWithRoles($id): JsonResponse
-    {
-        try {
-            $user = $this->service->findByIdWithRoles($id);
-            
-            if (!$user) {
-                return $this->apiResponse(false, null, 'Không tìm thấy người dùng', 404);
-            }
-
-            return $this->successResponseWithFormat($user, 'Lấy thông tin người dùng thành công');
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
@@ -74,19 +50,10 @@ class UserController extends BaseController
         try {
             $data = $request->validated();
             $result = $this->service->assignRoles($id, $data['role_ids']);
-            
             return $this->apiResponse(true, $result, 'Phân quyền thành công');
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
-    }
-
-    /**
-     * Override default search fields for User model
-     */
-    protected function getSearchFields(): array
-    {
-        return ['id', 'username', 'email'];
     }
 
 } 

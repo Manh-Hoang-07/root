@@ -18,9 +18,7 @@ class PostService extends BaseService
         $tagIds = $data['tag_ids'] ?? null;
         $categoryIds = $data['category_ids'] ?? null;
         unset($data['tag_ids'], $data['category_ids']);
-
         $post = parent::create($data);
-
         if ($post && is_array($tagIds)) {
             $postModel = $this->repo->getModel()->find($post['id']);
             $postModel->tags()->sync($tagIds);
@@ -29,7 +27,6 @@ class PostService extends BaseService
             $postModel = $this->repo->getModel()->find($post['id']);
             $postModel->categories()->sync($categoryIds);
         }
-
         return $post;
     }
 
@@ -39,10 +36,8 @@ class PostService extends BaseService
         $tagIds = $data['tag_ids'] ?? null;
         $categoryIds = $data['category_ids'] ?? null;
         unset($data['tag_ids'], $data['category_ids']);
-
         $post = parent::update($id, $data);
         if (!$post) return null;
-
         if (is_array($tagIds)) {
             $postModel = $this->repo->getModel()->find($post['id']);
             $postModel->tags()->sync($tagIds);
@@ -51,7 +46,6 @@ class PostService extends BaseService
             $postModel = $this->repo->getModel()->find($post['id']);
             $postModel->categories()->sync($categoryIds);
         }
-
         return $post;
     }
 

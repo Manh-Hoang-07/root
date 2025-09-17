@@ -10,16 +10,4 @@ class RoleRepository extends BaseRepository
     {
         return Role::class;
     }
-
-    public function find($id, array $relations = [], array $fields = ['*']): ?array
-    {
-        // Thêm permissions vào relations mặc định
-        if (empty($relations)) {
-            $relations = ['permissions'];
-        } elseif (!in_array('permissions', $relations)) {
-            $relations[] = 'permissions';
-        }
-        
-        return parent::find($id, $relations, $fields);
-    }
 } 

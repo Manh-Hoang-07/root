@@ -15,17 +15,14 @@ class PermissionRepository extends BaseRepository
     public function all(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*']): array
     {
         $query = $this->model->newQuery();
-        
         // Thêm subquery để đếm children
         $query->addSelect([
             'children_count' => Permission::selectRaw('count(*)')
                 ->whereColumn('parent_id', 'permissions.id')
         ]);
-        
         // LEFT JOIN để lấy parent_name
         $query->leftJoin('permissions as parent_permissions', 'permissions.parent_id', '=', 'parent_permissions.id')
               ->addSelect('parent_permissions.display_name as parent_name');
-        
         // Select fields với table prefix để tránh ambiguous column
         if ($fields !== ['*']) {
             $selectFields = [];
@@ -52,7 +49,6 @@ class PermissionRepository extends BaseRepository
                 'permissions.updated_at'
             ]);
         }
-        
         // Apply filters
         if (!empty($filters['search'])) {
             $query->where(function($q) use ($filters) {
@@ -60,23 +56,18 @@ class PermissionRepository extends BaseRepository
                   ->orWhere('permissions.display_name', 'like', '%' . $filters['search'] . '%');
             });
         }
-        
         if (!empty($filters['status'])) {
             $query->where('permissions.status', $filters['status']);
         }
-        
         // Apply sorting
         if (!empty($filters['sort_by'])) {
             $this->applyCustomSorting($query, $filters['sort_by']);
         }
-        
         // Load relations
         if (!empty($relations)) {
             $query->with($relations);
         }
-        
         $result = $query->paginate($perPage);
-        
         return [
             'data' => $result->items(),
             'pagination' => [

@@ -10,7 +10,7 @@ class PermissionController extends BaseController
     public function __construct(PermissionService $service)
     {
         parent::__construct($service);
-                $this->storeRequestClass = PermissionRequest::class;
+        $this->storeRequestClass = PermissionRequest::class;
         $this->updateRequestClass = PermissionRequest::class;
     }
 } 

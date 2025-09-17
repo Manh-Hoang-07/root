@@ -34,12 +34,17 @@ class UserRequest extends FormRequest
             'phone' => 'nullable|string|max:20|unique:users,phone,' . $userId,
             'password' => $this->isMethod('post') ? 'required|string|min:8|confirmed' : 'nullable|string|min:8|confirmed',
             'status' => 'required|string|in:active,inactive,banned',
-            'name' => 'nullable|string|max:255',
-            'gender' => 'nullable|string|in:male,female,other',
-            'birthday' => 'nullable|date',
-            'address' => 'nullable|string|max:255',
-            'image' => 'nullable|string|max:255',
-            'about' => 'nullable|string|max:500',
+            
+            // Profile data as nested array
+            'profile' => 'nullable|array',
+            'profile.name' => 'nullable|string|max:255',
+            'profile.gender' => 'nullable|string|in:male,female,other',
+            'profile.birthday' => 'nullable|date',
+            'profile.address' => 'nullable|string|max:255',
+            'profile.image' => 'nullable|string|max:255',
+            'profile.about' => 'nullable|string|max:500',
+            
+            // Role IDs
             'role_ids' => 'nullable|array',
             'role_ids.*' => 'exists:roles,id',
         ];
@@ -52,10 +57,20 @@ class UserRequest extends FormRequest
         $validated = parent::validated($key, $default);
         
         // Convert string "null" to actual null for nullable fields
-        $nullableFields = ['phone', 'name', 'gender', 'birthday', 'address', 'about', 'image'];
+        $nullableFields = ['phone'];
         foreach ($nullableFields as $field) {
             if (isset($validated[$field]) && $validated[$field] === 'null') {
                 $validated[$field] = null;
+            }
+        }
+        
+        // Handle profile fields
+        if (isset($validated['profile'])) {
+            $profileNullableFields = ['name', 'gender', 'birthday', 'address', 'about', 'image'];
+            foreach ($profileNullableFields as $field) {
+                if (isset($validated['profile'][$field]) && $validated['profile'][$field] === 'null') {
+                    $validated['profile'][$field] = null;
+                }
             }
         }
         
@@ -76,11 +91,19 @@ class UserRequest extends FormRequest
             'phone.unique' => 'Số điện thoại đã tồn tại.',
             'status.required' => 'Trạng thái không được để trống.',
             'status.in' => 'Trạng thái không hợp lệ.',
-            'roles.array' => 'Danh sách vai trò phải là mảng.',
-            'roles.*.exists' => 'Vai trò không hợp lệ.',
+            'role_ids.array' => 'Danh sách vai trò phải là mảng.',
+            'role_ids.*.exists' => 'Vai trò không hợp lệ.',
             'password.required' => 'Mật khẩu không được để trống.',
             'password.min' => 'Mật khẩu phải có ít nhất :min ký tự.',
             'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
+            
+            // Profile validation messages
+            'profile.array' => 'Thông tin hồ sơ phải là mảng.',
+            'profile.name.max' => 'Tên không được vượt quá :max ký tự.',
+            'profile.gender.in' => 'Giới tính không hợp lệ.',
+            'profile.birthday.date' => 'Ngày sinh không đúng định dạng.',
+            'profile.address.max' => 'Địa chỉ không được vượt quá :max ký tự.',
+            'profile.about.max' => 'Giới thiệu không được vượt quá :max ký tự.',
         ];
     }
 }

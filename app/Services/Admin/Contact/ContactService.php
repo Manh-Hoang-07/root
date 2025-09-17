@@ -7,6 +7,7 @@ use App\Repositories\Contact\ContactRepository;
 use App\Enums\ContactStatus;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\ContactResponseMail;
 use Exception;
 
 class ContactService extends BaseService
@@ -23,18 +24,14 @@ class ContactService extends BaseService
     {
         try {
             $contact = $this->repo->find($id);
-            
             if (!$contact) {
                 throw new Exception('Contact not found');
             }
-
             $result = $this->repo->updateStatus($id, $status, $adminId, $adminNotes);
-            
             // Send response email to customer if status is completed
             if ($status === ContactStatus::COMPLETED) {
                 $this->sendResponseEmail($contact);
             }
-            
             return $result;
         } catch (Exception $e) {
             Log::error('Error updating contact status: ' . $e->getMessage(), [
@@ -46,8 +43,6 @@ class ContactService extends BaseService
             throw $e;
         }
     }
-
-
 
     /**
      * Mark contact as responded
@@ -66,31 +61,19 @@ class ContactService extends BaseService
         }
     }
 
-
     /**
      * Send response email to customer
      */
     protected function sendResponseEmail($contact): void
     {
         try {
-            // This would be implemented based on your email configuration
-            // For now, just log the response
-            Log::info('Contact response email should be sent', [
-                'contact_id' => $contact->id,
-                'email' => $contact->email,
-                'status' => $contact->status->value
-            ]);
-            
-            // Uncomment and implement when email is configured
-            /*
-            Mail::to($contact->email)
-                ->send(new ContactResponseMail($contact));
-            */
+            // Mail::to($contact->email)
+            //     ->send(new ContactResponseMail($contact));
+            echo "ok";
         } catch (Exception $e) {
             Log::error('Error sending response email: ' . $e->getMessage());
         }
     }
-
 
     /**
      * Bulk update contact status
@@ -98,7 +81,6 @@ class ContactService extends BaseService
     public function bulkUpdateStatus(array $contactIds, ContactStatus $status, $adminId = null, $adminNotes = null): array
     {
         $results = [];
-        
         foreach ($contactIds as $contactId) {
             try {
                 $result = $this->updateStatus($contactId, $status, $adminId, $adminNotes);
@@ -115,7 +97,6 @@ class ContactService extends BaseService
                 ];
             }
         }
-        
         return $results;
     }
 }

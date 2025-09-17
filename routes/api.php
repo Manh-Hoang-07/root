@@ -130,7 +130,6 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     Route::patch('users/toggle-status/{id}', [UserController::class, 'toggleStatus']);
     Route::get('users/statuses', [UserController::class, 'statuses']);
     Route::post('users/{id}/change-password', [UserController::class, 'changePassword']);
-    Route::get('users/{id}/with-roles', [UserController::class, 'showWithRoles']);
     Route::post('users/{id}/assign-roles', [UserController::class, 'assignRoles']);
 
     // Admin - Posts module

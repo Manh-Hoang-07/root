@@ -3,7 +3,6 @@ namespace App\Services\Admin\Role;
 
 use App\Repositories\Role\RoleRepository;
 use App\Services\BaseService;
-use Illuminate\Support\Facades\Log;
 
 class RoleService extends BaseService
 {
@@ -16,19 +15,13 @@ class RoleService extends BaseService
     {
         $permissions = $data['permissions'] ?? [];
         unset($data['permissions']);
-        
-
-        
         $role = parent::create($data);
-        
         if (!empty($permissions)) {
             // Đảm bảo permissions là array of integers
             $permissionIds = array_map('intval', (array) $permissions);
-
             $roleModel = $this->repo->getModel()->find($role['id']);
             $roleModel->permissions()->sync($permissionIds);
         }
-        
         return $role;
     }
 
@@ -36,21 +29,14 @@ class RoleService extends BaseService
     {
         $permissions = $data['permissions'] ?? [];
         unset($data['permissions']);
-        
-
-        
         $role = parent::update($id, $data);
-        
         if (!$role) {
             return null;
         }
-        
         // Đảm bảo permissions là array of integers
         $permissionIds = array_map('intval', (array) $permissions);
-
         $roleModel = $this->repo->getModel()->find($role['id']);
         $roleModel->permissions()->sync($permissionIds);
-        
         return $role;
     }
 } 

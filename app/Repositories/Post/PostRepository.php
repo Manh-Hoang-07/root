@@ -16,34 +16,29 @@ class PostRepository extends BaseRepository
     protected function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
     {
         parent::applyFilters($query, $filters);
-
         if (!empty($filters['published_only'])) {
             $query->where('status', 'published')
                   ->whereNotNull('published_at')
                   ->where('published_at', '<=', Carbon::now());
         }
-
         if (!empty($filters['category_id'])) {
             $ids = is_array($filters['category_id']) ? $filters['category_id'] : explode(',', $filters['category_id']);
             $query->whereHas('categories', function ($q) use ($ids) {
                 $q->whereIn('postcategory.id', $ids);
             });
         }
-
         if (!empty($filters['category_slug'])) {
             $slugs = is_array($filters['category_slug']) ? $filters['category_slug'] : explode(',', $filters['category_slug']);
             $query->whereHas('categories', function ($q) use ($slugs) {
                 $q->whereIn('postcategory.slug', $slugs);
             });
         }
-
         if (!empty($filters['tag_id'])) {
             $ids = is_array($filters['tag_id']) ? $filters['tag_id'] : explode(',', $filters['tag_id']);
             $query->whereHas('tags', function ($q) use ($ids) {
                 $q->whereIn('posttag.id', $ids);
             });
         }
-
         if (!empty($filters['tag_slug'])) {
             $slugs = is_array($filters['tag_slug']) ? $filters['tag_slug'] : explode(',', $filters['tag_slug']);
             $query->whereHas('tags', function ($q) use ($slugs) {
@@ -55,14 +50,12 @@ class PostRepository extends BaseRepository
     public function findBySlug(string $slug, array $relations = [], array $fields = ['*']): ?array
     {
         $query = $this->getModel()->newQuery();
-
         if (!empty($relations)) {
             $query->with($relations);
         }
         if (!empty($fields) && $fields !== ['*']) {
             $query->select($fields);
         }
-
         $post = $query->where('slug', $slug)->first();
         return $post ? $post->toArray() : null;
     }
