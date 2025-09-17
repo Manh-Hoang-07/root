@@ -8,7 +8,6 @@ use App\Http\Requests\Admin\Contact\ContactRequest;
 use App\Http\Requests\Admin\Contact\ContactStatusUpdateRequest;
 use App\Enums\ContactStatus;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Exception;
 
