@@ -9,7 +9,12 @@ use Illuminate\Http\Request;
 
 class SystemConfigController extends BaseController
 {
-    protected static $serviceClass = SystemConfigService::class;
+    protected SystemConfigService $configService;
+
+    public function __construct(SystemConfigService $configService)
+    {
+        $this->configService = $configService;
+    }
 
     /**
      * Lấy tất cả cấu hình public
@@ -17,7 +22,7 @@ class SystemConfigController extends BaseController
     public function getPublicConfigs(): JsonResponse
     {
         try {
-            $configs = $this->service->getGeneralConfig();
+            $configs = $this->configService->getGeneralConfig();
             return $this->apiResponse(true, $configs, 'Lấy cấu hình public thành công');
         } catch (\Exception $e) {
             $this->logError('GetPublicConfigs', $e);
@@ -31,7 +36,7 @@ class SystemConfigController extends BaseController
     public function getGroupConfig(string $group): JsonResponse
     {
         try {
-            $configs = $this->service->getByGroup($group);
+            $configs = $this->configService->getByGroup($group);
             return $this->apiResponse(true, $configs, "Lấy cấu hình nhóm {$group} thành công");
         } catch (\Exception $e) {
             $this->logError('GetGroupConfig', $e);
@@ -53,7 +58,7 @@ class SystemConfigController extends BaseController
             
             $configs = [];
             foreach ($groups as $group) {
-                $configs[$group] = $this->service->getByGroup($group);
+                $configs[$group] = $this->configService->getByGroup($group);
             }
             
             return $this->apiResponse(true, $configs, 'Lấy cấu hình nhiều nhóm thành công');
@@ -75,7 +80,7 @@ class SystemConfigController extends BaseController
                 return $this->apiResponse(true, [], 'Không có key nào được truyền');
             }
             
-            $value = $this->service->getByKey($key);
+            $value = $this->configService->getByKey($key);
             
             return $this->apiResponse(true, ['key' => $key, 'value' => $value], "Lấy cấu hình key {$key} thành công");
         } catch (\Exception $e) {
@@ -96,7 +101,7 @@ class SystemConfigController extends BaseController
                 return $this->apiResponse(true, [], 'Không có keys nào được truyền');
             }
             
-            $configs = $this->service->getByKeys($keys);
+            $configs = $this->configService->getByKeys($keys);
             $result = [];
             
             foreach ($configs as $config) {
@@ -116,7 +121,7 @@ class SystemConfigController extends BaseController
     public function getGeneralConfig(): JsonResponse
     {
         try {
-            $configs = $this->service->getGeneralConfig();
+            $configs = $this->configService->getGeneralConfig();
             
             return $this->apiResponse(true, $configs, 'Lấy cấu hình chung thành công');
         } catch (\Exception $e) {
@@ -131,7 +136,7 @@ class SystemConfigController extends BaseController
     public function getEmailConfig(): JsonResponse
     {
         try {
-            $configs = $this->service->getEmailConfig();
+            $configs = $this->configService->getEmailConfig();
             
             return $this->apiResponse(true, $configs, 'Lấy cấu hình email thành công');
         } catch (\Exception $e) {
@@ -153,7 +158,7 @@ class SystemConfigController extends BaseController
                 return $this->apiResponse(false, null, 'Key là bắt buộc', 400);
             }
             
-            $value = $this->service->getByKey($key, $default);
+            $value = $this->configService->getByKey($key, $default);
             
             return $this->apiResponse(true, ['key' => $key, 'value' => $value], "Lấy cấu hình key {$key} thành công");
         } catch (\Exception $e) {

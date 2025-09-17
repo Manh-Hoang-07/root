@@ -8,9 +8,13 @@ use App\Http\Requests\Admin\PostTag\PostTagRequest;
 
 class PostTagController extends BaseController
 {
-    protected static $serviceClass = PostTagService::class;
     protected $indexRelations = [];
     protected $showRelations = [];
-    protected $storeRequestClass = PostTagRequest::class;
-    protected $updateRequestClass = PostTagRequest::class;
+
+    public function __construct(PostTagService $service)
+    {
+        parent::__construct($service);
+        $this->storeRequestClass = PostTagRequest::class;
+        $this->updateRequestClass = PostTagRequest::class;
+    }
 }

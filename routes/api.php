@@ -86,7 +86,9 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     Route::apiResource('products', ProductController::class);
     Route::get('products/select/list', [ProductController::class, 'getForSelect']);
     Route::get('products/{product}/variants', [App\Http\Controllers\Api\Admin\Variant\VariantController::class, 'getProductVariants']);
+    Route::get('products/{product}/images', [App\Http\Controllers\Api\Admin\Image\ImageController::class, 'getProductImages']);
     Route::apiResource('variants', App\Http\Controllers\Api\Admin\Variant\VariantController::class);
+    Route::apiResource('images', App\Http\Controllers\Api\Admin\Image\ImageController::class);
     Route::apiResource('attributes', App\Http\Controllers\Api\Admin\Attribute\AttributeController::class);
     
     // Image upload

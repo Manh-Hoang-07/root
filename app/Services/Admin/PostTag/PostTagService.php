@@ -7,7 +7,10 @@ use App\Repositories\PostTag\PostTagRepository;
 
 class PostTagService extends BaseService
 {
-    protected static $repositoryClass = PostTagRepository::class;
+    public function __construct(PostTagRepository $repo)
+    {
+        parent::__construct($repo);
+    }
 
     public function findBySlug(string $slug, $relations = [], $fields = ['*']): ?array
     {

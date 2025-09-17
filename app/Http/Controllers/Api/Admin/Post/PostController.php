@@ -8,11 +8,15 @@ use App\Http\Requests\Admin\Post\PostRequest;
 
 class PostController extends BaseController
 {
-    protected static $serviceClass = PostService::class;
     protected $indexRelations = ['categories:id,name,slug', 'tags:id,name,slug'];
     protected $showRelations = ['categories:id,name,slug', 'tags:id,name,slug', 'primaryCategory:id,name,slug'];
-    protected $storeRequestClass = PostRequest::class;
-    protected $updateRequestClass = PostRequest::class;
+
+    public function __construct(PostService $service)
+    {
+        parent::__construct($service);
+        $this->storeRequestClass = PostRequest::class;
+        $this->updateRequestClass = PostRequest::class;
+    }
 }
 
 

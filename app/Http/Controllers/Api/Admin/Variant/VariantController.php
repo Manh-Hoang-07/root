@@ -10,9 +10,12 @@ use Illuminate\Http\JsonResponse;
 
 class VariantController extends BaseController
 {
-    protected static $serviceClass = VariantService::class;
-    protected $storeRequestClass = VariantRequest::class;
-    protected $updateRequestClass = VariantRequest::class;
+    public function __construct(VariantService $service)
+    {
+        parent::__construct($service);
+        $this->storeRequestClass = VariantRequest::class;
+        $this->updateRequestClass = VariantRequest::class;
+    }
 
     /**
      * Get variants for a product

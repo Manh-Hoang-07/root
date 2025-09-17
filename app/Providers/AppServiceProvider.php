@@ -9,11 +9,13 @@ use App\Services\Admin\Warehouse\WarehouseService;
 use App\Services\Admin\Product\ProductService;
 use App\Services\Admin\Inventory\InventoryService;
 use App\Services\Admin\Inventory\StockSummaryService;
+use App\Services\Admin\Image\ImageService;
 use App\Repositories\Brand\BrandRepository;
 use App\Repositories\Category\CategoryRepository;
 use App\Repositories\Warehouse\WarehouseRepository;
 use App\Repositories\Product\ProductRepository;
 use App\Repositories\Inventory\InventoryRepository;
+use App\Repositories\Image\ImageRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(WarehouseRepository::class);
         $this->app->singleton(ProductRepository::class);
         $this->app->singleton(InventoryRepository::class);
+        $this->app->singleton(ImageRepository::class);
 
         // Register services
         $this->app->singleton(BrandService::class, function ($app) {
@@ -59,6 +62,9 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->singleton(ImageService::class, function ($app) {
+            return new ImageService($app->make(ImageRepository::class));
+        });
     }
 
     /**

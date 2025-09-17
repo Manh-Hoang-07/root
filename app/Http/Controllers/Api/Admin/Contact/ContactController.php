@@ -13,13 +13,19 @@ use Exception;
 
 class ContactController extends BaseController
 {
-    protected static $serviceClass = ContactService::class;
+    protected $service;
     protected $storeRequestClass = ContactRequest::class;
     protected $updateRequestClass = ContactRequest::class;
     protected $indexRelations = ['admin'];
     protected $showRelations = ['admin'];
     protected $defaultPerPage = 20;
     protected $maxPerPage = 100;
+
+    public function __construct(ContactService $service)
+    {
+        parent::__construct($service);
+        $this->service = $service;
+    }
 
     /**
      * Update contact status

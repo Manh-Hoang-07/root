@@ -7,7 +7,8 @@ use App\Http\Requests\Admin\Shipping\ShippingZoneRequest;
 
 class ShippingZoneController extends BaseController
 {
-    protected static $serviceClass = ShippingZoneService::class;
-    protected $storeRequestClass = ShippingZoneRequest::class;
-    protected $updateRequestClass = ShippingZoneRequest::class;
-}
+    public function __construct(ShippingZoneService $service)
+    {
+        parent::__construct($service);
+        $this->storeRequestClass = ShippingZoneRequest::class;
+} 

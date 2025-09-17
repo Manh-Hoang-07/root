@@ -10,8 +10,14 @@ use Exception;
 
 class ContactController extends BaseController
 {
-    protected static $serviceClass = ContactService::class;
-    protected $storeRequestClass = ContactRequest::class;
+    protected $service;
+        protected $storeRequestClass = ContactRequest::class;
+
+    public function __construct(ContactService $service)
+    {
+        parent::__construct($service);
+        $this->service = $service;
+    }
 
     /**
      * Override store method to use createContact service method

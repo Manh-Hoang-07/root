@@ -9,19 +9,11 @@ use Illuminate\Support\Str;
 abstract class BaseService
 {
     protected $repo;
-    
-    /** @var string Repository class to be injected */
-    protected static $repositoryClass;
 
 
-    public function __construct($repo = null)
+    public function __construct($repo)
     {
-        // Auto-resolve repository if not provided and repositoryClass is defined
-        if ($repo === null && static::$repositoryClass) {
-            $this->repo = app(static::$repositoryClass);
-        } else {
-            $this->repo = $repo;
-        }
+        $this->repo = $repo;
     }
 
     public function list($filters = [], $perPage = 20, $relations = [], $fields = ['*']): array

@@ -7,7 +7,10 @@ use App\Http\Requests\Admin\Permission\PermissionRequest;
 
 class PermissionController extends BaseController
 {
-    protected static $serviceClass = PermissionService::class;
-    protected $storeRequestClass = PermissionRequest::class;
-    protected $updateRequestClass = PermissionRequest::class;
+    public function __construct(PermissionService $service)
+    {
+        parent::__construct($service);
+        $this->storeRequestClass = PermissionRequest::class;
+        $this->updateRequestClass = PermissionRequest::class;
+    }
 } 

@@ -12,7 +12,10 @@ use Exception;
 
 class ContactService extends BaseService
 {
-    protected static $repositoryClass = ContactRepository::class;
+    public function __construct(ContactRepository $repo)
+    {
+        parent::__construct($repo);
+    }
 
     /**
      * Update contact status
