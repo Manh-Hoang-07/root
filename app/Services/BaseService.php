@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
 
@@ -28,17 +27,13 @@ abstract class BaseService
 
     public function create($data): array
     {
-        $data = $this->handleImageUpload($data);
         $result = $this->repo->create($data);
-        
         return $result;
     }
 
     public function update($id, $data): ?array
     {
-        $data = $this->handleImageUpload($data);
         $result = $this->repo->update($id, $data);
-        
         return $result;
     }
 
@@ -46,22 +41,12 @@ abstract class BaseService
     {
         $item = $this->find($id);
         $result = $this->repo->delete($id);
-        
         return $result;
     }
 
     public function getRepo(): mixed
     {
         return $this->repo;
-    }
-
-    protected function handleImageUpload($data): array
-    {
-        // Xử lý tự động cho trường image nếu là file upload
-        if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
-            $data['image'] = $data['image']->store('categories', 'public');
-        }
-        return $data;
     }
 
     /**
