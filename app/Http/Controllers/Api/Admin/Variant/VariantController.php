@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api\Admin\Variant;
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Admin\Variant\VariantService;
 use App\Http\Requests\Admin\Variant\VariantRequest;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class VariantController extends BaseController
 {
+    protected $storeRequestClass = VariantRequest::class;
+    protected $updateRequestClass = VariantRequest::class;
+    
     /**
      * @var VariantService
      */
@@ -18,8 +20,6 @@ class VariantController extends BaseController
     public function __construct(VariantService $service)
     {
         parent::__construct($service);
-        $this->storeRequestClass = VariantRequest::class;
-        $this->updateRequestClass = VariantRequest::class;
     }
 
     /**

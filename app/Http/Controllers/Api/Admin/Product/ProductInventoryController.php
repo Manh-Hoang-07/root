@@ -7,6 +7,9 @@ use App\Http\Requests\Admin\Product\ProductInventoryRequest;
 
 class ProductInventoryController extends BaseController
 {
+    protected $storeRequestClass = ProductInventoryRequest::class;
+    protected $updateRequestClass = ProductInventoryRequest::class;
+    
     /**
      * @var ProductInventoryService
      */
@@ -15,7 +18,5 @@ class ProductInventoryController extends BaseController
     public function __construct(ProductInventoryService $service)
     {
         parent::__construct($service);
-        $this->storeRequestClass = ProductInventoryRequest::class;
-        $this->updateRequestClass = ProductInventoryRequest::class;
     }
 } 

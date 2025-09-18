@@ -11,13 +11,13 @@ use Illuminate\Support\Facades\Validator;
 
 class SystemConfigController extends BaseController
 {
+    protected $storeRequestClass = SystemConfigRequest::class;
+    protected $updateRequestClass = SystemConfigRequest::class;
+
     /**
      * @var SystemConfigService
      */
     protected $service;
-
-    protected $storeRequestClass = SystemConfigRequest::class;
-    protected $updateRequestClass = SystemConfigRequest::class;
 
     public function __construct(SystemConfigService $service)
     {

@@ -9,14 +9,10 @@ use Illuminate\Http\JsonResponse;
 
 class ProductController extends BaseController
 {
-    /**
-     * @var ProductService
-     */
-    protected $service;
-
-    // Tối ưu relations - chỉ load những gì cần thiết
+    protected $storeRequestClass = ProductRequest::class;
+    protected $updateRequestClass = ProductRequest::class;
     protected $relations = [
-        'index' => ['brand:id,name'], // Giảm từ 2 xuống 1 relation
+        'index' => ['brand:id,name'],
         'show' => [
             'brand:id,name', 
             'categories:id,name', 
@@ -29,13 +25,15 @@ class ProductController extends BaseController
         'search' => ['brand:id,name']
     ];
 
+     /**
+     * @var ProductService
+     */
+    protected $service;
+
     public function __construct(ProductService $service)
     {
         parent::__construct($service);
-        $this->storeRequestClass = ProductRequest::class;
-        $this->updateRequestClass = ProductRequest::class;
     }
-
 
     /**
      * Override show method với tối ưu hiệu suất

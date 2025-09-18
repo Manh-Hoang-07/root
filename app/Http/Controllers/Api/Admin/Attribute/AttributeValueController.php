@@ -7,6 +7,11 @@ use App\Http\Requests\Admin\Attribute\AttributeValueRequest;
 
 class AttributeValueController extends BaseController
 {
+    protected $storeRequestClass = AttributeValueRequest::class;
+    protected $updateRequestClass = AttributeValueRequest::class;
+    protected $indexRelations = ['attribute:id,name'];
+    protected $showRelations = ['attribute'];
+    
     /**
      * @var AttributeValueService
      */
@@ -15,9 +20,5 @@ class AttributeValueController extends BaseController
     public function __construct(AttributeValueService $service)
     {
         parent::__construct($service);
-        $this->storeRequestClass = AttributeValueRequest::class;
-        $this->updateRequestClass = AttributeValueRequest::class;
-        $this->indexRelations = ['attribute:id,name'];
-        $this->showRelations = ['attribute'];
     }
 } 

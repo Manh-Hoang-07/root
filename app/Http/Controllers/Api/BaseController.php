@@ -23,7 +23,10 @@ abstract class BaseController extends Controller
     use ResponseTrait;
     use LoggingTrait;
 
-    /** @var mixed Service instance for business logic */
+    /**
+     * Service instance for business logic
+     * @var \App\Services\BaseService
+     */
     protected $service;
     
     /** @var string Request class for store operations */
@@ -67,9 +70,9 @@ abstract class BaseController extends Controller
 
     /**
      * Constructor
-     * @param mixed $service Service instance
+     * @param \App\Services\BaseService $service Service instance
      */
-    public function __construct($service)
+    public function __construct(\App\Services\BaseService $service)
     {
         $this->service = $service;
         // Initialize cache service
