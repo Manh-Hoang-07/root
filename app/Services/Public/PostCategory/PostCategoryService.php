@@ -4,10 +4,13 @@ namespace App\Services\Public\PostCategory;
 
 use App\Services\BaseService;
 use App\Repositories\PostCategory\PostCategoryRepository;
-use Illuminate\Database\Eloquent\Collection;
 
 class PostCategoryService extends BaseService
 {
+    /**
+     * @var PostCategoryRepository
+     */
+    protected $repo;
     public function __construct(PostCategoryRepository $repo)
     {
         parent::__construct($repo);
@@ -34,7 +37,6 @@ class PostCategoryService extends BaseService
             ->where('status', 'active')
             ->where('slug', $slug)
             ->first(['id', 'name', 'slug', 'description']);
-        
         return $category ? $category->toArray() : null;
     }
 

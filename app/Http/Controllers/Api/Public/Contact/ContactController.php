@@ -10,28 +10,16 @@ use Exception;
 
 class ContactController extends BaseController
 {
+    /**
+     * @var ContactService
+     */
     protected $service;
-        protected $storeRequestClass = ContactRequest::class;
+    protected $storeRequestClass = ContactRequest::class;
 
     public function __construct(ContactService $service)
     {
         parent::__construct($service);
-        $this->service = $service;
     }
 
-    /**
-     * Override store method to use createContact service method
-     */
-    public function store(): JsonResponse
-    {
-        try {
-            $request = app($this->getStoreRequestClass());
-            $data = $this->service->createContact($request->all());
-            
-            return $this->successResponseWithFormat($data, 'single');
-        } catch (Exception $e) {
-            $this->logError('Store', $e);
-            return $this->apiResponse(false, null, 'Không thể gửi liên hệ. Vui lòng thử lại sau.', 500);
-        }
-    }
+    // Use BaseController::store
 }

@@ -6,6 +6,11 @@ use App\Services\BaseService;
 
 class RoleService extends BaseService
 {
+    /**
+     * @var RoleRepository
+     */
+    protected $repo;
+
     public function __construct(RoleRepository $repo)
     {
         parent::__construct($repo);

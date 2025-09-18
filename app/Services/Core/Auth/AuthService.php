@@ -24,7 +24,6 @@ class AuthService extends BaseService
     public function login(array $data): array
     {
         $user = $this->authRepository->findByEmail($data['email']);
-
         if (!$user || !Hash::check($data['password'], $user->password)) {
             return [
                 'success' => false,
@@ -32,7 +31,6 @@ class AuthService extends BaseService
                 'status' => 401
             ];
         }
-
         // Kiểm tra trạng thái user
         if ($user->status !== UserStatus::Active) {
             return [
@@ -41,13 +39,10 @@ class AuthService extends BaseService
                 'status' => 401
             ];
         }
-
         // Cập nhật last_login_at
         $this->authRepository->updateLastLogin($user->id);
-
         // Tạo token với thời gian hết hạn 30 phút
         $token = $user->createToken('auth-token', ['*'], now()->addMinutes(60))->plainTextToken;
-
         return [
             'success' => true,
             'message' => 'Đăng nhập thành công.',
@@ -70,14 +65,12 @@ class AuthService extends BaseService
                 'password' => Hash::make($data['password']),
                 'status' => UserStatus::Active
             ]);
-
             // Tạo profile
             if (isset($data['name'])) {
                 $this->authRepository->createProfile($user->id, [
                     'name' => $data['name']
                 ]);
             }
-
             return [
                 'success' => true,
                 'message' => 'Đăng ký thành công.',
@@ -102,7 +95,6 @@ class AuthService extends BaseService
         try {
             // Revoke tất cả tokens của user
             $user->tokens()->delete();
-
             return [
                 'success' => true,
                 'message' => 'Đăng xuất thành công.'
@@ -124,10 +116,8 @@ class AuthService extends BaseService
         try {
             // Revoke current token
             $user->tokens()->delete();
-            
             // Tạo token mới với thời gian hết hạn 24 giờ
             $token = $user->createToken('auth-token', ['*'], now()->addHours(24))->plainTextToken;
-
             return [
                 'success' => true,
                 'message' => 'Token refreshed successfully.',
@@ -152,7 +142,6 @@ class AuthService extends BaseService
         try {
             // Load permissions và roles
             $user->load(['permissions']);
-            
             return [
                 'success' => true,
                 'message' => 'Lấy thông tin user thành công',
@@ -180,13 +169,10 @@ class AuthService extends BaseService
                 'status' => 400
             ];
         }
-
         // Cập nhật mật khẩu mới
         $this->authRepository->updatePassword($user->id, Hash::make($data['password']));
-
         // Xóa tất cả token cũ để user phải đăng nhập lại
         $user->tokens()->delete();
-
         return [
             'success' => true,
             'message' => 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại.'

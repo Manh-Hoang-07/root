@@ -16,25 +16,18 @@ class ContactService extends BaseService
     }
 
     /**
-     * Create a new contact (Public API)
+     * Override BaseService create to add default status and notifications
      */
-    public function createContact(array $data)
+    public function create($data): array
     {
         try {
-            // Set default status
             $data['status'] = ContactStatus::PENDING;
-            
-            // Create contact using BaseService method
-            $contact = $this->create($data);
-            
-            // Send notification email to admin (optional)
+            $contact = parent::create($data);
             $this->sendNotificationEmail($contact);
-            
             return $contact;
         } catch (Exception $e) {
             Log::error('Error creating contact: ' . $e->getMessage(), [
                 'data' => $data,
-                'trace' => $e->getTraceAsString()
             ]);
             throw $e;
         }
@@ -49,9 +42,9 @@ class ContactService extends BaseService
             // This would be implemented based on your email configuration
             // For now, just log the notification
             Log::info('Contact notification email should be sent', [
-                'contact_id' => $contact->id,
-                'email' => $contact->email,
-                'subject' => $contact->subject
+                'contact_id' => is_array($contact) ? ($contact['id'] ?? null) : ($contact->id ?? null),
+                'email' => is_array($contact) ? ($contact['email'] ?? null) : ($contact->email ?? null),
+                'subject' => is_array($contact) ? ($contact['subject'] ?? null) : ($contact->subject ?? null)
             ]);
             
             // Uncomment and implement when email is configured

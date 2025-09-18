@@ -32,14 +32,11 @@ class EnumController extends Controller
     {
         try {
             $data = $this->enumService->getEnumsWithCache($type, $this->cacheTtl);
-            
             if ($data->isEmpty()) {
                 return $this->apiResponse(false, null, 'Loại enum không hợp lệ', 400);
             }
-
             return $this->apiResponse(true, $data->toArray(), 'Lấy danh sách enum thành công');
         } catch (Exception $e) {
-            $this->logError('GetEnums', $e, ['type' => $type]);
             return $this->apiResponse(false, null, 'Không thể lấy danh sách enum', 500);
         }
     }
@@ -53,7 +50,6 @@ class EnumController extends Controller
             $types = $this->enumService->getAvailableTypes();
             return $this->apiResponse(true, $types->toArray(), 'Lấy danh sách enum types thành công');
         } catch (Exception $e) {
-            $this->logError('GetEnumTypes', $e);
             return $this->apiResponse(false, null, 'Không thể lấy danh sách enum types', 500);
         }
     }
@@ -65,14 +61,11 @@ class EnumController extends Controller
     {
         try {
             $success = $this->enumService->clearCache($type);
-            
             if (!$success) {
                 return $this->apiResponse(false, null, 'Không thể xóa cache', 500);
             }
-
             return $this->apiResponse(true, null, "Đã xóa cache cho enum type: {$type}");
         } catch (Exception $e) {
-            $this->logError('ClearEnumCache', $e, ['type' => $type]);
             return $this->apiResponse(false, null, 'Không thể xóa cache', 500);
         }
     }
@@ -84,14 +77,11 @@ class EnumController extends Controller
     {
         try {
             $success = $this->enumService->clearAllCache();
-            
             if (!$success) {
                 return $this->apiResponse(false, null, 'Không thể xóa tất cả cache', 500);
             }
-
             return $this->apiResponse(true, null, 'Đã xóa tất cả cache enum');
         } catch (Exception $e) {
-            $this->logError('ClearAllEnumCache', $e);
             return $this->apiResponse(false, null, 'Không thể xóa tất cả cache', 500);
         }
     }

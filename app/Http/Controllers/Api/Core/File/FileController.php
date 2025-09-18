@@ -34,12 +34,9 @@ class FileController extends Controller
     {
         try {
             $file = $request->file('file');
-            
             $result = $this->fileService->uploadFile($file);
-            
             return $this->apiResponse(true, $result, 'Upload file thành công');
         } catch (Exception $e) {
-            $this->logError('UploadFile', $e);
             return $this->apiResponse(false, null, 'Upload file thất bại: ' . $e->getMessage(), 500);
         }
     }
@@ -51,12 +48,9 @@ class FileController extends Controller
     {
         try {
             $files = $request->file('files');
-            
             $results = $this->fileService->uploadMultipleFiles($files);
-            
             return $this->apiResponse(true, $results, 'Upload ' . count($results) . ' file thành công');
         } catch (Exception $e) {
-            $this->logError('UploadMultipleFiles', $e);
             return $this->apiResponse(false, null, 'Upload files thất bại: ' . $e->getMessage(), 500);
         }
     }
@@ -69,14 +63,11 @@ class FileController extends Controller
         try {
             $path = $request->get('path');
             $info = $this->fileService->getFileInfo($path);
-            
             if (!$info) {
                 return $this->apiResponse(false, null, 'File không tồn tại', 404);
             }
-            
             return $this->apiResponse(true, $info, 'Lấy thông tin file thành công');
         } catch (Exception $e) {
-            $this->logError('GetFileInfo', $e, ['path' => $request->get('path')]);
             return $this->apiResponse(false, null, 'Không thể lấy thông tin file', 500);
         }
     }
@@ -89,15 +80,9 @@ class FileController extends Controller
         try {
             $type = $request->get('type');
             $date = $request->get('date');
-            
             $files = $this->fileService->listFiles($type, $date);
-            
             return $this->apiResponse(true, $files, 'Lấy danh sách file thành công');
         } catch (Exception $e) {
-            $this->logError('ListFiles', $e, [
-                'type' => $request->get('type'),
-                'date' => $request->get('date')
-            ]);
             return $this->apiResponse(false, null, 'Không thể lấy danh sách file', 500);
         }
     }
@@ -110,14 +95,11 @@ class FileController extends Controller
         try {
             $path = $request->get('path');
             $success = $this->fileService->deleteFile($path);
-            
             if (!$success) {
                 return $this->apiResponse(false, null, 'Không thể xóa file hoặc file không tồn tại', 404);
             }
-            
             return $this->apiResponse(true, null, 'Xóa file thành công');
         } catch (Exception $e) {
-            $this->logError('DeleteFile', $e, ['path' => $request->get('path')]);
             return $this->apiResponse(false, null, 'Không thể xóa file', 500);
         }
     }
@@ -130,10 +112,8 @@ class FileController extends Controller
         try {
             $type = $request->get('type');
             $dates = $this->fileService->getAvailableDates($type);
-            
             return $this->apiResponse(true, $dates, 'Lấy danh sách ngày có file thành công');
         } catch (Exception $e) {
-            $this->logError('GetAvailableDates', $e, ['type' => $request->get('type')]);
             return $this->apiResponse(false, null, 'Không thể lấy danh sách ngày', 500);
         }
     }
@@ -151,10 +131,8 @@ class FileController extends Controller
                 'audio' => ['mp3', 'wav', 'ogg', 'aac', 'm4a'],
                 'archive' => ['zip', 'rar', '7z', 'tar', 'gz'],
             ];
-            
             return $this->apiResponse(true, $types, 'Lấy danh sách loại file được hỗ trợ thành công');
         } catch (Exception $e) {
-            $this->logError('GetSupportedTypes', $e);
             return $this->apiResponse(false, null, 'Không thể lấy danh sách loại file', 500);
         }
     }

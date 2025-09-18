@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 
 class PostController extends BaseController
 {
+    /**
+     * @var ContactService
+     */
+    protected $service;
     protected $indexRelations = ['categories:id,name,slug', 'tags:id,name,slug'];
     protected $showRelations = ['categories:id,name,slug', 'tags:id,name,slug', 'primaryCategory:id,name,slug'];
 

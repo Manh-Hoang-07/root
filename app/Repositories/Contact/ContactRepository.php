@@ -22,17 +22,6 @@ class ContactRepository extends BaseRepository
     }
 
     /**
-     * Apply relationship search for contacts
-     */
-    protected function applyRelationshipSearch(\Illuminate\Database\Eloquent\Builder $query, string $searchValue): void
-    {
-        $query->orWhereHas('admin', function ($q) use ($searchValue) {
-            $q->where('name', 'like', "%$searchValue%")
-              ->orWhere('email', 'like', "%$searchValue%");
-        });
-    }
-
-    /**
      * Update contact status
      */
     public function updateStatus(int $id, ContactStatus $status, $adminId = null, $adminNotes = null): ?array

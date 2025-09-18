@@ -10,6 +10,9 @@ use Illuminate\Http\JsonResponse;
 
 class UserController extends BaseController
 {
+    /**
+     * @var AuthService
+     */
     protected $authService;
 
     public function __construct(AuthService $authService)
@@ -24,11 +27,9 @@ class UserController extends BaseController
     public function me(Request $request): JsonResponse
     {
         $user = $request->user();
-        
         if (!$user) {
             return $this->apiResponse(false, null, 'Không tìm thấy thông tin user.', 401);
         }
-        
         // Format data giống như AuthResource
         $userData = [
             'id' => $user->id,
@@ -39,7 +40,6 @@ class UserController extends BaseController
             'status' => $user->status,
             'permissions' => $user->getAllPermissions()->pluck('name'),
         ];
-        
         return $this->successResponseWithFormat($userData, 'Lấy thông tin user thành công.');
     }
 
@@ -52,11 +52,9 @@ class UserController extends BaseController
             $request->user(),
             $request->validated()
         );
-        
         if ($result['success']) {
             return $this->apiResponse(true, null, $result['message']);
         }
-
         return $this->apiResponse(false, null, $result['message'], $result['status'] ?? 400);
     }
 } 
