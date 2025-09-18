@@ -13,6 +13,9 @@ use Exception;
 
 class ContactController extends BaseController
 {
+    /**
+     * @var ContactService
+     */
     protected $service;
     protected $storeRequestClass = ContactRequest::class;
     protected $updateRequestClass = ContactRequest::class;

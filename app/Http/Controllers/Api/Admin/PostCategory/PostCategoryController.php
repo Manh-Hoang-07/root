@@ -8,6 +8,11 @@ use App\Http\Requests\Admin\PostCategory\PostCategoryRequest;
 
 class PostCategoryController extends BaseController
 {
+    /**
+     * @var PostCategoryService
+     */
+    protected $service;
+
     protected $indexRelations = [];
     protected $showRelations = [];
 

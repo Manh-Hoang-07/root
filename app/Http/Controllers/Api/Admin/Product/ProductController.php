@@ -9,6 +9,11 @@ use Illuminate\Http\JsonResponse;
 
 class ProductController extends BaseController
 {
+    /**
+     * @var ProductService
+     */
+    protected $service;
+
     // Tối ưu relations - chỉ load những gì cần thiết
     protected $relations = [
         'index' => ['brand:id,name'], // Giảm từ 2 xuống 1 relation

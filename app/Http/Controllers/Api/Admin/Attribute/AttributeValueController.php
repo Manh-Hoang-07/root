@@ -7,6 +7,11 @@ use App\Http\Requests\Admin\Attribute\AttributeValueRequest;
 
 class AttributeValueController extends BaseController
 {
+    /**
+     * @var AttributeValueService
+     */
+    protected $service;
+
     public function __construct(AttributeValueService $service)
     {
         parent::__construct($service);

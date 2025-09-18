@@ -8,6 +8,11 @@ use App\Http\Requests\Admin\Post\PostRequest;
 
 class PostController extends BaseController
 {
+    /**
+     * @var PostService
+     */
+    protected $service;
+
     protected $indexRelations = ['categories:id,name,slug', 'tags:id,name,slug'];
     protected $showRelations = ['categories:id,name,slug', 'tags:id,name,slug', 'primaryCategory:id,name,slug'];
 

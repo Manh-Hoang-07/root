@@ -8,6 +8,11 @@ use App\Http\Requests\Admin\PostTag\PostTagRequest;
 
 class PostTagController extends BaseController
 {
+    /**
+     * @var PostTagService
+     */
+    protected $service;
+
     protected $indexRelations = [];
     protected $showRelations = [];
 

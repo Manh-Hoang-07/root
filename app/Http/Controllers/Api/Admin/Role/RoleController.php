@@ -7,6 +7,11 @@ use App\Http\Requests\Admin\Role\RoleRequest;
 
 class RoleController extends BaseController
 {
+    /**
+     * @var RoleService
+     */
+    protected $service;
+
     public function __construct(RoleService $service)
     {
         parent::__construct($service);

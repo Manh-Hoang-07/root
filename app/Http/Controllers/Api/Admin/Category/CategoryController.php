@@ -10,6 +10,11 @@ use Illuminate\Http\Request;
 
 class CategoryController extends BaseController
 {
+    /**
+     * @var CategoryService
+     */
+    protected $service;
+
     public function __construct(CategoryService $service)
     {
         parent::__construct($service);

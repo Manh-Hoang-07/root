@@ -7,6 +7,11 @@ use App\Http\Requests\Admin\Order\OrderRequest;
 
 class OrderController extends BaseController
 {
+    /**
+     * @var OrderService
+     */
+    protected $service;
+
     public function __construct(OrderService $service)
     {
         parent::__construct($service);

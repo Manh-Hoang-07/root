@@ -10,6 +10,11 @@ use Illuminate\Http\JsonResponse;
 
 class BrandController extends BaseController
 {
+    /**
+     * @var BrandService
+     */
+    protected $service;
+
     public function __construct(BrandService $service)
     {
         parent::__construct($service);

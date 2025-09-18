@@ -9,6 +9,11 @@ use Illuminate\Http\JsonResponse;
 
 class ImageController extends BaseController
 {
+    /**
+     * @var ImageService
+     */
+    protected $service;
+
     public function __construct(ImageService $service)
     {
         parent::__construct($service);

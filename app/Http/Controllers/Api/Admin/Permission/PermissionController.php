@@ -7,6 +7,11 @@ use App\Http\Requests\Admin\Permission\PermissionRequest;
 
 class PermissionController extends BaseController
 {
+    /**
+     * @var PermissionService
+     */
+    protected $service;
+
     public function __construct(PermissionService $service)
     {
         parent::__construct($service);

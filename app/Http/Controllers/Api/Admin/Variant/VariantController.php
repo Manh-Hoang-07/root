@@ -10,6 +10,11 @@ use Illuminate\Http\JsonResponse;
 
 class VariantController extends BaseController
 {
+    /**
+     * @var VariantService
+     */
+    protected $service;
+
     public function __construct(VariantService $service)
     {
         parent::__construct($service);

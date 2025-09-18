@@ -7,6 +7,11 @@ use App\Http\Requests\Admin\Product\ProductInventoryRequest;
 
 class ProductInventoryController extends BaseController
 {
+    /**
+     * @var ProductInventoryService
+     */
+    protected $service;
+
     public function __construct(ProductInventoryService $service)
     {
         parent::__construct($service);

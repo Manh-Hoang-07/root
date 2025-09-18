@@ -12,6 +12,11 @@ use Illuminate\Http\JsonResponse;
 
 class InventoryController extends BaseController
 {
+    /**
+     * @var InventoryService
+     */
+    protected $service;
+
     public function __construct(InventoryService $service)
     {
         parent::__construct($service);
