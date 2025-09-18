@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class PermissionService extends BaseService
 {
+    /**
+     * @var PermissionRepository
+     */
+    protected $repo;
+
     public function __construct(PermissionRepository $repo)
     {
         parent::__construct($repo);

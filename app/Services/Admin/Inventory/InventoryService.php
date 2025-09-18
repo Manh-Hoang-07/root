@@ -8,25 +8,17 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Warehouse;
 use App\Repositories\Inventory\InventoryRepository;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Carbon\Carbon;
+use App\Services\BaseService;
+ 
 
-class InventoryService
+class InventoryService extends BaseService
 {
     protected $inventoryRepository;
 
     public function __construct(InventoryRepository $inventoryRepository)
     {
+        parent::__construct($inventoryRepository);
         $this->inventoryRepository = $inventoryRepository;
-    }
-
-    /**
-     * Lấy danh sách tồn kho với phân trang và bộ lọc
-     */
-    public function list(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*']): array
-    {
-        return $this->inventoryRepository->all($filters, $perPage, $relations, $fields);
     }
 
     /**
@@ -35,14 +27,6 @@ class InventoryService
     public function getInventories(array $filters = [], int $perPage = 15): array
     {
         return $this->inventoryRepository->getInventoriesWithRelations($filters, $perPage);
-    }
-
-    /**
-     * Tìm tồn kho theo ID
-     */
-    public function find(int $id, array $relations = [], array $fields = ['*']): ?array
-    {
-        return $this->inventoryRepository->find($id, $relations, $fields);
     }
 
     /**
@@ -57,7 +41,7 @@ class InventoryService
     /**
      * Tạo tồn kho mới
      */
-    public function create(array $data): array
+    public function create($data): array
     {
         // Validate business logic
         $this->validateBusinessLogic($data);
@@ -67,13 +51,13 @@ class InventoryService
             $data['available_quantity'] = $data['quantity'] - ($data['reserved_quantity'] ?? 0);
         }
 
-        return $this->inventoryRepository->create($data);
+        return parent::create($data);
     }
 
     /**
      * Cập nhật tồn kho
      */
-    public function update(int $id, array $data): ?array
+    public function update($id, $data): ?array
     {
         // Validate business logic
         $this->validateBusinessLogic($data);
@@ -86,16 +70,13 @@ class InventoryService
             }
         }
 
-        return $this->inventoryRepository->update($id, $data);
+        return parent::update($id, $data);
     }
 
     /**
      * Xóa tồn kho
      */
-    public function delete(int $id): bool
-    {
-        return $this->inventoryRepository->delete($id);
-    }
+    // Sử dụng delete() từ BaseService
 
     /**
      * Nhập kho (tăng số lượng)
