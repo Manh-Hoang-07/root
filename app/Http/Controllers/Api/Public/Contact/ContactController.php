@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Api\Public\Contact;
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Public\Contact\ContactService;
 use App\Http\Requests\Public\Contact\ContactRequest;
-use Illuminate\Http\JsonResponse;
-use Exception;
 
 class ContactController extends BaseController
 {
@@ -20,6 +18,4 @@ class ContactController extends BaseController
     {
         parent::__construct($service);
     }
-
-    // Use BaseController::store
 }

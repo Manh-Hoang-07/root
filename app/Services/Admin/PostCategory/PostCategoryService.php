@@ -12,10 +12,7 @@ class PostCategoryService extends BaseService
         parent::__construct($repo);
     }
 
-    public function findBySlug(string $slug, $relations = [], $fields = ['*']): ?array
-    {
-        return $this->repo->findBySlug($slug, $relations, $fields);
-    }
+    // Deprecated: use BaseService::findOneBy(['slug' => $slug], ...)
 
     public function create($data): array
     {

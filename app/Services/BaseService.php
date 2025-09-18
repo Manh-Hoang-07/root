@@ -50,6 +50,16 @@ abstract class BaseService
     }
 
     /**
+     * Find a single record by multiple conditions.
+     */
+    public function findOneBy(array $conditions = [], array $relations = [], array $fields = ['*']): ?array
+    {
+        return $this->repo->findOneBy($conditions, $relations, $fields);
+    }
+
+    // Consolidated: Use findOneBy for arbitrary field lookups
+
+    /**
      * Generate a unique slug for a model based on name if slug is empty.
      */
     protected function ensureSlug(array $data): array

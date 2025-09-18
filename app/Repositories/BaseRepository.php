@@ -127,6 +127,25 @@ abstract class BaseRepository
     }
 
     /**
+     * Find first record by multiple conditions. Conditions can be:
+     * - [field => value] pairs
+     * - Closures for complex where constraints (numeric keys)
+     */
+    public function findOneBy(array $conditions = [], array $relations = [], array $fields = ['*']): ?array
+    {
+        $query = $this->buildQuery($relations, $fields);
+        foreach ($conditions as $key => $condition) {
+            if (is_int($key) && $condition instanceof \Closure) {
+                $query->where($condition);
+            } else {
+                $query->where($key, $condition);
+            }
+        }
+        $model = $query->first();
+        return $model ? $model->toArray() : null;
+    }
+
+    /**
      * Search records with advanced filtering (alias for all method)
      */
     public function search(array $filters = [], int $perPage = 20, array $relations = [], array $fields = ['*']): array

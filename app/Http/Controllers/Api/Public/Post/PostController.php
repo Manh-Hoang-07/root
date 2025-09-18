@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class PostController extends BaseController
 {
     /**
-     * @var ContactService
+     * @var PostService
      */
     protected $service;
     protected $indexRelations = ['categories:id,name,slug', 'tags:id,name,slug'];
@@ -35,7 +35,10 @@ class PostController extends BaseController
     {
         $relations = $this->showRelations;
         $fields = $this->getDefaultShowFields();
-        $item = $this->service->findBySlug($slug, $relations, $fields);
+        $item = $this->service->findOneBy([
+            'status' => 'published',
+            'slug' => $slug,
+        ], $relations, $fields);
         if (!$item) {
             return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu', 404);
         }

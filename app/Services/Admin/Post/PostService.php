@@ -54,10 +54,7 @@ class PostService extends BaseService
         return $post;
     }
 
-    public function findBySlug(string $slug, $relations = [], $fields = ['*']): ?array
-    {
-        return $this->repo->findBySlug($slug, $relations, $fields);
-    }
+    // Deprecated: use BaseService::findOneBy(['slug' => $slug], ...)
 }
 
 
