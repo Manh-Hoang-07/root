@@ -9,6 +9,8 @@ use App\Libraries\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Exception;
 
 /**
@@ -230,6 +232,8 @@ abstract class BaseController extends Controller
             $request = app($this->getStoreRequestClass());
             $data = $this->service->create($request->validated());
             return $this->successResponseWithFormat($data, 'Tạo dữ liệu thành công', 201);
+        } catch (ValidationException|HttpResponseException $e) {
+            throw $e; // Let the framework return 422 with validation errors
         } catch (Exception $e) {
             $this->logError('Store', $e);
             return $this->apiResponse(false, null, 'Không thể tạo dữ liệu', 500);
@@ -250,6 +254,8 @@ abstract class BaseController extends Controller
                 return $this->apiResponse(false, null, '', 404);
             }
             return $this->successResponseWithFormat($data, 'Cập nhật dữ liệu thành công', 200);
+        } catch (ValidationException|HttpResponseException $e) {
+            throw $e; // Let the framework return 422 with validation errors
         } catch (Exception $e) {
             $this->logError('Update', $e, ['id' => $id]);
             return $this->apiResponse(false, null, 'Không thể cập nhật dữ liệu', 500);

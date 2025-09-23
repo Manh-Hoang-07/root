@@ -6,6 +6,7 @@ enum BasicStatus: string
 {
     case Active = 'active';
     case Inactive = 'inactive';
+    case Test = 'test';
 
     /**
      * Lấy tên hiển thị của trạng thái
@@ -15,6 +16,7 @@ enum BasicStatus: string
         return match($this) {
             self::Active => 'Hoạt động',
             self::Inactive => 'Không hoạt động',
+            self::Test => 'Test',
         };
     }
 
@@ -26,6 +28,7 @@ enum BasicStatus: string
         return [
             ['id' => self::Active->value, 'name' => self::Active->label()],
             ['id' => self::Inactive->value, 'name' => self::Inactive->label()],
+            ['id' => self::Test->value, 'name' => self::Test->label()],
         ];
     }
 } 

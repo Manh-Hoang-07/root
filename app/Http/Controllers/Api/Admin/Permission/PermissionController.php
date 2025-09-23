@@ -9,6 +9,8 @@ class PermissionController extends BaseController
 {
     protected $storeRequestClass = PermissionRequest::class;
     protected $updateRequestClass = PermissionRequest::class;
+    protected $indexRelations = ['parent'];
+    protected $showRelations = ['parent'];
     
     /**
      * @var PermissionService

@@ -168,9 +168,9 @@ Route::prefix('files')->group(function () {
 });
 
 // Admin routes for enum cache management
-Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function () {
+Route::prefix('admin')->group(function () {
     Route::delete('/enums/{type}/cache', [EnumController::class, 'clearCache']);
-    Route::delete('/enums/cache/all', [EnumController::class, 'clearAllCache']);
+    Route::get('/enums/cache/all', [EnumController::class, 'clearAllCache']);
 });
 
  
