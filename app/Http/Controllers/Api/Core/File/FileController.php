@@ -6,12 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Services\Core\File\FileService;
 use App\Http\Requests\Core\File\UploadFileRequest;
 use App\Http\Requests\Core\File\UploadMultipleFilesRequest;
-use App\Http\Requests\Core\File\GetFileInfoRequest;
 use App\Http\Requests\Core\File\ListFilesRequest;
 use App\Http\Requests\Core\File\DeleteFileRequest;
 use App\Traits\ResponseTrait;
 use App\Traits\LoggingTrait;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Exception;
 
@@ -56,38 +54,6 @@ class FileController extends Controller
     }
 
     /**
-     * Get file info
-     */
-    public function getInfo(GetFileInfoRequest $request): JsonResponse
-    {
-        try {
-            $path = $request->get('path');
-            $info = $this->fileService->getFileInfo($path);
-            if (!$info) {
-                return $this->apiResponse(false, null, 'File không tồn tại', 404);
-            }
-            return $this->apiResponse(true, $info, 'Lấy thông tin file thành công');
-        } catch (Exception $e) {
-            return $this->apiResponse(false, null, 'Không thể lấy thông tin file', 500);
-        }
-    }
-
-    /**
-     * List files
-     */
-    public function list(ListFilesRequest $request): JsonResponse
-    {
-        try {
-            $type = $request->get('type');
-            $date = $request->get('date');
-            $files = $this->fileService->listFiles($type, $date);
-            return $this->apiResponse(true, $files, 'Lấy danh sách file thành công');
-        } catch (Exception $e) {
-            return $this->apiResponse(false, null, 'Không thể lấy danh sách file', 500);
-        }
-    }
-
-    /**
      * Delete file
      */
     public function delete(DeleteFileRequest $request): JsonResponse
@@ -101,39 +67,6 @@ class FileController extends Controller
             return $this->apiResponse(true, null, 'Xóa file thành công');
         } catch (Exception $e) {
             return $this->apiResponse(false, null, 'Không thể xóa file', 500);
-        }
-    }
-
-    /**
-     * Get available dates
-     */
-    public function getAvailableDates(Request $request): JsonResponse
-    {
-        try {
-            $type = $request->get('type');
-            $dates = $this->fileService->getAvailableDates($type);
-            return $this->apiResponse(true, $dates, 'Lấy danh sách ngày có file thành công');
-        } catch (Exception $e) {
-            return $this->apiResponse(false, null, 'Không thể lấy danh sách ngày', 500);
-        }
-    }
-
-    /**
-     * Get supported file types
-     */
-    public function getSupportedTypes(): JsonResponse
-    {
-        try {
-            $types = [
-                'image' => ['jpeg', 'jpg', 'png', 'gif', 'webp', 'svg'],
-                'document' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'],
-                'video' => ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'],
-                'audio' => ['mp3', 'wav', 'ogg', 'aac', 'm4a'],
-                'archive' => ['zip', 'rar', '7z', 'tar', 'gz'],
-            ];
-            return $this->apiResponse(true, $types, 'Lấy danh sách loại file được hỗ trợ thành công');
-        } catch (Exception $e) {
-            return $this->apiResponse(false, null, 'Không thể lấy danh sách loại file', 500);
         }
     }
 }

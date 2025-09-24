@@ -25,46 +25,6 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Register repositories
-        $this->app->singleton(BrandRepository::class);
-        $this->app->singleton(CategoryRepository::class);
-        $this->app->singleton(WarehouseRepository::class);
-        $this->app->singleton(ProductRepository::class);
-        $this->app->singleton(InventoryRepository::class);
-        $this->app->singleton(ImageRepository::class);
-
-        // Register services
-        $this->app->singleton(BrandService::class, function ($app) {
-            return new BrandService($app->make(BrandRepository::class));
-        });
-
-        $this->app->singleton(CategoryService::class, function ($app) {
-            return new CategoryService($app->make(CategoryRepository::class));
-        });
-
-        $this->app->singleton(WarehouseService::class, function ($app) {
-            return new WarehouseService($app->make(WarehouseRepository::class));
-        });
-
-        $this->app->singleton(ProductService::class, function ($app) {
-            return new ProductService($app->make(ProductRepository::class));
-        });
-
-        $this->app->singleton(StockSummaryService::class, function ($app) {
-            return new StockSummaryService();
-        });
-
-        $this->app->singleton(InventoryService::class, function ($app) {
-            return new InventoryService(
-                $app->make(InventoryRepository::class),
-                $app->make(ProductRepository::class),
-                $app->make(WarehouseRepository::class),
-                $app->make(StockSummaryService::class)
-            );
-        });
-
-        $this->app->singleton(ImageService::class, function ($app) {
-            return new ImageService($app->make(ImageRepository::class));
-        });
     }
 
     /**
