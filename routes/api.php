@@ -33,12 +33,6 @@ Route::options('{any}', function () {
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
-// Public API - thông tin công khai
-Route::get('/products', [ProductController::class, 'index']);
-Route::get('/categories', [CategoryController::class, 'index']);
-Route::get('/brands', [BrandController::class, 'index']);
-Route::get('/products/{id}', [ProductController::class, 'show']);
-
 // Public API - posts
 Route::get('/posts', [App\Http\Controllers\Api\Public\Post\PostController::class, 'index']);
 Route::get('/posts/slug/{slug}', [App\Http\Controllers\Api\Public\Post\PostController::class, 'showBySlug']);
@@ -53,20 +47,6 @@ Route::get('/post-tags/{id}', [App\Http\Controllers\Api\Public\PostTag\PostTagCo
 // Public API - Contact (không cần authentication)
 Route::post('/contacts', [PublicContactController::class, 'store']);
 
-// Public API - Config (không cần authentication)
-Route::prefix('config')->group(function () {
-    Route::get('/public', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getPublicConfigs']);
-    Route::get('/group/{group}', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getGroupConfig']);
-    Route::post('/groups', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getMultipleGroups']);
-    Route::get('/key', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getConfigByKey']);
-    Route::post('/keys', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getMultipleConfigs']);
-    
-    // Config V2 compatibility routes
-    Route::get('/general', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getGeneralConfig']);
-    Route::get('/email', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getEmailConfig']);
-    Route::get('/by-key', [App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController::class, 'getByKey']);
-});
-
 // Protected routes - cần authentication
 Route::middleware(['auto.auth'])->group(function () {
     // User routes
@@ -74,59 +54,16 @@ Route::middleware(['auto.auth'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
     Route::post('/change-password', [ApiUserController::class, 'changePassword']);
-    Route::get('/my-orders', [OrderController::class, 'myOrders']);
-    Route::post('/orders', [OrderController::class, 'store']);
-});
 
 // Admin User API - cần role admin
 Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function () { 
     Route::apiResource('users', UserController::class);
     Route::apiResource('permissions', PermissionController::class);
     Route::apiResource('roles', RoleController::class);
-    Route::apiResource('products', ProductController::class);
-    Route::get('products/select/list', [ProductController::class, 'getForSelect']);
-    Route::get('products/{product}/variants', [App\Http\Controllers\Api\Admin\Variant\VariantController::class, 'getProductVariants']);
-    Route::get('products/{product}/images', [App\Http\Controllers\Api\Admin\Image\ImageController::class, 'getProductImages']);
-    Route::apiResource('variants', App\Http\Controllers\Api\Admin\Variant\VariantController::class);
-    Route::apiResource('images', App\Http\Controllers\Api\Admin\Image\ImageController::class);
-    Route::apiResource('attributes', App\Http\Controllers\Api\Admin\Attribute\AttributeController::class);
     
     // Image upload
     Route::post('images/upload', [App\Http\Controllers\Api\Core\File\FileController::class, 'upload']);
-    // Search endpoints - phải đặt trước resource routes
-    Route::get('brands/search', [BrandController::class, 'search']);
-    Route::get('categories/search', [CategoryController::class, 'search']);
     
-    Route::apiResource('warehouses', WarehouseController::class);
-    
-    // Inventory routes
-    Route::prefix('inventory')->group(function () {
-        Route::get('/', [InventoryController::class, 'index']);
-        
-        // Filter options - phải đặt trước {inventory} route
-        Route::get('/filter-options', [InventoryController::class, 'filterOptions']);
-        
-        // Special operations
-        Route::post('/import', [InventoryController::class, 'import']);
-        Route::post('/export', [InventoryController::class, 'export']);
-        
-        // Reports
-        Route::get('/expiring-soon', [InventoryController::class, 'expiringSoon']);
-        Route::get('/expired', [InventoryController::class, 'expired']);
-        Route::get('/low-stock', [InventoryController::class, 'lowStock']);
-        
-        // CRUD operations - đặt sau các specific routes
-        Route::get('/{inventory}', [InventoryController::class, 'show']);
-        Route::post('/', [InventoryController::class, 'store']);
-        Route::put('/{inventory}', [InventoryController::class, 'update']);
-        Route::delete('/{inventory}', [InventoryController::class, 'destroy']);
-    });
-    
-    Route::apiResource('orders', OrderController::class);
-    Route::apiResource('categories', CategoryController::class);
-    Route::apiResource('brands', BrandController::class);
-    Route::apiResource('attributes', AttributeController::class);
-    Route::apiResource('attribute-values', AttributeValueController::class);
     Route::patch('users/toggle-status/{id}', [UserController::class, 'toggleStatus']);
     Route::get('users/statuses', [UserController::class, 'statuses']);
     Route::post('users/{id}/change-password', [UserController::class, 'changePassword']);
@@ -172,55 +109,3 @@ Route::prefix('admin')->group(function () {
     Route::delete('/enums/{type}/cache', [EnumController::class, 'clearCache']);
     Route::get('/enums/cache/all', [EnumController::class, 'clearAllCache']);
 });
-
- 
-
-Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function () {
-    Route::prefix('shipping')->group(function () {
-        Route::apiResource('api', App\Http\Controllers\Api\Admin\Shipping\ShippingApiConfigController::class);
-        Route::apiResource('services', App\Http\Controllers\Api\Admin\Shipping\ShippingServiceController::class);
-        Route::apiResource('zones', App\Http\Controllers\Api\Admin\Shipping\ShippingZoneController::class);
-        Route::apiResource('pricing', App\Http\Controllers\Api\Admin\Shipping\ShippingPricingRuleController::class);
-        Route::apiResource('promotions', App\Http\Controllers\Api\Admin\Shipping\ShippingPromotionController::class);
-        Route::apiResource('delivery', App\Http\Controllers\Api\Admin\Shipping\ShippingDeliverySettingController::class);
-        Route::apiResource('advanced', App\Http\Controllers\Api\Admin\Shipping\ShippingAdvancedSettingController::class);
-    });
-    
-    // System Config routes - Admin
-    Route::prefix('system-configs')->group(function () {
-        // Specific routes phải đặt trước generic routes
-        Route::get('/groups/list', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'getGroups']);
-        Route::get('/search', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'search']);
-        
-        // Theo nhóm - phải đặt trước {id} route
-        Route::get('/group/{group}', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'getByGroup']);
-        Route::put('/group/{group}', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'updateGroup']);
-        Route::get('/group/{group}/form', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'getGroupForm']);
-        
-        // Bulk operations
-        Route::post('/bulk-update', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'bulkUpdate']);
-        Route::post('/bulk-delete', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'bulkDelete']);
-        
-        // Cache management
-        Route::post('/clear-cache', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'clearCache']);
-        
-        // CRUD cơ bản - đặt cuối cùng
-        Route::get('/', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'index']);
-        Route::get('/{id}', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'show']);
-        Route::post('/', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'store']);
-        Route::put('/{id}', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'update']);
-        Route::delete('/{id}', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'destroy']);
-    });
-    
-    // Config V2 Admin routes
-    Route::prefix('config-v2')->group(function () {
-        Route::post('/general', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'updateGeneralConfig']);
-        Route::post('/email', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'updateEmailConfig']);
-        Route::post('/key', [App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController::class, 'updateByKey']);
-    });
-    
-}); 
-
- 
-
- 
