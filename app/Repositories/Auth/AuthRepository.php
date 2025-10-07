@@ -63,11 +63,10 @@ class AuthRepository extends BaseRepository
     /**
      * Tạo profile cho user
      */
-    public function createProfile(int $userId, array $data): Profile
+    public function createProfile(int $userId): Profile
     {
         return Profile::create([
-            'user_id' => $userId,
-            'name' => $data['name']
+            'user_id' => $userId
         ]);
     }
 

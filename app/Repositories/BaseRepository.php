@@ -218,4 +218,22 @@ abstract class BaseRepository
         
         return $model->restore();
     }
+
+    /**
+     * Convert một mảng dữ liệu (array) thành Eloquent Model mà KHÔNG cần query lại DB.
+     *
+     * @param array $data        Dữ liệu dạng mảng (thường lấy từ toArray()).
+     * @param string $modelClass Tên class đầy đủ của model (vd: \App\Models\User::class).
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function arrayToModel(array $data, string $modelClass): Model
+    {
+        /** @var Model $model */
+        $model = new $modelClass();
+        $model->forceFill($data); // fill tất cả field, bỏ qua fillable
+        $model->exists = true;
+
+        return $model;
+    }
 } 

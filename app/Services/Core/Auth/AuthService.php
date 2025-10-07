@@ -11,11 +11,14 @@ use App\Enums\UserStatus;
 
 class AuthService extends BaseService
 {
-    protected $authRepository;
+    /**
+     * @var AuthRepository
+     */
+    protected $repo;
 
-    public function __construct(AuthRepository $authRepository)
+    public function __construct(AuthRepository $repo)
     {
-        $this->authRepository = $authRepository;
+        parent::__construct($repo);
     }
 
     /**
@@ -23,8 +26,8 @@ class AuthService extends BaseService
      */
     public function login(array $data): array
     {
-        $user = $this->authRepository->findByEmail($data['email']);
-        if (!$user || !Hash::check($data['password'], $user->password)) {
+        $user = $this->repo->findOneBy(['email' => $data['email']]);
+        if (!$user || !Hash::check($data['password'], $user['password'] ?? '')) {
             return [
                 'success' => false,
                 'message' => 'Email hoặc mật khẩu không đúng.',
@@ -32,7 +35,7 @@ class AuthService extends BaseService
             ];
         }
         // Kiểm tra trạng thái user
-        if ($user->status !== UserStatus::Active) {
+        if ($user['status'] !== UserStatus::Active->value) {
             return [
                 'success' => false,
                 'message' => 'Tài khoản đã bị khóa hoặc không hoạt động.',
@@ -40,8 +43,9 @@ class AuthService extends BaseService
             ];
         }
         // Cập nhật last_login_at
-        $this->authRepository->updateLastLogin($user->id);
+        $this->repo->updateBy(['id' => $user['id'] ?? ''], ['last_login_at'=> now()]);
         // Tạo token với thời gian hết hạn 30 phút
+        $user = $this->repo->arrayToModel($user, $this->repo->model());
         $token = $user->createToken('auth-token', ['*'], now()->addMinutes(60))->plainTextToken;
         return [
             'success' => true,
@@ -58,18 +62,16 @@ class AuthService extends BaseService
     public function register(array $data): array
     {
         try {
-            $user = $this->authRepository->create([
+            $user = $this->repo->create([
                 'username' => $data['username'] ?? $data['email'],
                 'email' => $data['email'],
                 'phone' => $data['phone'] ?? null,
                 'password' => Hash::make($data['password']),
-                'status' => UserStatus::Active
+                'status' => UserStatus::Active->value
             ]);
             // Tạo profile
-            if (isset($data['name'])) {
-                $this->authRepository->createProfile($user->id, [
-                    'name' => $data['name']
-                ]);
+            if (!empty($user['id'])) {
+                $this->repo->createProfile($user['id']);
             }
             return [
                 'success' => true,
@@ -111,10 +113,11 @@ class AuthService extends BaseService
     /**
      * Refresh token
      */
-    public function refreshToken(User $user): array
+    public function refreshToken(int $id): array
     {
         try {
             // Revoke current token
+            $user = $this->repo->arrayToModel($this->repo->find($id),$this->repo->model());
             $user->tokens()->delete();
             // Tạo token mới với thời gian hết hạn 24 giờ
             $token = $user->createToken('auth-token', ['*'], now()->addHours(24))->plainTextToken;
@@ -137,10 +140,12 @@ class AuthService extends BaseService
     /**
      * Lấy thông tin user hiện tại
      */
-    public function me(User $user): array
+    public function me(int $id): array
     {
         try {
             // Load permissions và roles
+            $fields = ['id', 'username', 'email', 'phone', 'status', 'email_verified_at', 'phone_verified_at', 'last_login_at', 'created_at', 'updated_at'];
+            $user = $this->repo->arrayToModel($this->repo->find($id,fields:$fields),$this->repo->model());
             $user->load(['permissions']);
             return [
                 'success' => true,
@@ -159,18 +164,25 @@ class AuthService extends BaseService
     /**
      * Đổi mật khẩu
      */
-    public function changePassword(User $user, array $data): array
+    public function changePassword(int $id, array $data): array
     {
+        if(empty($id) || empty($data)){
+            return [];
+        }
+        $user = $this->repo->find($id);
+        var_dump($user);
         // Kiểm tra mật khẩu cũ
-        if (!Hash::check($data['current_password'], $user->password)) {
+        if (!Hash::check($data['current_password'], $user['password'] ?? '')) {
             return [
                 'success' => false,
                 'message' => 'Mật khẩu hiện tại không đúng.',
                 'status' => 400
             ];
         }
+        var_dump(111111);
         // Cập nhật mật khẩu mới
-        $this->authRepository->updatePassword($user->id, Hash::make($data['password']));
+        $this->repo->updateBy(['id'=>$id],['password'=> Hash::make($data['password'])]);
+        $user = $this->repo->arrayToModel($user,$this->repo->model());
         // Xóa tất cả token cũ để user phải đăng nhập lại
         $user->tokens()->delete();
         return [

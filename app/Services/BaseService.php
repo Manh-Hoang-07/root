@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 abstract class BaseService
 {
     protected $repo;
-
+    protected static array $fields =['*'];
 
     public function __construct($repo)
     {

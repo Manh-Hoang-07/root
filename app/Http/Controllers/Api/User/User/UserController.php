@@ -48,8 +48,9 @@ class UserController extends BaseController
      */
     public function changePassword(ChangePasswordRequest $request): JsonResponse
     {
+        $user = $request->user();
         $result = $this->authService->changePassword(
-            $request->user(),
+            $user->id,
             $request->validated()
         );
         if ($result['success']) {

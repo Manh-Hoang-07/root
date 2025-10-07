@@ -61,7 +61,7 @@ class AuthController extends BaseController
         if (!$user) {
             return $this->apiResponse(false, null, '', 401);
         }
-        $result = $this->service->me($user);
+        $result = $this->service->me($user->id);
         if ($result['success']) {
             return $this->successResponseWithFormat($result['data'], $result['message']);
         }
@@ -91,7 +91,7 @@ class AuthController extends BaseController
                 return $this->apiResponse(false, null, '', 401);
             }
             // Sử dụng AuthService để refresh token
-            $result = $this->service->refreshToken($user);
+            $result = $this->service->refreshToken($user->id);
             if ($result['success']) {
                 $response = $this->apiResponse(true, $result['data'], $result['message']);
                 // Set cookie với token mới
