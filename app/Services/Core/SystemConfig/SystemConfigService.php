@@ -5,29 +5,24 @@ namespace App\Services\Core\SystemConfig;
 use App\Models\SystemConfig;
 use App\Repositories\SystemConfig\SystemConfigRepository;
 use App\Services\Core\SystemConfig\ConfigValidationService;
-use App\Services\Core\SystemConfig\ConfigCacheService;
 use App\Services\Core\SystemConfig\ConfigAuditService;
 use App\Services\BaseService;
 use App\Enums\ConfigGroup;
 use App\Enums\ConfigType;
-use Illuminate\Support\Facades\Cache;
 use Exception;
 
 class SystemConfigService extends BaseService
 {
     protected ConfigValidationService $validationService;
-    protected ConfigCacheService $cacheService;
     protected ConfigAuditService $auditService;
 
     public function __construct(
         SystemConfigRepository $repository,
         ConfigValidationService $validationService,
-        ConfigCacheService $cacheService,
         ConfigAuditService $auditService
     ) {
         parent::__construct($repository);
         $this->validationService = $validationService;
-        $this->cacheService = $cacheService;
         $this->auditService = $auditService;
     }
 
@@ -45,16 +40,12 @@ class SystemConfigService extends BaseService
     public function getByGroup(string $group, bool $publicOnly = false): array
     {
         try {
-            $cacheKey = "config_group_{$group}" . ($publicOnly ? '_public' : '');
+            $conditions = ['group' => $group, 'status' => 'active'];
+            if ($publicOnly) {
+                $conditions['is_public'] = true;
+            }
             
-            return $this->cacheService->remember($cacheKey, 300, function() use ($group, $publicOnly) {
-                $conditions = ['group' => $group, 'status' => 'active'];
-                if ($publicOnly) {
-                    $conditions['is_public'] = true;
-                }
-                
-                return $this->getBy($conditions);
-            });
+            return $this->getBy($conditions);
         } catch (Exception $e) {
             throw new Exception("Failed to get configs by group: " . $e->getMessage());
         }
@@ -66,22 +57,18 @@ class SystemConfigService extends BaseService
     public function getByKey(string $key, $default = null, bool $publicOnly = false): mixed
     {
         try {
-            $cacheKey = "config_key_{$key}" . ($publicOnly ? '_public' : '');
+            $conditions = ['key' => $key, 'status' => 'active'];
+            if ($publicOnly) {
+                $conditions['is_public'] = true;
+            }
             
-            return $this->cacheService->remember($cacheKey, 300, function() use ($key, $default, $publicOnly) {
-                $conditions = ['key' => $key, 'status' => 'active'];
-                if ($publicOnly) {
-                    $conditions['is_public'] = true;
-                }
-                
-                $config = $this->findOneBy($conditions);
-                
-                if (!$config) {
-                    return $default;
-                }
-                
-                return $this->parseConfigValue($config);
-            });
+            $config = $this->findOneBy($conditions);
+            
+            if (!$config) {
+                return $default;
+            }
+            
+            return $this->parseConfigValue($config);
         } catch (Exception $e) {
             return $default;
         }
@@ -93,23 +80,19 @@ class SystemConfigService extends BaseService
     public function getByKeys(array $keys, bool $publicOnly = false): array
     {
         try {
-            $cacheKey = "config_keys_" . md5(implode(',', $keys)) . ($publicOnly ? '_public' : '');
+            $conditions = ['key' => $keys, 'status' => 'active'];
+            if ($publicOnly) {
+                $conditions['is_public'] = true;
+            }
             
-            return $this->cacheService->remember($cacheKey, 300, function() use ($keys, $publicOnly) {
-                $conditions = ['key' => $keys, 'status' => 'active'];
-                if ($publicOnly) {
-                    $conditions['is_public'] = true;
-                }
-                
-                $configs = $this->getBy($conditions);
-                $result = [];
-                
-                foreach ($configs as $config) {
-                    $result[$config['key']] = $this->parseConfigValue($config);
-                }
-                
-                return $result;
-            });
+            $configs = $this->getBy($conditions);
+            $result = [];
+            
+            foreach ($configs as $config) {
+                $result[$config['key']] = $this->parseConfigValue($config);
+            }
+            
+            return $result;
         } catch (Exception $e) {
             return [];
         }
@@ -121,9 +104,7 @@ class SystemConfigService extends BaseService
     public function getPublicConfigs(): array
     {
         try {
-            return $this->cacheService->remember('config_public_all', 300, function() {
-                return $this->getBy(['is_public' => true, 'status' => 'active']);
-            });
+            return $this->getBy(['is_public' => true, 'status' => 'active']);
         } catch (Exception $e) {
             return [];
         }
@@ -150,8 +131,6 @@ class SystemConfigService extends BaseService
                 $userId
             );
             
-            // Clear cache
-            $this->clearConfigCache($data['key']);
             
             return [
                 'success' => true,
@@ -194,8 +173,6 @@ class SystemConfigService extends BaseService
                 }
             }
             
-            // Clear all cache
-            $this->clearAllCache();
             
             if (empty($errors)) {
                 return [
@@ -245,8 +222,6 @@ class SystemConfigService extends BaseService
                     $userId
                 );
                 
-                // Clear cache
-                $this->clearConfigCache($key);
                 
                 return [
                     'success' => true,
@@ -269,32 +244,6 @@ class SystemConfigService extends BaseService
 
 
 
-    /**
-     * Clear config cache
-     */
-    public function clearConfigCache(string $key): bool
-    {
-        try {
-            $this->cacheService->forget("config_key_{$key}");
-            $this->cacheService->forget("config_key_{$key}_public");
-            return true;
-        } catch (Exception $e) {
-            return false;
-        }
-    }
-
-    /**
-     * Clear all config cache
-     */
-    public function clearAllCache(): bool
-    {
-        try {
-            $this->cacheService->clearAllConfigCache();
-            return true;
-        } catch (Exception $e) {
-            return false;
-        }
-    }
 
     /**
      * Parse config value based on type

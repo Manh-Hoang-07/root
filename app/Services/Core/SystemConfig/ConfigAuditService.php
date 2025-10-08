@@ -2,14 +2,21 @@
 
 namespace App\Services\Core\SystemConfig;
 
+use App\Repositories\ConfigAudit\ConfigAuditRepository;
+use App\Services\BaseService;
 use App\Models\ConfigAuditLog;
 use App\Models\SystemConfig;
 use App\Enums\ConfigAction;
 use Illuminate\Support\Facades\Request;
 use Exception;
 
-class ConfigAuditService
+class ConfigAuditService extends BaseService
 {
+    public function __construct(ConfigAuditRepository $repository)
+    {
+        parent::__construct($repository);
+    }
+
     /**
      * Log config change
      */
@@ -32,7 +39,7 @@ class ConfigAuditService
                 'metadata' => $this->getMetadata($configKey, $oldValue, $newValue),
             ];
 
-            ConfigAuditLog::create($auditData);
+            $this->create($auditData);
             return true;
         } catch (Exception $e) {
             return false;
@@ -45,15 +52,16 @@ class ConfigAuditService
     public function getConfigAuditLogs(string $configKey, int $limit = 50): array
     {
         try {
-            $logs = ConfigAuditLog::where('config_key', $configKey)
-                ->orderBy('created_at', 'desc')
-                ->limit($limit)
-                ->get()
-                ->toArray();
-
-            return $logs;
+            $filters = [
+                'config_key' => $configKey,
+                'order_by' => 'created_at',
+                'order_direction' => 'desc',
+                'per_page' => $limit
+            ];
+            
+            return $this->list($filters);
         } catch (Exception $e) {
-            return [];
+            return ['data' => [], 'total' => 0];
         }
     }
 
@@ -63,15 +71,16 @@ class ConfigAuditService
     public function getUserAuditLogs(int $userId, int $limit = 50): array
     {
         try {
-            $logs = ConfigAuditLog::where('changed_by', $userId)
-                ->orderBy('created_at', 'desc')
-                ->limit($limit)
-                ->get()
-                ->toArray();
-
-            return $logs;
+            $filters = [
+                'changed_by' => $userId,
+                'order_by' => 'created_at',
+                'order_direction' => 'desc',
+                'per_page' => $limit
+            ];
+            
+            return $this->list($filters);
         } catch (Exception $e) {
-            return [];
+            return ['data' => [], 'total' => 0];
         }
     }
 
@@ -81,15 +90,17 @@ class ConfigAuditService
     public function getAuditLogsByDateRange(string $startDate, string $endDate, int $limit = 100): array
     {
         try {
-            $logs = ConfigAuditLog::whereBetween('created_at', [$startDate, $endDate])
-                ->orderBy('created_at', 'desc')
-                ->limit($limit)
-                ->get()
-                ->toArray();
-
-            return $logs;
+            $filters = [
+                'date_from' => $startDate,
+                'date_to' => $endDate,
+                'order_by' => 'created_at',
+                'order_direction' => 'desc',
+                'per_page' => $limit
+            ];
+            
+            return $this->list($filters);
         } catch (Exception $e) {
-            return [];
+            return ['data' => [], 'total' => 0];
         }
     }
 
