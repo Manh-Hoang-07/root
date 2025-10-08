@@ -57,6 +57,24 @@ abstract class BaseService
         return $this->repo->findOneBy($conditions, $relations, $fields);
     }
 
+    /**
+     * Get records by condition (without pagination)
+     */
+    public function getBy(array $conditions = [], array $relations = [], array $fields = ['*']): array
+    {
+        return $this->repo->getBy($conditions, $relations, $fields);
+    }
+
+    /**
+     * Create or update record by conditions
+     */
+    public function createOrUpdate(array $conditions, array $data): array
+    {
+        return $this->repo->createOrUpdate($conditions, $data);
+    }
+
+
+
     // Consolidated: Use findOneBy for arbitrary field lookups
 
     /**

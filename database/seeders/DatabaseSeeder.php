@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             AuthSeeder::class,
             RolePermissionSeeder::class,
             RoleSeeder::class,
+            SystemConfigSeeder::class,
             PostCategorySeeder::class,
             PostTagSeeder::class,
             PostSeeder::class,

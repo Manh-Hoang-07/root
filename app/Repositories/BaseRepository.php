@@ -118,6 +118,25 @@ abstract class BaseRepository
     }
 
     /**
+     * Create or update record by conditions
+     * @param array $conditions Conditions to find existing record
+     * @param array $data Data to create/update
+     * @return array Created or updated record
+     */
+    public function createOrUpdate(array $conditions, array $data): array
+    {
+        $existing = $this->findOneBy($conditions);
+        
+        if ($existing) {
+            return $this->update($existing['id'], $data);
+        } else {
+            // Merge conditions into data for creation
+            $createData = array_merge($conditions, $data);
+            return $this->create($createData);
+        }
+    }
+
+    /**
      * Get the model instance
      * @return Model
      */
