@@ -18,137 +18,28 @@ class ConfigAuditService extends BaseService
     }
 
     /**
-     * Log config change
+     * Create audit log
      */
-    public function logConfigChange(
-        string $configKey,
-        ?string $oldValue,
-        ?string $newValue,
-        string $action,
-        ?int $userId = null
-    ): bool {
+    public function create($data): array
+    {
         try {
             $auditData = [
-                'config_key' => $configKey,
-                'old_value' => $oldValue,
-                'new_value' => $newValue,
-                'action' => $action,
-                'changed_by' => $userId,
+                'config_key' => $data['config_key'],
+                'old_value' => $data['old_value'] ?? null,
+                'new_value' => $data['new_value'] ?? null,
+                'action' => $data['action'],
+                'changed_by' => $data['changed_by'] ?? null,
                 'ip_address' => Request::ip(),
                 'user_agent' => Request::userAgent(),
-                'metadata' => $this->getMetadata($configKey, $oldValue, $newValue),
+                'metadata' => $this->getMetadata($data['config_key'], $data['old_value'] ?? null, $data['new_value'] ?? null),
             ];
 
-            $this->create($auditData);
-            return true;
+            return parent::create($auditData);
         } catch (Exception $e) {
-            return false;
+            throw $e;
         }
     }
 
-    /**
-     * Get audit logs for specific config
-     */
-    public function getConfigAuditLogs(string $configKey, int $limit = 50): array
-    {
-        try {
-            $filters = [
-                'config_key' => $configKey,
-                'order_by' => 'created_at',
-                'order_direction' => 'desc',
-                'per_page' => $limit
-            ];
-            
-            return $this->list($filters);
-        } catch (Exception $e) {
-            return ['data' => [], 'total' => 0];
-        }
-    }
-
-    /**
-     * Get audit logs by user
-     */
-    public function getUserAuditLogs(int $userId, int $limit = 50): array
-    {
-        try {
-            $filters = [
-                'changed_by' => $userId,
-                'order_by' => 'created_at',
-                'order_direction' => 'desc',
-                'per_page' => $limit
-            ];
-            
-            return $this->list($filters);
-        } catch (Exception $e) {
-            return ['data' => [], 'total' => 0];
-        }
-    }
-
-    /**
-     * Get audit logs by date range
-     */
-    public function getAuditLogsByDateRange(string $startDate, string $endDate, int $limit = 100): array
-    {
-        try {
-            $filters = [
-                'date_from' => $startDate,
-                'date_to' => $endDate,
-                'order_by' => 'created_at',
-                'order_direction' => 'desc',
-                'per_page' => $limit
-            ];
-            
-            return $this->list($filters);
-        } catch (Exception $e) {
-            return ['data' => [], 'total' => 0];
-        }
-    }
-
-    /**
-     * Get audit statistics
-     */
-    public function getAuditStatistics(?string $startDate = null, ?string $endDate = null): array
-    {
-        try {
-            $query = ConfigAuditLog::query();
-            
-            if ($startDate && $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            }
-
-            $total = $query->count();
-            $byAction = $query->selectRaw('action, COUNT(*) as count')
-                ->groupBy('action')
-                ->pluck('count', 'action')
-                ->toArray();
-            
-            $byUser = $query->selectRaw('changed_by, COUNT(*) as count')
-                ->whereNotNull('changed_by')
-                ->groupBy('changed_by')
-                ->pluck('count', 'changed_by')
-                ->toArray();
-
-            return [
-                'total' => $total,
-                'by_action' => $byAction,
-                'by_user' => $byUser,
-                'date_range' => [
-                    'start' => $startDate,
-                    'end' => $endDate
-                ]
-            ];
-        } catch (Exception $e) {
-            return [
-                'total' => 0,
-                'by_action' => [],
-                'by_user' => [],
-                'date_range' => [
-                    'start' => $startDate,
-                    'end' => $endDate
-                ]
-            ];
-        }
-    }
 
     /**
      * Clean old audit logs

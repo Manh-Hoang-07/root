@@ -111,37 +111,29 @@ class SystemConfigService extends BaseService
     }
 
     /**
-     * Create or update config
+     * Create or update config with validation and audit
      */
-    public function createOrUpdateConfig(array $data, ?int $userId = null): array
+    public function createOrUpdate(array $conditions, array $data, ?int $userId = null): array
     {
         try {
             // Validate data
             $this->validationService->validateConfigData($data);
             
             // Create or update using BaseService method
-            $result = $this->createOrUpdate(['key' => $data['key']], $data);
+            $result = parent::createOrUpdate($conditions, $data);
             
             // Log audit
-            $this->auditService->logConfigChange(
-                $data['key'],
-                null,
-                $result['value'] ?? null,
-                'updated',
-                $userId
-            );
+            $this->auditService->create([
+                'config_key' => $data['key'],
+                'old_value' => null,
+                'new_value' => $result['value'] ?? null,
+                'action' => 'updated',
+                'changed_by' => $userId
+            ]);
             
-            
-            return [
-                'success' => true,
-                'data' => $result,
-                'message' => 'Cấu hình đã được cập nhật thành công'
-            ];
+            return $result;
         } catch (Exception $e) {
-            return [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
+            throw $e;
         }
     }
 
@@ -156,18 +148,8 @@ class SystemConfigService extends BaseService
             
             foreach ($configs as $index => $config) {
                 try {
-                    $this->validationService->validateConfigData($config);
-                    $result = $this->createOrUpdate(['key' => $config['key']], $config);
+                    $result = $this->createOrUpdate(['key' => $config['key']], $config, $userId);
                     $results[] = $result;
-                    
-                    // Log audit
-                    $this->auditService->logConfigChange(
-                        $config['key'],
-                        null,
-                        $result['value'] ?? null,
-                        'updated',
-                        $userId
-                    );
                 } catch (Exception $e) {
                     $errors[] = "Config {$index}: " . $e->getMessage();
                 }
@@ -214,13 +196,13 @@ class SystemConfigService extends BaseService
             
             if ($deleted) {
                 // Log audit
-                $this->auditService->logConfigChange(
-                    $key,
-                    $config['value'],
-                    null,
-                    'deleted',
-                    $userId
-                );
+                $this->auditService->create([
+                    'config_key' => $key,
+                    'old_value' => $config['value'],
+                    'new_value' => null,
+                    'action' => 'deleted',
+                    'changed_by' => $userId
+                ]);
                 
                 
                 return [
