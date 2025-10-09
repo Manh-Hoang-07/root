@@ -77,7 +77,7 @@ Route::middleware(['auto.auth'])->group(function () {
 });
 
 // Admin API
-Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function () {
+Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
     // Admin routes for enum cache management
     Route::delete('/enums/cache/{type}', [EnumController::class, 'clearCache']);
     Route::get('/enums/cache/all', [EnumController::class, 'clearAllCache']);
@@ -115,7 +115,6 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
         Route::get('/key', [SystemConfigController::class, 'getByKey']);
         Route::get('/keys', [SystemConfigController::class, 'getByKeys']);
         Route::get('/list', [SystemConfigController::class, 'index']);
-        Route::get('/for-user', [SystemConfigController::class, 'getForUser']);
         
         // Management operations
         Route::post('/store', [SystemConfigController::class, 'store']);
@@ -126,7 +125,6 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
     // Admin - Config Audit module
     Route::prefix('config-audit')->group(function () {
         Route::get('/logs', [ConfigAuditController::class, 'index']);
-        Route::post('/clean-old', [ConfigAuditController::class, 'cleanOldLogs']);
         Route::get('/export', [ConfigAuditController::class, 'export']);
     });
 });

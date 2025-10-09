@@ -42,21 +42,6 @@ class ConfigAuditService extends BaseService
 
 
     /**
-     * Clean old audit logs
-     */
-    public function cleanOldLogs(int $daysToKeep = 90): int
-    {
-        try {
-            $cutoffDate = now()->subDays($daysToKeep);
-            $deletedCount = ConfigAuditLog::where('created_at', '<', $cutoffDate)->delete();
-            
-            return $deletedCount;
-        } catch (Exception $e) {
-            return 0;
-        }
-    }
-
-    /**
      * Get audit logs with flexible filtering
      */
     public function getAuditLogs(array $filters = [], int $perPage = 50): array
@@ -88,42 +73,6 @@ class ConfigAuditService extends BaseService
             return $this->list($conditions, $perPage);
         } catch (Exception $e) {
             throw new Exception("Failed to get audit logs: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Get audit statistics
-     */
-    public function getAuditStatistics(?string $startDate = null, ?string $endDate = null): array
-    {
-        try {
-            $query = ConfigAuditLog::query();
-            
-            if ($startDate && $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            }
-
-            $totalLogs = $query->count();
-            $uniqueUsers = $query->distinct('changed_by')->count('changed_by');
-            $uniqueConfigs = $query->distinct('config_key')->count('config_key');
-            
-            $actionStats = $query->selectRaw('action, COUNT(*) as count')
-                ->groupBy('action')
-                ->pluck('count', 'action')
-                ->toArray();
-
-            return [
-                'total_logs' => $totalLogs,
-                'unique_users' => $uniqueUsers,
-                'unique_configs' => $uniqueConfigs,
-                'action_statistics' => $actionStats,
-                'date_range' => [
-                    'start_date' => $startDate,
-                    'end_date' => $endDate
-                ]
-            ];
-        } catch (Exception $e) {
-            throw new Exception("Failed to get audit statistics: " . $e->getMessage());
         }
     }
 

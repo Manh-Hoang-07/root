@@ -68,7 +68,22 @@ class SystemConfigService extends BaseService
                 return $default;
             }
             
-            return $this->parseConfigValue($config);
+            // Lấy value trực tiếp từ database, không qua accessor
+            $rawValue = $config['value'];
+            $type = $config['type'];
+            $isEncrypted = $config['is_encrypted'] ?? false;
+            
+            // Decrypt nếu cần
+            if ($isEncrypted && $rawValue) {
+                try {
+                    $rawValue = decrypt($rawValue);
+                } catch (Exception $e) {
+                    // Return original value if decryption fails
+                }
+            }
+            
+            // Parse theo type
+            return $this->parseValueByType($rawValue, $type);
         } catch (Exception $e) {
             return $default;
         }
@@ -89,7 +104,20 @@ class SystemConfigService extends BaseService
             $result = [];
             
             foreach ($configs as $config) {
-                $result[$config['key']] = $this->parseConfigValue($config);
+                $rawValue = $config['value'];
+                $type = $config['type'];
+                $isEncrypted = $config['is_encrypted'] ?? false;
+                
+                // Decrypt nếu cần
+                if ($isEncrypted && $rawValue) {
+                    try {
+                        $rawValue = decrypt($rawValue);
+                    } catch (Exception $e) {
+                        // Return original value if decryption fails
+                    }
+                }
+                
+                $result[$config['key']] = $this->parseValueByType($rawValue, $type);
             }
             
             return $result;
@@ -276,6 +304,36 @@ class SystemConfigService extends BaseService
     }
 
     /**
+     * Parse value by type
+     */
+    private function parseValueByType($value, string $type): mixed
+    {
+        // Simple type conversion
+        switch ($type) {
+            case 'integer':
+                return is_numeric($value) ? (int) $value : $value;
+            case 'float':
+                return is_numeric($value) ? (float) $value : $value;
+            case 'boolean':
+                return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            case 'json':
+                if (is_string($value)) {
+                    $decoded = json_decode($value, true);
+                    return json_last_error() === JSON_ERROR_NONE ? $decoded : $value;
+                }
+                return $value;
+            case 'array':
+                if (is_string($value)) {
+                    $decoded = json_decode($value, true);
+                    return json_last_error() === JSON_ERROR_NONE ? $decoded : [$value];
+                }
+                return is_array($value) ? $value : [$value];
+            default:
+                return $value;
+        }
+    }
+
+    /**
      * Parse config value based on type - simplified version
      */
     private function parseConfigValue(array $config): mixed
@@ -285,18 +343,15 @@ class SystemConfigService extends BaseService
         
         // Decrypt if needed
         if ($config['is_encrypted']) {
-            $value = decrypt($value);
+            try {
+                $value = decrypt($value);
+            } catch (Exception $e) {
+                // Return original value if decryption fails
+                $value = $config['value'];
+            }
         }
         
-        // Simple type conversion
-        return match ($type) {
-            ConfigType::INTEGER->value => (int) $value,
-            ConfigType::FLOAT->value => (float) $value,
-            ConfigType::BOOLEAN->value => filter_var($value, FILTER_VALIDATE_BOOLEAN),
-            ConfigType::JSON->value => is_string($value) ? json_decode($value, true) : $value,
-            ConfigType::ARRAY->value => is_string($value) ? json_decode($value, true) ?: [$value] : (array) $value,
-            default => $value
-        };
+        return $this->parseValueByType($value, $type);
     }
 
     /**

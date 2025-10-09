@@ -158,29 +158,4 @@ class SystemConfigController extends BaseController
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
     }
-
-    /**
-     * Get configs for specific user
-     */
-    public function getForUser(Request $request): JsonResponse
-    {
-        try {
-            $userId = $request->get('user_id');
-            $group = $request->get('group');
-
-            if (!$userId) {
-                return $this->apiResponse(false, null, 'User ID là bắt buộc', 400);
-            }
-
-            $conditions = ['status' => 'active'];
-            if ($group) {
-                $conditions['group'] = $group;
-            }
-            
-            $configs = $this->service->getBy($conditions);
-            return $this->apiResponse(true, $configs, 'Lấy cấu hình người dùng thành công');
-        } catch (Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
 }

@@ -34,22 +34,7 @@ class ConfigAuditController extends BaseController
             $perPage = min($perPage, $this->maxPerPage);
 
             $logs = $this->service->getAuditLogs($filters, $perPage);
-            return $this->apiResponse(true, $logs, 'Lấy audit logs thành công');
-        } catch (Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
-
-    /**
-     * Clean old audit logs
-     */
-    public function cleanOldLogs(Request $request): JsonResponse
-    {
-        try {
-            $daysToKeep = $request->get('days_to_keep', 90);
-
-            $deletedCount = $this->service->cleanOldLogs($daysToKeep);
-            return $this->apiResponse(true, ['deleted_count' => $deletedCount], "Đã xóa {$deletedCount} audit logs cũ");
+            return $this->successResponseWithFormat($logs, 'Lấy audit logs thành công');
         } catch (Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
