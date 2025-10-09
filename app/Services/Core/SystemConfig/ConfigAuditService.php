@@ -42,17 +42,37 @@ class ConfigAuditService extends BaseService
 
 
     /**
-     * Clean old audit logs
+     * Get audit logs with flexible filtering
      */
-    public function cleanOldLogs(int $daysToKeep = 90): int
+    public function getAuditLogs(array $filters = [], int $perPage = 50): array
     {
         try {
-            $cutoffDate = now()->subDays($daysToKeep);
-            $deletedCount = ConfigAuditLog::where('created_at', '<', $cutoffDate)->delete();
+            $conditions = [];
             
-            return $deletedCount;
+            // Filter by config key
+            if (!empty($filters['config_key'])) {
+                $conditions['config_key'] = $filters['config_key'];
+            }
+            
+            // Filter by user ID
+            if (!empty($filters['user_id'])) {
+                $conditions['changed_by'] = $filters['user_id'];
+            }
+            
+            // Filter by action
+            if (!empty($filters['action'])) {
+                $conditions['action'] = $filters['action'];
+            }
+            
+            // Filter by date range
+            if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+                $conditions[] = ['created_at', '>=', $filters['start_date']];
+                $conditions[] = ['created_at', '<=', $filters['end_date']];
+            }
+            
+            return $this->list($conditions, $perPage);
         } catch (Exception $e) {
-            return 0;
+            throw new Exception("Failed to get audit logs: " . $e->getMessage());
         }
     }
 
