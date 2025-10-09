@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\Menu\MenuController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Admin\User\UserController;
 use App\Http\Controllers\Api\Core\Enum\EnumController;
@@ -95,12 +96,13 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
 
     // Admin - Posts module
     Route::apiResource('posts', PostController::class);
+    Route::apiResource('menus', MenuController::class);
     Route::apiResource('post-categories', PostCategoryController::class);
     Route::apiResource('post-tags', PostTagController::class);
-    
+
     // Admin - Contact module
     Route::apiResource('contacts', ContactController::class);
-    
+
     // Contact additional routes - phải đặt sau apiResource
     Route::prefix('contacts')->group(function () {
         // Status management

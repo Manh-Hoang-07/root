@@ -15,7 +15,7 @@ class MakeModuleCommand extends Command
         {--public : Place in Public sub-namespace}
         {--user : Place in User sub-namespace}';
 
-    protected $description = 'Generate a module with Controller, Service, Repository, and Model. Supports API/Web and namespace grouping.';
+    protected $description = 'Generate a module with Controller, Service, Repository, Model and Request, supporting API/Web and module namespaces.';
 
     public function handle()
     {
@@ -24,7 +24,7 @@ class MakeModuleCommand extends Command
         // Determine type (Api or Web)
         $type = $this->option('api') ? 'Api' : 'Web';
 
-        // Determine module scope (default Core)
+        // Determine module scope
         $scope = 'Core';
         foreach (['admin', 'core', 'public', 'user'] as $option) {
             if ($this->option($option)) {
@@ -38,20 +38,23 @@ class MakeModuleCommand extends Command
         $serviceDir = app_path("Services/{$scope}/{$name}");
         $repoDir = app_path("Repositories/{$name}");
         $modelDir = app_path("Models");
+        $requestDir = app_path("Http/Requests/{$scope}/{$name}");
 
         // Ensure directories exist
         File::ensureDirectoryExists($controllerDir);
         File::ensureDirectoryExists($serviceDir);
         File::ensureDirectoryExists($repoDir);
         File::ensureDirectoryExists($modelDir);
+        File::ensureDirectoryExists($requestDir);
 
         // Create files
         File::put("{$controllerDir}/{$name}Controller.php", $this->controllerTemplate($name, $type, $scope));
         File::put("{$serviceDir}/{$name}Service.php", $this->serviceTemplate($name, $scope));
         File::put("{$repoDir}/{$name}Repository.php", $this->repositoryTemplate($name));
         File::put("{$modelDir}/{$name}.php", $this->modelTemplate($name));
+        File::put("{$requestDir}/{$name}Request.php", $this->requestTemplate($name, $scope));
 
-        $this->info("✅ [{$type}/{$scope}] module [{$name}] generated successfully!");
+        $this->info("✅ [{$type}/{$scope}] module [{$name}] generated successfully with Request!");
     }
 
     protected function controllerTemplate($name, $type, $scope)
@@ -67,13 +70,12 @@ namespace App\Http\Controllers\\{$type}\\{$scope}\\{$name};
 
 use {$baseController};
 use App\Services\\{$scope}\\{$name}\\{$name}Service;
+use App\Http\Requests\\{$scope}\\{$name}\\{$name}Request;
 
 class {$name}Controller extends BaseController
 {
-    /**
-     * @var {$name}Service
-     */
-    protected \$service;
+    protected \$storeRequestClass = {$name}Request::class;
+    protected \$updateRequestClass = {$name}Request::class;
 
     public function __construct({$name}Service \$service)
     {
@@ -139,8 +141,29 @@ class {$name} extends Model
 PHP;
     }
 
-    private function lc($string)
+    protected function requestTemplate($name, $scope)
     {
-        return lcfirst($string);
+        return <<<PHP
+<?php
+
+namespace App\Http\Requests\\{$scope}\\{$name};
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class {$name}Request extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'max:255'],
+        ];
+    }
+}
+PHP;
     }
 }
