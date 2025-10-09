@@ -372,3 +372,4 @@ php artisan tinker
 **Tác giả**: AI Assistant  
 **Ngày tạo**: 2025-10-08  
 **Phiên bản**: 1.0.0
+

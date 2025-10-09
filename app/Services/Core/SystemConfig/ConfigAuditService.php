@@ -57,6 +57,77 @@ class ConfigAuditService extends BaseService
     }
 
     /**
+     * Get audit logs with flexible filtering
+     */
+    public function getAuditLogs(array $filters = [], int $perPage = 50): array
+    {
+        try {
+            $conditions = [];
+            
+            // Filter by config key
+            if (!empty($filters['config_key'])) {
+                $conditions['config_key'] = $filters['config_key'];
+            }
+            
+            // Filter by user ID
+            if (!empty($filters['user_id'])) {
+                $conditions['changed_by'] = $filters['user_id'];
+            }
+            
+            // Filter by action
+            if (!empty($filters['action'])) {
+                $conditions['action'] = $filters['action'];
+            }
+            
+            // Filter by date range
+            if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+                $conditions[] = ['created_at', '>=', $filters['start_date']];
+                $conditions[] = ['created_at', '<=', $filters['end_date']];
+            }
+            
+            return $this->list($conditions, $perPage);
+        } catch (Exception $e) {
+            throw new Exception("Failed to get audit logs: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get audit statistics
+     */
+    public function getAuditStatistics(?string $startDate = null, ?string $endDate = null): array
+    {
+        try {
+            $query = ConfigAuditLog::query();
+            
+            if ($startDate && $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            }
+
+            $totalLogs = $query->count();
+            $uniqueUsers = $query->distinct('changed_by')->count('changed_by');
+            $uniqueConfigs = $query->distinct('config_key')->count('config_key');
+            
+            $actionStats = $query->selectRaw('action, COUNT(*) as count')
+                ->groupBy('action')
+                ->pluck('count', 'action')
+                ->toArray();
+
+            return [
+                'total_logs' => $totalLogs,
+                'unique_users' => $uniqueUsers,
+                'unique_configs' => $uniqueConfigs,
+                'action_statistics' => $actionStats,
+                'date_range' => [
+                    'start_date' => $startDate,
+                    'end_date' => $endDate
+                ]
+            ];
+        } catch (Exception $e) {
+            throw new Exception("Failed to get audit statistics: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Export audit logs
      */
     public function exportAuditLogs(?string $startDate = null, ?string $endDate = null, string $format = 'json'): string

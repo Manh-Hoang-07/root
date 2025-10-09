@@ -111,23 +111,88 @@ class SystemConfigService extends BaseService
     }
 
     /**
+     * Override BaseService create to handle audit logging
+     */
+    public function create($data): array
+    {
+        try {
+            // Validate data
+            $validatedData = $this->validationService->validate($data);
+            
+            // Create using BaseService method
+            $result = parent::create($validatedData);
+            
+            // Log audit
+            $this->auditService->create([
+                'config_key' => $validatedData['key'],
+                'old_value' => null,
+                'new_value' => $result['value'] ?? null,
+                'action' => 'created',
+                'changed_by' => request()->user()?->id
+            ]);
+            
+            return $result;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Override BaseService update to handle audit logging
+     */
+    public function update($id, $data): ?array
+    {
+        try {
+            // Get old config for audit
+            $oldConfig = $this->find($id);
+            if (!$oldConfig) {
+                return null;
+            }
+            
+            // Validate data
+            $validatedData = $this->validationService->validate($data);
+            
+            // Update using BaseService method
+            $result = parent::update($id, $validatedData);
+            
+            if ($result) {
+                // Log audit
+                $this->auditService->create([
+                    'config_key' => $validatedData['key'],
+                    'old_value' => $oldConfig['value'],
+                    'new_value' => $result['value'] ?? null,
+                    'action' => 'updated',
+                    'changed_by' => request()->user()?->id
+                ]);
+            }
+            
+            return $result;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
      * Create or update config with validation and audit
      */
     public function createOrUpdate(array $conditions, array $data, ?int $userId = null): array
     {
         try {
-            // Validate data
-            $this->validationService->validateConfigData($data);
+            // Validate data và lấy dữ liệu đã validate
+            $validatedData = $this->validationService->validate($data);
+            
+            // Get old config for audit if updating
+            $oldConfig = $this->findOneBy($conditions);
             
             // Create or update using BaseService method
-            $result = parent::createOrUpdate($conditions, $data);
+            $result = parent::createOrUpdate($conditions, $validatedData);
             
             // Log audit
             $this->auditService->create([
-                'config_key' => $data['key'],
-                'old_value' => null,
+                'config_key' => $validatedData['key'],
+                'old_value' => $oldConfig ? $oldConfig['value'] : null,
                 'new_value' => $result['value'] ?? null,
-                'action' => 'updated',
+                'action' => $oldConfig ? 'updated' : 'created',
                 'changed_by' => $userId
             ]);
             
@@ -179,88 +244,78 @@ class SystemConfigService extends BaseService
     }
 
     /**
-     * Delete config by key
+     * Override BaseService delete to handle audit logging
      */
-    public function deleteByKey(string $key, ?int $userId = null): array
+    public function delete($id): bool
     {
         try {
-            $config = $this->findOneBy(['key' => $key, 'status' => 'active']);
+            // Get config before deletion for audit
+            $config = $this->find($id);
             if (!$config) {
-                return [
-                    'success' => false,
-                    'message' => 'Cấu hình không tồn tại'
-                ];
+                return false;
             }
             
-            $deleted = $this->delete($config['id']);
+            // Delete using BaseService method
+            $deleted = parent::delete($id);
             
             if ($deleted) {
                 // Log audit
                 $this->auditService->create([
-                    'config_key' => $key,
+                    'config_key' => $config['key'],
                     'old_value' => $config['value'],
                     'new_value' => null,
                     'action' => 'deleted',
-                    'changed_by' => $userId
+                    'changed_by' => request()->user()?->id
                 ]);
-                
-                
-                return [
-                    'success' => true,
-                    'message' => 'Cấu hình đã được xóa thành công'
-                ];
             }
             
-            return [
-                'success' => false,
-                'message' => 'Không thể xóa cấu hình'
-            ];
+            return $deleted;
         } catch (Exception $e) {
-            return [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
+            return false;
         }
     }
 
-
-
-
-
     /**
-     * Parse config value based on type
+     * Parse config value based on type - simplified version
      */
     private function parseConfigValue(array $config): mixed
     {
         $value = $config['value'];
         $type = $config['type'];
         
+        // Decrypt if needed
         if ($config['is_encrypted']) {
             $value = decrypt($value);
         }
         
-        switch ($type) {
-            case ConfigType::INTEGER->value:
-                return (int) $value;
-                
-            case ConfigType::FLOAT->value:
-                return (float) $value;
-                
-            case ConfigType::BOOLEAN->value:
-                return filter_var($value, FILTER_VALIDATE_BOOLEAN);
-                
-            case ConfigType::JSON->value:
-                return is_string($value) ? json_decode($value, true) : $value;
-                
-            case ConfigType::ARRAY->value:
-                if (is_string($value)) {
-                    $decoded = json_decode($value, true);
-                    return is_array($decoded) ? $decoded : [$value];
-                }
-                return is_array($value) ? $value : [$value];
-                
-            default:
-                return $value;
+        // Simple type conversion
+        return match ($type) {
+            ConfigType::INTEGER->value => (int) $value,
+            ConfigType::FLOAT->value => (float) $value,
+            ConfigType::BOOLEAN->value => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+            ConfigType::JSON->value => is_string($value) ? json_decode($value, true) : $value,
+            ConfigType::ARRAY->value => is_string($value) ? json_decode($value, true) ?: [$value] : (array) $value,
+            default => $value
+        };
+    }
+
+    /**
+     * Clear all config cache
+     */
+    public function clearAllCache(): bool
+    {
+        try {
+            // Clear Laravel cache
+            \Illuminate\Support\Facades\Cache::forget('system_configs');
+            \Illuminate\Support\Facades\Cache::forget('system_config_groups');
+            
+            // Clear any other config-related cache keys
+            $cacheKeys = \Illuminate\Support\Facades\Cache::getStore()->getPrefix() . '*system_config*';
+            \Illuminate\Support\Facades\Cache::flush();
+            
+            return true;
+        } catch (Exception $e) {
+            return false;
         }
     }
 }

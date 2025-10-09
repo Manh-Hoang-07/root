@@ -10,85 +10,31 @@ use Exception;
 
 class ConfigAuditController extends BaseController
 {
-    protected $auditService;
+    protected $indexRelations = [];
+    protected $showRelations = [];
+    protected $defaultPerPage = 50;
+    protected $maxPerPage = 200;
+    
+    /** @var ConfigAuditService */
+    protected $service;
 
-    public function __construct(ConfigAuditService $auditService)
+    public function __construct(ConfigAuditService $service)
     {
-        $this->auditService = $auditService;
+        parent::__construct($service);
     }
 
     /**
-     * Get audit logs for specific config
+     * Get audit logs with flexible filtering
      */
-    public function getConfigLogs(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
-            $configKey = $request->get('config_key');
-            $limit = $request->get('limit', 50);
+            $filters = $request->only(['config_key', 'user_id', 'start_date', 'end_date', 'action']);
+            $perPage = $request->get('per_page', $this->defaultPerPage);
+            $perPage = min($perPage, $this->maxPerPage);
 
-            if (!$configKey) {
-                return $this->apiResponse(false, null, 'Config key là bắt buộc', 400);
-            }
-
-            $logs = $this->auditService->getConfigAuditLogs($configKey, $limit);
-            return $this->apiResponse(true, $logs, 'Lấy audit logs cấu hình thành công');
-        } catch (Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
-
-    /**
-     * Get audit logs by user
-     */
-    public function getUserLogs(Request $request): JsonResponse
-    {
-        try {
-            $userId = $request->get('user_id');
-            $limit = $request->get('limit', 50);
-
-            if (!$userId) {
-                return $this->apiResponse(false, null, 'User ID là bắt buộc', 400);
-            }
-
-            $logs = $this->auditService->getUserAuditLogs($userId, $limit);
-            return $this->apiResponse(true, $logs, 'Lấy audit logs người dùng thành công');
-        } catch (Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
-
-    /**
-     * Get audit logs by date range
-     */
-    public function getLogsByDateRange(Request $request): JsonResponse
-    {
-        try {
-            $startDate = $request->get('start_date');
-            $endDate = $request->get('end_date');
-            $limit = $request->get('limit', 100);
-
-            if (!$startDate || !$endDate) {
-                return $this->apiResponse(false, null, 'Ngày bắt đầu và kết thúc là bắt buộc', 400);
-            }
-
-            $logs = $this->auditService->getAuditLogsByDateRange($startDate, $endDate, $limit);
-            return $this->apiResponse(true, $logs, 'Lấy audit logs theo ngày thành công');
-        } catch (Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
-
-    /**
-     * Get audit statistics
-     */
-    public function getStatistics(Request $request): JsonResponse
-    {
-        try {
-            $startDate = $request->get('start_date');
-            $endDate = $request->get('end_date');
-
-            $stats = $this->auditService->getAuditStatistics($startDate, $endDate);
-            return $this->apiResponse(true, $stats, 'Lấy thống kê audit thành công');
+            $logs = $this->service->getAuditLogs($filters, $perPage);
+            return $this->apiResponse(true, $logs, 'Lấy audit logs thành công');
         } catch (Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
@@ -102,7 +48,7 @@ class ConfigAuditController extends BaseController
         try {
             $daysToKeep = $request->get('days_to_keep', 90);
 
-            $deletedCount = $this->auditService->cleanOldLogs($daysToKeep);
+            $deletedCount = $this->service->cleanOldLogs($daysToKeep);
             return $this->apiResponse(true, ['deleted_count' => $deletedCount], "Đã xóa {$deletedCount} audit logs cũ");
         } catch (Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
@@ -112,14 +58,14 @@ class ConfigAuditController extends BaseController
     /**
      * Export audit logs
      */
-    public function export(Request $request): JsonResponse
+    public function export(Request $request)
     {
         try {
             $startDate = $request->get('start_date');
             $endDate = $request->get('end_date');
             $format = $request->get('format', 'json');
 
-            $exportData = $this->auditService->exportAuditLogs($startDate, $endDate, $format);
+            $exportData = $this->service->exportAuditLogs($startDate, $endDate, $format);
             
             return response($exportData)
                 ->header('Content-Type', $format === 'csv' ? 'text/csv' : 'application/json')

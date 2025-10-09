@@ -16,7 +16,7 @@ use App\Http\Controllers\Api\Public\PostTag\PostTagController as PublicPostTagCo
 use App\Http\Controllers\Api\Admin\Post\PostController;
 use App\Http\Controllers\Api\Admin\PostCategory\PostCategoryController;
 use App\Http\Controllers\Api\Admin\PostTag\PostTagController;
-use App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController as AdminSystemConfigController;
+use App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController;
 use App\Http\Controllers\Api\Admin\SystemConfig\ConfigAuditController;
 use App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController as PublicSystemConfigController;
 
@@ -57,7 +57,7 @@ Route::get('/post-tags/slug/{slug}', [PublicPostTagController::class, 'showBySlu
 // Public API - Contact module
 Route::apiResource('contacts', PublicPostTagController::class)->only(['store']);
 
-// Public API - System Config
+// Public API - System Config module
 Route::prefix('config')->group(function () {
     Route::get('/groups', [PublicSystemConfigController::class, 'getGroups']);
     Route::get('/group', [PublicSystemConfigController::class, 'getByGroup']);
@@ -65,8 +65,6 @@ Route::prefix('config')->group(function () {
     Route::get('/keys', [PublicSystemConfigController::class, 'getByKeys']);
     Route::get('/all', [PublicSystemConfigController::class, 'getAll']);
     Route::get('/search', [PublicSystemConfigController::class, 'search']);
-    Route::get('/with-default', [PublicSystemConfigController::class, 'getWithDefault']);
-    Route::get('/groups', [PublicSystemConfigController::class, 'getByGroups']);
 });
 
 // User API
@@ -109,28 +107,25 @@ Route::middleware(['auto.auth', 'role:admin'])->prefix('admin')->group(function 
         Route::post('/bulk-update-status', [ContactController::class, 'bulkUpdateStatus']);
     });
 
-    // Admin - System Config
+    // Admin - System Config module
     Route::prefix('config')->group(function () {
-        // Config management
-        Route::get('/groups', [AdminSystemConfigController::class, 'getGroups']);
-        Route::get('/group', [AdminSystemConfigController::class, 'getByGroup']);
-        Route::get('/key', [AdminSystemConfigController::class, 'getByKey']);
-        Route::get('/keys', [AdminSystemConfigController::class, 'getByKeys']);
-        Route::post('/store', [AdminSystemConfigController::class, 'storeConfig']);
-        Route::post('/bulk-update', [AdminSystemConfigController::class, 'bulkUpdate']);
-        Route::delete('/delete', [AdminSystemConfigController::class, 'destroyConfig']);
-        Route::get('/list', [AdminSystemConfigController::class, 'index']);
-        Route::get('/search', [AdminSystemConfigController::class, 'search']);
-        Route::post('/clear-cache', [AdminSystemConfigController::class, 'clearCache']);
-        Route::get('/for-user', [AdminSystemConfigController::class, 'getForUser']);
+        // Basic CRUD operations
+        Route::get('/groups', [SystemConfigController::class, 'getGroups']);
+        Route::get('/group', [SystemConfigController::class, 'getByGroup']);
+        Route::get('/key', [SystemConfigController::class, 'getByKey']);
+        Route::get('/keys', [SystemConfigController::class, 'getByKeys']);
+        Route::get('/list', [SystemConfigController::class, 'index']);
+        Route::get('/for-user', [SystemConfigController::class, 'getForUser']);
+        
+        // Management operations
+        Route::post('/store', [SystemConfigController::class, 'store']);
+        Route::post('/bulk-update', [SystemConfigController::class, 'bulkUpdate']);
+        Route::post('/clear-cache', [SystemConfigController::class, 'clearCache']);
     });
 
-    // Admin - Config Audit
+    // Admin - Config Audit module
     Route::prefix('config-audit')->group(function () {
-        Route::get('/config-logs', [ConfigAuditController::class, 'getConfigLogs']);
-        Route::get('/user-logs', [ConfigAuditController::class, 'getUserLogs']);
-        Route::get('/date-range', [ConfigAuditController::class, 'getLogsByDateRange']);
-        Route::get('/statistics', [ConfigAuditController::class, 'getStatistics']);
+        Route::get('/logs', [ConfigAuditController::class, 'index']);
         Route::post('/clean-old', [ConfigAuditController::class, 'cleanOldLogs']);
         Route::get('/export', [ConfigAuditController::class, 'export']);
     });
