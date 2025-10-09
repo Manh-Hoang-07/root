@@ -18,10 +18,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'auto.auth' => \App\Http\Middleware\Api\AutoAuthMiddleware::class,
             'cors' => \App\Http\Middleware\CorsMiddleware::class,
         ]);
-        
+
         // Sử dụng middleware CORS tùy chỉnh
         $middleware->prepend(\App\Http\Middleware\CorsMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    ->withCommands([
+        App\Console\Commands\MakeModuleCommand::class,
+    ])
+    ->create();
