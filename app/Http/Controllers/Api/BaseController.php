@@ -179,6 +179,17 @@ abstract class BaseController extends Controller
     }
 
     /**
+     * Process filters before querying - can be overridden in child classes
+     * @param array $filters
+     * @param string $context
+     * @return array
+     */
+    protected function processFilters(array $filters, string $context = 'index'): array
+    {
+        return $filters;
+    }
+
+    /**
      * Get optimized data with common logic
      * @param array $filters
      * @param int $limit
@@ -188,6 +199,9 @@ abstract class BaseController extends Controller
      */
     protected function getOptimizedData(array $filters, int $perPage, string $context = 'index', bool $single = false): array
     {
+        // Process filters - allow child classes to modify filters
+        $filters = $this->processFilters($filters, $context);
+        
         // Check caching
         if ($this->cacheService->shouldCache()) {
             $cacheKey = $this->cacheService->generateKey($filters, $perPage, $context, $single, static::class);
