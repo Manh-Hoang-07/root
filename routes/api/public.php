@@ -39,7 +39,7 @@ Route::get('/post-tags/slug/{slug}', [PostTagController::class, 'showBySlug']);
 Route::apiResource('contacts', ContactController::class)->only(['store']);
 
 // Public API - System Config module
-Route::prefix('config')->group(function () {
+Route::prefix('system-configs')->group(function () {
     Route::get('/groups', [SystemConfigController::class, 'getGroups']);
     Route::get('/key', [SystemConfigController::class, 'getByKey']);
     Route::get('/', [SystemConfigController::class, 'index']);

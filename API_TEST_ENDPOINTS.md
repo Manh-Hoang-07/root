@@ -2,27 +2,27 @@
 
 ## 📋 **ADMIN APIs** (Cần Authentication)
 
-### **Base URL**: `/api/admin/config`
+### **Base URL**: `/api/admin/system-configs`
 
 #### **1. CRUD Operations**
 
-**GET** `/api/admin/config/` - Lấy danh sách configs
+**GET** `/api/admin/system-configs/` - Lấy danh sách configs
 ```bash
-curl -X GET "http://localhost:8000/api/admin/config/" \
+curl -X GET "http://localhost:8000/api/admin/system-configs/" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Accept: application/json"
 ```
 
-**GET** `/api/admin/config/{id}` - Lấy config theo ID
+**GET** `/api/admin/system-configs/{id}` - Lấy config theo ID
 ```bash
-curl -X GET "http://localhost:8000/api/admin/config/1" \
+curl -X GET "http://localhost:8000/api/admin/system-configs/1" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Accept: application/json"
 ```
 
-**POST** `/api/admin/config/store` - Tạo/cập nhật config
+**POST** `/api/admin/system-configs` - Tạo config mới
 ```bash
-curl -X POST "http://localhost:8000/api/admin/config/store" \
+curl -X POST "http://localhost:8000/api/admin/system-configs/store" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
@@ -38,9 +38,9 @@ curl -X POST "http://localhost:8000/api/admin/config/store" \
   }'
 ```
 
-**PUT** `/api/admin/config/{id}` - Cập nhật config
+**PUT** `/api/admin/system-configs/{id}` - Cập nhật config
 ```bash
-curl -X PUT "http://localhost:8000/api/admin/config/1" \
+curl -X PUT "http://localhost:8000/api/admin/system-configs/1" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
@@ -56,32 +56,32 @@ curl -X PUT "http://localhost:8000/api/admin/config/1" \
   }'
 ```
 
-**DELETE** `/api/admin/config/{id}` - Xóa config
+**DELETE** `/api/admin/system-configs/{id}` - Xóa config
 ```bash
-curl -X DELETE "http://localhost:8000/api/admin/config/1" \
+curl -X DELETE "http://localhost:8000/api/admin/system-configs/1" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Accept: application/json"
 ```
 
 #### **2. Special Operations**
 
-**GET** `/api/admin/config/group?group=general` - Lấy configs theo group
+**GET** `/api/admin/system-configs/group?group=general` - Lấy configs theo group
 ```bash
-curl -X GET "http://localhost:8000/api/admin/config/group?group=general" \
+curl -X GET "http://localhost:8000/api/admin/system-configs/group?group=general" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Accept: application/json"
 ```
 
-**GET** `/api/admin/config/key?key=app_name` - Lấy config theo key
+**GET** `/api/admin/system-configs/key?key=app_name` - Lấy config theo key
 ```bash
-curl -X GET "http://localhost:8000/api/admin/config/key?key=app_name" \
+curl -X GET "http://localhost:8000/api/admin/system-configs/key?key=app_name" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Accept: application/json"
 ```
 
-**POST** `/api/admin/config/bulk-update` - Cập nhật nhiều configs
+**POST** `/api/admin/system-configs/bulk-update` - Cập nhật nhiều configs
 ```bash
-curl -X POST "http://localhost:8000/api/admin/config/bulk-update" \
+curl -X POST "http://localhost:8000/api/admin/system-configs/bulk-update" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
@@ -99,9 +99,9 @@ curl -X POST "http://localhost:8000/api/admin/config/bulk-update" \
   }'
 ```
 
-**POST** `/api/admin/config/clear-cache` - Xóa cache
+**POST** `/api/admin/system-configs/clear-cache` - Xóa cache
 ```bash
-curl -X POST "http://localhost:8000/api/admin/config/clear-cache" \
+curl -X POST "http://localhost:8000/api/admin/system-configs/clear-cache" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Accept: application/json"
 ```
@@ -111,47 +111,47 @@ curl -X POST "http://localhost:8000/api/admin/config/clear-cache" \
 **Pagination & Filtering:**
 ```bash
 # Pagination
-curl -X GET "http://localhost:8000/api/admin/config/?page=1&per_page=10"
+curl -X GET "http://localhost:8000/api/admin/system-configs/?page=1&per_page=10"
 
 # Filtering
-curl -X GET "http://localhost:8000/api/admin/config/?group=general&is_public=true&status=active"
+curl -X GET "http://localhost:8000/api/admin/system-configs/?group=general&is_public=true&status=active"
 
 # Sorting
-curl -X GET "http://localhost:8000/api/admin/config/?sort_by=created_at&sort_direction=desc"
+curl -X GET "http://localhost:8000/api/admin/system-configs/?sort_by=created_at&sort_direction=desc"
 
 # Field selection
-curl -X GET "http://localhost:8000/api/admin/config/?fields=id,key,value,group"
+curl -X GET "http://localhost:8000/api/admin/system-configs/?fields=id,key,value,group"
 ```
 
 ---
 
 ## 🌐 **PUBLIC APIs** (Không cần Authentication)
 
-### **Base URL**: `/api/public/config`
+### **Base URL**: `/api/system-configs`
 
 #### **1. Basic Operations**
 
-**GET** `/api/public/config/` - Lấy danh sách public configs
+**GET** `/api/system-configs/` - Lấy danh sách public configs
 ```bash
-curl -X GET "http://localhost:8000/api/public/config/" \
+curl -X GET "http://localhost:8000/api/system-configs/" \
   -H "Accept: application/json"
 ```
 
-**GET** `/api/public/config/groups` - Lấy danh sách public groups
+**GET** `/api/system-configs/groups` - Lấy danh sách public groups
 ```bash
-curl -X GET "http://localhost:8000/api/public/config/groups" \
+curl -X GET "http://localhost:8000/api/system-configs/groups" \
   -H "Accept: application/json"
 ```
 
-**GET** `/api/public/config/{id}` - Lấy config theo ID
+**GET** `/api/system-configs/{id}` - Lấy config theo ID
 ```bash
-curl -X GET "http://localhost:8000/api/public/config/1" \
+curl -X GET "http://localhost:8000/api/system-configs/1" \
   -H "Accept: application/json"
 ```
 
-**GET** `/api/public/config/key?key=app_name` - Lấy config theo key
+**GET** `/api/system-configs/key?key=app_name` - Lấy config theo key
 ```bash
-curl -X GET "http://localhost:8000/api/public/config/key?key=app_name" \
+curl -X GET "http://localhost:8000/api/system-configs/key?key=app_name" \
   -H "Accept: application/json"
 ```
 
@@ -160,19 +160,19 @@ curl -X GET "http://localhost:8000/api/public/config/key?key=app_name" \
 **Filtering:**
 ```bash
 # Filter by group
-curl -X GET "http://localhost:8000/api/public/config/?group=general"
+curl -X GET "http://localhost:8000/api/system-configs/?group=general"
 
 # Filter by multiple groups
-curl -X GET "http://localhost:8000/api/public/config/?group[]=general&group[]=email"
+curl -X GET "http://localhost:8000/api/system-configs/?group[]=general&group[]=email"
 
 # Search by key
-curl -X GET "http://localhost:8000/api/public/config/?search=app"
+curl -X GET "http://localhost:8000/api/system-configs/?search=app"
 
 # Pagination
-curl -X GET "http://localhost:8000/api/public/config/?page=1&per_page=5"
+curl -X GET "http://localhost:8000/api/system-configs/?page=1&per_page=5"
 
 # Field selection
-curl -X GET "http://localhost:8000/api/public/config/?fields=key,value,group"
+curl -X GET "http://localhost:8000/api/system-configs/?fields=key,value,group"
 ```
 
 ---
@@ -182,7 +182,7 @@ curl -X GET "http://localhost:8000/api/public/config/?fields=key,value,group"
 ### **Scenario 1: Tạo Config mới**
 ```bash
 # 1. Tạo config
-curl -X POST "http://localhost:8000/api/admin/config/store" \
+curl -X POST "http://localhost:8000/api/admin/system-configs/store" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -197,17 +197,17 @@ curl -X POST "http://localhost:8000/api/admin/config/store" \
   }'
 
 # 2. Kiểm tra trong Admin
-curl -X GET "http://localhost:8000/api/admin/config/key?key=test_config" \
+curl -X GET "http://localhost:8000/api/admin/system-configs/key?key=test_config" \
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # 3. Kiểm tra trong Public
-curl -X GET "http://localhost:8000/api/public/config/key?key=test_config"
+curl -X GET "http://localhost:8000/api/system-configs/key?key=test_config"
 ```
 
 ### **Scenario 2: Test Cache**
 ```bash
 # 1. Tạo config
-curl -X POST "http://localhost:8000/api/admin/config/store" \
+curl -X POST "http://localhost:8000/api/admin/system-configs/store" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -220,10 +220,10 @@ curl -X POST "http://localhost:8000/api/admin/config/store" \
   }'
 
 # 2. Lấy config (sẽ cache)
-curl -X GET "http://localhost:8000/api/public/config/key?key=cache_test"
+curl -X GET "http://localhost:8000/api/system-configs/key?key=cache_test"
 
 # 3. Cập nhật config
-curl -X PUT "http://localhost:8000/api/admin/config/{id}" \
+curl -X PUT "http://localhost:8000/api/admin/system-configs/{id}" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -236,13 +236,13 @@ curl -X PUT "http://localhost:8000/api/admin/config/{id}" \
   }'
 
 # 4. Lấy lại config (cache đã được clear)
-curl -X GET "http://localhost:8000/api/public/config/key?key=cache_test"
+curl -X GET "http://localhost:8000/api/system-configs/key?key=cache_test"
 ```
 
 ### **Scenario 3: Test Audit Logging**
 ```bash
 # 1. Tạo config (sẽ log audit)
-curl -X POST "http://localhost:8000/api/admin/config/store" \
+curl -X POST "http://localhost:8000/api/admin/system-configs/store" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -255,7 +255,7 @@ curl -X POST "http://localhost:8000/api/admin/config/store" \
   }'
 
 # 2. Cập nhật config (sẽ log audit)
-curl -X PUT "http://localhost:8000/api/admin/config/{id}" \
+curl -X PUT "http://localhost:8000/api/admin/system-configs/{id}" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -268,7 +268,7 @@ curl -X PUT "http://localhost:8000/api/admin/config/{id}" \
   }'
 
 # 3. Xóa config (sẽ log audit)
-curl -X DELETE "http://localhost:8000/api/admin/config/{id}" \
+curl -X DELETE "http://localhost:8000/api/admin/system-configs/{id}" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

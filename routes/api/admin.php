@@ -46,7 +46,7 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
     });
 
     // Admin - System Config module - Special routes BEFORE apiResource
-    Route::prefix('config')->group(function () {
+    Route::prefix('system-configs')->group(function () {
         // Special operations
         Route::get('/group', [SystemConfigController::class, 'getByGroup']);
         Route::get('/key', [SystemConfigController::class, 'getByKey']);
@@ -55,10 +55,10 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
     });
     
     // Admin - System Config module - RESTful routes
-    Route::apiResource('config', SystemConfigController::class);
+    Route::apiResource('system-configs', SystemConfigController::class);
 
     // Admin - Config Audit module
-    Route::prefix('config-audit')->group(function () {
+    Route::prefix('system-configs-audit')->group(function () {
         Route::get('/logs', [ConfigAuditController::class, 'index']);
         Route::get('/export', [ConfigAuditController::class, 'export']);
     });
