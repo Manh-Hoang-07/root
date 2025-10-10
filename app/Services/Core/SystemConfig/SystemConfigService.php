@@ -11,6 +11,7 @@ use App\Enums\ConfigGroup;
 use App\Enums\ConfigType;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class SystemConfigService extends BaseService
@@ -360,42 +361,147 @@ class SystemConfigService extends BaseService
     }
 
     /**
-     * Bulk update configs
+     * Bulk update configs - Ultra-optimized version with transactions
      */
     public function bulkUpdate(array $configs, ?int $userId = null): array
     {
         try {
-            $results = [];
-            $errors = [];
-            
-            foreach ($configs as $index => $config) {
-                try {
-                    $result = $this->createOrUpdate(['key' => $config['key']], $config, $userId);
-                    $results[] = $result;
-                } catch (Exception $e) {
-                    $errors[] = "Config {$index}: " . $e->getMessage();
+            return DB::transaction(function() use ($configs, $userId) {
+                $results = [];
+                $errors = [];
+                $groupsToClear = [];
+                $auditLogs = [];
+                
+                // Get all existing keys in one query
+                $keys = array_column($configs, 'key');
+                $existingConfigs = $this->repo->getBy(['key' => $keys]);
+                $existingMap = collect($existingConfigs)->keyBy('key');
+                
+                // Separate create vs update
+                $toCreate = [];
+                $toUpdate = [];
+                
+                foreach ($configs as $config) {
+                    if ($existingMap->has($config['key'])) {
+                        $toUpdate[] = $config;
+                    } else {
+                        $toCreate[] = $config;
+                    }
                 }
-            }
-            
-            
-            if (empty($errors)) {
-                return [
-                    'success' => true,
-                    'data' => $results,
-                    'message' => 'Tất cả cấu hình đã được cập nhật'
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'message' => 'Một số cấu hình có lỗi',
-                    'data' => $results,
-                    'errors' => $errors
-                ];
-            }
+                
+                // Batch create
+                if (!empty($toCreate)) {
+                    foreach ($toCreate as $config) {
+                        try {
+                            $validatedData = $this->validationService->validate($config);
+                            $result = $this->repo->create($validatedData);
+                            $results[] = $result;
+                            $groupsToClear[] = $result['group'];
+                            
+                            // Prepare audit log
+                            $auditLogs[] = [
+                                'config_key' => $result['key'],
+                                'old_value' => null,
+                                'new_value' => $result['value'],
+                                'action' => 'created',
+                                'changed_by' => $userId,
+                                'ip_address' => request()->ip(),
+                                'user_agent' => request()->userAgent(),
+                                'metadata' => json_encode([
+                                    'config_key' => $result['key'],
+                                    'value_changed' => true,
+                                    'timestamp' => now()->toISOString(),
+                                    'request_id' => request()->header('X-Request-ID'),
+                                ]),
+                                'created_at' => now()
+                            ];
+                        } catch (Exception $e) {
+                            $errors[] = "Config {$config['key']}: " . $e->getMessage();
+                        }
+                    }
+                }
+                
+                // Batch update
+                if (!empty($toUpdate)) {
+                    foreach ($toUpdate as $config) {
+                        try {
+                            $validatedData = $this->validationService->validate($config);
+                            $existingConfig = $existingMap->get($config['key']);
+                            
+                            if ($existingConfig) {
+                                $result = $this->repo->update($existingConfig['id'], $validatedData);
+                                if ($result) {
+                                    $results[] = $result;
+                                    $groupsToClear[] = $result['group'];
+                                    
+                                    // Prepare audit log
+                                    $auditLogs[] = [
+                                        'config_key' => $result['key'],
+                                        'old_value' => $existingConfig['value'],
+                                        'new_value' => $result['value'],
+                                        'action' => 'updated',
+                                        'changed_by' => $userId,
+                                        'ip_address' => request()->ip(),
+                                        'user_agent' => request()->userAgent(),
+                                        'metadata' => json_encode([
+                                            'config_key' => $result['key'],
+                                            'value_changed' => $existingConfig['value'] !== $result['value'],
+                                            'timestamp' => now()->toISOString(),
+                                            'request_id' => request()->header('X-Request-ID'),
+                                        ]),
+                                        'created_at' => now()
+                                    ];
+                                }
+                            }
+                        } catch (Exception $e) {
+                            $errors[] = "Config {$config['key']}: " . $e->getMessage();
+                        }
+                    }
+                }
+                
+                // Batch insert audit logs
+                if (!empty($auditLogs)) {
+                    DB::table('config_audit_logs')->insert($auditLogs);
+                }
+                
+                // Clear cache for all affected groups (once)
+                $uniqueGroups = array_unique($groupsToClear);
+                foreach ($uniqueGroups as $group) {
+                    $this->clearCacheByGroup($group);
+                }
+                
+                if (empty($errors)) {
+                    return [
+                        'success' => true,
+                        'data' => $results,
+                        'message' => 'Tất cả cấu hình đã được cập nhật thành công',
+                        'stats' => [
+                            'total' => count($configs),
+                            'created' => count($toCreate),
+                            'updated' => count($toUpdate),
+                            'groups_affected' => count($uniqueGroups)
+                        ]
+                    ];
+                } else {
+                    return [
+                        'success' => false,
+                        'message' => 'Một số cấu hình có lỗi',
+                        'data' => $results,
+                        'errors' => $errors,
+                        'stats' => [
+                            'total' => count($configs),
+                            'success' => count($results),
+                            'failed' => count($errors),
+                            'created' => count($toCreate),
+                            'updated' => count($toUpdate)
+                        ]
+                    ];
+                }
+            });
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Lỗi hệ thống: ' . $e->getMessage()
             ];
         }
     }
