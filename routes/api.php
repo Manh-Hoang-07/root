@@ -61,11 +61,9 @@ Route::apiResource('contacts', PublicPostTagController::class)->only(['store']);
 // Public API - System Config module
 Route::prefix('config')->group(function () {
     Route::get('/groups', [PublicSystemConfigController::class, 'getGroups']);
-    Route::get('/group', [PublicSystemConfigController::class, 'getByGroup']);
     Route::get('/key', [PublicSystemConfigController::class, 'getByKey']);
-    Route::get('/keys', [PublicSystemConfigController::class, 'getByKeys']);
-    Route::get('/all', [PublicSystemConfigController::class, 'getAll']);
-    Route::get('/search', [PublicSystemConfigController::class, 'search']);
+    Route::get('/', [PublicSystemConfigController::class, 'index']);
+    Route::get('/{id}', [PublicSystemConfigController::class, 'show']);
 });
 
 // User API
@@ -109,20 +107,17 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
         Route::post('/bulk-update-status', [ContactController::class, 'bulkUpdateStatus']);
     });
 
-    // Admin - System Config module
+    // Admin - System Config module - Special routes BEFORE apiResource
     Route::prefix('config')->group(function () {
-        // Basic CRUD operations
-        Route::get('/groups', [SystemConfigController::class, 'getGroups']);
+        // Special operations
         Route::get('/group', [SystemConfigController::class, 'getByGroup']);
         Route::get('/key', [SystemConfigController::class, 'getByKey']);
-        Route::get('/keys', [SystemConfigController::class, 'getByKeys']);
-        Route::get('/list', [SystemConfigController::class, 'index']);
-        
-        // Management operations
-        Route::post('/store', [SystemConfigController::class, 'store']);
         Route::post('/bulk-update', [SystemConfigController::class, 'bulkUpdate']);
         Route::post('/clear-cache', [SystemConfigController::class, 'clearCache']);
     });
+    
+    // Admin - System Config module - RESTful routes
+    Route::apiResource('config', SystemConfigController::class);
 
     // Admin - Config Audit module
     Route::prefix('config-audit')->group(function () {

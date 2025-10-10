@@ -101,7 +101,7 @@ trait ResponseTrait
         }
 
         // Check if data is a paginated collection (Laravel pagination object)
-        if (method_exists($data, 'toArray')) {
+        if (is_object($data) && method_exists($data, 'toArray')) {
             $dataArray = $data->toArray();
             // Check for Laravel pagination structure
             if (isset($dataArray['data']) && (isset($dataArray['links']) || isset($dataArray['meta']))) {
@@ -171,7 +171,7 @@ trait ResponseTrait
     protected function formatSingleData($data)
     {
         if (!$data) {
-            return null;
+            return [];
         }
         // If data is already an array, return as is
         if (is_array($data)) {

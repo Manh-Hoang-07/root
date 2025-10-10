@@ -226,6 +226,7 @@ abstract class BaseController extends Controller
         unset($filters['relations'], $filters['fields'], $filters['per_page']);
         if ($single) {
             $data = $this->service->find($filters['id'], $relations, $fields);
+            $data = $data ?? []; // Ensure array return
         } else {
             $data = $this->service->list($filters, $perPage, $relations, $fields);
         }

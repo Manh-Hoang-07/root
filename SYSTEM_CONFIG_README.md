@@ -82,9 +82,9 @@ app/
 GET /api/config/groups
 ```
 
-#### Lấy cấu hình theo nhóm
+#### Lấy cấu hình theo nhóm (sử dụng index với filter)
 ```
-GET /api/config/group?group=general
+GET /api/config/?group=general
 ```
 
 #### Lấy cấu hình theo key
@@ -92,19 +92,19 @@ GET /api/config/group?group=general
 GET /api/config/key?key=app.name
 ```
 
-#### Lấy nhiều cấu hình theo keys
+#### Lấy nhiều cấu hình theo keys (sử dụng index với filter)
 ```
-GET /api/config/keys?keys[]=app.name&keys[]=app.version
-```
-
-#### Lấy tất cả cấu hình public
-```
-GET /api/config/all
+GET /api/config/?key[]=app.name&key[]=app.version
 ```
 
-#### Tìm kiếm cấu hình
+#### Lấy tất cả cấu hình public (sử dụng index)
 ```
-GET /api/config/search?search=app
+GET /api/config/
+```
+
+#### Lấy cấu hình với pagination và field selection
+```
+GET /api/config/?per_page=10&fields=key,value,description
 ```
 
 ### Admin API (Cần authentication + role admin)
@@ -114,13 +114,9 @@ GET /api/config/search?search=app
 GET    /api/admin/config/groups          # Lấy danh sách nhóm
 GET    /api/admin/config/group           # Lấy cấu hình theo nhóm
 GET    /api/admin/config/key             # Lấy cấu hình theo key
-GET    /api/admin/config/keys            # Lấy nhiều cấu hình
+GET    /api/admin/config/                # Danh sách cấu hình (có phân trang, filters)
 POST   /api/admin/config/store           # Tạo/cập nhật cấu hình
 POST   /api/admin/config/bulk-update     # Cập nhật hàng loạt
-DELETE /api/admin/config/delete          # Xóa cấu hình
-GET    /api/admin/config/list            # Danh sách cấu hình (có phân trang)
-GET    /api/admin/config/search          # Tìm kiếm cấu hình
-GET    /api/admin/config/statistics      # Thống kê cấu hình
 POST   /api/admin/config/clear-cache     # Xóa cache
 ```
 

@@ -32,9 +32,9 @@ curl -X GET "http://localhost:8000/api/config/groups" \
 }
 ```
 
-#### Lấy cấu hình theo nhóm
+#### Lấy cấu hình theo nhóm (sử dụng index với filter)
 ```bash
-curl -X GET "http://localhost:8000/api/config/group?group=general" \
+curl -X GET "http://localhost:8000/api/config/?group=general" \
   -H "Accept: application/json"
 ```
 
@@ -44,15 +44,21 @@ curl -X GET "http://localhost:8000/api/config/key?key=app.name" \
   -H "Accept: application/json"
 ```
 
-#### Lấy nhiều cấu hình
+#### Lấy nhiều cấu hình (sử dụng index với filter)
 ```bash
-curl -X GET "http://localhost:8000/api/config/keys?keys[]=app.name&keys[]=app.version" \
+curl -X GET "http://localhost:8000/api/config/?key[]=app.name&key[]=app.version" \
   -H "Accept: application/json"
 ```
 
-#### Tìm kiếm cấu hình
+#### Lấy tất cả cấu hình public (sử dụng index)
 ```bash
-curl -X GET "http://localhost:8000/api/config/search?search=app" \
+curl -X GET "http://localhost:8000/api/config/" \
+  -H "Accept: application/json"
+```
+
+#### Lấy cấu hình với pagination và field selection
+```bash
+curl -X GET "http://localhost:8000/api/config/?per_page=10&fields=key,value,description" \
   -H "Accept: application/json"
 ```
 
@@ -113,9 +119,37 @@ curl -X DELETE "http://localhost:8000/api/admin/config/delete?key=test.setting" 
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 
-#### Lấy danh sách cấu hình (có phân trang)
+#### Lấy cấu hình theo nhóm
 ```bash
-curl -X GET "http://localhost:8000/api/admin/config/list?per_page=10&page=1" \
+curl -X GET "http://localhost:8000/api/admin/config/group?group=general" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+#### Lấy cấu hình theo key
+```bash
+curl -X GET "http://localhost:8000/api/admin/config/key?key=app.name" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+#### Lấy danh sách cấu hình (có phân trang và filters)
+```bash
+curl -X GET "http://localhost:8000/api/admin/config/?per_page=10&page=1" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+#### Lấy cấu hình theo group (sử dụng index với filter)
+```bash
+curl -X GET "http://localhost:8000/api/admin/config/?group=general" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+#### Lấy cấu hình với field selection
+```bash
+curl -X GET "http://localhost:8000/api/admin/config/?fields=key,value,type,group" \
   -H "Accept: application/json" \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```

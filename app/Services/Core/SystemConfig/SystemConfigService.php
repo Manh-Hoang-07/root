@@ -9,12 +9,15 @@ use App\Services\Core\SystemConfig\ConfigAuditService;
 use App\Services\BaseService;
 use App\Enums\ConfigGroup;
 use App\Enums\ConfigType;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class SystemConfigService extends BaseService
 {
     protected ConfigValidationService $validationService;
     protected ConfigAuditService $auditService;
+    protected ?array $oldConfig = null;
 
     public function __construct(
         SystemConfigRepository $repository,
@@ -27,11 +30,103 @@ class SystemConfigService extends BaseService
     }
 
     /**
-     * Get all config groups
+     * Hook method called when create operation succeeds
+     * Clear cache and perform post-creation tasks
      */
-    public function getGroups(): array
+    protected function onCreateSuccess(array $result, array $data): void
     {
-        return $this->repo->getGroups();
+        // Clear cache for this config group
+        $this->clearCacheByGroup($result['group']);
+        
+        // Log audit
+        $this->auditService->create([
+            'config_key' => $result['key'],
+            'old_value' => null,
+            'new_value' => $result['value'] ?? null,
+            'action' => 'created',
+            'changed_by' => request()->user()?->id
+        ]);
+    }
+
+    /**
+     * Hook method called when update operation succeeds
+     * Clear cache and perform post-update tasks
+     */
+    protected function onUpdateSuccess(array $result, $id, array $data): void
+    {
+        // Clear cache for this config group
+        $this->clearCacheByGroup($result['group']);
+        
+        // Log audit
+        $this->auditService->create([
+            'config_key' => $result['key'],
+            'old_value' => $this->oldConfig ? $this->oldConfig['value'] : null,
+            'new_value' => $result['value'] ?? null,
+            'action' => 'updated',
+            'changed_by' => request()->user()?->id
+        ]);
+        
+        // Clear old config
+        $this->oldConfig = null;
+    }
+
+    /**
+     * Hook method called when delete operation succeeds
+     * Clear cache and perform post-deletion tasks
+     */
+    protected function onDeleteSuccess(?array $item, $id): void
+    {
+        if ($item) {
+            // Clear cache for this config group
+            $this->clearCacheByGroup($item['group']);
+            
+            // Log audit
+            $this->auditService->create([
+                'config_key' => $item['key'],
+                'old_value' => $item['value'],
+                'new_value' => null,
+                'action' => 'deleted',
+                'changed_by' => request()->user()?->id
+            ]);
+        }
+    }
+
+    /**
+     * Hook method called when createOrUpdate operation succeeds
+     * Clear cache and perform post-operation tasks
+     */
+    protected function onCreateOrUpdateSuccess(array $result, array $conditions, array $data): void
+    {
+        // Clear cache for this config group
+        $this->clearCacheByGroup($result['group']);
+        
+        // Log audit
+        $this->auditService->create([
+            'config_key' => $result['key'],
+            'old_value' => $this->oldConfig ? $this->oldConfig['value'] : null,
+            'new_value' => $result['value'] ?? null,
+            'action' => $this->oldConfig ? 'updated' : 'created',
+            'changed_by' => request()->user()?->id
+        ]);
+        
+        // Clear old config
+        $this->oldConfig = null;
+    }
+
+    /**
+     * Clear cache for a specific config group
+     */
+    private function clearCacheByGroup(string $group): void
+    {
+        // Clear cache for the specific group
+        $cacheKey = "config_group_{$group}";
+        Cache::forget($cacheKey);
+        
+        // Clear general config cache
+        Cache::forget('all_configs');
+        
+        // Clear groups cache
+        Cache::forget('system_config_groups');
     }
 
     /**
@@ -45,7 +140,8 @@ class SystemConfigService extends BaseService
                 $conditions['is_public'] = true;
             }
             
-            return $this->getBy($conditions);
+            $result = $this->getBy($conditions);
+            return $result ?? [];
         } catch (Exception $e) {
             throw new Exception("Failed to get configs by group: " . $e->getMessage());
         }
@@ -132,14 +228,76 @@ class SystemConfigService extends BaseService
     public function getPublicConfigs(): array
     {
         try {
-            return $this->getBy(['is_public' => true, 'status' => 'active']);
+            $result = $this->getBy(['is_public' => true, 'status' => 'active']);
+            return $result ?? [];
         } catch (Exception $e) {
             return [];
         }
     }
 
     /**
-     * Override BaseService create to handle audit logging
+     * Get all config groups with metadata
+     */
+    public function getGroups(): array
+    {
+        try {
+            $cacheKey = 'system_config_groups';
+            
+            return Cache::remember($cacheKey, 600, function () {
+                $configs = $this->getBy(['status' => 'active']);
+                $configs = $configs ?? [];
+                
+                $groups = [];
+                foreach ($configs as $config) {
+                    $group = $config['group'];
+                    
+                    if (!isset($groups[$group])) {
+                        $groups[$group] = [
+                            'name' => $group,
+                            'display_name' => ucfirst(str_replace('_', ' ', $group)),
+                            'description' => $this->getGroupDescription($group),
+                            'is_public' => $config['is_public'] ?? false,
+                            'config_count' => 0,
+                            'public_config_count' => 0
+                        ];
+                    }
+                    
+                    $groups[$group]['config_count']++;
+                    if ($config['is_public']) {
+                        $groups[$group]['public_config_count']++;
+                    }
+                }
+                
+                return array_values($groups);
+            });
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get group description based on group name
+     */
+    private function getGroupDescription(string $group): string
+    {
+        $descriptions = [
+            'general' => 'Cấu hình chung của hệ thống',
+            'email' => 'Cấu hình email và SMTP',
+            'payment' => 'Cấu hình thanh toán',
+            'social' => 'Cấu hình mạng xã hội',
+            'security' => 'Cấu hình bảo mật',
+            'api' => 'Cấu hình API và tích hợp',
+            'notification' => 'Cấu hình thông báo',
+            'storage' => 'Cấu hình lưu trữ file',
+            'cache' => 'Cấu hình cache',
+            'database' => 'Cấu hình cơ sở dữ liệu',
+        ];
+
+        return $descriptions[$group] ?? "Nhóm cấu hình {$group}";
+    }
+
+    /**
+     * Override BaseService create to handle validation
      */
     public function create($data): array
     {
@@ -147,26 +305,15 @@ class SystemConfigService extends BaseService
             // Validate data
             $validatedData = $this->validationService->validate($data);
             
-            // Create using BaseService method
-            $result = parent::create($validatedData);
-            
-            // Log audit
-            $this->auditService->create([
-                'config_key' => $validatedData['key'],
-                'old_value' => null,
-                'new_value' => $result['value'] ?? null,
-                'action' => 'created',
-                'changed_by' => request()->user()?->id
-            ]);
-            
-            return $result;
+            // Create using BaseService method (hooks will handle audit)
+            return parent::create($validatedData);
         } catch (Exception $e) {
             throw $e;
         }
     }
 
     /**
-     * Override BaseService update to handle audit logging
+     * Override BaseService update to handle validation
      */
     public function update($id, $data): ?array
     {
@@ -177,31 +324,21 @@ class SystemConfigService extends BaseService
                 return null;
             }
             
+            // Store old config for hook
+            $this->oldConfig = $oldConfig;
+            
             // Validate data
             $validatedData = $this->validationService->validate($data);
             
-            // Update using BaseService method
-            $result = parent::update($id, $validatedData);
-            
-            if ($result) {
-                // Log audit
-                $this->auditService->create([
-                    'config_key' => $validatedData['key'],
-                    'old_value' => $oldConfig['value'],
-                    'new_value' => $result['value'] ?? null,
-                    'action' => 'updated',
-                    'changed_by' => request()->user()?->id
-                ]);
-            }
-            
-            return $result;
+            // Update using BaseService method (hooks will handle audit)
+            return parent::update($id, $validatedData);
         } catch (Exception $e) {
             throw $e;
         }
     }
 
     /**
-     * Create or update config with validation and audit
+     * Create or update config with validation
      */
     public function createOrUpdate(array $conditions, array $data, ?int $userId = null): array
     {
@@ -212,19 +349,11 @@ class SystemConfigService extends BaseService
             // Get old config for audit if updating
             $oldConfig = $this->findOneBy($conditions);
             
-            // Create or update using BaseService method
-            $result = parent::createOrUpdate($conditions, $validatedData);
+            // Store old config for hook
+            $this->oldConfig = $oldConfig;
             
-            // Log audit
-            $this->auditService->create([
-                'config_key' => $validatedData['key'],
-                'old_value' => $oldConfig ? $oldConfig['value'] : null,
-                'new_value' => $result['value'] ?? null,
-                'action' => $oldConfig ? 'updated' : 'created',
-                'changed_by' => $userId
-            ]);
-            
-            return $result;
+            // Create or update using BaseService method (hooks will handle audit)
+            return parent::createOrUpdate($conditions, $validatedData);
         } catch (Exception $e) {
             throw $e;
         }

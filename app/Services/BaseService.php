@@ -27,21 +27,47 @@ abstract class BaseService
 
     public function create($data): array
     {
-        $result = $this->repo->create($data);
-        return $result;
+        try {
+            $result = $this->repo->create($data);
+            $this->onCreateSuccess($result, $data);
+            return $result;
+        } catch (\Exception $e) {
+            $this->onCreateFail($data);
+            throw $e;
+        }
     }
 
     public function update($id, $data): ?array
     {
-        $result = $this->repo->update($id, $data);
-        return $result;
+        try {
+            $result = $this->repo->update($id, $data);
+            if ($result) {
+                $this->onUpdateSuccess($result, $id, $data);
+            } else {
+                $this->onUpdateFail($id, $data);
+            }
+            return $result;
+        } catch (\Exception $e) {
+            $this->onUpdateFail($id, $data);
+            throw $e;
+        }
     }
 
     public function delete($id): bool
     {
-        $item = $this->find($id);
-        $result = $this->repo->delete($id);
-        return $result;
+        try {
+            $item = $this->find($id);
+            $result = $this->repo->delete($id);
+            if ($result) {
+                $this->onDeleteSuccess($item, $id);
+            } else {
+                $this->onDeleteFail($id, $item);
+            }
+            return $result;
+        } catch (\Exception $e) {
+            $this->onDeleteFail($id, $item ?? null);
+            throw $e;
+        }
     }
 
     public function getRepo(): mixed
@@ -70,7 +96,14 @@ abstract class BaseService
      */
     public function createOrUpdate(array $conditions, array $data): array
     {
-        return $this->repo->createOrUpdate($conditions, $data);
+        try {
+            $result = $this->repo->createOrUpdate($conditions, $data);
+            $this->onCreateOrUpdateSuccess($result, $conditions, $data);
+            return $result;
+        } catch (\Exception $e) {
+            $this->onCreateOrUpdateFail($conditions, $data);
+            throw $e;
+        }
     }
 
 
@@ -109,5 +142,102 @@ abstract class BaseService
             }
             $counter++;
         }
+    }
+
+    /**
+     * Hook method called when create operation succeeds
+     * Override in child classes to add custom logic
+     * 
+     * @param array $result The created record
+     * @param array $data The original data used for creation
+     */
+    protected function onCreateSuccess(array $result, array $data): void
+    {
+        // Override in child classes if needed
+    }
+
+    /**
+     * Hook method called when create operation fails
+     * Override in child classes to add custom error handling
+     * 
+     * @param array $data The original data used for creation
+     */
+    protected function onCreateFail(array $data): void
+    {
+        // Override in child classes if needed
+    }
+
+    /**
+     * Hook method called when update operation succeeds
+     * Override in child classes to add custom logic
+     * 
+     * @param array $result The updated record
+     * @param mixed $id The ID of the updated record
+     * @param array $data The original data used for update
+     */
+    protected function onUpdateSuccess(array $result, $id, array $data): void
+    {
+        // Override in child classes if needed
+    }
+
+    /**
+     * Hook method called when update operation fails
+     * Override in child classes to add custom error handling
+     * 
+     * @param mixed $id The ID of the record that failed to update
+     * @param array $data The original data used for update
+     */
+    protected function onUpdateFail($id, array $data): void
+    {
+        // Override in child classes if needed
+    }
+
+    /**
+     * Hook method called when delete operation succeeds
+     * Override in child classes to add custom logic
+     * 
+     * @param array|null $item The deleted record (before deletion)
+     * @param mixed $id The ID of the deleted record
+     */
+    protected function onDeleteSuccess(?array $item, $id): void
+    {
+        // Override in child classes if needed
+    }
+
+    /**
+     * Hook method called when delete operation fails
+     * Override in child classes to add custom error handling
+     * 
+     * @param mixed $id The ID of the record that failed to delete
+     * @param array|null $item The record that failed to delete
+     */
+    protected function onDeleteFail($id, ?array $item): void
+    {
+        // Override in child classes if needed
+    }
+
+    /**
+     * Hook method called when createOrUpdate operation succeeds
+     * Override in child classes to add custom logic
+     * 
+     * @param array $result The created/updated record
+     * @param array $conditions The conditions used for lookup
+     * @param array $data The original data used for create/update
+     */
+    protected function onCreateOrUpdateSuccess(array $result, array $conditions, array $data): void
+    {
+        // Override in child classes if needed
+    }
+
+    /**
+     * Hook method called when createOrUpdate operation fails
+     * Override in child classes to add custom error handling
+     * 
+     * @param array $conditions The conditions used for lookup
+     * @param array $data The original data used for create/update
+     */
+    protected function onCreateOrUpdateFail(array $conditions, array $data): void
+    {
+        // Override in child classes if needed
     }
 } 

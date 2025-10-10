@@ -9,19 +9,14 @@ use Illuminate\Http\JsonResponse;
 
 class SystemConfigController extends BaseController
 {
-    protected SystemConfigService $service;
+    /** @var SystemConfigService */
+    protected $service;
     
     /** @var bool Enable caching for responses */
     protected $enableCaching = true;
     
     /** @var int Cache TTL in seconds */
     protected $cacheTtl = 600; // 10 minutes for config data
-    
-    /** @var bool Enable rate limiting */
-    protected $enableRateLimiting = true;
-    
-    /** @var int Rate limit attempts per minute */
-    protected $rateLimitAttempts = 120; // Higher limit for public configs
     
     /** @var array Default fields for list view */
     protected $defaultListFields = ['key', 'value', 'type', 'group', 'description'];
@@ -32,6 +27,7 @@ class SystemConfigController extends BaseController
     public function __construct(SystemConfigService $configService)
     {
         parent::__construct($configService);
+        $this->service = $configService; // Type hint for IDE
     }
 
     /**
