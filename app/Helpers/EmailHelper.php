@@ -25,22 +25,6 @@ class EmailHelper
     }
 
     /**
-     * Gửi email với cấu hình từ database
-     */
-    public static function send($mailable, $to = null)
-    {
-        // Đảm bảo cấu hình đã được load
-        self::loadConfig();
-        
-        if ($to) {
-            return Mail::to($to)->send($mailable);
-        }
-        
-        return Mail::send($mailable);
-    }
-
-
-    /**
      * Gửi email (text hoặc HTML)
      */
     public static function send(string $to, string $subject, string $content, array $data = []): array
