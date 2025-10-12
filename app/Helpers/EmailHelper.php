@@ -41,12 +41,21 @@ class EmailHelper
 
 
     /**
-     * Gửi email đơn giản
+     * Gửi email (text hoặc HTML)
      */
-    public static function sendSimple(string $to, string $subject, string $content, array $data = []): array
+    public static function send(string $to, string $subject, string $content, array $data = []): array
     {
         $emailService = App::make(\App\Services\Core\Email\EmailService::class);
         return $emailService->send($to, $subject, $content, $data);
+    }
+
+    /**
+     * Gửi email PHP thuần (nhanh nhất)
+     */
+    public static function sendRaw(string $to, string $subject, string $content): array
+    {
+        $emailService = App::make(\App\Services\Core\Email\EmailService::class);
+        return $emailService->sendRaw($to, $subject, $content);
     }
 
     /**

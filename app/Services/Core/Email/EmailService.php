@@ -3,11 +3,9 @@
 namespace App\Services\Core\Email;
 
 use App\Models\NotificationTemplate;
-use App\Mail\SimpleEmail;
 use App\Services\Core\SystemConfig\SystemConfigService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Log;
 use Exception;
 
 class EmailService
@@ -31,7 +29,6 @@ class EmailService
             $emailConfigs = $this->configService->getByGroup('email');
             
             if (empty($emailConfigs)) {
-                Log::warning('Không tìm thấy cấu hình email trong database');
                 return false;
             }
 
@@ -44,11 +41,9 @@ class EmailService
             // Cập nhật cấu hình mail trong Laravel
             $this->updateConfig($configs);
 
-            Log::info('Đã tải cấu hình email từ database thành công');
             return true;
 
         } catch (Exception $e) {
-            Log::error('Lỗi khi tải cấu hình email từ database: ' . $e->getMessage());
             return false;
         }
     }
@@ -105,19 +100,26 @@ class EmailService
     }
 
 
+    /**
+     * Gửi email (text hoặc HTML)
+     */
     public function send(string $to, string $subject, string $content, array $data = []): array
     {
         try {
             // Đảm bảo cấu hình email đã được load
             $this->getConfig();
 
-            // Gửi email
-            Mail::to($to)->send(new SimpleEmail($subject, $content, $data));
-
-            Log::info("Email sent successfully to: {$to}", [
-                'subject' => $subject,
-                'to' => $to
-            ]);
+            // Nếu có data thì tạo HTML, không thì gửi text thuần
+            if (!empty($data)) {
+                $htmlContent = $this->formatHtmlContent($subject, $content, $data);
+                Mail::html($htmlContent, function ($message) use ($to, $subject) {
+                    $message->to($to)->subject($subject);
+                });
+            } else {
+                Mail::raw($content, function ($message) use ($to, $subject) {
+                    $message->to($to)->subject($subject);
+                });
+            }
 
             return [
                 'success' => true,
@@ -127,12 +129,86 @@ class EmailService
             ];
 
         } catch (Exception $e) {
-            Log::error("Failed to send email to: {$to}", [
-                'error' => $e->getMessage(),
-                'subject' => $subject,
-                'to' => $to
-            ]);
+            return [
+                'success' => false,
+                'message' => 'Lỗi khi gửi email: ' . $e->getMessage(),
+                'to' => $to,
+                'subject' => $subject
+            ];
+        }
+    }
 
+    /**
+     * Format content as HTML
+     */
+    protected function formatHtmlContent(string $subject, string $content, array $data = []): string
+    {
+        $html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' . $subject . '</title></head><body>';
+        $html .= '<h2>' . $subject . '</h2>';
+        $html .= '<div>' . nl2br(e($content)) . '</div>';
+        
+        if (!empty($data)) {
+            $html .= '<div style="margin-top: 20px; padding: 10px; background: #f5f5f5;">';
+            $html .= '<h3>Thông tin bổ sung:</h3>';
+            foreach ($data as $key => $value) {
+                $html .= '<p><strong>' . ucfirst(str_replace('_', ' ', $key)) . ':</strong> ' . (is_array($value) ? json_encode($value) : $value) . '</p>';
+            }
+            $html .= '</div>';
+        }
+        
+        $html .= '<div style="margin-top: 20px; font-size: 12px; color: #666;">';
+        $html .= '<p>Email từ hệ thống ' . config('app.name', 'Laravel System') . '</p>';
+        $html .= '<p>Thời gian: ' . now()->format('d/m/Y H:i:s') . '</p>';
+        $html .= '</div>';
+        $html .= '</body></html>';
+        
+        return $html;
+    }
+
+    /**
+     * Gửi email PHP thuần (nhanh nhất - không cần cấu hình SMTP)
+     */
+    public function sendRaw(string $to, string $subject, string $content): array
+    {
+        try {
+            // Lấy thông tin from từ config
+            $configs = $this->configService->getByGroup('email');
+            $emailConfigs = [];
+            foreach ($configs as $config) {
+                $emailConfigs[$config['key']] = $config['value'];
+            }
+            
+            $fromEmail = $emailConfigs['from_address'] ?? config('mail.from.address', 'noreply@example.com');
+            $fromName = $emailConfigs['from_name'] ?? config('mail.from.name', 'System');
+
+            // Tạo headers với From information
+            $headers = [
+                'From: ' . $fromName . ' <' . $fromEmail . '>',
+                'Reply-To: ' . $fromEmail,
+                'X-Mailer: PHP/' . phpversion(),
+                'Content-Type: text/plain; charset=UTF-8'
+            ];
+
+            // Gửi email bằng PHP thuần với headers
+            $result = mail($to, $subject, $content, implode("\r\n", $headers));
+
+            if ($result) {
+                return [
+                    'success' => true,
+                    'message' => 'Email đã được gửi thành công',
+                    'to' => $to,
+                    'subject' => $subject
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Không thể gửi email',
+                    'to' => $to,
+                    'subject' => $subject
+                ];
+            }
+
+        } catch (Exception $e) {
             return [
                 'success' => false,
                 'message' => 'Lỗi khi gửi email: ' . $e->getMessage(),
@@ -164,15 +240,9 @@ class EmailService
             return $this->send($to, $processed['subject'], $processed['content'], $data);
 
         } catch (Exception $e) {
-            Log::error("Failed to send email with template: {$templateCode}", [
-                'error' => $e->getMessage(),
-                'to' => $to,
-                'template' => $templateCode
-            ]);
-
             return [
                 'success' => false,
-                'message' => 'Lỗi khi gửi email với template: ' . $e->getMessage()
+                'message' => 'Lỗi khi gửi email: ' . $e->getMessage()
             ];
         }
     }
