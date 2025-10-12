@@ -13,6 +13,7 @@ enum ConfigGroup: string
     case CACHE = 'cache';
     case NOTIFICATION = 'notification';
     case PAYMENT = 'payment';
+    case EMAIL_TEMPLATES = 'email_templates';
     case CUSTOM = 'custom';
 
     public function getLabel(): string
@@ -27,6 +28,7 @@ enum ConfigGroup: string
             self::CACHE => 'Cài đặt Cache',
             self::NOTIFICATION => 'Cài đặt thông báo',
             self::PAYMENT => 'Cài đặt thanh toán',
+            self::EMAIL_TEMPLATES => 'Mẫu email',
             self::CUSTOM => 'Cài đặt tùy chỉnh',
         };
     }
@@ -43,6 +45,7 @@ enum ConfigGroup: string
             self::CACHE => 'Cấu hình cache và performance',
             self::NOTIFICATION => 'Cài đặt thông báo push và email',
             self::PAYMENT => 'Cấu hình thanh toán và gateway',
+            self::EMAIL_TEMPLATES => 'Mẫu email và template thông báo',
             self::CUSTOM => 'Cài đặt tùy chỉnh do người dùng định nghĩa',
         };
     }
@@ -59,6 +62,7 @@ enum ConfigGroup: string
             self::SECURITY => false,
             self::NOTIFICATION => false,
             self::PAYMENT => false,
+            self::EMAIL_TEMPLATES => false,
             self::CUSTOM => true,
         };
     }

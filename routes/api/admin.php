@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Admin\PostCategory\PostCategoryController;
 use App\Http\Controllers\Api\Admin\PostTag\PostTagController;
 use App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController;
 use App\Http\Controllers\Api\Admin\SystemConfig\ConfigAuditController;
+use App\Http\Controllers\Api\Admin\NotificationTemplate\NotificationTemplateController;
 use Illuminate\Support\Facades\Route;
 
 // Admin API
@@ -64,4 +65,7 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
         Route::get('/logs', [ConfigAuditController::class, 'index']);
         Route::get('/export', [ConfigAuditController::class, 'export']);
     });
+
+    // Admin - Notification Template module
+    Route::apiResource('notification-templates', NotificationTemplateController::class);
 });
