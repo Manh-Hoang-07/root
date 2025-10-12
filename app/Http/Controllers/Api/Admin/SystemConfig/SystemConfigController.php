@@ -40,13 +40,22 @@ class SystemConfigController extends BaseController
         $this->service = $service; // Type hint for IDE
     }
 
+    /**
+     * Get all config groups (admin can see all groups including private)
+     */
+    public function getGroups(): JsonResponse
+    {
+        $groups = $this->service->getGroups();
+        return $this->successResponseWithFormat($groups, 'Lấy danh sách nhóm cấu hình thành công');
+    }
 
     /**
      * Get configs by group
      */
-    public function getByGroup(Request $request): JsonResponse
+    public function getByGroup(Request $request, $group = null): JsonResponse
     {
-        $group = $request->get('group');
+        // Support both query parameter and path parameter
+        $group = $group ?: $request->get('group');
         $publicOnly = $request->boolean('public_only', false);
 
         if (!$group) {

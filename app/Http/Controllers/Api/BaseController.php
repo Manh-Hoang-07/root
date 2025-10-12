@@ -111,9 +111,9 @@ abstract class BaseController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            // Check rate limiting
-            if ($this->enableRateLimiting && !$this->checkRateLimit($request)) {
-                return $this->apiResponse(false, null, '', 429);
+            // Check rate limiting with advanced implementation
+            if ($this->enableRateLimiting && !$this->checkAdvancedRateLimit($request)) {
+                return $this->apiResponse(false, null, 'Quá nhiều yêu cầu, vui lòng thử lại sau', 429);
             }
             return $this->getIndexData($request);
         } catch (Exception $e) {
@@ -401,19 +401,27 @@ abstract class BaseController extends Controller
     }
 
     /**
-     * Check rate limiting
+     * Check rate limiting with atomic operations
      * @param Request $request
      * @return bool
      */
     protected function checkRateLimit(Request $request): bool
     {
         $key = $this->generateRateLimiterKey($request);
-        // Simple rate limiting implementation
-        $attempts = Cache::get($key, 0);
-        if ($attempts >= $this->rateLimitAttempts) {
+        
+        // Use atomic increment to avoid race conditions
+        $attempts = Cache::increment($key, 1);
+        
+        // If this is the first request in the window, set expiration
+        if ($attempts === 1) {
+            Cache::put($key, 1, 60); // 1 minute window
+        }
+        
+        // Check if limit exceeded
+        if ($attempts > $this->rateLimitAttempts) {
             return false;
         }
-        Cache::put($key, $attempts + 1, 60); // 1 minute window
+        
         return true;
     }
 
@@ -425,5 +433,55 @@ abstract class BaseController extends Controller
     protected function generateRateLimiterKey(Request $request): string
     {
         return 'rate_limit:' . $request->ip() . ':' . $request->path();
+    }
+
+    /**
+     * Advanced rate limiting with sliding window (Redis recommended)
+     * @param Request $request
+     * @return bool
+     */
+    protected function checkAdvancedRateLimit(Request $request): bool
+    {
+        $key = $this->generateRateLimiterKey($request);
+        $now = time();
+        $window = 60; // 1 minute window
+        
+        // Use Redis sorted set for sliding window (if Redis is available)
+        if (config('cache.default') === 'redis') {
+            return $this->checkSlidingWindowRateLimit($key, $now, $window);
+        }
+        
+        // Fallback to simple counter for non-Redis cache
+        return $this->checkRateLimit($request);
+    }
+
+    /**
+     * Sliding window rate limiting using Redis sorted sets
+     * @param string $key
+     * @param int $now
+     * @param int $window
+     * @return bool
+     */
+    protected function checkSlidingWindowRateLimit(string $key, int $now, int $window): bool
+    {
+        $redis = Cache::getRedis();
+        $pipe = $redis->pipeline();
+        
+        // Remove expired entries
+        $pipe->zremrangebyscore($key, 0, $now - $window);
+        
+        // Count current requests
+        $pipe->zcard($key);
+        
+        // Add current request
+        $pipe->zadd($key, $now, $now . ':' . uniqid());
+        
+        // Set expiration
+        $pipe->expire($key, $window);
+        
+        $results = $pipe->exec();
+        $currentCount = $results[1];
+        
+        return $currentCount < $this->rateLimitAttempts;
     }
 } 

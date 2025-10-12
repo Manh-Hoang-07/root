@@ -41,4 +41,29 @@ class ConfigValidationService
 
         return $validator->validated();
     }
+
+    /**
+     * Validation for bulk update - chỉ validate key và value
+     */
+    public function validateForBulkUpdate(array $data): array
+    {
+        $rules = [
+            'key' => 'required|string|max:255|regex:/^[a-zA-Z0-9._-]+$/',
+            'value' => 'nullable',
+        ];
+
+        $validator = Validator::make($data, $rules);
+
+        if ($validator->fails()) {
+            throw new HttpResponseException(
+                response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu không hợp lệ',
+                    'errors' => $validator->errors()
+                ], 422)
+            );
+        }
+
+        return $validator->validated();
+    }
 }

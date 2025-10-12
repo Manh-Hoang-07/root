@@ -48,7 +48,9 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
     // Admin - System Config module - Special routes BEFORE apiResource
     Route::prefix('system-configs')->group(function () {
         // Special operations
+        Route::get('/groups', [SystemConfigController::class, 'getGroups']);
         Route::get('/group', [SystemConfigController::class, 'getByGroup']);
+        Route::get('/group/{group}', [SystemConfigController::class, 'getByGroup']);
         Route::get('/key', [SystemConfigController::class, 'getByKey']);
         Route::post('/bulk-update', [SystemConfigController::class, 'bulkUpdate']);
         Route::post('/clear-cache', [SystemConfigController::class, 'clearCache']);

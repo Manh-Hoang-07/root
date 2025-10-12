@@ -150,7 +150,7 @@ class SystemConfigRequest extends FormRequest
     protected function validateKeyUniqueness($validator): void
     {
         $key = $this->input('key');
-        $configId = $this->route('config') ?? null;
+        $configId = $this->route('system_config') ?? null;
 
         if (!$key) {
             return;

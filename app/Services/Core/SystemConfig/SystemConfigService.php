@@ -425,11 +425,13 @@ class SystemConfigService extends BaseService
                 if (!empty($toUpdate)) {
                     foreach ($toUpdate as $config) {
                         try {
-                            $validatedData = $this->validationService->validate($config);
+                            $validatedData = $this->validationService->validateForBulkUpdate($config);
                             $existingConfig = $existingMap->get($config['key']);
                             
                             if ($existingConfig) {
-                                $result = $this->repo->update($existingConfig['id'], $validatedData);
+                                // Chỉ cập nhật giá trị, giữ nguyên các trường khác
+                                $updateData = ['value' => $validatedData['value']];
+                                $result = $this->repo->update($existingConfig['id'], $updateData);
                                 if ($result) {
                                     $results[] = $result;
                                     $groupsToClear[] = $result['group'];

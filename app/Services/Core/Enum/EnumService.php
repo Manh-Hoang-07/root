@@ -6,11 +6,11 @@ use App\Enums\UserStatus;
 use App\Enums\Gender;
 use App\Enums\BasicStatus;
 use App\Enums\RoleStatus;
-use App\Enums\ProductStatus;
-use App\Enums\OrderStatus;
-use App\Enums\VariantStatus;
 use App\Enums\ContactStatus;
 use App\Enums\PostStatus;
+use App\Enums\ConfigAction;
+use App\Enums\ConfigGroup;
+use App\Enums\ConfigType;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -24,11 +24,11 @@ class EnumService
         'gender' => Gender::class,
         'basic_status' => BasicStatus::class,
         'role_status' => RoleStatus::class,
-        'product_status' => ProductStatus::class,
-        'order_status' => OrderStatus::class,
-        'variant_status' => VariantStatus::class,
         'contact_status' => ContactStatus::class,
         'post_status' => PostStatus::class,
+        'config_action' => ConfigAction::class,
+        'config_group' => ConfigGroup::class,
+        'config_type' => ConfigType::class,
     ];
 
     /**
@@ -46,11 +46,14 @@ class EnumService
         $enums = $enumClass::cases();
 
         return collect($enums)->map(function ($enum) {
+            // Hỗ trợ cả label() và getLabel() methods
+            $label = method_exists($enum, 'label') ? $enum->label() : $enum->getLabel();
+            
             return [
                 'id' => $enum->value,
-                'name' => $enum->label(),
+                'name' => $label,
                 'value' => $enum->value,
-                'label' => $enum->label()
+                'label' => $label
             ];
         });
     }

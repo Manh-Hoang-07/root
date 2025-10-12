@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\SystemConfig;
 use App\Enums\ConfigType;
@@ -18,7 +17,7 @@ class SystemConfigSeeder extends Seeder
         $configs = [
             // General Settings
             [
-                'key' => 'app.name',
+                'key' => 'name',
                 'value' => 'Laravel System',
                 'type' => ConfigType::STRING,
                 'group' => ConfigGroup::GENERAL,
@@ -29,7 +28,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 1,
             ],
             [
-                'key' => 'app.version',
+                'key' => 'version',
                 'value' => '1.0.0',
                 'type' => ConfigType::STRING,
                 'group' => ConfigGroup::GENERAL,
@@ -40,7 +39,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 2,
             ],
             [
-                'key' => 'app.debug',
+                'key' => 'debug',
                 'value' => '0',
                 'type' => ConfigType::BOOLEAN,
                 'group' => ConfigGroup::GENERAL,
@@ -51,7 +50,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 3,
             ],
             [
-                'key' => 'app.timezone',
+                'key' => 'timezone',
                 'value' => 'Asia/Ho_Chi_Minh',
                 'type' => ConfigType::STRING,
                 'group' => ConfigGroup::GENERAL,
@@ -64,7 +63,7 @@ class SystemConfigSeeder extends Seeder
 
             // Email Settings
             [
-                'key' => 'mail.driver',
+                'key' => 'driver',
                 'value' => 'smtp',
                 'type' => ConfigType::STRING,
                 'group' => ConfigGroup::EMAIL,
@@ -75,7 +74,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 1,
             ],
             [
-                'key' => 'mail.host',
+                'key' => 'host',
                 'value' => 'smtp.gmail.com',
                 'type' => ConfigType::STRING,
                 'group' => ConfigGroup::EMAIL,
@@ -86,7 +85,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 2,
             ],
             [
-                'key' => 'mail.port',
+                'key' => 'port',
                 'value' => '587',
                 'type' => ConfigType::INTEGER,
                 'group' => ConfigGroup::EMAIL,
@@ -97,7 +96,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 3,
             ],
             [
-                'key' => 'mail.username',
+                'key' => 'username',
                 'value' => '',
                 'type' => ConfigType::STRING,
                 'group' => ConfigGroup::EMAIL,
@@ -108,7 +107,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 4,
             ],
             [
-                'key' => 'mail.password',
+                'key' => 'password',
                 'value' => '',
                 'type' => ConfigType::STRING,
                 'group' => ConfigGroup::EMAIL,
@@ -121,7 +120,7 @@ class SystemConfigSeeder extends Seeder
 
             // API Settings
             [
-                'key' => 'api.rate_limit',
+                'key' => 'rate_limit',
                 'value' => '60',
                 'type' => ConfigType::INTEGER,
                 'group' => ConfigGroup::API,
@@ -132,7 +131,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 1,
             ],
             [
-                'key' => 'api.timeout',
+                'key' => 'timeout',
                 'value' => '30',
                 'type' => ConfigType::INTEGER,
                 'group' => ConfigGroup::API,
@@ -143,7 +142,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 2,
             ],
             [
-                'key' => 'api.cors_enabled',
+                'key' => 'cors_enabled',
                 'value' => '1',
                 'type' => ConfigType::BOOLEAN,
                 'group' => ConfigGroup::API,
@@ -156,7 +155,7 @@ class SystemConfigSeeder extends Seeder
 
             // Cache Settings
             [
-                'key' => 'cache.default',
+                'key' => 'default',
                 'value' => 'file',
                 'type' => ConfigType::STRING,
                 'group' => ConfigGroup::CACHE,
@@ -167,7 +166,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 1,
             ],
             [
-                'key' => 'cache.ttl',
+                'key' => 'ttl',
                 'value' => '3600',
                 'type' => ConfigType::INTEGER,
                 'group' => ConfigGroup::CACHE,
@@ -180,7 +179,7 @@ class SystemConfigSeeder extends Seeder
 
             // Security Settings
             [
-                'key' => 'security.password_min_length',
+                'key' => 'password_min_length',
                 'value' => '8',
                 'type' => ConfigType::INTEGER,
                 'group' => ConfigGroup::SECURITY,
@@ -191,7 +190,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 1,
             ],
             [
-                'key' => 'security.session_timeout',
+                'key' => 'session_timeout',
                 'value' => '120',
                 'type' => ConfigType::INTEGER,
                 'group' => ConfigGroup::SECURITY,
@@ -202,7 +201,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 2,
             ],
             [
-                'key' => 'security.max_login_attempts',
+                'key' => 'max_login_attempts',
                 'value' => '5',
                 'type' => ConfigType::INTEGER,
                 'group' => ConfigGroup::SECURITY,
@@ -215,7 +214,7 @@ class SystemConfigSeeder extends Seeder
 
             // Storage Settings
             [
-                'key' => 'storage.disk',
+                'key' => 'disk',
                 'value' => 'local',
                 'type' => ConfigType::STRING,
                 'group' => ConfigGroup::STORAGE,
@@ -226,7 +225,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 1,
             ],
             [
-                'key' => 'storage.max_file_size',
+                'key' => 'max_file_size',
                 'value' => '10240',
                 'type' => ConfigType::INTEGER,
                 'group' => ConfigGroup::STORAGE,
@@ -237,7 +236,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 2,
             ],
             [
-                'key' => 'storage.allowed_extensions',
+                'key' => 'allowed_extensions',
                 'value' => '["jpg","jpeg","png","gif","pdf","doc","docx","xls","xlsx"]',
                 'type' => ConfigType::ARRAY,
                 'group' => ConfigGroup::STORAGE,
@@ -250,7 +249,7 @@ class SystemConfigSeeder extends Seeder
 
             // Notification Settings
             [
-                'key' => 'notification.email_enabled',
+                'key' => 'email_enabled',
                 'value' => '1',
                 'type' => ConfigType::BOOLEAN,
                 'group' => ConfigGroup::NOTIFICATION,
@@ -261,7 +260,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 1,
             ],
             [
-                'key' => 'notification.sms_enabled',
+                'key' => 'sms_enabled',
                 'value' => '0',
                 'type' => ConfigType::BOOLEAN,
                 'group' => ConfigGroup::NOTIFICATION,
@@ -274,7 +273,7 @@ class SystemConfigSeeder extends Seeder
 
             // Custom Settings
             [
-                'key' => 'custom.maintenance_mode',
+                'key' => 'maintenance_mode',
                 'value' => '0',
                 'type' => ConfigType::BOOLEAN,
                 'group' => ConfigGroup::CUSTOM,
@@ -285,7 +284,7 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 1,
             ],
             [
-                'key' => 'custom.maintenance_message',
+                'key' => 'maintenance_message',
                 'value' => 'Hệ thống đang bảo trì, vui lòng quay lại sau!',
                 'type' => ConfigType::STRING,
                 'group' => ConfigGroup::CUSTOM,

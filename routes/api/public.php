@@ -16,8 +16,8 @@ Route::post('/register', [AuthController::class, 'register']);
 
 // Public API - Enum
 Route::prefix('enums')->group(function () {
-    Route::get('/types', [EnumController::class, 'getTypes']);
     Route::get('/{type}', [EnumController::class, 'get']);
+    Route::get('/types', [EnumController::class, 'getTypes']);
 });
 
 // Public API - File upload
@@ -38,10 +38,7 @@ Route::get('/post-tags/slug/{slug}', [PostTagController::class, 'showBySlug']);
 // Public API - Contact module
 Route::apiResource('contacts', ContactController::class)->only(['store']);
 
-// Public API - System Config module
+// Public API - System Config module (chỉ cho phép lấy configs theo group)
 Route::prefix('system-configs')->group(function () {
-    Route::get('/groups', [SystemConfigController::class, 'getGroups']);
-    Route::get('/key', [SystemConfigController::class, 'getByKey']);
-    Route::get('/', [SystemConfigController::class, 'index']);
-    Route::get('/{id}', [SystemConfigController::class, 'show']);
+    Route::get('/group/{group}', [SystemConfigController::class, 'getByGroup']);
 });

@@ -31,18 +31,27 @@ class SystemConfigController extends BaseController
     }
 
     /**
-     * Get all public config groups
+     * Get public configs by group (trả về dạng key:value)
      */
-    public function getGroups(): JsonResponse
+    public function getByGroup(Request $request, $group = null): JsonResponse
     {
-        $groups = collect($this->service->getGroups())
-            ->filter(function ($group) {
-                return $group['is_public'];
-            })
-            ->values()
-            ->toArray();
+        // Support both query parameter and path parameter
+        $group = $group ?: $request->get('group');
 
-        return $this->successResponseWithFormat($groups, 'Lấy danh sách nhóm cấu hình public thành công');
+        if (!$group) {
+            return $this->apiResponse(false, null, 'Nhóm cấu hình là bắt buộc', 400);
+        }
+
+        // Always get public-only configs for public API
+        $configs = $this->service->getByGroup($group, true);
+        
+        // Transform to key:value format
+        $keyValueData = [];
+        foreach ($configs as $config) {
+            $keyValueData[$config['key']] = $config['value'];
+        }
+        
+        return $this->successResponseWithFormat($keyValueData, 'Lấy cấu hình nhóm public thành công');
     }
 
     /**
