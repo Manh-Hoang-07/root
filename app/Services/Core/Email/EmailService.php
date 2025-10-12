@@ -5,6 +5,7 @@ namespace App\Services\Core\Email;
 use App\Models\NotificationTemplate;
 use App\Services\Core\SystemConfig\SystemConfigService;
 use App\Helpers\SystemConfigHelper;
+use App\Libraries\CacheService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Config;
 use Exception;
@@ -12,21 +13,30 @@ use Exception;
 class EmailService
 {
     protected SystemConfigService $configService;
+    protected CacheService $cacheService;
 
     public function __construct(SystemConfigService $configService)
     {
         $this->configService = $configService;
+        $this->cacheService = new CacheService(true, 3600, 'email');
     }
     /**
      * Gửi email đơn giản với tiêu đề và nội dung
      */
     /**
-     * Lấy cấu hình email từ database và cập nhật vào config
+     * Lấy cấu hình email từ database và cập nhật vào config (có cache)
      */
     public function getConfig(): bool
     {
         try {
-            // Lấy tất cả cấu hình email từ database
+            // Lấy từ cache trước
+            $cached = $this->cacheService->get('config');
+            if ($cached !== null) {
+                $this->updateConfig($cached);
+                return true;
+            }
+
+            // Nếu không có cache thì lấy từ database
             $emailConfigs = $this->configService->getByGroup('email');
             
             if (empty($emailConfigs)) {
@@ -38,6 +48,9 @@ class EmailService
             foreach ($emailConfigs as $config) {
                 $configs[$config['key']] = $config['value'];
             }
+
+            // Cache lại
+            $this->cacheService->put('config', $configs);
 
             // Cập nhật cấu hình mail trong Laravel
             $this->updateConfig($configs);
@@ -158,7 +171,7 @@ class EmailService
         }
         
         $html .= '<div style="margin-top: 20px; font-size: 12px; color: #666;">';
-        $html .= '<p>Email từ hệ thống ' . SystemConfigHelper::getAppName() . '</p>';
+        $html .= '<p>Email từ hệ thống ' . SystemConfigHelper::getName() . '</p>';
         $html .= '<p>Thời gian: ' . now()->format('d/m/Y H:i:s') . '</p>';
         $html .= '</div>';
         $html .= '</body></html>';
@@ -180,7 +193,7 @@ class EmailService
             }
             
             $fromEmail = $emailConfigs['from_address'] ?? SystemConfigHelper::getAppEmail();
-            $fromName = $emailConfigs['from_name'] ?? SystemConfigHelper::getAppName();
+            $fromName = $emailConfigs['from_name'] ?? SystemConfigHelper::getName();
 
             // Tạo headers với From information
             $headers = [

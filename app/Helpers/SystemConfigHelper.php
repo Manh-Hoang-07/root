@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Services\Core\SystemConfig\SystemConfigService;
+use App\Libraries\CacheService;
 use Illuminate\Support\Facades\App;
 
 class SystemConfigHelper
@@ -12,8 +13,10 @@ class SystemConfigHelper
      */
     public static function getGeneralConfig(): array
     {
+        $cacheService = new CacheService(true, 3600, 'system');
+        
         // Lấy từ cache trước
-        $cached = cache()->get('system_config_general');
+        $cached = $cacheService->get('general_config');
         if ($cached !== null) {
             return $cached;
         }
@@ -30,7 +33,7 @@ class SystemConfigHelper
         }
         
         // Cache lại
-        cache()->put('system_config_general', $result, 3600);
+        $cacheService->put('general_config', $result);
         
         return $result;
     }
@@ -47,9 +50,9 @@ class SystemConfigHelper
     /**
      * Lấy tên ứng dụng từ cấu hình hệ thống
      */
-    public static function getAppName(): string
+    public static function getName(): string
     {
-        return self::getGeneralConfigByKey('app_name', 'Laravel System');
+        return self::getGeneralConfigByKey('name', 'Laravel System');
     }
 
     /**
