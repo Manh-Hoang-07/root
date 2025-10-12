@@ -4,6 +4,7 @@ namespace App\Services\Core\Email;
 
 use App\Models\NotificationTemplate;
 use App\Services\Core\SystemConfig\SystemConfigService;
+use App\Helpers\SystemConfigHelper;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Config;
 use Exception;
@@ -157,7 +158,7 @@ class EmailService
         }
         
         $html .= '<div style="margin-top: 20px; font-size: 12px; color: #666;">';
-        $html .= '<p>Email từ hệ thống ' . config('app.name', 'Laravel System') . '</p>';
+        $html .= '<p>Email từ hệ thống ' . SystemConfigHelper::getAppName() . '</p>';
         $html .= '<p>Thời gian: ' . now()->format('d/m/Y H:i:s') . '</p>';
         $html .= '</div>';
         $html .= '</body></html>';
@@ -178,8 +179,8 @@ class EmailService
                 $emailConfigs[$config['key']] = $config['value'];
             }
             
-            $fromEmail = $emailConfigs['from_address'] ?? config('mail.from.address', 'noreply@example.com');
-            $fromName = $emailConfigs['from_name'] ?? config('mail.from.name', 'System');
+            $fromEmail = $emailConfigs['from_address'] ?? SystemConfigHelper::getAppEmail();
+            $fromName = $emailConfigs['from_name'] ?? SystemConfigHelper::getAppName();
 
             // Tạo headers với From information
             $headers = [
