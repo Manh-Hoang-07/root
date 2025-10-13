@@ -140,64 +140,6 @@ class SystemConfigSeeder extends Seeder
                 'sort_order' => 7,
             ],
 
-            // Email Templates
-            [
-                'key' => 'email_template_welcome',
-                'value' => '{"subject":"Chào mừng đến với {{app_name}}","content":"Xin chào {{name}},\\n\\nChào mừng bạn đến với {{app_name}}!\\n\\nCảm ơn bạn đã đăng ký tài khoản. Chúng tôi rất vui được chào đón bạn tham gia cộng đồng của chúng tôi.\\n\\nNếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi.\\n\\nTrân trọng,\\nĐội ngũ {{app_name}}","description":"Email chào mừng người dùng mới"}',
-                'type' => ConfigType::JSON,
-                'group' => 'email_templates',
-                'description' => 'Email template chào mừng',
-                'is_public' => false,
-                'is_encrypted' => false,
-                'status' => 'active',
-                'sort_order' => 1,
-            ],
-            [
-                'key' => 'email_template_password_reset',
-                'value' => '{"subject":"Đặt lại mật khẩu - {{app_name}}","content":"Xin chào {{name}},\\n\\nBạn đã yêu cầu đặt lại mật khẩu cho tài khoản của mình.\\n\\nMã xác thực của bạn là: {{reset_code}}\\n\\nMã này có hiệu lực trong 15 phút. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.\\n\\nTrân trọng,\\nĐội ngũ {{app_name}}","description":"Email đặt lại mật khẩu"}',
-                'type' => ConfigType::JSON,
-                'group' => 'email_templates',
-                'description' => 'Email template đặt lại mật khẩu',
-                'is_public' => false,
-                'is_encrypted' => false,
-                'status' => 'active',
-                'sort_order' => 2,
-            ],
-            [
-                'key' => 'email_template_notification',
-                'value' => '{"subject":"Thông báo từ {{app_name}}","content":"Xin chào {{name}},\\n\\n{{message}}\\n\\nThời gian: {{current_datetime}}\\n\\nTrân trọng,\\nĐội ngũ {{app_name}}","description":"Email thông báo chung"}',
-                'type' => ConfigType::JSON,
-                'group' => 'email_templates',
-                'description' => 'Email template thông báo',
-                'is_public' => false,
-                'is_encrypted' => false,
-                'status' => 'active',
-                'sort_order' => 3,
-            ],
-
-            // Notification Settings
-            [
-                'key' => 'email_enabled',
-                'value' => '1',
-                'type' => ConfigType::BOOLEAN,
-                'group' => ConfigGroup::NOTIFICATION,
-                'description' => 'Bật thông báo email',
-                'is_public' => false,
-                'is_encrypted' => false,
-                'status' => 'active',
-                'sort_order' => 1,
-            ],
-            [
-                'key' => 'sms_enabled',
-                'value' => '0',
-                'type' => ConfigType::BOOLEAN,
-                'group' => ConfigGroup::NOTIFICATION,
-                'description' => 'Bật thông báo SMS',
-                'is_public' => false,
-                'is_encrypted' => false,
-                'status' => 'active',
-                'sort_order' => 2,
-            ],
         ];
 
         foreach ($configs as $config) {
