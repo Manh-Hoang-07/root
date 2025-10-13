@@ -50,7 +50,7 @@ class SystemConfig
      */
     public static function getName(): string
     {
-        return self::getGeneralConfigByKey('name', 'Laravel System');
+        return self::getGeneralConfigByKey('name');
     }
 
     /**
@@ -58,6 +58,6 @@ class SystemConfig
      */
     public static function getAppEmail(): string
     {
-        return self::getGeneralConfigByKey('from_address', 'noreply@example.com');
+        return self::getGeneralConfigByKey('email');
     }
 }
