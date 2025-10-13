@@ -9,7 +9,7 @@ use App\Services\Core\SystemConfig\ConfigAuditService;
 use App\Services\BaseService;
 use App\Enums\ConfigGroup;
 use App\Enums\ConfigType;
-use Illuminate\Support\Facades\Cache;
+use App\Libraries\Core\CacheService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -121,13 +121,13 @@ class SystemConfigService extends BaseService
     {
         // Clear cache for the specific group
         $cacheKey = "config_group_{$group}";
-        Cache::forget($cacheKey);
+        CacheService::forget($cacheKey, 'config');
         
         // Clear general config cache
-        Cache::forget('all_configs');
+        CacheService::forget('all_configs', 'config');
         
         // Clear groups cache
-        Cache::forget('system_config_groups');
+        CacheService::forget('system_config_groups', 'config');
     }
 
     /**
@@ -244,33 +244,39 @@ class SystemConfigService extends BaseService
         try {
             $cacheKey = 'system_config_groups';
             
-            return Cache::remember($cacheKey, 600, function () {
-                $configs = $this->getBy(['status' => 'active']);
-                $configs = $configs ?? [];
+            $cachedData = CacheService::get($cacheKey, 'config');
+            if ($cachedData !== null) {
+                return $cachedData;
+            }
+            
+            $configs = $this->getBy(['status' => 'active']);
+            $configs = $configs ?? [];
+            
+            $groups = [];
+            foreach ($configs as $config) {
+                $group = $config['group'];
                 
-                $groups = [];
-                foreach ($configs as $config) {
-                    $group = $config['group'];
-                    
-                    if (!isset($groups[$group])) {
-                        $groups[$group] = [
-                            'name' => $group,
-                            'display_name' => ucfirst(str_replace('_', ' ', $group)),
-                            'description' => $this->getGroupDescription($group),
-                            'is_public' => $config['is_public'] ?? false,
-                            'config_count' => 0,
-                            'public_config_count' => 0
-                        ];
-                    }
-                    
-                    $groups[$group]['config_count']++;
-                    if ($config['is_public']) {
-                        $groups[$group]['public_config_count']++;
-                    }
+                if (!isset($groups[$group])) {
+                    $groups[$group] = [
+                        'name' => $group,
+                        'display_name' => ucfirst(str_replace('_', ' ', $group)),
+                        'description' => $this->getGroupDescription($group),
+                        'is_public' => $config['is_public'] ?? false,
+                        'config_count' => 0,
+                        'public_config_count' => 0
+                    ];
                 }
                 
-                return array_values($groups);
-            });
+                $groups[$group]['config_count']++;
+                if ($config['is_public']) {
+                    $groups[$group]['public_config_count']++;
+                }
+            }
+            
+            $result = array_values($groups);
+            CacheService::put($cacheKey, $result, 600, 'config');
+            
+            return $result;
         } catch (Exception $e) {
             return [];
         }
@@ -597,13 +603,10 @@ class SystemConfigService extends BaseService
     public function clearAllCache(): bool
     {
         try {
-            // Clear Laravel cache
-            \Illuminate\Support\Facades\Cache::forget('system_configs');
-            \Illuminate\Support\Facades\Cache::forget('system_config_groups');
-            
-            // Clear any other config-related cache keys
-            $cacheKeys = \Illuminate\Support\Facades\Cache::getStore()->getPrefix() . '*system_config*';
-            \Illuminate\Support\Facades\Cache::flush();
+            // Clear config cache
+            CacheService::forget('system_configs', 'config');
+            CacheService::forget('system_config_groups', 'config');
+            CacheService::forget('all_configs', 'config');
             
             return true;
         } catch (Exception $e) {

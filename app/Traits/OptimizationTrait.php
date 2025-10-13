@@ -2,6 +2,8 @@
 
 namespace App\Traits;
 
+use App\Libraries\Core\CacheService;
+
 /**
  * Trait for data optimization operations
  * 
@@ -17,14 +19,17 @@ trait OptimizationTrait
      * @param int $limit
      * @param string $context
      * @param bool $single
+     * @param bool $enableCaching
+     * @param int $cacheTtl
+     * @param string $cachePrefix
      * @return mixed
      */
-    protected function getData(array $filters, int $perPage, string $context = 'index', bool $single = false)
+    protected function getData(array $filters, int $perPage, string $context = 'index', bool $single = false, bool $enableCaching = false, int $cacheTtl = 300, string $cachePrefix = 'app')
     {
         // Check caching
-        if ($this->cacheService->shouldCache()) {
-            $cacheKey = $this->cacheService->generateKey($filters, $perPage, $context, $single, static::class);
-            $cachedData = $this->cacheService->get($cacheKey);
+        if ($enableCaching) {
+            $cacheKey = CacheService::generateKey($filters, $perPage, $context, $single, static::class);
+            $cachedData = CacheService::get($cacheKey, $cachePrefix);
             if ($cachedData !== null) {
                 return $cachedData;
             }
@@ -49,8 +54,8 @@ trait OptimizationTrait
             $data = $this->service->list($filters, $perPage, $relations, $fields);
         }
         // Cache the response if enabled
-        if ($this->cacheService->shouldCache()) {
-            $this->cacheService->put($cacheKey, $data);
+        if ($enableCaching) {
+            CacheService::put($cacheKey, $data, $cacheTtl, $cachePrefix);
         }
         return $data;
     }

@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Helpers;
+namespace App\Libraries\Core;
 
 use App\Services\Core\Email\EmailService;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Mail;
 
-class EmailHelper
+class Email
 {
     /**
      * Lấy instance của EmailService
@@ -29,8 +28,7 @@ class EmailHelper
      */
     public static function send(string $to, string $subject, string $content, array $data = []): array
     {
-        $emailService = App::make(\App\Services\Core\Email\EmailService::class);
-        return $emailService->send($to, $subject, $content, $data);
+        return self::getService()->send($to, $subject, $content, $data);
     }
 
     /**
@@ -38,8 +36,7 @@ class EmailHelper
      */
     public static function sendRaw(string $to, string $subject, string $content): array
     {
-        $emailService = App::make(\App\Services\Core\Email\EmailService::class);
-        return $emailService->sendRaw($to, $subject, $content);
+        return self::getService()->sendRaw($to, $subject, $content);
     }
 
     /**
@@ -47,8 +44,7 @@ class EmailHelper
      */
     public static function sendWithTemplate(string $to, string $templateCode, array $data = [], string $locale = 'vi'): array
     {
-        $emailService = App::make(\App\Services\Core\Email\EmailService::class);
-        return $emailService->sendWithTemplate($to, $templateCode, $data, $locale);
+        return self::getService()->sendWithTemplate($to, $templateCode, $data, $locale);
     }
 
 }

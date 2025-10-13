@@ -12,7 +12,7 @@ use App\Enums\ConfigAction;
 use App\Enums\ConfigGroup;
 use App\Enums\ConfigType;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
+use App\Libraries\Core\CacheService;
 
 class EnumService
 {
@@ -83,9 +83,15 @@ class EnumService
         $normalizedType = $this->normalizeType($type);
         $cacheKey = "enums_{$normalizedType}";
 
-        return Cache::remember($cacheKey, $cacheTtl, function () use ($type) {
-            return $this->getEnums($type);
-        });
+        $cachedData = CacheService::get($cacheKey, 'enums');
+        if ($cachedData !== null) {
+            return collect($cachedData);
+        }
+
+        $data = $this->getEnums($type);
+        CacheService::put($cacheKey, $data->toArray(), $cacheTtl, 'enums');
+        
+        return $data;
     }
 
     /**
@@ -96,7 +102,8 @@ class EnumService
         $normalizedType = $this->normalizeType($type);
         $cacheKey = "enums_{$normalizedType}";
         
-        return Cache::forget($cacheKey);
+        CacheService::forget($cacheKey, 'enums');
+        return true;
     }
 
     /**
@@ -104,15 +111,11 @@ class EnumService
      */
     public function clearAllCache(): bool
     {
-        $success = true;
-        
         foreach (array_keys($this->enumMap) as $type) {
-            if (!$this->clearCache($type)) {
-                $success = false;
-            }
+            $this->clearCache($type);
         }
         
-        return $success;
+        return true;
     }
 
     /**

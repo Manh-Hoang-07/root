@@ -3,7 +3,7 @@
 namespace App\Helpers;
 
 use App\Services\Core\SystemConfig\SystemConfigService;
-use App\Libraries\CacheService;
+use App\Libraries\Core\CacheService;
 use Illuminate\Support\Facades\App;
 
 class SystemConfigHelper
@@ -13,10 +13,8 @@ class SystemConfigHelper
      */
     public static function getGeneralConfig(): array
     {
-        $cacheService = new CacheService(true, 3600, 'system');
-        
         // Lấy từ cache trước
-        $cached = $cacheService->get('general_config');
+        $cached = CacheService::get('general_config', 'system');
         if ($cached !== null) {
             return $cached;
         }
@@ -33,7 +31,7 @@ class SystemConfigHelper
         }
         
         // Cache lại
-        $cacheService->put('general_config', $result);
+        CacheService::put('general_config', $result, 3600, 'system');
         
         return $result;
     }

@@ -3,7 +3,7 @@
 namespace App\Traits;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use App\Libraries\Core\CacheService;
 
 /**
  * Trait for request handling operations
@@ -38,11 +38,11 @@ trait RequestTrait
     {
         $key = $this->genLimitKey($request);
         // Simple rate limiting implementation
-        $attempts = Cache::get($key, 0);
+        $attempts = CacheService::get($key, 'rate_limit') ?? 0;
         if ($attempts >= $this->rateLimitAttempts) {
             return false;
         }
-        Cache::put($key, $attempts + 1, 60); // 1 minute window
+        CacheService::put($key, $attempts + 1, 60, 'rate_limit'); // 1 minute window
         return true;
     }
 

@@ -5,7 +5,7 @@ namespace App\Http\Middleware\Api;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
+use App\Libraries\Core\CacheService;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AutoAuthMiddleware
@@ -62,13 +62,14 @@ class AutoAuthMiddleware
         // Cache token validation để tránh query database mỗi lần
         $cacheKey = 'auth_token_' . md5($token);
         
-        $userId = Cache::remember($cacheKey, 300, function () use ($token) {
+        $userId = CacheService::get($cacheKey, 'auth');
+        if ($userId === null) {
             $accessToken = PersonalAccessToken::findToken($token);
             if ($accessToken && $accessToken->tokenable) {
-                return $accessToken->tokenable->id;
+                $userId = $accessToken->tokenable->id;
+                CacheService::put($cacheKey, $userId, 300, 'auth');
             }
-            return null;
-        });
+        }
         
         if ($userId) {
             // Load user và authenticate

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Traits\ResponseTrait;
 use App\Traits\LoggingTrait;
-use App\Libraries\CacheService;
+use App\Libraries\Core\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -77,12 +77,6 @@ abstract class BaseController extends Controller
     public function __construct(\App\Services\BaseService $service)
     {
         $this->service = $service;
-        // Initialize cache service
-        $this->cacheService = new CacheService(
-            $this->enableCaching,
-            $this->cacheTtl,
-            'api'
-        );
     }
 
     /**
@@ -203,9 +197,9 @@ abstract class BaseController extends Controller
         $filters = $this->processFilters($filters, $context);
         
         // Check caching
-        if ($this->cacheService->shouldCache()) {
-            $cacheKey = $this->cacheService->generateKey($filters, $perPage, $context, $single, static::class);
-            $cachedData = $this->cacheService->get($cacheKey);
+        if ($this->enableCaching) {
+            $cacheKey = CacheService::generateKey($filters, $perPage, $context, $single, static::class);
+            $cachedData = CacheService::get($cacheKey, 'api');
             if ($cachedData !== null) {
                 return $cachedData;
             }
@@ -231,8 +225,8 @@ abstract class BaseController extends Controller
             $data = $this->service->list($filters, $perPage, $relations, $fields);
         }
         // Cache the response if enabled
-        if ($this->cacheService->shouldCache()) {
-            $this->cacheService->put($cacheKey, $data);
+        if ($this->enableCaching) {
+            CacheService::put($cacheKey, $data, $this->cacheTtl, 'api');
         }
         return $data;
     }
@@ -414,7 +408,7 @@ abstract class BaseController extends Controller
         
         // If this is the first request in the window, set expiration
         if ($attempts === 1) {
-            Cache::put($key, 1, 60); // 1 minute window
+            CacheService::put($key, 1, 60, 'rate_limit'); // 1 minute window
         }
         
         // Check if limit exceeded

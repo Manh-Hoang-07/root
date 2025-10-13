@@ -5,7 +5,7 @@ namespace App\Services\Core\Email;
 use App\Models\NotificationTemplate;
 use App\Services\Core\SystemConfig\SystemConfigService;
 use App\Helpers\SystemConfigHelper;
-use App\Libraries\CacheService;
+use App\Libraries\Core\CacheService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Config;
 use Exception;
@@ -13,12 +13,9 @@ use Exception;
 class EmailService
 {
     protected SystemConfigService $configService;
-    protected CacheService $cacheService;
-
     public function __construct(SystemConfigService $configService)
     {
         $this->configService = $configService;
-        $this->cacheService = new CacheService(true, 3600, 'email');
     }
     /**
      * Gửi email đơn giản với tiêu đề và nội dung
@@ -30,7 +27,7 @@ class EmailService
     {
         try {
             // Lấy từ cache trước
-            $cached = $this->cacheService->get('config');
+            $cached = CacheService::get('config', 'email');
             if ($cached !== null) {
                 $this->updateConfig($cached);
                 return true;
@@ -50,7 +47,7 @@ class EmailService
             }
 
             // Cache lại
-            $this->cacheService->put('config', $configs);
+            CacheService::put('config', $configs, 3600, 'email');
 
             // Cập nhật cấu hình mail trong Laravel
             $this->updateConfig($configs);
