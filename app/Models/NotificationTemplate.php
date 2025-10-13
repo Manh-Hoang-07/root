@@ -86,7 +86,7 @@ class NotificationTemplate extends Model
 
         // Merge with default placeholders
         $defaults = [
-            '{{app_name}}' => \App\Helpers\SystemConfigHelper::getName(),
+            '{{app_name}}' => \App\Libraries\Public\SystemConfig::getName(),
             '{{current_date}}' => now()->format('d/m/Y'),
             '{{current_time}}' => now()->format('H:i:s'),
             '{{current_datetime}}' => now()->format('d/m/Y H:i:s'),

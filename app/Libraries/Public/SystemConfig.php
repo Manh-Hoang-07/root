@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Helpers;
+namespace App\Libraries\Public;
 
 use App\Services\Core\SystemConfig\SystemConfigService;
 use App\Libraries\Core\CacheService;
 use Illuminate\Support\Facades\App;
 
-class SystemConfigHelper
+class SystemConfig
 {
     /**
      * Lấy tất cả cấu hình hệ thống từ group general (có cache)
