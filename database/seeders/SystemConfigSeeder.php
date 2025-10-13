@@ -145,7 +145,10 @@ class SystemConfigSeeder extends Seeder
         foreach ($configs as $config) {
             SystemConfig::updateOrCreate(
                 ['key' => $config['key']],
-                $config
+                array_merge($config, [
+                    'created_user_id' => 1,
+                    'updated_user_id' => 1,
+                ])
             );
         }
     }

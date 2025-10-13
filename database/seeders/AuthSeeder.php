@@ -20,16 +20,9 @@ class AuthSeeder extends Seeder
         ], [
             'username' => 'admin',
             'password' => Hash::make('password'),
-            'status' => UserStatus::Active
-        ]);
-
-        // Tạo admin user
-        $adminUser = User::firstOrCreate([
-            'email' => 'admin@example.com'
-        ], [
-            'username' => 'admin',
-            'password' => Hash::make('password'),
-            'status' => UserStatus::Active
+            'status' => UserStatus::Active,
+            'created_user_id' => 1,
+            'updated_user_id' => 1
         ]);
 
         // Tạo profile cho admin
@@ -39,7 +32,9 @@ class AuthSeeder extends Seeder
                 'gender' => 'male',
                 'birthday' => '1990-01-01',
                 'address' => 'Hà Nội, Việt Nam',
-                'about' => 'Quản trị viên hệ thống'
+                'about' => 'Quản trị viên hệ thống',
+                'created_user_id' => 1,
+                'updated_user_id' => 1
             ]);
         }
 
@@ -49,51 +44,22 @@ class AuthSeeder extends Seeder
         ], [
             'username' => 'user',
             'password' => Hash::make('password'),
-            'status' => UserStatus::Active
+            'status' => UserStatus::Active,
+            'created_user_id' => 1,
+            'updated_user_id' => 1
         ]);
 
-        // Tạo thêm một số user mẫu
-        $sampleUsers = [
-            [
-                'username' => 'john_doe',
-                'email' => 'john@example.com',
-                'name' => 'John Doe',
-                'password' => 'password'
-            ],
-            [
-                'username' => 'jane_smith',
-                'email' => 'jane@example.com',
-                'name' => 'Jane Smith',
-                'password' => 'password'
-            ],
-            [
-                'username' => 'bob_wilson',
-                'email' => 'bob@example.com',
-                'name' => 'Bob Wilson',
-                'password' => 'password'
-            ]
-        ];
-
-        foreach ($sampleUsers as $userData) {
-            $user = User::firstOrCreate([
-                'email' => $userData['email']
-            ], [
-                'username' => $userData['username'],
-                'password' => Hash::make($userData['password']),
-                'status' => UserStatus::Active
+        // Tạo profile cho user
+        if (!$normalUser->profile) {
+            $normalUser->profile()->create([
+                'name' => 'User',
+                'gender' => 'male',
+                'birthday' => '1990-01-01',
+                'address' => 'Việt Nam',
+                'about' => 'Người dùng thường',
+                'created_user_id' => 1,
+                'updated_user_id' => 1
             ]);
-
-            if (!$user->profile) {
-                $user->profile()->create([
-                    'name' => $userData['name'],
-                    'gender' => 'male',
-                    'birthday' => '1990-01-01',
-                    'address' => 'Việt Nam',
-                    'about' => 'Người dùng mẫu'
-                ]);
-            }
-
-
         }
 
         $this->command->info('Auth seeder completed successfully!');

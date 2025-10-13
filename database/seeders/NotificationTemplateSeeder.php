@@ -21,7 +21,7 @@ class NotificationTemplateSeeder extends Seeder
                 'content' => "Xin chào {{name}},\n\nChào mừng bạn đến với {{app_name}}!\n\nCảm ơn bạn đã đăng ký tài khoản. Chúng tôi rất vui được chào đón bạn tham gia cộng đồng của chúng tôi.\n\nNếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi.\n\nTrân trọng,\nĐội ngũ {{app_name}}",
                 'variables' => ['name'],
                 'locale' => 'vi',
-                'status' => 1,
+                'status' => 'active',
             ],
             [
                 'type' => 'email',
@@ -31,7 +31,7 @@ class NotificationTemplateSeeder extends Seeder
                 'content' => "Xin chào {{name}},\n\nBạn đã yêu cầu mã xác thực OTP.\n\nMã xác thực của bạn là: {{otp}}\n\nMã này có hiệu lực trong 5 phút. Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.\n\nTrân trọng,\nĐội ngũ {{app_name}}",
                 'variables' => ['name', 'otp'],
                 'locale' => 'vi',
-                'status' => 1,
+                'status' => 'active',
             ],
             [
                 'type' => 'email',
@@ -41,7 +41,7 @@ class NotificationTemplateSeeder extends Seeder
                 'content' => "Xin chào {{name}},\n\nBạn đã yêu cầu đặt lại mật khẩu cho tài khoản của mình.\n\nMã xác thực của bạn là: {{reset_code}}\n\nMã này có hiệu lực trong 15 phút. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.\n\nTrân trọng,\nĐội ngũ {{app_name}}",
                 'variables' => ['name', 'reset_code'],
                 'locale' => 'vi',
-                'status' => 1,
+                'status' => 'active',
             ],
             [
                 'type' => 'email',
@@ -51,7 +51,7 @@ class NotificationTemplateSeeder extends Seeder
                 'content' => "Xin chào {{name}},\n\n{{message}}\n\nThời gian: {{current_datetime}}\n\nTrân trọng,\nĐội ngũ {{app_name}}",
                 'variables' => ['name', 'message'],
                 'locale' => 'vi',
-                'status' => 1,
+                'status' => 'active',
             ],
             [
                 'type' => 'sms',
@@ -61,7 +61,7 @@ class NotificationTemplateSeeder extends Seeder
                 'content' => "Mã xác thực của bạn là: {{otp}}. Mã có hiệu lực trong 5 phút. {{app_name}}",
                 'variables' => ['otp'],
                 'locale' => 'vi',
-                'status' => 1,
+                'status' => 'active',
             ],
             [
                 'type' => 'otp',
@@ -71,14 +71,17 @@ class NotificationTemplateSeeder extends Seeder
                 'content' => "{{otp}}",
                 'variables' => ['otp'],
                 'locale' => 'vi',
-                'status' => 1,
+                'status' => 'active',
             ],
         ];
 
         foreach ($templates as $template) {
             NotificationTemplate::updateOrCreate(
                 ['code' => $template['code'], 'locale' => $template['locale']],
-                $template
+                array_merge($template, [
+                    'created_user_id' => 1,
+                    'updated_user_id' => 1,
+                ])
             );
         }
     }

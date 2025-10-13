@@ -25,6 +25,8 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive'])->default('active')->comment('Trạng thái hoạt động');
             $table->integer('sort_order')->default(0)->comment('Thứ tự sắp xếp');
             $table->timestamps();
+            $table->unsignedBigInteger('created_user_id')->nullable();
+            $table->unsignedBigInteger('updated_user_id')->nullable();
 
             $table->index(['group', 'status']);
             $table->index(['is_public', 'status']);

@@ -14,13 +14,16 @@ return new class extends Migration
         Schema::create('menus', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('route_name')->nullable();
+            $table->string('api')->nullable();
+            $table->string('path')->nullable();
             $table->string('icon')->nullable();
             $table->foreignId('parent_id')->nullable()->constrained('menus')->nullOnDelete();
             $table->integer('sort_order')->default(0);
-            $table->string('roles')->nullable();
-            $table->boolean('is_active')->default(true);
+            $table->string('permissions')->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
+            $table->unsignedBigInteger('created_user_id')->nullable();
+            $table->unsignedBigInteger('updated_user_id')->nullable();
         });
     }
 

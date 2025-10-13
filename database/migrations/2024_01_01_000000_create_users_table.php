@@ -20,6 +20,8 @@ return new class extends Migration
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
+            $table->unsignedBigInteger('created_user_id')->nullable();
+            $table->unsignedBigInteger('updated_user_id')->nullable();
         });
     }
 

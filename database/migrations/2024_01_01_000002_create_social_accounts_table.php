@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('provider_email')->nullable();
             $table->string('avatar')->nullable();
             $table->timestamps();
+            $table->unsignedBigInteger('created_user_id')->nullable();
+            $table->unsignedBigInteger('updated_user_id')->nullable();
         });
     }
 

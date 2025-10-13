@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use App\Repositories\Traits\BaseFilterTrait;
 use App\Repositories\Traits\BaseSearchTrait;
 use App\Repositories\Traits\BaseSortingTrait;
@@ -20,6 +21,7 @@ abstract class BaseRepository
     use BaseFilterTrait, BaseSearchTrait, BaseSortingTrait, BaseConditionTrait, BaseQueryTrait;
 
     protected Model $model;
+    protected ?int $trackingUserId = null;
 
     /**
      * Constructor - Initialize the model
@@ -34,6 +36,35 @@ abstract class BaseRepository
      * @return string
      */
     abstract public function model();
+
+    /**
+     * Get current authenticated user ID
+     * @return int|null
+     */
+    protected function getCurrentUserId(): ?int
+    {
+        return Auth::check() ? Auth::id() : null;
+    }
+
+    /**
+     * Set user ID for tracking (useful for system operations)
+     * @param int|null $userId
+     * @return $this
+     */
+    public function setTrackingUserId(?int $userId): self
+    {
+        $this->trackingUserId = $userId;
+        return $this;
+    }
+
+    /**
+     * Get tracking user ID (either set manually or current auth user)
+     * @return int|null
+     */
+    protected function getTrackingUserId(): ?int
+    {
+        return $this->trackingUserId ?? $this->getCurrentUserId();
+    }
 
     /**
      * Get all records with pagination and filtering
@@ -60,6 +91,11 @@ abstract class BaseRepository
      */
     public function create(array $data): array
     {
+        // Auto-assign created_user_id if not provided
+        if (!isset($data['created_user_id'])) {
+            $data['created_user_id'] = $this->getTrackingUserId();
+        }
+        
         return $this->model->create($data)->toArray();
     }
 
@@ -71,6 +107,11 @@ abstract class BaseRepository
         $model = $this->model->find($id);
         if (!$model) {
             return null;
+        }
+        
+        // Auto-assign updated_user_id if not provided
+        if (!isset($data['updated_user_id'])) {
+            $data['updated_user_id'] = $this->getTrackingUserId();
         }
         
         $model->update($data);
@@ -177,6 +218,11 @@ abstract class BaseRepository
      */
     public function updateBy(array $conditions, array $data): int
     {
+        // Auto-assign updated_user_id if not provided
+        if (!isset($data['updated_user_id'])) {
+            $data['updated_user_id'] = $this->getTrackingUserId();
+        }
+        
         $query = $this->model->query();
         $this->applyConditions($query, $conditions);
         return $query->update($data);

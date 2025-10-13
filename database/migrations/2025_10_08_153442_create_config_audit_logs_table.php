@@ -17,16 +17,15 @@ return new class extends Migration
             $table->text('old_value')->nullable()->comment('Giá trị cũ');
             $table->text('new_value')->nullable()->comment('Giá trị mới');
             $table->string('action')->comment('Hành động: created, updated, deleted');
-            $table->unsignedBigInteger('changed_by')->nullable()->comment('Người thay đổi');
-            $table->foreign('changed_by')->references('id')->on('users')->onDelete('set null');
             $table->text('change_reason')->nullable()->comment('Lý do thay đổi');
             $table->string('ip_address')->nullable()->comment('Địa chỉ IP');
             $table->string('user_agent')->nullable()->comment('User Agent');
             $table->json('metadata')->nullable()->comment('Dữ liệu bổ sung');
             $table->timestamp('created_at')->useCurrent();
+            $table->unsignedBigInteger('created_user_id')->nullable();
+            $table->unsignedBigInteger('updated_user_id')->nullable();
             
             $table->index(['config_key', 'created_at']);
-            $table->index(['changed_by', 'created_at']);
             $table->index(['action', 'created_at']);
         });
     }

@@ -6,7 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Menu extends Model
 {
-    protected $fillable = ['name', 'route_name', 'icon', 'parent_id', 'sort_order'];
+    protected $fillable = [
+        'title', 
+        'api', 
+        'path', 
+        'icon', 
+        'parent_id', 
+        'sort_order', 
+        'permissions', 
+        'status',
+        'created_user_id',
+        'updated_user_id'
+    ];
 
     public function children()
     {
@@ -24,13 +35,13 @@ class Menu extends Model
     }
 
     /**
-     * Helper: return roles as array
+     * Helper: return permissions as array
      */
-    public function getRolesArrayAttribute(): array
+    public function getPermissionsArrayAttribute(): array
     {
-        if (!$this->roles) return [];
-        $json = json_decode($this->roles, true);
+        if (!$this->permissions) return [];
+        $json = json_decode($this->permissions, true);
         if (is_array($json)) return $json;
-        return array_map('trim', explode(',', $this->roles));
+        return array_map('trim', explode(',', $this->permissions));
     }
 }

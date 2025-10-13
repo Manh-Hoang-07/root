@@ -23,6 +23,8 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->softDeletes();
             $table->timestamps();
+            $table->unsignedBigInteger('created_user_id')->nullable();
+            $table->unsignedBigInteger('updated_user_id')->nullable();
 
             $table->foreign('parent_id')->references('id')->on('postcategory')->nullOnDelete();
         });
@@ -38,6 +40,8 @@ return new class extends Migration
             $table->string('canonical_url')->nullable();
             $table->softDeletes();
             $table->timestamps();
+            $table->unsignedBigInteger('created_user_id')->nullable();
+            $table->unsignedBigInteger('updated_user_id')->nullable();
         });
 
         Schema::create('posts', function (Blueprint $table) {
@@ -60,14 +64,12 @@ return new class extends Migration
             $table->string('og_title')->nullable();
             $table->string('og_description')->nullable();
             $table->string('og_image')->nullable();
-            $table->unsignedBigInteger('created_by')->nullable()->index();
-            $table->unsignedBigInteger('updated_by')->nullable()->index();
             $table->softDeletes();
             $table->timestamps();
+            $table->unsignedBigInteger('created_user_id')->nullable();
+            $table->unsignedBigInteger('updated_user_id')->nullable();
 
             $table->foreign('primary_postcategory_id')->references('id')->on('postcategory')->nullOnDelete();
-            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
-            $table->foreign('updated_by')->references('id')->on('users')->nullOnDelete();
         });
 
         Schema::create('post_posttag', function (Blueprint $table) {

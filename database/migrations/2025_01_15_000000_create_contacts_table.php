@@ -25,6 +25,8 @@ return new class extends Migration
             $table->timestamp('responded_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->unsignedBigInteger('created_user_id')->nullable();
+            $table->unsignedBigInteger('updated_user_id')->nullable();
 
             // Indexes
             $table->index('status');

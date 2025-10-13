@@ -24,7 +24,10 @@ class PostSeeder extends Seeder
         }
 
         // Create posts
-        Post::factory()->count(40)->create()->each(function (Post $post) use ($categories, $tags) {
+        Post::factory()->count(40)->create([
+            'created_user_id' => 1,
+            'updated_user_id' => 1,
+        ])->each(function (Post $post) use ($categories, $tags) {
             // Assign primary category
             $primary = $categories->random();
             $post->primary_postcategory_id = $primary->id;

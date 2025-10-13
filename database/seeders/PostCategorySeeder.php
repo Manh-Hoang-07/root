@@ -26,6 +26,8 @@ class PostCategorySeeder extends Seeder
                     'description' => null,
                     'status' => BasicStatus::Active,
                     'sort_order' => 0,
+                    'created_user_id' => 1,
+                    'updated_user_id' => 1,
                 ])
             );
             $rootIds[] = $root->id;
@@ -36,6 +38,8 @@ class PostCategorySeeder extends Seeder
             PostCategory::factory()->count(3)->create([
                 'parent_id' => $parentId,
                 'status' => BasicStatus::Active,
+                'created_user_id' => 1,
+                'updated_user_id' => 1,
             ]);
         }
     }

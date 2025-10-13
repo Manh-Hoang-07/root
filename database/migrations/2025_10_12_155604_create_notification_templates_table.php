@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('content')->comment('Nội dung template (có thể chứa {{otp}}, {{name}})');
             $table->json('variables')->nullable()->comment('Danh sách biến dùng trong template');
             $table->string('locale', 10)->default('vi')->comment('Ngôn ngữ');
-            $table->tinyInteger('status')->default(1)->comment('1=active, 0=inactive');
+            $table->enum('status', ['active', 'inactive'])->default('active')->comment('Trạng thái hoạt động');
             $table->unsignedBigInteger('created_user_id')->nullable()->comment('Người tạo');
             $table->unsignedBigInteger('updated_user_id')->nullable()->comment('Người cập nhật');
             $table->timestamps();

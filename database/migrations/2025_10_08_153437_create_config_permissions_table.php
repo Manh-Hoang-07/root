@@ -21,6 +21,8 @@ return new class extends Migration
             $table->json('allowed_keys')->nullable()->comment('Danh sách key được phép (null = tất cả)');
             $table->json('restricted_keys')->nullable()->comment('Danh sách key bị hạn chế');
             $table->timestamps();
+            $table->unsignedBigInteger('created_user_id')->nullable();
+            $table->unsignedBigInteger('updated_user_id')->nullable();
             
             $table->unique(['user_id', 'config_group']);
             $table->index(['config_group', 'can_read']);

@@ -24,6 +24,8 @@ class PostTagSeeder extends Seeder
                 array_merge($data, [
                     'description' => null,
                     'status' => BasicStatus::Active,
+                    'created_user_id' => 1,
+                    'updated_user_id' => 1,
                 ])
             );
         }
@@ -31,6 +33,8 @@ class PostTagSeeder extends Seeder
         // Random tags
         PostTag::factory()->count(10)->create([
             'status' => BasicStatus::Active,
+            'created_user_id' => 1,
+            'updated_user_id' => 1,
         ]);
     }
 }

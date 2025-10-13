@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->text('about')->nullable();
             $table->timestamps();
+            $table->unsignedBigInteger('created_user_id')->nullable();
+            $table->unsignedBigInteger('updated_user_id')->nullable();
         });
     }
 

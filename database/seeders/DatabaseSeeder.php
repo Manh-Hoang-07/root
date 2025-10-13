@@ -11,15 +11,25 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Chạy AuthSeeder trước
         $this->call([
+            // 1. Chạy PermissionSeeder trước
+            PermissionSeeder::class,
+            
+            // 2. Tạo users
             AuthSeeder::class,
-            RolePermissionSeeder::class,
+            
+            // 3. Tạo roles và gán quyền
             RoleSeeder::class,
+            
+            // 4. Các seeder khác
             SystemConfigSeeder::class,
+            MenuSeeder::class,
+            NotificationTemplateSeeder::class,
+            ConfigAuditLogSeeder::class,
             PostCategorySeeder::class,
             PostTagSeeder::class,
             PostSeeder::class,
+            ContactSeeder::class,
         ]);
     }
 }
