@@ -26,6 +26,8 @@ return new class extends Migration
             $table->index('provider_email');
             $table->index(['provider', 'provider_id']);
             $table->index('created_at');
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
         });
     }
 

@@ -36,8 +36,6 @@ class PostFactory extends Factory
             'og_title' => $this->faker->optional()->sentence(6),
             'og_description' => $this->faker->optional()->sentence(12),
             'og_image' => null,
-            'created_by' => null,
-            'updated_by' => null,
         ];
     }
 }

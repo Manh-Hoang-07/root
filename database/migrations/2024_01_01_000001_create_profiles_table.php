@@ -27,6 +27,8 @@ return new class extends Migration
             $table->index('gender');
             $table->index('birthday');
             $table->index('created_at');
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
         });
     }
 

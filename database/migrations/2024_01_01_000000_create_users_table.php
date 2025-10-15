@@ -30,6 +30,8 @@ return new class extends Migration
             $table->index('phone');
             $table->index('created_at');
             $table->index(['status', 'created_at']);
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
         });
     }
 

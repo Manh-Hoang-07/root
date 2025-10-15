@@ -28,6 +28,7 @@ return new class extends Migration
             $table->unsignedBigInteger('created_user_id')->nullable();
             $table->unsignedBigInteger('updated_user_id')->nullable();
 
+            // Indexes
             $table->index(['group', 'status']);
             $table->index(['is_public', 'status']);
             $table->index('key');

@@ -31,8 +31,8 @@ class Post extends Model
         'og_title',
         'og_description',
         'og_image',
-        'created_by',
-        'updated_by',
+        'created_user_id',
+        'updated_user_id',
     ];
 
     protected $casts = [
@@ -60,6 +60,6 @@ class Post extends Model
 
     public function author()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_user_id');
     }
 }

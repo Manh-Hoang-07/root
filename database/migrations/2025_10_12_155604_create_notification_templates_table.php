@@ -25,6 +25,7 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_user_id')->nullable()->comment('Người cập nhật');
             $table->timestamps();
 
+            // Indexes
             $table->index(['type', 'status']);
             $table->index(['code', 'locale']);
             $table->index('status');

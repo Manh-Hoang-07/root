@@ -13,9 +13,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->unsignedBigInteger('parent_id')->nullable()->index();
+            $table->unsignedBigInteger('parent_id')->nullable();
             $table->string('image')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active')->index();
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->string('meta_title')->nullable();
             $table->string('meta_description')->nullable();
             $table->string('canonical_url')->nullable();
@@ -46,7 +46,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active')->index();
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->string('meta_title')->nullable();
             $table->string('meta_description')->nullable();
             $table->string('canonical_url')->nullable();
@@ -67,17 +67,17 @@ return new class extends Migration
 
         Schema::create('posts', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('name')->index();
+            $table->string('name');
             $table->string('slug')->unique();
             $table->text('excerpt')->nullable();
             $table->longText('content');
             $table->string('image')->nullable();
             $table->string('cover_image')->nullable();
-            $table->unsignedBigInteger('primary_postcategory_id')->nullable()->index();
-            $table->enum('status', ['draft','scheduled','published','archived'])->default('draft')->index();
-            $table->boolean('is_featured')->default(false)->index();
-            $table->boolean('is_pinned')->default(false)->index();
-            $table->dateTime('published_at')->nullable()->index();
+            $table->unsignedBigInteger('primary_postcategory_id')->nullable();
+            $table->enum('status', ['draft','scheduled','published','archived'])->default('draft');
+            $table->boolean('is_featured')->default(false);
+            $table->boolean('is_pinned')->default(false);
+            $table->dateTime('published_at')->nullable();
             $table->unsignedBigInteger('view_count')->default(0);
             $table->string('meta_title')->nullable();
             $table->string('meta_description')->nullable();
