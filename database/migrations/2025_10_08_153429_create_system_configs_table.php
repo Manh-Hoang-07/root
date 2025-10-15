@@ -30,6 +30,12 @@ return new class extends Migration
 
             $table->index(['group', 'status']);
             $table->index(['is_public', 'status']);
+            $table->index('key');
+            $table->index('type');
+            $table->index('sort_order');
+            $table->index('created_at');
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
         });
     }
 

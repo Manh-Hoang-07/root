@@ -34,6 +34,16 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_user_id')->nullable();
 
             $table->unique(['name', 'guard_name']);
+
+            // Indexes
+            $table->index('name');
+            $table->index('display_name');
+            $table->index('parent_id');
+            $table->index('guard_name');
+            $table->index('status');
+            $table->index('created_at');
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
         });
 
         Schema::create($tableNames['roles'], static function (Blueprint $table) use ($teams, $columnNames) {
@@ -57,6 +67,16 @@ return new class extends Migration
             } else {
                 $table->unique(['name', 'guard_name']);
             }
+
+            // Indexes
+            $table->index('name');
+            $table->index('display_name');
+            $table->index('parent_id');
+            $table->index('guard_name');
+            $table->index('status');
+            $table->index('created_at');
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
         });
 
         Schema::create($tableNames['model_has_permissions'], static function (Blueprint $table) use ($tableNames, $columnNames, $pivotPermission, $teams) {

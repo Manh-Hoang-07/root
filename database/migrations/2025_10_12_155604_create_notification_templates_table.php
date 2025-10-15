@@ -28,6 +28,13 @@ return new class extends Migration
             $table->index(['type', 'status']);
             $table->index(['code', 'locale']);
             $table->index('status');
+            $table->index('type');
+            $table->index('code');
+            $table->index('locale');
+            $table->index('name');
+            $table->index('created_at');
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
         });
     }
 

@@ -27,6 +27,12 @@ return new class extends Migration
             
             $table->index(['config_key', 'created_at']);
             $table->index(['action', 'created_at']);
+            $table->index('config_key');
+            $table->index('action');
+            $table->index('ip_address');
+            $table->index('created_at');
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
         });
     }
 

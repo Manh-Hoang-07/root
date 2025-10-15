@@ -27,6 +27,18 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_user_id')->nullable();
 
             $table->foreign('parent_id')->references('id')->on('postcategory')->nullOnDelete();
+
+            // Indexes
+            $table->index('name');
+            $table->index('slug');
+            $table->index('parent_id');
+            $table->index('status');
+            $table->index('sort_order');
+            $table->index('created_at');
+            $table->index(['status', 'sort_order']);
+            $table->index(['parent_id', 'status']);
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
         });
 
         Schema::create('posttag', function (Blueprint $table) {
@@ -42,6 +54,15 @@ return new class extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('created_user_id')->nullable();
             $table->unsignedBigInteger('updated_user_id')->nullable();
+
+            // Indexes
+            $table->index('name');
+            $table->index('slug');
+            $table->index('status');
+            $table->index('created_at');
+            $table->index(['status', 'created_at']);
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
         });
 
         Schema::create('posts', function (Blueprint $table) {
@@ -70,6 +91,22 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_user_id')->nullable();
 
             $table->foreign('primary_postcategory_id')->references('id')->on('postcategory')->nullOnDelete();
+
+            // Indexes
+            $table->index('name');
+            $table->index('slug');
+            $table->index('primary_postcategory_id');
+            $table->index('status');
+            $table->index('is_featured');
+            $table->index('is_pinned');
+            $table->index('published_at');
+            $table->index('view_count');
+            $table->index('created_at');
+            $table->index(['status', 'published_at']);
+            $table->index(['is_featured', 'status']);
+            $table->index(['primary_postcategory_id', 'status']);
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
         });
 
         Schema::create('post_posttag', function (Blueprint $table) {
@@ -80,6 +117,11 @@ return new class extends Migration
             $table->primary(['post_id', 'posttag_id']);
             $table->foreign('post_id')->references('id')->on('posts')->onDelete('cascade');
             $table->foreign('posttag_id')->references('id')->on('posttag')->onDelete('cascade');
+
+            // Indexes
+            $table->index('post_id');
+            $table->index('posttag_id');
+            $table->index('created_at');
         });
 
         Schema::create('post_postcategory', function (Blueprint $table) {
@@ -90,6 +132,11 @@ return new class extends Migration
             $table->primary(['post_id', 'postcategory_id']);
             $table->foreign('post_id')->references('id')->on('posts')->onDelete('cascade');
             $table->foreign('postcategory_id')->references('id')->on('postcategory')->onDelete('cascade');
+
+            // Indexes
+            $table->index('post_id');
+            $table->index('postcategory_id');
+            $table->index('created_at');
         });
     }
 

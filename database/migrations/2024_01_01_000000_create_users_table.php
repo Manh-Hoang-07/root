@@ -22,6 +22,14 @@ return new class extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('created_user_id')->nullable();
             $table->unsignedBigInteger('updated_user_id')->nullable();
+
+            // Indexes
+            $table->index('status');
+            $table->index('email');
+            $table->index('username');
+            $table->index('phone');
+            $table->index('created_at');
+            $table->index(['status', 'created_at']);
         });
     }
 

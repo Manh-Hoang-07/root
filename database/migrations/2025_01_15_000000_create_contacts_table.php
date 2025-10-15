@@ -31,8 +31,15 @@ return new class extends Migration
             // Indexes
             $table->index('status');
             $table->index('email');
+            $table->index('name');
+            $table->index('phone');
+            $table->index('subject');
             $table->index('created_at');
+            $table->index('responded_at');
             $table->index(['status', 'created_at']);
+            $table->index(['email', 'status']);
+            $table->index('created_user_id');
+            $table->index('updated_user_id');
 
             // Foreign key
             $table->foreign('admin_id')->references('id')->on('users')->onDelete('set null');

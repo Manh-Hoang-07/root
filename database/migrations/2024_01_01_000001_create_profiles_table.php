@@ -20,6 +20,13 @@ return new class extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('created_user_id')->nullable();
             $table->unsignedBigInteger('updated_user_id')->nullable();
+
+            // Indexes
+            $table->index('user_id');
+            $table->index('name');
+            $table->index('gender');
+            $table->index('birthday');
+            $table->index('created_at');
         });
     }
 

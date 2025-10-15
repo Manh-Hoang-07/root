@@ -18,6 +18,14 @@ return new class extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('created_user_id')->nullable();
             $table->unsignedBigInteger('updated_user_id')->nullable();
+
+            // Indexes
+            $table->index('user_id');
+            $table->index('provider');
+            $table->index('provider_id');
+            $table->index('provider_email');
+            $table->index(['provider', 'provider_id']);
+            $table->index('created_at');
         });
     }
 
