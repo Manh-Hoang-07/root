@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Core\Enum\EnumController;
 use App\Http\Controllers\Api\Core\File\FileController;
 use App\Http\Controllers\Api\Core\Auth\AuthController;
+use App\Http\Controllers\Api\Public\Menu\MenuController;
 use App\Http\Controllers\Api\Public\Post\PostController;
 use App\Http\Controllers\Api\Public\PostCategory\PostCategoryController;
 use App\Http\Controllers\Api\Public\PostTag\PostTagController;
@@ -29,6 +30,7 @@ Route::prefix('files')->group(function () {
 
 // Public API - Post module
 Route::apiResource('posts', PostController::class)->only(['index', 'show']);
+Route::apiResource('menus', MenuController::class)->only(['index', 'show']);
 Route::get('/posts/slug/{slug}', [PostController::class, 'showBySlug']);
 Route::apiResource('post-categories', PostCategoryController::class)->only(['index', 'show']);
 Route::get('/post-categories/slug/{slug}', [PostCategoryController::class, 'showBySlug']);

@@ -20,10 +20,11 @@ class MenuSeeder extends Seeder
                 'icon' => 'fas fa-tachometer-alt',
                 'parent_id' => null,
                 'sort_order' => 1,
-                'permissions' => 'view_dashboard',
+                'permissions' => json_encode(['view_dashboard']),
                 'status' => 'active',
+                'type' => 'admin',
                 'created_user_id' => 1,
-                'updated_user_id' => 1
+                'updated_user_id' => 1,
             ],
             [
                 'title' => 'Quản lý người dùng',
@@ -32,10 +33,11 @@ class MenuSeeder extends Seeder
                 'icon' => 'fas fa-users',
                 'parent_id' => null,
                 'sort_order' => 2,
-                'permissions' => 'manage_users',
+                'permissions' => json_encode(['manage_users']),
                 'status' => 'active',
+                'type' => 'admin',
                 'created_user_id' => 1,
-                'updated_user_id' => 1
+                'updated_user_id' => 1,
             ],
             [
                 'title' => 'Quản lý vai trò',
@@ -44,10 +46,11 @@ class MenuSeeder extends Seeder
                 'icon' => 'fas fa-user-tag',
                 'parent_id' => null,
                 'sort_order' => 3,
-                'permissions' => 'manage_roles',
+                'permissions' => json_encode(['manage_roles']),
                 'status' => 'active',
+                'type' => 'admin',
                 'created_user_id' => 1,
-                'updated_user_id' => 1
+                'updated_user_id' => 1,
             ],
             [
                 'title' => 'Quản lý bài viết',
@@ -56,10 +59,11 @@ class MenuSeeder extends Seeder
                 'icon' => 'fas fa-newspaper',
                 'parent_id' => null,
                 'sort_order' => 4,
-                'permissions' => 'manage_posts',
+                'permissions' => json_encode(['manage_posts']),
                 'status' => 'active',
+                'type' => 'admin',
                 'created_user_id' => 1,
-                'updated_user_id' => 1
+                'updated_user_id' => 1,
             ],
             [
                 'title' => 'Danh mục bài viết',
@@ -68,10 +72,11 @@ class MenuSeeder extends Seeder
                 'icon' => 'fas fa-folder',
                 'parent_id' => null,
                 'sort_order' => 5,
-                'permissions' => 'manage_categories',
+                'permissions' => json_encode(['manage_categories']),
                 'status' => 'active',
+                'type' => 'admin',
                 'created_user_id' => 1,
-                'updated_user_id' => 1
+                'updated_user_id' => 1,
             ],
             [
                 'title' => 'Thẻ bài viết',
@@ -80,10 +85,11 @@ class MenuSeeder extends Seeder
                 'icon' => 'fas fa-tags',
                 'parent_id' => null,
                 'sort_order' => 6,
-                'permissions' => 'manage_tags',
+                'permissions' => json_encode(['manage_tags']),
                 'status' => 'active',
+                'type' => 'admin',
                 'created_user_id' => 1,
-                'updated_user_id' => 1
+                'updated_user_id' => 1,
             ],
             [
                 'title' => 'Liên hệ',
@@ -92,10 +98,11 @@ class MenuSeeder extends Seeder
                 'icon' => 'fas fa-envelope',
                 'parent_id' => null,
                 'sort_order' => 7,
-                'permissions' => 'manage_contacts',
+                'permissions' => json_encode(['manage_contacts']),
                 'status' => 'active',
+                'type' => 'admin',
                 'created_user_id' => 1,
-                'updated_user_id' => 1
+                'updated_user_id' => 1,
             ],
             [
                 'title' => 'Cấu hình hệ thống',
@@ -104,10 +111,11 @@ class MenuSeeder extends Seeder
                 'icon' => 'fas fa-cog',
                 'parent_id' => null,
                 'sort_order' => 8,
-                'permissions' => 'manage_system_configs',
+                'permissions' => json_encode(['manage_system_configs']),
                 'status' => 'active',
+                'type' => 'admin',
                 'created_user_id' => 1,
-                'updated_user_id' => 1
+                'updated_user_id' => 1,
             ],
             [
                 'title' => 'Mẫu thông báo',
@@ -116,10 +124,11 @@ class MenuSeeder extends Seeder
                 'icon' => 'fas fa-bell',
                 'parent_id' => null,
                 'sort_order' => 9,
-                'permissions' => 'manage_notification_templates',
+                'permissions' => json_encode(['manage_notification_templates']),
                 'status' => 'active',
+                'type' => 'admin',
                 'created_user_id' => 1,
-                'updated_user_id' => 1
+                'updated_user_id' => 1,
             ],
             [
                 'title' => 'Quản lý menu',
@@ -128,12 +137,40 @@ class MenuSeeder extends Seeder
                 'icon' => 'fas fa-bars',
                 'parent_id' => null,
                 'sort_order' => 10,
-                'permissions' => 'manage_menus',
+                'permissions' => json_encode(['manage_menus']),
                 'status' => 'active',
+                'type' => 'admin',
                 'created_user_id' => 1,
-                'updated_user_id' => 1
-            ]
+                'updated_user_id' => 1,
+            ],
+            [
+                'title' => 'Trang chủ',
+                'api' => null,
+                'path' => '/',
+                'icon' => 'fas fa-home',
+                'parent_id' => null,
+                'sort_order' => 1,
+                'permissions' => json_encode([]), // public => không cần quyền
+                'status' => 'active',
+                'type' => 'public',
+                'created_user_id' => 1,
+                'updated_user_id' => 1,
+            ],
+            [
+                'title' => 'Sản phẩm',
+                'api' => null,
+                'path' => '/products',
+                'icon' => 'fas fa-box',
+                'parent_id' => null,
+                'sort_order' => 2,
+                'permissions' => json_encode([]), // public
+                'status' => 'active',
+                'type' => 'public',
+                'created_user_id' => 1,
+                'updated_user_id' => 1,
+            ],
         ];
+
 
         foreach ($menus as $menuData) {
             Menu::firstOrCreate([
