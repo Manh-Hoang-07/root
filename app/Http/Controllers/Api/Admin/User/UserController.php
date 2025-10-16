@@ -6,12 +6,14 @@ use App\Services\Admin\User\UserService;
 use App\Http\Requests\Admin\User\UserRequest;
 use App\Http\Requests\Admin\User\ChangePasswordRequest;
 use App\Http\Requests\Admin\User\AssignRoleRequest;
+use App\Http\Requests\Admin\User\StatusUpdateRequest;
 use Illuminate\Http\JsonResponse;
 
 class UserController extends BaseController
 {
     protected $storeRequestClass = UserRequest::class;
     protected $updateRequestClass = UserRequest::class;
+    protected $statusUpdateRequestClass = StatusUpdateRequest::class;
     protected $showRelations = [
         'profile:id,user_id,name,address,gender,birthday,image,about', 
         'roles:id,name,guard_name', 

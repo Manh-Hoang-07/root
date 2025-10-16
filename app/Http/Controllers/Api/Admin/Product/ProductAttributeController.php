@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin\Product;
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Admin\Product\ProductAttributeService;
 use App\Http\Requests\Admin\Product\ProductAttributeRequest;
+use App\Http\Requests\Admin\Product\AttributeStatusUpdateRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -12,6 +13,7 @@ class ProductAttributeController extends BaseController
 {
     protected $storeRequestClass = ProductAttributeRequest::class;
     protected $updateRequestClass = ProductAttributeRequest::class;
+    protected $statusUpdateRequestClass = AttributeStatusUpdateRequest::class;
     protected $indexRelations = ['values:id,product_attribute_id,value'];
     protected $showRelations = ['values:id,product_attribute_id,value', 'createdUser:id,name', 'updatedUser:id,name'];
 
@@ -25,26 +27,6 @@ class ProductAttributeController extends BaseController
         return ['id', 'name'];
     }
 
-    /**
-     * Update attribute status
-     */
-    public function updateStatus(Request $request, $id): JsonResponse
-    {
-        try {
-            $request->validate([
-                'status' => 'required|in:active,inactive'
-            ]);
-
-            $attribute = $this->service->getRepo()->updateStatus($id, $request->status);
-            if (!$attribute) {
-                return $this->apiResponse(false, null, 'Không tìm thấy thuộc tính', 404);
-            }
-            
-            return $this->apiResponse(true, $attribute, 'Cập nhật trạng thái thuộc tính thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
 
 
 }

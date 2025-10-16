@@ -15,6 +15,7 @@ class ContactController extends BaseController
 {
     protected $storeRequestClass = ContactRequest::class;
     protected $updateRequestClass = ContactRequest::class;
+    protected $statusUpdateRequestClass = ContactStatusUpdateRequest::class;
     protected $indexRelations = ['admin'];
     protected $showRelations = ['admin'];
 
@@ -28,26 +29,6 @@ class ContactController extends BaseController
         parent::__construct($service);
     }
 
-    /**
-     * Update contact status
-     */
-    public function updateStatus($id, ContactStatusUpdateRequest $request)
-    {
-        try {
-            $validated = $request->validated();
-            $status = ContactStatus::from($validated['status']);
-            $adminId = Auth::id();
-            $adminNotes = $validated['admin_notes'] ?? null;
-            $data = $this->service->updateStatus($id, $status, $adminId, $adminNotes);
-            if (!$data) {
-                return $this->apiResponse(false, null, 'Không tìm thấy liên hệ để cập nhật', 404);
-            }
-            return $this->successResponseWithFormat($data, 'single');
-        } catch (Exception $e) {
-            $this->logError('UpdateStatus', $e, ['id' => $id]);
-            return $this->apiResponse(false, null, 'Không thể cập nhật trạng thái liên hệ', 500);
-        }
-    }
 
     /**
      * Mark contact as responded

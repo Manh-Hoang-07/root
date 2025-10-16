@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api\Admin\Order;
 
 use App\Http\Controllers\Api\BaseController;
 use App\Services\Admin\Order\OrderService;
+use App\Http\Requests\Admin\Order\StatusUpdateRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class OrderController extends BaseController
 {
+    protected $statusUpdateRequestClass = StatusUpdateRequest::class;
     protected $indexRelations = ['user:id,name,email', 'items.product:id,name,sku', 'items.variant:id,name,sku'];
     protected $showRelations = ['user:id,name,email,phone', 'items.product:id,name,sku,image', 'items.variant:id,name,sku', 'createdUser:id,name', 'updatedUser:id,name'];
 
@@ -22,26 +24,6 @@ class OrderController extends BaseController
         return ['id', 'order_number', 'customer_name', 'customer_email'];
     }
 
-    /**
-     * Update order status
-     */
-    public function updateStatus(Request $request, $id): JsonResponse
-    {
-        try {
-            $request->validate([
-                'status' => 'required|in:pending,confirmed,processing,shipped,delivered,cancelled'
-            ]);
-
-            $order = $this->service->getRepo()->updateStatus($id, $request->status);
-            if (!$order) {
-                return $this->apiResponse(false, null, 'Không tìm thấy đơn hàng', 404);
-            }
-            
-            return $this->apiResponse(true, $order, 'Cập nhật trạng thái đơn hàng thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
 
     /**
      * Update payment status

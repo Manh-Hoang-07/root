@@ -27,9 +27,11 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
 
     // Admin - Common module
     Route::apiResource('users', UserController::class);
-    Route::patch('users/toggle-status/{id}', [UserController::class, 'toggleStatus']);
-    Route::post('users/change-password/{id}', [UserController::class, 'changePassword']);
-    Route::post('users/assign-roles/{id}', [UserController::class, 'assignRoles']);
+    Route::prefix('users')->group(function () {
+        Route::patch('/status/{id}', [UserController::class, 'updateStatus']);
+        Route::post('/change-password/{id}', [UserController::class, 'changePassword']);
+        Route::post('/assign-roles/{id}', [UserController::class, 'assignRoles']);
+    });
 
     Route::apiResource('permissions', PermissionController::class);
     Route::apiResource('roles', RoleController::class);
