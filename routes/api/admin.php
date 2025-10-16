@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\Admin\SystemConfig\ConfigAuditController;
 use App\Http\Controllers\Api\Admin\NotificationTemplate\NotificationTemplateController;
 use App\Http\Controllers\Api\Admin\Product\ProductController;
 use App\Http\Controllers\Api\Admin\Product\ProductCategoryController;
+use App\Http\Controllers\Api\Admin\Product\ProductVariantController;
+use App\Http\Controllers\Api\Admin\Product\ProductAttributeController;
 use App\Http\Controllers\Api\Admin\Order\OrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -78,22 +80,31 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
         Route::patch('/status/{id}', [ProductController::class, 'updateStatus']);
         Route::patch('/toggle-featured/{id}', [ProductController::class, 'toggleFeatured']);
         Route::get('/variants/{id}', [ProductController::class, 'variants']);
-        Route::get('/low-stock', [ProductController::class, 'lowStock']);
     });
 
     Route::apiResource('product-categories', ProductCategoryController::class);
     Route::prefix('product-categories')->group(function () {
         Route::get('/tree', [ProductCategoryController::class, 'tree']);
         Route::get('/{id}/products', [ProductCategoryController::class, 'products']);
-        Route::post('/bulk-update', [ProductCategoryController::class, 'bulkUpdate']);
     });
+
+    // Product Variants
+    Route::apiResource('product-variants', ProductVariantController::class);
+    Route::prefix('product-variants')->group(function () {
+        Route::patch('/status/{id}', [ProductVariantController::class, 'updateStatus']);
+    });
+
+    // Product Attributes
+    Route::apiResource('product-attributes', ProductAttributeController::class);
+    Route::prefix('product-attributes')->group(function () {
+        Route::patch('/status/{id}', [ProductAttributeController::class, 'updateStatus']);
+    });
+
 
     Route::apiResource('orders', OrderController::class);
     Route::prefix('orders')->group(function () {
         Route::patch('/status/{id}', [OrderController::class, 'updateStatus']);
         Route::patch('/payment-status/{id}', [OrderController::class, 'updatePaymentStatus']);
         Route::patch('/shipping-status/{id}', [OrderController::class, 'updateShippingStatus']);
-        Route::get('/by-payment-status/{status}', [OrderController::class, 'byPaymentStatus']);
-        Route::get('/by-shipping-status/{status}', [OrderController::class, 'byShippingStatus']);
     });
 });

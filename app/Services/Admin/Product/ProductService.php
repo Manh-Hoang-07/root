@@ -12,13 +12,6 @@ class ProductService extends BaseService
         parent::__construct($repo);
     }
 
-    /**
-     * Get low stock products
-     */
-    public function getLowStockProducts(array $relations = [], array $fields = ['*']): array
-    {
-        return $this->repo->getLowStockProducts($relations, $fields);
-    }
 
 
     /**

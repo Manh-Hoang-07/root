@@ -12,16 +12,6 @@ class ProductRepository extends BaseRepository
         return Product::class;
     }
 
-    /**
-     * Get low stock products
-     */
-    public function getLowStockProducts(array $relations = [], array $fields = ['*']): array
-    {
-        $query = $this->buildQuery($relations, $fields);
-        $query->whereRaw('stock_quantity <= min_stock_level');
-        
-        return $query->get()->toArray();
-    }
 
 
     /**

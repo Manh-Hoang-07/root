@@ -77,16 +77,4 @@ class ProductController extends BaseController
     }
 
 
-    /**
-     * Get low stock products
-     */
-    public function lowStock(): JsonResponse
-    {
-        try {
-            $products = $this->service->getRepo()->getLowStockProducts();
-            return $this->apiResponse(true, $products, 'Lấy danh sách sản phẩm sắp hết hàng thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
 }

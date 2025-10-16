@@ -94,32 +94,6 @@ class ProductCategoryRepository extends BaseRepository
         return $this->formatPagination($query->paginate($perPage));
     }
 
-    /**
-     * Bulk update categories
-     */
-    public function bulkUpdate(array $ids, string $action, $value = null): array
-    {
-        $data = [];
-        
-        switch ($action) {
-            case 'activate':
-                $data['status'] = 'active';
-                break;
-            case 'deactivate':
-                $data['status'] = 'inactive';
-                break;
-            case 'delete':
-                // Delete functionality removed
-                return ['updated' => 0, 'ids' => $ids];
-        }
-        
-        if (!empty($data)) {
-            $updated = $this->model->whereIn('id', $ids)->update($data);
-            return ['updated' => $updated, 'ids' => $ids];
-        }
-        
-        return ['updated' => 0, 'ids' => $ids];
-    }
 
 }
 

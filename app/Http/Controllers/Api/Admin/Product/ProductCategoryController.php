@@ -53,23 +53,4 @@ class ProductCategoryController extends BaseController
         }
     }
 
-    /**
-     * Bulk update categories
-     */
-    public function bulkUpdate(Request $request): JsonResponse
-    {
-        try {
-            $request->validate([
-                'ids' => 'required|array',
-                'ids.*' => 'integer|exists:product_categories,id',
-                'action' => 'required|in:activate,deactivate,delete',
-                'value' => 'sometimes|boolean'
-            ]);
-
-            $result = $this->service->getRepo()->bulkUpdate($request->ids, $request->action, $request->value ?? null);
-            return $this->apiResponse(true, $result, 'Cập nhật danh mục hàng loạt thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
 }

@@ -87,36 +87,5 @@ class OrderController extends BaseController
     }
 
 
-    /**
-     * Get orders by payment status
-     */
-    public function byPaymentStatus(Request $request, $status): JsonResponse
-    {
-        try {
-            $filters = array_merge($request->all(), ['payment_status' => $status]);
-            $perPage = min($request->get('per_page', 20), 100);
-            $orders = $this->service->list($filters, $perPage, $this->indexRelations);
-            
-            return $this->apiResponse(true, $orders, 'Lấy danh sách đơn hàng theo trạng thái thanh toán thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
-
-    /**
-     * Get orders by shipping status
-     */
-    public function byShippingStatus(Request $request, $status): JsonResponse
-    {
-        try {
-            $filters = array_merge($request->all(), ['shipping_status' => $status]);
-            $perPage = min($request->get('per_page', 20), 100);
-            $orders = $this->service->list($filters, $perPage, $this->indexRelations);
-            
-            return $this->apiResponse(true, $orders, 'Lấy danh sách đơn hàng theo trạng thái vận chuyển thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
 
 }
