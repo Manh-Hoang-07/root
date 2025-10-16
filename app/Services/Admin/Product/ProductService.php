@@ -37,13 +37,6 @@ class ProductService extends BaseService
         return $this->repo->toggleFeatured($id);
     }
 
-    /**
-     * Bulk update products
-     */
-    public function bulkUpdate(array $ids, string $action, $value = null): array
-    {
-        return $this->repo->bulkUpdate($ids, $action, $value);
-    }
 
     /**
      * Get product variants

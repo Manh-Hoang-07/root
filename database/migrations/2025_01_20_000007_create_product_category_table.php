@@ -11,20 +11,20 @@ return new class extends Migration
         Schema::create('product_category', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('product_id');
-            $table->unsignedBigInteger('category_id');
+            $table->unsignedBigInteger('product_category_id');
             $table->timestamps();
 
             // Foreign keys
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
-            $table->foreign('category_id')->references('id')->on('product_categories')->onDelete('cascade');
+            $table->foreign('product_category_id')->references('id')->on('product_categories')->onDelete('cascade');
 
             // Indexes
             $table->index('product_id');
-            $table->index('category_id');
+            $table->index('product_category_id');
             $table->index('created_at');
 
             // Unique constraint
-            $table->unique(['product_id', 'category_id'], 'unique_product_category');
+            $table->unique(['product_id', 'product_category_id'], 'unique_product_category');
         });
     }
 

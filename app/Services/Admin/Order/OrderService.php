@@ -36,12 +36,5 @@ class OrderService extends BaseService
         return $this->repo->updateShippingStatus($id, $status, $trackingNumber);
     }
 
-    /**
-     * Bulk update orders
-     */
-    public function bulkUpdate(array $ids, string $action, $value = null): array
-    {
-        return $this->repo->bulkUpdate($ids, $action, $value);
-    }
 }
 

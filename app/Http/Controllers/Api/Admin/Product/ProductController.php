@@ -76,25 +76,6 @@ class ProductController extends BaseController
         }
     }
 
-    /**
-     * Bulk update products
-     */
-    public function bulkUpdate(Request $request): JsonResponse
-    {
-        try {
-            $request->validate([
-                'ids' => 'required|array',
-                'ids.*' => 'integer|exists:products,id',
-                'action' => 'required|in:activate,deactivate,delete,featured,unfeatured',
-                'value' => 'sometimes|boolean'
-            ]);
-
-            $result = $this->service->getRepo()->bulkUpdate($request->ids, $request->action, $request->value ?? null);
-            return $this->apiResponse(true, $result, 'Cập nhật sản phẩm hàng loạt thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
 
     /**
      * Get low stock products

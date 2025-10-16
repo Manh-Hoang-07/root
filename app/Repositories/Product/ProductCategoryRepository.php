@@ -56,33 +56,6 @@ class ProductCategoryRepository extends BaseRepository
         return $result;
     }
 
-    /**
-     * Get parent categories only
-     */
-    public function getParentCategories(array $relations = [], array $fields = ['*']): array
-    {
-        $query = $this->buildQuery($relations, $fields);
-        $query->whereNull('parent_id')
-              ->orderBy('sort_order')
-              ->orderBy('name');
-        
-        return $query->get()->toArray();
-    }
-
-    /**
-     * Update category sort order
-     */
-    public function updateSortOrder(array $categories): bool
-    {
-        try {
-            foreach ($categories as $category) {
-                $this->update($category['id'], ['sort_order' => $category['sort_order']]);
-            }
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
 
     /**
      * Get category products
@@ -136,7 +109,8 @@ class ProductCategoryRepository extends BaseRepository
                 $data['status'] = 'inactive';
                 break;
             case 'delete':
-                return $this->bulkDelete($ids);
+                // Delete functionality removed
+                return ['updated' => 0, 'ids' => $ids];
         }
         
         if (!empty($data)) {
@@ -147,19 +121,5 @@ class ProductCategoryRepository extends BaseRepository
         return ['updated' => 0, 'ids' => $ids];
     }
 
-    /**
-     * Bulk delete categories
-     */
-    public function bulkDelete(array $ids): array
-    {
-        $deleted = 0;
-        foreach ($ids as $id) {
-            if ($this->delete($id)) {
-                $deleted++;
-            }
-        }
-        
-        return ['deleted' => $deleted, 'ids' => $ids];
-    }
 }
 

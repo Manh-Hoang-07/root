@@ -20,21 +20,6 @@ class ProductCategoryService extends BaseService
         return $this->repo->getCategoryTree($relations, $fields);
     }
 
-    /**
-     * Get parent categories
-     */
-    public function getParentCategories(array $relations = [], array $fields = ['*']): array
-    {
-        return $this->repo->getParentCategories($relations, $fields);
-    }
-
-    /**
-     * Update category sort order
-     */
-    public function updateSortOrder(array $categories): bool
-    {
-        return $this->repo->updateSortOrder($categories);
-    }
 
     /**
      * Get category products

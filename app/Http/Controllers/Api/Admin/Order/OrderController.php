@@ -86,21 +86,6 @@ class OrderController extends BaseController
         }
     }
 
-    /**
-     * Get orders by status
-     */
-    public function byStatus(Request $request, $status): JsonResponse
-    {
-        try {
-            $filters = array_merge($request->all(), ['status' => $status]);
-            $perPage = min($request->get('per_page', 20), 100);
-            $orders = $this->service->list($filters, $perPage, $this->indexRelations);
-            
-            return $this->apiResponse(true, $orders, 'Lấy danh sách đơn hàng theo trạng thái thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
 
     /**
      * Get orders by payment status
@@ -134,23 +119,4 @@ class OrderController extends BaseController
         }
     }
 
-    /**
-     * Bulk update orders
-     */
-    public function bulkUpdate(Request $request): JsonResponse
-    {
-        try {
-            $request->validate([
-                'ids' => 'required|array',
-                'ids.*' => 'integer|exists:orders,id',
-                'action' => 'required|in:confirm,process,ship,deliver,cancel,mark_paid,mark_failed',
-                'value' => 'sometimes|string'
-            ]);
-
-            $result = $this->service->getRepo()->bulkUpdate($request->ids, $request->action, $request->value ?? null);
-            return $this->apiResponse(true, $result, 'Cập nhật đơn hàng hàng loạt thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
 }

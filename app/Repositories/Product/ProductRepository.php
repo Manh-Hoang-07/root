@@ -45,50 +45,21 @@ class ProductRepository extends BaseRepository
         return $this->update($id, ['is_featured' => !$product->is_featured]);
     }
 
-    /**
-     * Bulk update products
-     */
-    public function bulkUpdate(array $ids, string $action, $value = null): array
-    {
-        $data = [];
-        
-        switch ($action) {
-            case 'activate':
-                $data['status'] = 'active';
-                break;
-            case 'deactivate':
-                $data['status'] = 'inactive';
-                break;
-            case 'featured':
-                $data['is_featured'] = true;
-                break;
-            case 'unfeatured':
-                $data['is_featured'] = false;
-                break;
-            case 'delete':
-                return $this->bulkDelete($ids);
-        }
-        
-        if (!empty($data)) {
-            $updated = $this->model->whereIn('id', $ids)->update($data);
-            return ['updated' => $updated, 'ids' => $ids];
-        }
-        
-        return ['updated' => 0, 'ids' => $ids];
-    }
+
 
     /**
-     * Bulk delete products
+     * Apply filters specific to products
      */
-    public function bulkDelete(array $ids): array
+    protected function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
     {
-        $deleted = 0;
-        foreach ($ids as $id) {
-            if ($this->delete($id)) {
-                $deleted++;
-            }
-        }
+        parent::applyFilters($query, $filters);
         
-        return ['deleted' => $deleted, 'ids' => $ids];
+        // Handle category filter
+        if (!empty($filters['category_id'])) {
+            $categoryIds = is_array($filters['category_id']) ? $filters['category_id'] : explode(',', $filters['category_id']);
+            $query->whereHas('categories', function ($q) use ($categoryIds) {
+                $q->whereIn('product_categories.id', $categoryIds);
+            });
+        }
     }
 }

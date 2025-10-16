@@ -38,41 +38,6 @@ class ProductCategoryController extends BaseController
         }
     }
 
-    /**
-     * Get parent categories
-     */
-    public function parents(): JsonResponse
-    {
-        try {
-            $parents = $this->service->getRepo()->getParentCategories();
-            return $this->apiResponse(true, $parents, 'Lấy danh sách danh mục cha thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
-
-    /**
-     * Update category sort order
-     */
-    public function updateSortOrder(Request $request): JsonResponse
-    {
-        try {
-            $request->validate([
-                'categories' => 'required|array',
-                'categories.*.id' => 'required|integer|exists:product_categories,id',
-                'categories.*.sort_order' => 'required|integer|min:0'
-            ]);
-
-            $result = $this->service->getRepo()->updateSortOrder($request->categories);
-            if (!$result) {
-                return $this->apiResponse(false, null, 'Cập nhật thứ tự danh mục thất bại', 500);
-            }
-            
-            return $this->apiResponse(true, null, 'Cập nhật thứ tự danh mục thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
 
     /**
      * Get category products
