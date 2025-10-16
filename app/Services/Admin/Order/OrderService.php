@@ -12,13 +12,6 @@ class OrderService extends BaseService
         parent::__construct($repo);
     }
 
-    /**
-     * Update order status
-     */
-    public function updateStatus($id, string $status): ?array
-    {
-        return $this->repo->updateStatus($id, $status);
-    }
 
     /**
      * Update payment status

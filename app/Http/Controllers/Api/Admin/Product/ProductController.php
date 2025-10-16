@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\BaseController;
 use App\Services\Admin\Product\ProductService;
 use App\Http\Requests\Admin\Product\ProductRequest;
 use App\Http\Requests\Admin\Product\StatusUpdateRequest;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class ProductController extends BaseController
@@ -45,18 +44,6 @@ class ProductController extends BaseController
         }
     }
 
-    /**
-     * Get product variants
-     */
-    public function variants($id): JsonResponse
-    {
-        try {
-            $variants = $this->service->getRepo()->getBy(['product_id' => $id]);
-            return $this->apiResponse(true, $variants, 'Lấy danh sách biến thể sản phẩm thành công');
-        } catch (\Exception $e) {
-            return $this->apiResponse(false, null, $e->getMessage(), 500);
-        }
-    }
 
 
 }

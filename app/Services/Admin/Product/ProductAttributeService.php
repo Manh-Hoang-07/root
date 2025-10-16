@@ -12,13 +12,6 @@ class ProductAttributeService extends BaseService
         parent::__construct($repo);
     }
 
-    /**
-     * Update attribute status
-     */
-    public function updateStatus($id, string $status): ?array
-    {
-        return $this->repo->updateStatus($id, $status);
-    }
 
 
     /**

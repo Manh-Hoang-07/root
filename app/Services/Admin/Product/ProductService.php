@@ -14,13 +14,6 @@ class ProductService extends BaseService
 
 
 
-    /**
-     * Update product status
-     */
-    public function updateStatus($id, string $status): ?array
-    {
-        return $this->repo->updateStatus($id, $status);
-    }
 
     /**
      * Toggle featured status
@@ -31,18 +24,6 @@ class ProductService extends BaseService
     }
 
 
-    /**
-     * Get product variants
-     */
-    public function getProductVariants($productId, array $relations = [], array $fields = ['*']): array
-    {
-        $product = $this->repo->find($productId);
-        if (!$product) {
-            return [];
-        }
-        
-        return $this->repo->getBy(['product_id' => $productId], $relations, $fields);
-    }
 
     /**
      * Override create to ensure slug generation

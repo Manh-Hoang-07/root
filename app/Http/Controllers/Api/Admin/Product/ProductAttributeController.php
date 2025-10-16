@@ -6,8 +6,6 @@ use App\Http\Controllers\Api\BaseController;
 use App\Services\Admin\Product\ProductAttributeService;
 use App\Http\Requests\Admin\Product\ProductAttributeRequest;
 use App\Http\Requests\Admin\Product\AttributeStatusUpdateRequest;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 
 class ProductAttributeController extends BaseController
 {
@@ -26,7 +24,4 @@ class ProductAttributeController extends BaseController
     {
         return ['id', 'name'];
     }
-
-
-
 }

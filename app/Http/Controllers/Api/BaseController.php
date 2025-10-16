@@ -501,8 +501,7 @@ abstract class BaseController extends Controller
     {
         try {
             $request = app($this->getStatusUpdateRequestClass());
-            $field = $request->get('field', 'status');
-            $result = $this->service->updateStatus($id, $request->status, $field);
+            $result = $this->service->updateStatus($id, $request->status);
             
             if (!$result) {
                 return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu để cập nhật', 404);

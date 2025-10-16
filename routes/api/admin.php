@@ -81,19 +81,19 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
     Route::prefix('products')->group(function () {
         Route::patch('/status/{id}', [ProductController::class, 'updateStatus']);
         Route::patch('/toggle-featured/{id}', [ProductController::class, 'toggleFeatured']);
-        Route::get('/variants/{id}', [ProductController::class, 'variants']);
     });
 
     Route::apiResource('product-categories', ProductCategoryController::class);
     Route::prefix('product-categories')->group(function () {
         Route::get('/tree', [ProductCategoryController::class, 'tree']);
-        Route::get('/{id}/products', [ProductCategoryController::class, 'products']);
+        Route::get('/products/{id}', [ProductCategoryController::class, 'products']);
     });
 
     // Product Variants
     Route::apiResource('product-variants', ProductVariantController::class);
     Route::prefix('product-variants')->group(function () {
         Route::patch('/status/{id}', [ProductVariantController::class, 'updateStatus']);
+        Route::get('/product/{productId}', [ProductVariantController::class, 'variants']);
     });
 
     // Product Attributes

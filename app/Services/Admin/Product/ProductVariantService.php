@@ -12,14 +12,6 @@ class ProductVariantService extends BaseService
         parent::__construct($repo);
     }
 
-    /**
-     * Update variant status
-     */
-    public function updateStatus($id, string $status): ?array
-    {
-        return $this->repo->updateStatus($id, $status);
-    }
-
 
     /**
      * Override create to ensure SKU generation
@@ -48,7 +40,7 @@ class ProductVariantService extends BaseService
             $product = \App\Models\Product::find($data['product_id']);
             if ($product) {
                 $baseSku = $product->sku;
-                $variants = $this->repo->getByProductId($data['product_id']);
+                $variants = $this->repo->getBy(['product_id' => $data['product_id']]);
                 $variantCount = count($variants);
                 $data['sku'] = $baseSku . '-' . str_pad($variantCount + 1, 3, '0', STR_PAD_LEFT);
             }

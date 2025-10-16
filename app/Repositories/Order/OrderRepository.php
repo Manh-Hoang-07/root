@@ -12,13 +12,6 @@ class OrderRepository extends BaseRepository
         return Order::class;
     }
 
-    /**
-     * Update order status
-     */
-    public function updateStatus($id, string $status): ?array
-    {
-        return $this->update($id, ['status' => $status]);
-    }
 
     /**
      * Update payment status

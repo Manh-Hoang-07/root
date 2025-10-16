@@ -259,10 +259,9 @@ abstract class BaseService
      * 
      * @param mixed $id The ID of the record
      * @param mixed $newStatus The new status value
-     * @param string $field The field name for status (default: 'status')
      * @return array|null The updated record or null if not found
      */
-    public function updateStatus($id, $newStatus, string $field = 'status'): ?array
+    public function updateStatus($id, $newStatus): ?array
     {
         // Get current record
         $currentRecord = $this->find($id);
@@ -271,13 +270,13 @@ abstract class BaseService
         }
 
         // Check if status is different
-        $currentStatus = $currentRecord[$field] ?? null;
+        $currentStatus = $currentRecord['status'] ?? null;
         if ($currentStatus === $newStatus) {
             // Status is the same, return current record without update
             return $currentRecord;
         }
 
         // Status is different, update it
-        return $this->updateField($id, $newStatus, $field);
+        return $this->updateField($id, $newStatus, 'status');
     }
 } 

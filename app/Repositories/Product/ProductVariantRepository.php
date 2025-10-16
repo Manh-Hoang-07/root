@@ -12,13 +12,6 @@ class ProductVariantRepository extends BaseRepository
         return ProductVariant::class;
     }
 
-    /**
-     * Update variant status
-     */
-    public function updateStatus($id, string $status): ?array
-    {
-        return $this->update($id, ['status' => $status]);
-    }
 
 
     /**

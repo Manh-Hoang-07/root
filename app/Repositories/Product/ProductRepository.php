@@ -14,13 +14,6 @@ class ProductRepository extends BaseRepository
 
 
 
-    /**
-     * Update product status
-     */
-    public function updateStatus($id, string $status): ?array
-    {
-        return $this->update($id, ['status' => $status]);
-    }
 
     /**
      * Toggle featured status

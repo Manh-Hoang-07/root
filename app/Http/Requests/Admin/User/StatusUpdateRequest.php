@@ -23,7 +23,6 @@ class StatusUpdateRequest extends FormRequest
     {
         return [
             'status' => ['required', 'in:active,inactive'],
-            'field' => ['nullable', 'string', 'max:50'],
         ];
     }
 
@@ -37,8 +36,6 @@ class StatusUpdateRequest extends FormRequest
         return [
             'status.required' => 'Trạng thái người dùng là bắt buộc.',
             'status.in' => 'Trạng thái người dùng không hợp lệ.',
-            'field.string' => 'Tên field phải là chuỗi ký tự.',
-            'field.max' => 'Tên field không được vượt quá 50 ký tự.',
         ];
     }
 
@@ -51,7 +48,6 @@ class StatusUpdateRequest extends FormRequest
     {
         return [
             'status' => 'trạng thái người dùng',
-            'field' => 'tên field',
         ];
     }
 }

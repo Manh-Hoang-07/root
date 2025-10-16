@@ -27,6 +27,17 @@ class ProductVariantController extends BaseController
         return ['id', 'name', 'sku'];
     }
 
-
+    /**
+     * Get variants by product ID
+     */
+    public function variants($productId): JsonResponse
+    {
+        try {
+            $variants = $this->service->getRepo()->getBy(['product_id' => $productId]);
+            return $this->apiResponse(true, $variants, 'Lấy danh sách biến thể sản phẩm thành công');
+        } catch (\Exception $e) {
+            return $this->apiResponse(false, null, $e->getMessage(), 500);
+        }
+    }
 
 }

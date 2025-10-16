@@ -12,13 +12,6 @@ class ProductAttributeRepository extends BaseRepository
         return ProductAttribute::class;
     }
 
-    /**
-     * Update attribute status
-     */
-    public function updateStatus($id, string $status): ?array
-    {
-        return $this->update($id, ['status' => $status]);
-    }
 
 
     /**
