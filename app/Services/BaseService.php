@@ -240,4 +240,44 @@ abstract class BaseService
     {
         // Override in child classes if needed
     }
+
+    /**
+     * Update any field of a record
+     * 
+     * @param mixed $id The ID of the record
+     * @param mixed $value The new value
+     * @param string $field The field name
+     * @return array|null The updated record or null if not found
+     */
+    public function updateField($id, $value, string $field): ?array
+    {
+        return $this->repo->update($id, [$field => $value]);
+    }
+
+    /**
+     * Update status of a record (only if status is different)
+     * 
+     * @param mixed $id The ID of the record
+     * @param mixed $newStatus The new status value
+     * @param string $field The field name for status (default: 'status')
+     * @return array|null The updated record or null if not found
+     */
+    public function updateStatus($id, $newStatus, string $field = 'status'): ?array
+    {
+        // Get current record
+        $currentRecord = $this->find($id);
+        if (!$currentRecord) {
+            return null;
+        }
+
+        // Check if status is different
+        $currentStatus = $currentRecord[$field] ?? null;
+        if ($currentStatus === $newStatus) {
+            // Status is the same, return current record without update
+            return $currentRecord;
+        }
+
+        // Status is different, update it
+        return $this->updateField($id, $newStatus, $field);
+    }
 } 

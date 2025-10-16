@@ -100,7 +100,6 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
         Route::patch('/status/{id}', [ProductAttributeController::class, 'updateStatus']);
     });
 
-
     Route::apiResource('orders', OrderController::class);
     Route::prefix('orders')->group(function () {
         Route::patch('/status/{id}', [OrderController::class, 'updateStatus']);

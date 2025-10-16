@@ -9,6 +9,7 @@ use App\Libraries\Core\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Exception;
@@ -36,6 +37,9 @@ abstract class BaseController extends Controller
     
     /** @var string Request class for update operations */
     protected $updateRequestClass = Request::class;
+    
+    /** @var string Request class for status update operations */
+    protected $statusUpdateRequestClass = Request::class;
     
     /** @var array Default relations to load for index operations */
     protected $indexRelations = [];
@@ -95,6 +99,15 @@ abstract class BaseController extends Controller
     protected function getUpdateRequestClass(): string
     {
         return $this->updateRequestClass;
+    }
+
+    /**
+     * Get the status update request class
+     * @return string
+     */
+    protected function getStatusUpdateRequestClass(): string
+    {
+        return $this->statusUpdateRequestClass;
     }
 
     /**
@@ -478,4 +491,30 @@ abstract class BaseController extends Controller
         
         return $currentCount < $this->rateLimitAttempts;
     }
+
+    /**
+     * Update status of a resource (only if different)
+     * @param int|string $id
+     * @return JsonResponse
+     */
+    public function updateStatus($id): JsonResponse
+    {
+        try {
+            $request = app($this->getStatusUpdateRequestClass());
+            $field = $request->get('field', 'status');
+            $result = $this->service->updateStatus($id, $request->status, $field);
+            
+            if (!$result) {
+                return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu để cập nhật', 404);
+            }
+            
+            return $this->apiResponse(true, $result, 'Cập nhật trạng thái thành công');
+        } catch (ValidationException|HttpResponseException $e) {
+            throw $e; // Let the framework return 422 with validation errors
+        } catch (Exception $e) {
+            $this->logError('UpdateStatus', $e, ['id' => $id]);
+            return $this->apiResponse(false, null, 'Không thể cập nhật trạng thái', 500);
+        }
+    }
+
 } 
