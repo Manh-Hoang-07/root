@@ -41,4 +41,35 @@ class User extends Authenticatable
     {
         return $this->hasMany(SocialAccount::class);
     }
+
+    // E-commerce relationships
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function cartItems()
+    {
+        return $this->hasMany(Cart::class);
+    }
+
+    public function createdProducts()
+    {
+        return $this->hasMany(Product::class, 'created_user_id');
+    }
+
+    public function updatedProducts()
+    {
+        return $this->hasMany(Product::class, 'updated_user_id');
+    }
+
+    public function createdCategories()
+    {
+        return $this->hasMany(ProductCategory::class, 'created_user_id');
+    }
+
+    public function updatedCategories()
+    {
+        return $this->hasMany(ProductCategory::class, 'updated_user_id');
+    }
 }

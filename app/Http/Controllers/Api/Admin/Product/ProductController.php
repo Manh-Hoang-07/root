@@ -1,0 +1,111 @@
+<?php
+
+namespace App\Http\Controllers\Api\Admin\Product;
+
+use App\Http\Controllers\Api\BaseController;
+use App\Services\Admin\Product\ProductService;
+use App\Http\Requests\Admin\Product\ProductRequest;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+class ProductController extends BaseController
+{
+    protected $storeRequestClass = ProductRequest::class;
+    protected $updateRequestClass = ProductRequest::class;
+    protected $indexRelations = ['categories:id,name', 'variants:id,product_id,name,price,stock_quantity'];
+    protected $showRelations = ['categories:id,name', 'variants:id,product_id,name,price,stock_quantity', 'createdUser:id,name', 'updatedUser:id,name'];
+
+    public function __construct(ProductService $service)
+    {
+        parent::__construct($service);
+    }
+
+    protected function getSearchFields(): array
+    {
+        return ['id', 'name', 'sku'];
+    }
+
+    /**
+     * Update product status
+     */
+    public function updateStatus(Request $request, $id): JsonResponse
+    {
+        try {
+            $request->validate([
+                'status' => 'required|in:active,inactive,draft'
+            ]);
+
+            $product = $this->service->getRepo()->updateStatus($id, $request->status);
+            if (!$product) {
+                return $this->apiResponse(false, null, 'Không tìm thấy sản phẩm', 404);
+            }
+            
+            return $this->apiResponse(true, $product, 'Cập nhật trạng thái sản phẩm thành công');
+        } catch (\Exception $e) {
+            return $this->apiResponse(false, null, $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Toggle featured status
+     */
+    public function toggleFeatured($id): JsonResponse
+    {
+        try {
+            $product = $this->service->getRepo()->toggleFeatured($id);
+            if (!$product) {
+                return $this->apiResponse(false, null, 'Không tìm thấy sản phẩm', 404);
+            }
+            
+            return $this->apiResponse(true, $product, 'Cập nhật trạng thái nổi bật thành công');
+        } catch (\Exception $e) {
+            return $this->apiResponse(false, null, $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get product variants
+     */
+    public function variants($id): JsonResponse
+    {
+        try {
+            $variants = $this->service->getRepo()->getBy(['product_id' => $id]);
+            return $this->apiResponse(true, $variants, 'Lấy danh sách biến thể sản phẩm thành công');
+        } catch (\Exception $e) {
+            return $this->apiResponse(false, null, $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Bulk update products
+     */
+    public function bulkUpdate(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'ids' => 'required|array',
+                'ids.*' => 'integer|exists:products,id',
+                'action' => 'required|in:activate,deactivate,delete,featured,unfeatured',
+                'value' => 'sometimes|boolean'
+            ]);
+
+            $result = $this->service->getRepo()->bulkUpdate($request->ids, $request->action, $request->value ?? null);
+            return $this->apiResponse(true, $result, 'Cập nhật sản phẩm hàng loạt thành công');
+        } catch (\Exception $e) {
+            return $this->apiResponse(false, null, $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get low stock products
+     */
+    public function lowStock(): JsonResponse
+    {
+        try {
+            $products = $this->service->getRepo()->getLowStockProducts();
+            return $this->apiResponse(true, $products, 'Lấy danh sách sản phẩm sắp hết hàng thành công');
+        } catch (\Exception $e) {
+            return $this->apiResponse(false, null, $e->getMessage(), 500);
+        }
+    }
+}
