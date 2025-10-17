@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Core;
 
-use App\Services\BaseService;
 use App\Traits\LoggingTrait;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Exceptions\HttpResponseException;

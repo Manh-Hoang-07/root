@@ -8,11 +8,9 @@ use App\Services\BaseService;
 use App\Traits\LoggingTrait;
 use App\Traits\ResponseTrait;
 use Exception;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Abstract Base Controller for API endpoints
@@ -64,8 +62,7 @@ abstract class ListController extends Controller
     /** @var int Default search limit */
     protected static $defaultSearchLimit = 10;
 
-    /** @var CacheService Cache service instance */
-    protected $cacheService;
+    // No instance cache service needed; static CacheService methods are used directly
 
     /**
      * Constructor
