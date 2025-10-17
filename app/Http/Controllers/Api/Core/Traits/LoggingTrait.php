@@ -1,23 +1,23 @@
 <?php
 
-namespace App\Traits;
+namespace App\Http\Controllers\Api\Core\Traits;
 
-use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Trait for centralized error logging
- * 
+ *
  * Provides common logging functionality with consistent format
  * and additional context support.
- * 
+ *
  * @package App\Traits
  */
 trait LoggingTrait
 {
     /**
      * Log error with common context
-     * 
+     *
      * @param string $operation
      * @param Exception $exception
      * @param array $additionalData
@@ -34,4 +34,4 @@ trait LoggingTrait
 
         Log::error("{$operation} operation failed", $logData);
     }
-} 
+}

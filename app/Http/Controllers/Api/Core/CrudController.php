@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api\Core;
 
-use App\Traits\LoggingTrait;
-use App\Traits\ResponseTrait;
+use App\Http\Controllers\Api\Core\Traits\LoggingTrait;
+use App\Http\Controllers\Api\Core\Traits\ResponseTrait;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

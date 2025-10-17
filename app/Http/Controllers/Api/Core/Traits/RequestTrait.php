@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Traits;
+namespace App\Http\Controllers\Api\Core\Traits;
 
-use Illuminate\Http\Request;
 use App\Libraries\Core\CacheService;
+use Illuminate\Http\Request;
 
 /**
  * Trait for request handling operations
- * 
+ *
  * Provides methods for request parsing, validation, and rate limiting
- * 
+ *
  * @package App\Traits
  */
 trait RequestTrait
@@ -23,10 +23,9 @@ trait RequestTrait
     {
         $data = $request->all();
         // Remove empty values
-        $data = array_filter($data, function($value) {
+        return array_filter($data, function($value) {
             return $value !== '' && $value !== null;
         });
-        return $data;
     }
 
     /**

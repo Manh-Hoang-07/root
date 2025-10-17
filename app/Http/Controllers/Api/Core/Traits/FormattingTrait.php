@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Traits;
+namespace App\Http\Controllers\Api\Core\Traits;
 
 /**
  * Trait for data formatting operations
- * 
+ *
  * Provides methods for formatting API responses, timestamps, and relationships
- * 
+ *
  * @package App\Traits
  */
 trait FormattingTrait

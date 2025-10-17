@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Api\Core\File;
 
+use App\Http\Controllers\Api\Core\Traits\LoggingTrait;
+use App\Http\Controllers\Api\Core\Traits\ResponseTrait;
 use App\Http\Controllers\Controller;
-use App\Services\Core\File\FileService;
+use App\Http\Requests\Core\File\DeleteFileRequest;
+use App\Http\Requests\Core\File\ListFilesRequest;
 use App\Http\Requests\Core\File\UploadFileRequest;
 use App\Http\Requests\Core\File\UploadMultipleFilesRequest;
-use App\Http\Requests\Core\File\ListFilesRequest;
-use App\Http\Requests\Core\File\DeleteFileRequest;
-use App\Traits\ResponseTrait;
-use App\Traits\LoggingTrait;
-use Illuminate\Http\JsonResponse;
+use App\Services\Core\File\FileService;
 use Exception;
+use Illuminate\Http\JsonResponse;
 
 class FileController extends Controller
 {

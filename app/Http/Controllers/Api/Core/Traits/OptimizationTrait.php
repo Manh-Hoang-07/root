@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Traits;
+namespace App\Http\Controllers\Api\Core\Traits;
 
 use App\Libraries\Core\CacheService;
 
 /**
  * Trait for data optimization operations
- * 
+ *
  * Provides methods for optimized data loading, caching, and query optimization
- * 
+ *
  * @package App\Traits
  */
 trait OptimizationTrait

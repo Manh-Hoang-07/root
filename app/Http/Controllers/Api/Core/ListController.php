@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\Core;
 
+use App\Http\Controllers\Api\Core\Traits\LoggingTrait;
+use App\Http\Controllers\Api\Core\Traits\ResponseTrait;
 use App\Http\Controllers\Controller;
 use App\Libraries\Core\CacheService;
 use App\Services\BaseService;
-use App\Traits\LoggingTrait;
-use App\Traits\ResponseTrait;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
