@@ -18,16 +18,31 @@ class MenuRepository extends BaseRepository
      */
     public function getMenuTree(array $filters = []): array
     {
-        $query = $this->model->query()->where('is_active', true);
-        if (!empty($filters['roles'])) {
-            $roles = (array)$filters['roles'];
-            $query->where(function ($q) use ($roles) {
-                foreach ($roles as $role) {
-                    $q->orWhereJsonContains('roles', $role);
+        $query = $this->model->query()->where('status', 'active');
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+        if (!empty($filters['permissions'])) {
+            $permissions = (array)$filters['permissions'];
+            $query->where(function ($q) use ($permissions) {
+                foreach ($permissions as $permission) {
+                    $q->orWhereJsonContains('permissions', $permission);
                 }
             });
         }
-        $menus = $query->with(['children'])->orderBy('sort_order')->get();
+        $menus = $query->with(['children' => function ($childQuery) use ($filters) {
+            $childQuery->where('status', 'active')->orderBy('sort_order');
+            if (!empty($filters['permissions'])) {
+                $permissions = (array)$filters['permissions'];
+                $childQuery->where(function ($cq) use ($permissions) {
+                    foreach ($permissions as $permission) {
+                        $cq->orWhereJsonContains('permissions', $permission);
+                    }
+                });
+            }
+        }])
+            ->orderBy('sort_order')
+            ->get();
         $tree = $menus->whereNull('parent_id')->values()->toArray();
         return [
             'data' => $tree,
@@ -35,8 +50,10 @@ class MenuRepository extends BaseRepository
                 'total' => count($tree),
                 'per_page' => count($tree),
                 'current_page' => 1,
-                'last_page' => 1
-            ]
+                'last_page' => 1,
+            ],
         ];
     }
+
+
 }

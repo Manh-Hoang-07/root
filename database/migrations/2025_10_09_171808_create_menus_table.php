@@ -19,7 +19,8 @@ return new class extends Migration
             $table->string('icon')->nullable();
             $table->foreignId('parent_id')->nullable()->constrained('menus')->nullOnDelete();
             $table->integer('sort_order')->default(0);
-            $table->string('permissions')->nullable();
+            $table->json('permissions')->nullable();
+            $table->enum('type', ['admin', 'public'])->default('admin');
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
             $table->unsignedBigInteger('created_user_id')->nullable();
@@ -31,7 +32,6 @@ return new class extends Migration
             $table->index('path');
             $table->index('parent_id');
             $table->index('sort_order');
-            $table->index('permissions');
             $table->index('status');
             $table->index('created_at');
             $table->index(['parent_id', 'sort_order']);
