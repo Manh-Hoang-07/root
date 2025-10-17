@@ -21,7 +21,9 @@ use Illuminate\Support\Facades\Route;
 
 // Admin API
 Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
-    // Admin routes for enum cache management
+    // Admin routes for enums
+    Route::get('/enums/{type}', [EnumController::class, 'get']);
+    Route::get('/enums/types', [EnumController::class, 'getTypes']);
     Route::delete('/enums/cache/{type}', [EnumController::class, 'clearCache']);
     Route::get('/enums/cache/all', [EnumController::class, 'clearAllCache']);
 

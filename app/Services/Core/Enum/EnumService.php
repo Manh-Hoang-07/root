@@ -11,6 +11,11 @@ use App\Enums\PostStatus;
 use App\Enums\ConfigAction;
 use App\Enums\ConfigGroup;
 use App\Enums\ConfigType;
+use App\Enums\AttributeType;
+use App\Enums\ProductStatus;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
+use App\Enums\ShippingStatus;
 use Illuminate\Support\Collection;
 use App\Libraries\Core\CacheService;
 
@@ -29,6 +34,12 @@ class EnumService
         'config_action' => ConfigAction::class,
         'config_group' => ConfigGroup::class,
         'config_type' => ConfigType::class,
+        // E-commerce specific
+        'attribute_type' => AttributeType::class,
+        'product_status' => ProductStatus::class,
+        'order_status' => OrderStatus::class,
+        'payment_status' => PaymentStatus::class,
+        'shipping_status' => ShippingStatus::class,
     ];
 
     /**
