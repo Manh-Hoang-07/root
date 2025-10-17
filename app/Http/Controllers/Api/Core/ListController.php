@@ -32,14 +32,7 @@ abstract class ListController extends Controller
      */
     protected $service;
 
-    /** @var string Request class for store operations */
-    protected $storeRequestClass = Request::class;
-
-    /** @var string Request class for update operations */
-    protected $updateRequestClass = Request::class;
-
-    /** @var string Request class for status update operations */
-    protected $statusUpdateRequestClass = Request::class;
+    // CRUD-specific request classes are defined in CrudController
 
     /** @var array Default relations to load for index operations */
     protected $indexRelations = [];
@@ -83,32 +76,7 @@ abstract class ListController extends Controller
         $this->service = $service;
     }
 
-    /**
-     * Get the store request class
-     * @return string
-     */
-    protected function getStoreRequestClass(): string
-    {
-        return $this->storeRequestClass;
-    }
-
-    /**
-     * Get the update request class
-     * @return string
-     */
-    protected function getUpdateRequestClass(): string
-    {
-        return $this->updateRequestClass;
-    }
-
-    /**
-     * Get the status update request class
-     * @return string
-     */
-    protected function getStatusUpdateRequestClass(): string
-    {
-        return $this->statusUpdateRequestClass;
-    }
+    // CRUD request class getters are defined in CrudController
 
     /**
      * Display a listing of the resource
@@ -244,64 +212,7 @@ abstract class ListController extends Controller
         return $data;
     }
 
-    /**
-     * Store a newly created resource
-     * @return JsonResponse
-     */
-    public function store(): JsonResponse
-    {
-        try {
-            $request = app($this->getStoreRequestClass());
-            $data = $this->service->create($request->validated());
-            return $this->successResponseWithFormat($data, 'Tạo dữ liệu thành công', 201);
-        } catch (ValidationException|HttpResponseException $e) {
-            throw $e; // Let the framework return 422 with validation errors
-        } catch (Exception $e) {
-            $this->logError('Store', $e);
-            return $this->apiResponse(false, null, 'Không thể tạo dữ liệu', 500);
-        }
-    }
-
-    /**
-     * Update the specified resource
-     * @param int|string $id
-     * @return JsonResponse
-     */
-    public function update($id): JsonResponse
-    {
-        try {
-            $request = app($this->getUpdateRequestClass());
-            $data = $this->service->update($id, $request->validated());
-            if (!$data) {
-                return $this->apiResponse(false, null, '', 404);
-            }
-            return $this->successResponseWithFormat($data, 'Cập nhật dữ liệu thành công', 200);
-        } catch (ValidationException|HttpResponseException $e) {
-            throw $e; // Let the framework return 422 with validation errors
-        } catch (Exception $e) {
-            $this->logError('Update', $e, ['id' => $id]);
-            return $this->apiResponse(false, null, 'Không thể cập nhật dữ liệu', 500);
-        }
-    }
-
-    /**
-     * Remove the specified resource
-     * @param int|string $id
-     * @return JsonResponse
-     */
-    public function destroy($id): JsonResponse
-    {
-        try {
-            $result = $this->service->delete($id);
-            if ($result) {
-                return $this->apiResponse(true, null, '', 200);
-            }
-            return $this->apiResponse(false, null, 'Không thể xóa dữ liệu', 500);
-        } catch (Exception $e) {
-            $this->logError('Destroy', $e, ['id' => $id]);
-            return $this->apiResponse(false, null, 'Không thể xóa dữ liệu', 500);
-        }
-    }
+    // CRUD actions are implemented in CrudController
 
     /**
      * Parse relations from request
@@ -492,28 +403,6 @@ abstract class ListController extends Controller
         return $currentCount < $this->rateLimitAttempts;
     }
 
-    /**
-     * Update status of a resource (only if different)
-     * @param int|string $id
-     * @return JsonResponse
-     */
-    public function updateStatus($id): JsonResponse
-    {
-        try {
-            $request = app($this->getStatusUpdateRequestClass());
-            $result = $this->service->updateStatus($id, $request->status);
-
-            if (!$result) {
-                return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu để cập nhật', 404);
-            }
-
-            return $this->apiResponse(true, $result, 'Cập nhật trạng thái thành công');
-        } catch (ValidationException|HttpResponseException $e) {
-            throw $e; // Let the framework return 422 with validation errors
-        } catch (Exception $e) {
-            $this->logError('UpdateStatus', $e, ['id' => $id]);
-            return $this->apiResponse(false, null, 'Không thể cập nhật trạng thái', 500);
-        }
-    }
+    // Status update is implemented in CrudController
 
 }
