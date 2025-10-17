@@ -107,5 +107,12 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
         Route::patch('/status/{id}', [OrderController::class, 'updateStatus']);
         Route::patch('/payment-status/{id}', [OrderController::class, 'updatePaymentStatus']);
         Route::patch('/shipping-status/{id}', [OrderController::class, 'updateShippingStatus']);
+        Route::post('/{id}/items', [OrderController::class, 'addItem']);
+        Route::patch('/{orderId}/items/{itemId}', [OrderController::class, 'updateItem']);
+        Route::delete('/{orderId}/items/{itemId}', [OrderController::class, 'removeItem']);
+        Route::post('/{id}/recalculate', [OrderController::class, 'recalculate']);
+        Route::post('/{id}/confirm', [OrderController::class, 'confirm']);
+        Route::post('/{id}/cancel', [OrderController::class, 'cancel']);
+        Route::post('/bulk-update-status', [OrderController::class, 'bulkUpdateStatus']);
     });
 });

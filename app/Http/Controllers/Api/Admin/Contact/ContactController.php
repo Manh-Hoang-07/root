@@ -29,7 +29,6 @@ class ContactController extends CrudController
         parent::__construct($service);
     }
 
-
     /**
      * Mark contact as responded
      */
