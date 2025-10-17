@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\Public\Contact;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Public\Contact\ContactService;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Public\Contact\ContactRequest;
+use App\Services\Public\Contact\ContactService;
 
-class ContactController extends BaseController
+class ContactController extends CrudController
 {
     /**
      * @var ContactService

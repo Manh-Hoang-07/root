@@ -1,84 +1,84 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Core;
 
 use App\Http\Controllers\Controller;
-use App\Traits\ResponseTrait;
-use App\Traits\LoggingTrait;
 use App\Libraries\Core\CacheService;
+use App\Services\BaseService;
+use App\Traits\LoggingTrait;
+use App\Traits\ResponseTrait;
+use Exception;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use Exception;
 
 /**
  * Abstract Base Controller for API endpoints
  * Provides common CRUD operations with optimized data loading,
  * flexible relations handling, and standardized response formatting.
- * 
+ *
  * @package App\Http\Controllers\Api
  */
-abstract class BaseController extends Controller
+abstract class ListController extends Controller
 {
     use ResponseTrait;
     use LoggingTrait;
 
     /**
      * Service instance for business logic
-     * @var \App\Services\BaseService
+     * @var BaseService
      */
     protected $service;
-    
+
     /** @var string Request class for store operations */
     protected $storeRequestClass = Request::class;
-    
+
     /** @var string Request class for update operations */
     protected $updateRequestClass = Request::class;
-    
+
     /** @var string Request class for status update operations */
     protected $statusUpdateRequestClass = Request::class;
-    
+
     /** @var array Default relations to load for index operations */
     protected $indexRelations = [];
-    
+
     /** @var array Default relations to load for show operations */
     protected $showRelations = [];
-    
+
     /** @var int Default number of items per page */
     protected $defaultPerPage = 20;
-    
+
     /** @var int Maximum number of items per page */
     protected $maxPerPage = 100;
-    
+
     /** @var string Response format type */
     protected $responseFormat = 'json';
-    
+
     /** @var bool Enable caching for responses */
     protected $enableCaching = false;
-    
+
     /** @var int Cache TTL in seconds */
     protected $cacheTtl = 300; // 5 minutes
-    
+
     /** @var bool Enable rate limiting */
     protected $enableRateLimiting = false;
-    
+
     /** @var int Rate limit attempts per minute */
     protected $rateLimitAttempts = 60;
-    
+
     /** @var int Default search limit */
     protected static $defaultSearchLimit = 10;
-    
+
     /** @var CacheService Cache service instance */
     protected $cacheService;
 
     /**
      * Constructor
-     * @param \App\Services\BaseService $service Service instance
+     * @param BaseService $service Service instance
      */
-    public function __construct(\App\Services\BaseService $service)
+    public function __construct(BaseService $service)
     {
         $this->service = $service;
     }
@@ -128,7 +128,7 @@ abstract class BaseController extends Controller
             return $this->apiResponse(false, null, 'Không thể tải danh sách dữ liệu', 500);
         }
     }
-    
+
     /**
      * Get index data with optimized loading
      * @param Request $request
@@ -167,7 +167,7 @@ abstract class BaseController extends Controller
             return $this->apiResponse(false, null, 'Không thể tải thông tin chi tiết', 500);
         }
     }
-    
+
     /**
      * Get show data with optimized loading
      * @param int|string $id
@@ -208,7 +208,7 @@ abstract class BaseController extends Controller
     {
         // Process filters - allow child classes to modify filters
         $filters = $this->processFilters($filters, $context);
-        
+
         // Check caching
         if ($this->enableCaching) {
             $cacheKey = CacheService::generateKey($filters, $perPage, $context, $single, static::class);
@@ -415,20 +415,20 @@ abstract class BaseController extends Controller
     protected function checkRateLimit(Request $request): bool
     {
         $key = $this->generateRateLimiterKey($request);
-        
+
         // Use atomic increment to avoid race conditions
         $attempts = Cache::increment($key, 1);
-        
+
         // If this is the first request in the window, set expiration
         if ($attempts === 1) {
             CacheService::put($key, 1, 60, 'rate_limit'); // 1 minute window
         }
-        
+
         // Check if limit exceeded
         if ($attempts > $this->rateLimitAttempts) {
             return false;
         }
-        
+
         return true;
     }
 
@@ -452,12 +452,12 @@ abstract class BaseController extends Controller
         $key = $this->generateRateLimiterKey($request);
         $now = time();
         $window = 60; // 1 minute window
-        
+
         // Use Redis sorted set for sliding window (if Redis is available)
         if (config('cache.default') === 'redis') {
             return $this->checkSlidingWindowRateLimit($key, $now, $window);
         }
-        
+
         // Fallback to simple counter for non-Redis cache
         return $this->checkRateLimit($request);
     }
@@ -473,22 +473,22 @@ abstract class BaseController extends Controller
     {
         $redis = Cache::getRedis();
         $pipe = $redis->pipeline();
-        
+
         // Remove expired entries
         $pipe->zremrangebyscore($key, 0, $now - $window);
-        
+
         // Count current requests
         $pipe->zcard($key);
-        
+
         // Add current request
         $pipe->zadd($key, $now, $now . ':' . uniqid());
-        
+
         // Set expiration
         $pipe->expire($key, $window);
-        
+
         $results = $pipe->exec();
         $currentCount = $results[1];
-        
+
         return $currentCount < $this->rateLimitAttempts;
     }
 
@@ -502,11 +502,11 @@ abstract class BaseController extends Controller
         try {
             $request = app($this->getStatusUpdateRequestClass());
             $result = $this->service->updateStatus($id, $request->status);
-            
+
             if (!$result) {
                 return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu để cập nhật', 404);
             }
-            
+
             return $this->apiResponse(true, $result, 'Cập nhật trạng thái thành công');
         } catch (ValidationException|HttpResponseException $e) {
             throw $e; // Let the framework return 422 with validation errors
@@ -516,4 +516,4 @@ abstract class BaseController extends Controller
         }
     }
 
-} 
+}

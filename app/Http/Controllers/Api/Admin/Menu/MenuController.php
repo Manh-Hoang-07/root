@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\Admin\Menu;
 
-use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\Menu\MenuRequest;
 use App\Services\Admin\Menu\MenuService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class MenuController extends BaseController
+class MenuController extends CrudController
 {
     protected $storeRequestClass = MenuRequest::class;
     protected $updateRequestClass = MenuRequest::class;

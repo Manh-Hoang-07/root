@@ -1,17 +1,17 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\Permission;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\Permission\PermissionService;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\Permission\PermissionRequest;
+use App\Services\Admin\Permission\PermissionService;
 
-class PermissionController extends BaseController
+class PermissionController extends CrudController
 {
     protected $storeRequestClass = PermissionRequest::class;
     protected $updateRequestClass = PermissionRequest::class;
     protected $indexRelations = ['parent'];
     protected $showRelations = ['parent'];
-    
+
     /**
      * @var PermissionService
      */
@@ -21,4 +21,4 @@ class PermissionController extends BaseController
     {
         parent::__construct($service);
     }
-} 
+}

@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers\Api\Public\SystemConfig;
 
-use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Services\Core\SystemConfig\SystemConfigService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class SystemConfigController extends BaseController
+class SystemConfigController extends CrudController
 {
     /** @var SystemConfigService */
     protected $service;
-    
+
     /** @var bool Enable caching for responses */
     protected $enableCaching = true;
-    
+
     /** @var int Cache TTL in seconds */
     protected $cacheTtl = 600; // 10 minutes for config data
-    
+
     /** @var array Default fields for list view */
     protected $defaultListFields = ['key', 'value', 'type', 'group', 'description'];
-    
+
     /** @var array Default fields for show view */
     protected $defaultShowFields = ['key', 'value', 'type', 'group', 'description', 'is_encrypted'];
 
@@ -44,13 +44,13 @@ class SystemConfigController extends BaseController
 
         // Always get public-only configs for public API
         $configs = $this->service->getByGroup($group, true);
-        
+
         // Transform to key:value format
         $keyValueData = [];
         foreach ($configs as $config) {
             $keyValueData[$config['key']] = $config['value'];
         }
-        
+
         return $this->successResponseWithFormat($keyValueData, 'Lấy cấu hình nhóm public thành công');
     }
 
@@ -65,7 +65,7 @@ class SystemConfigController extends BaseController
         // Always add public-only and active status filters
         $filters['is_public'] = true;
         $filters['status'] = 'active';
-        
+
         return $filters;
     }
 
@@ -82,7 +82,7 @@ class SystemConfigController extends BaseController
         }
 
         $value = $this->service->getByKey($key, $default, true);
-        
+
         return $this->successResponseWithFormat([
             'key' => $key,
             'value' => $value,

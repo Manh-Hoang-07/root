@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\Admin\Order;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\Order\OrderService;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\Order\StatusUpdateRequest;
-use Illuminate\Http\Request;
+use App\Services\Admin\Order\OrderService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class OrderController extends BaseController
+class OrderController extends CrudController
 {
     protected $statusUpdateRequestClass = StatusUpdateRequest::class;
     protected $indexRelations = ['user:id,name,email', 'items.product:id,name,sku', 'items.variant:id,name,sku'];
@@ -39,7 +39,7 @@ class OrderController extends BaseController
             if (!$order) {
                 return $this->apiResponse(false, null, 'Không tìm thấy đơn hàng', 404);
             }
-            
+
             return $this->apiResponse(true, $order, 'Cập nhật trạng thái thanh toán thành công');
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
@@ -61,7 +61,7 @@ class OrderController extends BaseController
             if (!$order) {
                 return $this->apiResponse(false, null, 'Không tìm thấy đơn hàng', 404);
             }
-            
+
             return $this->apiResponse(true, $order, 'Cập nhật trạng thái vận chuyển thành công');
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);

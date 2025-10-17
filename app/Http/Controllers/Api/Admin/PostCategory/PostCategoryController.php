@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\Admin\PostCategory;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\PostCategory\PostCategoryService;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\PostCategory\PostCategoryRequest;
+use App\Services\Admin\PostCategory\PostCategoryService;
 
-class PostCategoryController extends BaseController
+class PostCategoryController extends CrudController
 {
     protected $storeRequestClass = PostCategoryRequest::class;
     protected $updateRequestClass = PostCategoryRequest::class;

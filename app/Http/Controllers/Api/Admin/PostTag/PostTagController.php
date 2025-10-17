@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\Admin\PostTag;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\PostTag\PostTagService;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\PostTag\PostTagRequest;
+use App\Services\Admin\PostTag\PostTagService;
 
-class PostTagController extends BaseController
+class PostTagController extends CrudController
 {
     protected $storeRequestClass = PostTagRequest::class;
     protected $updateRequestClass = PostTagRequest::class;

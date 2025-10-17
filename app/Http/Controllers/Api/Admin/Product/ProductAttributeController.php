@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api\Admin\Product;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\Product\ProductAttributeService;
-use App\Http\Requests\Admin\Product\ProductAttributeRequest;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\Product\AttributeStatusUpdateRequest;
+use App\Http\Requests\Admin\Product\ProductAttributeRequest;
+use App\Services\Admin\Product\ProductAttributeService;
 
-class ProductAttributeController extends BaseController
+class ProductAttributeController extends CrudController
 {
     protected $storeRequestClass = ProductAttributeRequest::class;
     protected $updateRequestClass = ProductAttributeRequest::class;

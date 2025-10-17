@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\Admin\Product;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\Product\ProductCategoryService;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\Product\ProductCategoryRequest;
-use Illuminate\Http\Request;
+use App\Services\Admin\Product\ProductCategoryService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class ProductCategoryController extends BaseController
+class ProductCategoryController extends CrudController
 {
     protected $storeRequestClass = ProductCategoryRequest::class;
     protected $updateRequestClass = ProductCategoryRequest::class;

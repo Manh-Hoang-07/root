@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\Public\Post;
 
-use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Services\Public\Post\PostService;
 use Illuminate\Http\Request;
 
-class PostController extends BaseController
+class PostController extends CrudController
 {
     /**
      * @var PostService

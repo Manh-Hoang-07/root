@@ -1,25 +1,25 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\User;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\User\UserService;
-use App\Http\Requests\Admin\User\UserRequest;
-use App\Http\Requests\Admin\User\ChangePasswordRequest;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\User\AssignRoleRequest;
+use App\Http\Requests\Admin\User\ChangePasswordRequest;
 use App\Http\Requests\Admin\User\StatusUpdateRequest;
+use App\Http\Requests\Admin\User\UserRequest;
+use App\Services\Admin\User\UserService;
 use Illuminate\Http\JsonResponse;
 
-class UserController extends BaseController
+class UserController extends CrudController
 {
     protected $storeRequestClass = UserRequest::class;
     protected $updateRequestClass = UserRequest::class;
     protected $statusUpdateRequestClass = StatusUpdateRequest::class;
     protected $showRelations = [
-        'profile:id,user_id,name,address,gender,birthday,image,about', 
-        'roles:id,name,guard_name', 
+        'profile:id,user_id,name,address,gender,birthday,image,about',
+        'roles:id,name,guard_name',
         'permissions:id,name,guard_name'
     ];
-    
+
     /**
      * @var UserService
      */
@@ -29,7 +29,7 @@ class UserController extends BaseController
     {
         parent::__construct($service);
     }
-    
+
     protected function getSearchFields(): array
     {
         return ['id', 'username', 'email'];
@@ -60,4 +60,4 @@ class UserController extends BaseController
         }
     }
 
-} 
+}

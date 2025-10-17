@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\User\User;
 
-use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Services\Core\Auth\AuthService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class UserController extends BaseController
+class UserController extends CrudController
 {
     /**
      * @var AuthService
@@ -58,4 +58,4 @@ class UserController extends BaseController
         }
         return $this->apiResponse(false, null, $result['message'], $result['status'] ?? 400);
     }
-} 
+}

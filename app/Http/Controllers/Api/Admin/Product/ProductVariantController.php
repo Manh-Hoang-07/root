@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Api\Admin\Product;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\Product\ProductVariantService;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\Product\ProductVariantRequest;
 use App\Http\Requests\Admin\Product\VariantStatusUpdateRequest;
-use Illuminate\Http\Request;
+use App\Services\Admin\Product\ProductVariantService;
 use Illuminate\Http\JsonResponse;
 
-class ProductVariantController extends BaseController
+class ProductVariantController extends CrudController
 {
     protected $storeRequestClass = ProductVariantRequest::class;
     protected $updateRequestClass = ProductVariantRequest::class;

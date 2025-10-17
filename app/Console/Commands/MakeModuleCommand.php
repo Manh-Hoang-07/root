@@ -72,7 +72,7 @@ use {$baseController};
 use App\Services\\{$scope}\\{$name}\\{$name}Service;
 use App\Http\Requests\\{$scope}\\{$name}\\{$name}Request;
 
-class {$name}Controller extends BaseController
+class {$name}Controller extends CrudController
 {
     protected \$storeRequestClass = {$name}Request::class;
     protected \$updateRequestClass = {$name}Request::class;

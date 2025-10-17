@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\Public\PostCategory;
 
-use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Services\Public\PostCategory\PostCategoryService;
 
-class PostCategoryController extends BaseController
+class PostCategoryController extends CrudController
 {
     protected $indexRelations = [];
     protected $showRelations = [];

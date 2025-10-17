@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\Admin\Product;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\Product\ProductService;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\Product\ProductRequest;
 use App\Http\Requests\Admin\Product\StatusUpdateRequest;
+use App\Services\Admin\Product\ProductService;
 use Illuminate\Http\JsonResponse;
 
-class ProductController extends BaseController
+class ProductController extends CrudController
 {
     protected $storeRequestClass = ProductRequest::class;
     protected $updateRequestClass = ProductRequest::class;
@@ -37,7 +37,7 @@ class ProductController extends BaseController
             if (!$product) {
                 return $this->apiResponse(false, null, 'Không tìm thấy sản phẩm', 404);
             }
-            
+
             return $this->apiResponse(true, $product, 'Cập nhật trạng thái nổi bật thành công');
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);

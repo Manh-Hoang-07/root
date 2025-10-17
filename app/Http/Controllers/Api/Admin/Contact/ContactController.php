@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Api\Admin\Contact;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\Contact\ContactService;
+use App\Enums\ContactStatus;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\Contact\ContactRequest;
 use App\Http\Requests\Admin\Contact\ContactStatusUpdateRequest;
-use App\Enums\ContactStatus;
+use App\Services\Admin\Contact\ContactService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Exception;
 
-class ContactController extends BaseController
+class ContactController extends CrudController
 {
     protected $storeRequestClass = ContactRequest::class;
     protected $updateRequestClass = ContactRequest::class;

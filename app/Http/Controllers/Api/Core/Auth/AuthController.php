@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Api\Core\Auth;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Core\Auth\AuthService;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
-use Illuminate\Http\Request;
+use App\Services\Core\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class AuthController extends BaseController
+class AuthController extends CrudController
 {
     /**
      * @var AuthService
@@ -27,7 +27,7 @@ class AuthController extends BaseController
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $result = $this->service->login($request->validated()); 
+        $result = $this->service->login($request->validated());
         if ($result['success']) {
             $response = $this->apiResponse(true, $result['data'], $result['message']);
             // Set cookie với token
@@ -106,4 +106,4 @@ class AuthController extends BaseController
             return $this->apiResponse(false, null, 'Failed to refresh token', 500);
         }
     }
-} 
+}

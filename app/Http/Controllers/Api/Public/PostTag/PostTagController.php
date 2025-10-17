@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\Public\PostTag;
 
-use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Services\Public\PostTag\PostTagService;
 
-class PostTagController extends BaseController
+class PostTagController extends CrudController
 {
     protected $indexRelations = [];
     protected $showRelations = [];

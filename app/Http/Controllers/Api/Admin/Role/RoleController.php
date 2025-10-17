@@ -1,18 +1,18 @@
 <?php
 namespace App\Http\Controllers\Api\Admin\Role;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\Role\RoleService;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\Role\RoleRequest;
+use App\Services\Admin\Role\RoleService;
 
-class RoleController extends BaseController
+class RoleController extends CrudController
 {
     protected $storeRequestClass = RoleRequest::class;
     protected $updateRequestClass = RoleRequest::class;
     protected $showRelations = [
         'permissions:id,name,guard_name'
     ];
-    
+
     /**
      * @var RoleService
      */
@@ -23,4 +23,4 @@ class RoleController extends BaseController
         parent::__construct($service);
     }
 
-} 
+}

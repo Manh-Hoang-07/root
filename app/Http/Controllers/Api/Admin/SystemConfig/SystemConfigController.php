@@ -2,35 +2,35 @@
 
 namespace App\Http\Controllers\Api\Admin\SystemConfig;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Core\SystemConfig\SystemConfigService;
-use App\Http\Requests\Core\SystemConfig\SystemConfigRequest;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Core\SystemConfig\BulkUpdateConfigRequest;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use App\Http\Requests\Core\SystemConfig\SystemConfigRequest;
+use App\Services\Core\SystemConfig\SystemConfigService;
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class SystemConfigController extends BaseController
+class SystemConfigController extends CrudController
 {
     /** @var SystemConfigService */
     protected $service;
-    
+
     protected $storeRequestClass = SystemConfigRequest::class;
     protected $updateRequestClass = SystemConfigRequest::class;
     protected $indexRelations = [];
     protected $showRelations = [];
     protected $defaultPerPage = 15;
     protected $maxPerPage = 100;
-    
+
     /** @var bool Enable caching for responses */
     protected $enableCaching = true;
-    
+
     /** @var int Cache TTL in seconds */
     protected $cacheTtl = 300; // 5 minutes for admin config data
-    
+
     /** @var array Default fields for list view */
     protected $defaultListFields = ['id', 'key', 'value', 'type', 'group', 'description', 'is_public', 'is_encrypted', 'status'];
-    
+
     /** @var array Default fields for show view */
     protected $defaultShowFields = ['id', 'key', 'value', 'type', 'group', 'description', 'is_public', 'is_encrypted', 'status', 'validation_rules', 'default_value', 'sort_order'];
 
@@ -93,7 +93,7 @@ class SystemConfigController extends BaseController
             $userId = $request->user()?->id;
 
             $result = $this->service->bulkUpdate($configs, $userId);
-            
+
             if ($result['success']) {
                 return $this->apiResponse(true, $result['data'], $result['message']);
             }
@@ -111,7 +111,7 @@ class SystemConfigController extends BaseController
     {
         try {
             $result = $this->service->clearAllCache();
-            
+
             if ($result) {
                 return $this->apiResponse(true, null, 'Xóa cache thành công');
             }

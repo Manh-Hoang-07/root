@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Api\Admin\SystemConfig;
 
-use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Services\Core\SystemConfig\ConfigAuditService;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class ConfigAuditController extends BaseController
+class ConfigAuditController extends CrudController
 {
     protected $indexRelations = [];
     protected $showRelations = [];
     protected $defaultPerPage = 50;
     protected $maxPerPage = 200;
-    
+
     /** @var ConfigAuditService */
     protected $service;
 
@@ -51,7 +51,7 @@ class ConfigAuditController extends BaseController
             $format = $request->get('format', 'json');
 
             $exportData = $this->service->exportAuditLogs($startDate, $endDate, $format);
-            
+
             return response($exportData)
                 ->header('Content-Type', $format === 'csv' ? 'text/csv' : 'application/json')
                 ->header('Content-Disposition', 'attachment; filename="audit_logs.' . $format . '"');

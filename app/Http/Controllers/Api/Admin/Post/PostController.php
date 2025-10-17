@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\Admin\Post;
 
-use App\Http\Controllers\Api\BaseController;
-use App\Services\Admin\Post\PostService;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\Post\PostRequest;
+use App\Services\Admin\Post\PostService;
 
-class PostController extends BaseController
+class PostController extends CrudController
 {
     protected $storeRequestClass = PostRequest::class;
     protected $updateRequestClass = PostRequest::class;
