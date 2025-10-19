@@ -27,14 +27,9 @@ class ProductController extends CrudController
      */
     public function featured(Request $request): JsonResponse
     {
-        try {
-            $limit = $request->get('limit', 12);
-            $products = $this->service->getFeaturedProducts($limit);
-            return $this->successResponseWithFormat($products, 'Lấy sản phẩm nổi bật thành công');
-        } catch (\Exception $e) {
-            $this->logError('Featured Products', $e);
-            return $this->apiResponse(false, null, 'Không thể tải sản phẩm nổi bật', 500);
-        }
+        $limit = $request->get('limit', 12);
+        $products = $this->service->getFeaturedProducts($limit);
+        return $this->successResponseWithFormat($products, 'Lấy sản phẩm nổi bật thành công');
     }
 
     /**
@@ -42,26 +37,21 @@ class ProductController extends CrudController
      */
     public function search(Request $request): JsonResponse
     {
-        try {
-            // Use parent search method with custom filters
-            $filters = $this->parseRequestData($request);
-            $filters['search_query'] = $request->get('q');
-            $filters['category'] = $request->get('category');
-            $filters['min_price'] = $request->get('min_price');
-            $filters['max_price'] = $request->get('max_price');
-            $filters['sort_by'] = $request->get('sort_by', 'created_at');
-            $filters['sort_order'] = $request->get('sort_order', 'desc');
+        // Use parent search method with custom filters
+        $filters = $this->parseRequestData($request);
+        $filters['search_query'] = $request->get('q');
+        $filters['category'] = $request->get('category');
+        $filters['min_price'] = $request->get('min_price');
+        $filters['max_price'] = $request->get('max_price');
+        $filters['sort_by'] = $request->get('sort_by', 'created_at');
+        $filters['sort_order'] = $request->get('sort_order', 'desc');
 
-            $limit = min($request->get('limit', 12), $this->maxPerPage);
-            $fields = $this->getSearchFields();
-            $relations = $this->getSearchRelations();
+        $limit = min($request->get('limit', 12), $this->maxPerPage);
+        $fields = $this->getSearchFields();
+        $relations = $this->getSearchRelations();
 
-            $products = $this->service->list($filters, $limit, $relations, $fields);
-            return $this->successResponseWithFormat($products, 'Tìm kiếm sản phẩm thành công');
-        } catch (\Exception $e) {
-            $this->logError('Search Products', $e);
-            return $this->apiResponse(false, null, 'Không thể tìm kiếm sản phẩm', 500);
-        }
+        $products = $this->service->list($filters, $limit, $relations, $fields);
+        return $this->successResponseWithFormat($products, 'Tìm kiếm sản phẩm thành công');
     }
 
     /**
@@ -69,14 +59,9 @@ class ProductController extends CrudController
      */
     public function byCategory(Request $request, $categoryId): JsonResponse
     {
-        try {
-            // Add category_id filter and use parent index method
-            $request->merge(['category_id' => $categoryId]);
-            return $this->index($request);
-        } catch (\Exception $e) {
-            $this->logError('Products by Category', $e, ['category_id' => $categoryId]);
-            return $this->apiResponse(false, null, 'Không thể tải sản phẩm theo danh mục', 500);
-        }
+        // Add category_id filter and use parent index method
+        $request->merge(['category_id' => $categoryId]);
+        return $this->index($request);
     }
 
     /**
@@ -84,16 +69,11 @@ class ProductController extends CrudController
      */
     public function variants($id): JsonResponse
     {
-        try {
-            $variants = $this->service->getProductVariants($id);
-            if (!$variants) {
-                return $this->apiResponse(false, null, 'Không tìm thấy sản phẩm', 404);
-            }
-            return $this->successResponseWithFormat($variants, 'Lấy biến thể sản phẩm thành công');
-        } catch (\Exception $e) {
-            $this->logError('Product Variants', $e, ['product_id' => $id]);
-            return $this->apiResponse(false, null, 'Không thể tải biến thể sản phẩm', 500);
+        $variants = $this->service->getProductVariants($id);
+        if (!$variants) {
+            return $this->apiResponse(false, null, 'Không tìm thấy sản phẩm', 404);
         }
+        return $this->successResponseWithFormat($variants, 'Lấy biến thể sản phẩm thành công');
     }
 
     /**
@@ -101,16 +81,11 @@ class ProductController extends CrudController
      */
     public function show($id, ?Request $request = null): JsonResponse
     {
-        try {
-            $product = $this->service->getActiveProduct($id);
-            if (!$product) {
-                return $this->apiResponse(false, null, 'Không tìm thấy sản phẩm', 404);
-            }
-            return $this->successResponseWithFormat($product, 'Lấy chi tiết sản phẩm thành công');
-        } catch (\Exception $e) {
-            $this->logError('Show Product', $e, ['product_id' => $id]);
-            return $this->apiResponse(false, null, 'Không thể tải thông tin sản phẩm', 500);
+        $product = $this->service->getActiveProduct($id);
+        if (!$product) {
+            return $this->apiResponse(false, null, 'Không tìm thấy sản phẩm', 404);
         }
+        return $this->successResponseWithFormat($product, 'Lấy chi tiết sản phẩm thành công');
     }
 
     /**

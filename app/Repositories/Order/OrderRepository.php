@@ -50,6 +50,17 @@ class OrderRepository extends BaseRepository
     }
 
     /**
+     * Find user with profile
+     */
+    public function findUser($userId): ?array
+    {
+        return \App\Models\User::where('id', $userId)
+            ->with('profile')
+            ->first()
+            ?->toArray();
+    }
+
+    /**
      * Get order items
      */
     public function getOrderItems($orderId): array
@@ -72,21 +83,21 @@ class OrderRepository extends BaseRepository
     public function updateShippingStatus($id, string $status, ?string $trackingNumber = null): ?array
     {
         $data = ['shipping_status' => $status];
-        
+
         if ($trackingNumber) {
             $data['tracking_number'] = $trackingNumber;
         }
-        
+
         // Set shipped_at when status is shipped
         if ($status === 'shipped') {
             $data['shipped_at'] = now();
         }
-        
+
         // Set delivered_at when status is delivered
         if ($status === 'delivered') {
             $data['delivered_at'] = now();
         }
-        
+
         return $this->update($id, $data);
     }
 
@@ -164,7 +175,9 @@ class OrderRepository extends BaseRepository
     public function bulkUpdateStatus(array $ids, string $status): int
     {
         return $this->updateBy([
-            function ($q) use ($ids) { $q->whereIn('id', $ids); }
+            function ($q) use ($ids) {
+                $q->whereIn('id', $ids);
+            }
         ], [
             'status' => $status
         ]);
@@ -193,7 +206,9 @@ class OrderRepository extends BaseRepository
         if (!$product) return;
         $current = (int) ($product->stock_quantity ?? 0);
         $new = $current + $delta;
-        if ($new < 0) { $new = 0; }
+        if ($new < 0) {
+            $new = 0;
+        }
         $product->stock_quantity = $new;
         $product->save();
     }
@@ -204,9 +219,10 @@ class OrderRepository extends BaseRepository
         if (!$variant) return;
         $current = (int) ($variant->stock_quantity ?? 0);
         $new = $current + $delta;
-        if ($new < 0) { $new = 0; }
+        if ($new < 0) {
+            $new = 0;
+        }
         $variant->stock_quantity = $new;
         $variant->save();
     }
-
 }

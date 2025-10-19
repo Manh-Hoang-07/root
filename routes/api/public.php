@@ -71,11 +71,12 @@ Route::prefix('cart')->group(function () {
     Route::delete('/remove-coupon', [CartController::class, 'removeCoupon']);
 });
 
-// Order API - Guest checkout
-Route::apiResource('orders', OrderController::class)->only(['store', 'show']);
+// Order API - Unified checkout for both authenticated and guest users
+Route::post('/orders', [OrderController::class, 'createOrder']);
+Route::apiResource('orders', OrderController::class)->only(['show']);
 Route::prefix('orders')->group(function () {
-    Route::post('/guest', [OrderController::class, 'guestCheckout']);
     Route::get('/guest/{orderNumber}/{email}', [OrderController::class, 'guestShow']);
     Route::post('/{id}/payment', [OrderController::class, 'processPayment']);
     Route::get('/status/{orderNumber}', [OrderController::class, 'getStatus']);
+    Route::get('/user-address', [OrderController::class, 'getUserAddress'])->middleware('auth:api');
 });
