@@ -22,11 +22,6 @@ class GlobalAuthMiddleware
             return $next($request);
         }
 
-        // Chỉ áp dụng cho API routes
-        if (!$this->isApiRoute($request)) {
-            return $next($request);
-        }
-
         // Tối ưu: Chỉ kiểm tra token một lần
         $token = $this->getTokenFromRequest($request);
 
@@ -36,14 +31,6 @@ class GlobalAuthMiddleware
         }
 
         return $next($request);
-    }
-
-    /**
-     * Kiểm tra xem request có phải là API route không
-     */
-    private function isApiRoute(Request $request): bool
-    {
-        return str_starts_with($request->path(), 'api/');
     }
 
     /**

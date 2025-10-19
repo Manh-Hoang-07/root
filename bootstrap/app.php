@@ -17,13 +17,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\Api\RoleMiddleware::class,
             'auto.auth' => \App\Http\Middleware\Api\AutoAuthMiddleware::class,
             'cors' => \App\Http\Middleware\CorsMiddleware::class,
+            'global.auth' => \App\Http\Middleware\Api\GlobalAuthMiddleware::class,
         ]);
 
         // Sử dụng middleware CORS tùy chỉnh
         $middleware->prepend(\App\Http\Middleware\CorsMiddleware::class);
 
-        // Thêm middleware toàn cục để tự động xác thực cho tất cả API
-        $middleware->append(\App\Http\Middleware\Api\GlobalAuthMiddleware::class);
+        // Áp dụng middleware toàn cục cho API group
+        $middleware->group('api', [
+            \App\Http\Middleware\Api\GlobalAuthMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

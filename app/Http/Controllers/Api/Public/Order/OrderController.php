@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Public\Order;
 use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Public\Order\UnifiedOrderRequest;
 use App\Http\Requests\Public\Order\PaymentRequest;
+use App\Http\Requests\Public\Order\UpdateAddressRequest;
+use App\Http\Requests\Public\Order\CreateOrderRequest;
 use App\Services\Public\Order\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,27 +24,79 @@ class OrderController extends CrudController
     }
 
     /**
-     * Create a new order (for both authenticated users and guests)
+     * Update address information for checkout
      */
-    public function createOrder(UnifiedOrderRequest $request): JsonResponse
+    public function updateAddress(UpdateAddressRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $userId = auth('api')->id();
+        $userId = \Illuminate\Support\Facades\Auth::id();
 
-        // If user is authenticated, use their ID
-        if ($userId) {
-            // For authenticated users, we can pre-fill address from their profile
-            // but allow them to modify it for this order only
-            $order = $this->service->createOrder($data, $userId);
-            $message = 'Tạo đơn hàng thành công';
-        }
-        // Otherwise, create a guest order
-        else {
-            $order = $this->service->createOrder($data);
-            $message = 'Tạo đơn hàng khách vãng lai thành công';
+        $this->service->storeAddressInfo($data, $userId);
+
+        $message = $userId ? 'Cập nhật thông tin địa chỉ thành công' : 'Lưu thông tin địa chỉ thành công';
+
+        return $this->successResponseWithFormat(null, $message);
+    }
+
+    /**
+     * Create a new order with payment and shipping methods
+     */
+    public function createOrder(CreateOrderRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+        $userId = \Illuminate\Support\Facades\Auth::id();
+
+        // If user is authenticated and no cart_id provided, get it automatically
+        if ($userId && !isset($data['cart_id'])) {
+            $cartService = app(\App\Services\Public\Cart\CartService::class);
+            $cartId = $cartService->getCartId($request);
+            $data['cart_id'] = $cartId;
         }
 
-        return $this->successResponseWithFormat($order, $message, 201);
+        // Create order with stored address information
+        $result = $this->service->createOrder($data, $userId);
+
+        if ($result['success']) {
+            return $this->successResponseWithFormat($result['data'], $result['message'], 201);
+        } else {
+            return $this->apiResponse(false, null, $result['message'], 400, ['error_code' => $result['error_code']]);
+        }
+    }
+
+    /**
+     * Create a new order (legacy method for backward compatibility)
+     */
+    public function createUnifiedOrder(UnifiedOrderRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+        $userId = \Illuminate\Support\Facades\Auth::id();
+
+        // Store address information first
+        $addressData = [
+            'customer_name' => $data['customer_name'],
+            'customer_email' => $data['customer_email'],
+            'customer_phone' => $data['customer_phone'],
+            'shipping_address' => $data['shipping_address'],
+            'billing_address' => $data['billing_address'] ?? $data['shipping_address'],
+            'notes' => $data['notes'] ?? null,
+        ];
+        $this->service->storeAddressInfo($addressData, $userId);
+
+        // If user is authenticated and no cart_id provided, get it automatically
+        if ($userId && !isset($data['cart_id'])) {
+            $cartService = app(\App\Services\Public\Cart\CartService::class);
+            $cartId = $cartService->getCartId($request);
+            $data['cart_id'] = $cartId;
+        }
+
+        // Create order
+        $result = $this->service->createOrder($data, $userId);
+
+        if ($result['success']) {
+            return $this->successResponseWithFormat($result['data'], $result['message'], 201);
+        } else {
+            return $this->apiResponse(false, null, $result['message'], 400, ['error_code' => $result['error_code']]);
+        }
     }
 
     /**
@@ -50,7 +104,7 @@ class OrderController extends CrudController
      */
     public function show($id, ?Request $request = null): JsonResponse
     {
-        $userId = auth('api')->id();
+        $userId = \Illuminate\Support\Facades\Auth::id();
         $order = $this->service->getUserOrder($id, $userId);
 
         if (!$order) {
@@ -79,7 +133,7 @@ class OrderController extends CrudController
      */
     public function processPayment(PaymentRequest $request, $id): JsonResponse
     {
-        $userId = auth('api')->id();
+        $userId = \Illuminate\Support\Facades\Auth::id();
         $result = $this->service->processPayment($id, $request->validated(), $userId);
 
         if (!$result) {
@@ -113,7 +167,7 @@ class OrderController extends CrudController
      */
     public function getUserAddress(): JsonResponse
     {
-        $userId = auth('api')->id();
+        $userId = \Illuminate\Support\Facades\Auth::id();
 
         if (!$userId) {
             return $this->apiResponse(false, null, 'Người dùng chưa đăng nhập', 401);

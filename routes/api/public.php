@@ -71,8 +71,17 @@ Route::prefix('cart')->group(function () {
     Route::delete('/remove-coupon', [CartController::class, 'removeCoupon']);
 });
 
-// Order API - Unified checkout for both authenticated and guest users
-Route::post('/orders', [OrderController::class, 'createOrder']);
+// Order API - Split checkout process
+Route::prefix('checkout')->group(function () {
+    // Step 1: Update address information
+    Route::post('/address', [OrderController::class, 'updateAddress']);
+
+    // Step 2: Create order with payment and shipping methods
+    Route::post('/order', [OrderController::class, 'createOrder']);
+});
+
+// Order API - Unified checkout for both authenticated and guest users (legacy)
+Route::post('/orders', [OrderController::class, 'createUnifiedOrder']);
 Route::apiResource('orders', OrderController::class)->only(['show']);
 Route::prefix('orders')->group(function () {
     Route::get('/guest/{orderNumber}/{email}', [OrderController::class, 'guestShow']);

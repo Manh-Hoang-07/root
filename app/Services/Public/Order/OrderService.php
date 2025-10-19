@@ -31,72 +31,132 @@ class OrderService extends BaseService
     /**
      * Create order for authenticated user or guest
      */
-    public function createOrder(array $data, ?int $userId = null): ?array
+    public function createOrder(array $data, ?int $userId = null): array
     {
-        return DB::transaction(function () use ($data, $userId) {
-            $items = [];
-            $subtotal = 0;
-            $taxAmount = 0;
-            $discountAmount = 0;
+        // Get stored address information
+        $addressInfo = $this->getStoredAddressInfo($userId);
+        if (!$addressInfo) {
+            return [
+                'success' => false,
+                'message' => 'Vui lòng cập nhật thông tin địa chỉ trước khi tạo đơn hàng',
+                'error_code' => 'ADDRESS_REQUIRED'
+            ];
+        }
 
-            // If cart_id is provided, get items from cart
-            if (isset($data['cart_id'])) {
-                $cartId = $data['cart_id'];
-                $cart = $this->cartRepo->getCartWithItems($cartId);
+        $items = [];
+        $subtotal = 0;
+        $taxAmount = 0;
+        $discountAmount = 0;
 
-                if (!$cart || empty($cart['items'])) {
-                    throw new \Exception('Giỏ hàng trống');
-                }
+        // If cart_id is provided, get items from cart
+        if (isset($data['cart_id'])) {
+            $cartId = $data['cart_id'];
+            $cart = $this->cartRepo->getCartWithItems($cartId);
 
-                $items = $cart['items'];
-                $subtotal = $cart['subtotal'];
-                $taxAmount = $cart['tax_amount'];
-                $discountAmount = $cart['discount_amount'];
+            if (!$cart || empty($cart['items'])) {
+                // Check if this is a legacy unified order request and provide more helpful error
+                $hasCartId = isset($data['cart_id']);
+                $hasItems = isset($data['items']) && !empty($data['items']);
 
-                // Clear cart after getting items
-                $this->cartRepo->clearCart($cartId);
-            }
-            // Otherwise, use items directly from the request
-            elseif (isset($data['items'])) {
-                $items = $data['items'];
-
-                // Calculate totals from items
-                foreach ($items as $item) {
-                    $subtotal += $item['quantity'] * $item['unit_price'];
-                }
-            }
-
-            // Validate stock
-            foreach ($items as $item) {
-                $productId = $item['product_id'] ?? null;
-                $variantId = $item['product_variant_id'] ?? null;
-                $quantity = $item['quantity'];
-
-                if ($variantId) {
-                    $variant = $this->variantRepo->find($variantId);
-                    if (!$variant || $variant['stock_quantity'] < $quantity) {
-                        $productName = $item['product_name'] ?? 'N/A';
-                        throw new \Exception("Sản phẩm {$productName} không đủ hàng trong kho");
-                    }
+                if (!$hasCartId && !$hasItems) {
+                    return [
+                        'success' => false,
+                        'message' => 'Vui lòng cung cấp giỏ hàng hoặc danh sách sản phẩm để tạo đơn hàng',
+                        'error_code' => 'CART_OR_ITEMS_REQUIRED'
+                    ];
+                } elseif ($hasCartId) {
+                    return [
+                        'success' => false,
+                        'message' => 'Giỏ hàng trống. Vui lòng thêm sản phẩm vào giỏ hàng trước khi đặt hàng',
+                        'error_code' => 'CART_EMPTY'
+                    ];
                 } else {
-                    $product = $this->productRepo->find($productId);
-                    if (!$product || $product['stock_quantity'] < $quantity) {
-                        $productName = $item['product_name'] ?? 'N/A';
-                        throw new \Exception("Sản phẩm {$productName} không đủ hàng trong kho");
-                    }
+                    return [
+                        'success' => false,
+                        'message' => 'Giỏ hàng trống',
+                        'error_code' => 'CART_EMPTY'
+                    ];
                 }
             }
+
+            // Process cart items to add unit_price
+            $items = [];
+            foreach ($cart['items'] as $item) {
+                // Calculate unit price from product or variant
+                $unitPrice = 0;
+                if (isset($item['variant']) && $item['variant']) {
+                    $unitPrice = $item['variant']['sale_price'] ?? $item['variant']['price'] ?? 0;
+                } elseif (isset($item['product']) && $item['product']) {
+                    $unitPrice = $item['product']['sale_price'] ?? $item['product']['price'] ?? 0;
+                }
+
+                // Add unit_price to item
+                $item['unit_price'] = $unitPrice;
+                $items[] = $item;
+            }
+
+            $subtotal = $cart['subtotal'];
+            $taxAmount = $cart['tax_amount'];
+            $discountAmount = $cart['discount_amount'];
+
+            // Clear cart after getting items
+            $this->cartRepo->clearCart($cartId);
+        }
+        // Otherwise, use items directly from the request
+        elseif (isset($data['items'])) {
+            $items = $data['items'];
+
+            // Calculate totals from items
+            foreach ($items as $item) {
+                $subtotal += $item['quantity'] * $item['unit_price'];
+            }
+        }
+
+        // Validate stock
+        foreach ($items as $item) {
+            $productId = $item['product_id'] ?? null;
+            $variantId = $item['product_variant_id'] ?? null;
+            $quantity = $item['quantity'];
+
+            if ($variantId) {
+                $variant = $this->variantRepo->find($variantId);
+                if (!$variant || $variant['stock_quantity'] < $quantity) {
+                    $productName = $item['product_name'] ?? 'N/A';
+                    return [
+                        'success' => false,
+                        'message' => "Sản phẩm {$productName} không đủ hàng trong kho",
+                        'error_code' => 'INSUFFICIENT_STOCK'
+                    ];
+                }
+            } else {
+                $product = $this->productRepo->find($productId);
+                if (!$product || $product['stock_quantity'] < $quantity) {
+                    $productName = $item['product_name'] ?? 'N/A';
+                    return [
+                        'success' => false,
+                        'message' => "Sản phẩm {$productName} không đủ hàng trong kho",
+                        'error_code' => 'INSUFFICIENT_STOCK'
+                    ];
+                }
+            }
+        }
+
+        return DB::transaction(function () use ($data, $userId, $items, $subtotal, $taxAmount, $discountAmount, $addressInfo) {
+            // Get next order ID to generate order number
+            $nextOrderId = $this->getNextOrderId();
+            $orderNumber = $this->generateOrderNumber($nextOrderId);
 
             // Create order
             $orderData = [
+                'order_number' => $orderNumber,
                 'user_id' => $userId,
-                'customer_name' => $data['customer_name'],
-                'customer_email' => $data['customer_email'],
-                'customer_phone' => $data['customer_phone'],
-                'shipping_address' => $data['shipping_address'],
-                'billing_address' => $data['billing_address'] ?? $data['shipping_address'],
+                'customer_name' => $addressInfo['customer_name'],
+                'customer_email' => $addressInfo['customer_email'],
+                'customer_phone' => $addressInfo['customer_phone'],
+                'shipping_address' => $addressInfo['shipping_address'],
+                'billing_address' => $addressInfo['billing_address'],
                 'currency' => 'VND',
-                'notes' => $data['notes'] ?? null,
+                'notes' => $addressInfo['notes'],
                 'payment_method' => $data['payment_method'],
                 'shipping_method' => $data['shipping_method'],
                 'status' => 'pending',
@@ -112,18 +172,40 @@ class OrderService extends BaseService
 
             $order = $this->repo->create($orderData);
 
-            // Generate order number
-            $orderNumber = $this->generateOrderNumber($order['id']);
-            $this->repo->update($order['id'], ['order_number' => $orderNumber]);
-
             // Create order items
             foreach ($items as $item) {
+                // Extract product information from cart item
+                $productName = $item['product_name'] ?? null;
+                $productSku = $item['product_sku'] ?? null;
+                $variantName = $item['variant_name'] ?? null;
+
+                // If product name is not set, try to get it from product or variant data
+                if (!$productName && isset($item['product'])) {
+                    $productName = $item['product']['name'] ?? null;
+                }
+                if (!$productName && isset($item['variant'])) {
+                    $productName = $item['variant']['name'] ?? null;
+                }
+
+                // If product SKU is not set, try to get it from product or variant data
+                if (!$productSku && isset($item['product'])) {
+                    $productSku = $item['product']['sku'] ?? null;
+                }
+                if (!$productSku && isset($item['variant'])) {
+                    $productSku = $item['variant']['sku'] ?? null;
+                }
+
+                // If variant name is not set, try to get it from variant data
+                if (!$variantName && isset($item['variant'])) {
+                    $variantName = $item['variant']['name'] ?? null;
+                }
+
                 $this->repo->addItem($order['id'], [
                     'product_id' => $item['product_id'],
                     'product_variant_id' => $item['product_variant_id'],
-                    'product_name' => $item['product_name'] ?? $this->getProductName($item),
-                    'product_sku' => $item['product_sku'] ?? $this->getProductSku($item),
-                    'variant_name' => $item['variant_name'] ?? $this->getVariantName($item),
+                    'product_name' => $productName ?? $this->getProductName($item),
+                    'product_sku' => $productSku ?? $this->getProductSku($item),
+                    'variant_name' => $variantName ?? $this->getVariantName($item),
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'total_price' => $item['quantity'] * $item['unit_price'],
@@ -131,7 +213,14 @@ class OrderService extends BaseService
                 ]);
             }
 
-            return $this->repo->find($order['id']);
+            // Clear stored address information after creating order
+            $this->clearStoredAddressInfo($userId);
+
+            return [
+                'success' => true,
+                'data' => $this->repo->find($order['id']),
+                'message' => $userId ? 'Tạo đơn hàng thành công' : 'Tạo đơn hàng khách vãng lai thành công'
+            ];
         });
     }
 
@@ -291,6 +380,16 @@ class OrderService extends BaseService
     }
 
     /**
+     * Get next order ID
+     */
+    private function getNextOrderId(): int
+    {
+        // Get the maximum ID from the orders table and add 1
+        $maxId = DB::table('orders')->max('id') ?? 0;
+        return $maxId + 1;
+    }
+
+    /**
      * Apply stock change for all items of an order
      */
     private function applyStockChange(int $orderId, int $multiplier): void
@@ -372,5 +471,44 @@ class OrderService extends BaseService
         }
 
         return $addressInfo;
+    }
+
+    /**
+     * Store address information in session for checkout
+     */
+    public function storeAddressInfo(array $data, ?int $userId = null): bool
+    {
+        $addressKey = $userId ? "order_address_user_{$userId}" : 'order_address_guest';
+
+        // Store address information in session
+        session([$addressKey => [
+            'customer_name' => $data['customer_name'],
+            'customer_email' => $data['customer_email'],
+            'customer_phone' => $data['customer_phone'],
+            'shipping_address' => $data['shipping_address'],
+            'billing_address' => $data['billing_address'] ?? $data['shipping_address'],
+            'notes' => $data['notes'] ?? null,
+        ]]);
+
+        return true;
+    }
+
+    /**
+     * Get stored address information from session
+     */
+    public function getStoredAddressInfo(?int $userId = null): ?array
+    {
+        $addressKey = $userId ? "order_address_user_{$userId}" : 'order_address_guest';
+        return session($addressKey);
+    }
+
+    /**
+     * Clear stored address information from session
+     */
+    public function clearStoredAddressInfo(?int $userId = null): bool
+    {
+        $addressKey = $userId ? "order_address_user_{$userId}" : 'order_address_guest';
+        session()->forget($addressKey);
+        return true;
     }
 }

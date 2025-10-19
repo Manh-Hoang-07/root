@@ -1,11 +1,34 @@
 # Public E-commerce API Documentation
 
 ## Overview
-This API provides endpoints for public users to browse products, manage cart, and place orders without requiring authentication.
+API này cung cấp các endpoint cho người dùng công khai để duyệt sản phẩm, quản lý giỏ hàng và đặt hàng. Hệ thống được trang bị xác thực toàn cục, cho phép cả người dùng chưa đăng nhập (guest) và đã đăng nhập sử dụng API.
+
+## Đặc điểm xác thực
+- **Xác thực toàn cục**: Tất cả API đều có thể nhận diện user nếu có bearer token
+- **Không bắt buộc xác thực**: Các API công cộng vẫn hoạt động bình thường với guest users
+- **Tự động chuyển đổi**: Nếu có token, hệ thống sẽ tự động sử dụng thông tin user đã đăng nhập
+- **Linh hoạt**: Cùng một endpoint có thể hoạt động với cả guest và authenticated user
 
 ## Base URL
 ```
 /api
+```
+
+## Authentication
+API hỗ trợ 3 phương thức xác thực:
+1. **Authorization Header (Khuyến khích)**: `Authorization: Bearer your_token`
+2. **Query Parameter**: `?token=your_token`
+3. **Cookie**: `auth_token=your_token`
+
+### Lấy Token
+```bash
+POST /api/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password"
+}
 ```
 
 ## Product Endpoints
@@ -172,23 +195,22 @@ Query Parameters:
 GET /cart
 ```
 
+**Hỗ trợ cả guest và authenticated user**:
+- Guest: Cart được lưu theo session ID
+- Authenticated User: Cart được lưu theo user ID
+
 Response:
 ```json
 {
   "success": true,
   "data": {
-    "id": "cart_abc123",
+    "cart_id": "cart_abc123",
     "items": [
       {
         "id": 1,
         "product_id": 1,
         "product_variant_id": null,
-        "product_name": "Product Name",
-        "product_sku": "PRD001",
-        "variant_name": null,
         "quantity": 2,
-        "unit_price": 90000,
-        "total_price": 180000,
         "product": {...},
         "variant": null
       }
@@ -198,7 +220,6 @@ Response:
     "shipping_amount": 30000,
     "discount_amount": 0,
     "total_amount": 228000,
-    "coupon_code": null,
     "currency": "VND"
   },
   "message": "Lấy giỏ hàng thành công"
@@ -209,6 +230,8 @@ Response:
 ```
 POST /cart
 ```
+
+**Hỗ trợ cả guest và authenticated user**
 
 Request Body:
 ```json
@@ -224,6 +247,8 @@ Request Body:
 PUT /cart/{id}
 ```
 
+**Hỗ trợ cả guest và authenticated user**
+
 Request Body:
 ```json
 {
@@ -236,15 +261,21 @@ Request Body:
 DELETE /cart/{id}
 ```
 
+**Hỗ trợ cả guest và authenticated user**
+
 ### Clear Cart
 ```
 DELETE /cart
 ```
 
+**Hỗ trợ cả guest và authenticated user**
+
 ### Apply Coupon Code
 ```
 POST /cart/apply-coupon
 ```
+
+**Hỗ trợ cả guest và authenticated user**
 
 Request Body:
 ```json
@@ -258,14 +289,20 @@ Request Body:
 DELETE /cart/remove-coupon
 ```
 
+**Hỗ trợ cả guest và authenticated user**
+
 ## Order Endpoints
 
-### Create Order (Authenticated Users)
+### Create Order (Unified for Guest and Authenticated Users)
 ```
 POST /orders
 ```
 
-Request Body:
+**Endpoint duy nhất cho cả guest và authenticated user**:
+- Nếu có token: Sử dụng thông tin user đã đăng nhập và tự động lấy giỏ hàng của user
+- Nếu không có token: Xử lý như guest checkout và yêu cầu `items`
+
+Request Body (Authenticated User):
 ```json
 {
   "customer_name": "John Doe",
@@ -285,17 +322,13 @@ Request Body:
   },
   "notes": "Special instructions",
   "payment_method": "cod",
-  "shipping_method": "standard",
-  "cart_id": "cart_abc123"
+  "shipping_method": "standard"
 }
 ```
 
-### Guest Checkout (No Authentication Required)
-```
-POST /orders/guest
-```
+**Lưu ý**: `cart_id` là tùy chọn cho authenticated user, hệ thống sẽ tự động lấy giỏ hàng của user.
 
-Request Body:
+Request Body (Guest User):
 ```json
 {
   "customer_name": "John Doe",
@@ -327,12 +360,16 @@ Request Body:
 }
 ```
 
-### Get Order Details (Authenticated Users)
+### Get Order Details
 ```
 GET /orders/{id}
 ```
 
-### Get Order Details (Guest Users)
+**Hỗ trợ cả guest và authenticated user**:
+- Authenticated User: Có thể xem các đơn hàng của mình
+- Guest: Cần cung cấp email đúng với email trong đơn hàng
+
+### Get Order Details (Guest)
 ```
 GET /orders/guest/{orderNumber}/{email}
 ```
@@ -341,6 +378,8 @@ GET /orders/guest/{orderNumber}/{email}
 ```
 POST /orders/{id}/payment
 ```
+
+**Hỗ trợ cả guest và authenticated user**
 
 Request Body:
 ```json
@@ -361,6 +400,8 @@ Request Body:
 GET /orders/status/{orderNumber}
 ```
 
+**Hỗ trợ cả guest và authenticated user**
+
 Response:
 ```json
 {
@@ -374,6 +415,13 @@ Response:
   "message": "Lấy trạng thái đơn hàng thành công"
 }
 ```
+
+### Get User Address (Authenticated Users Only)
+```
+GET /orders/user-address
+```
+
+**Chỉ hoạt động với authenticated user**
 
 ## Payment Methods
 - `cod`: Cash on Delivery
@@ -397,6 +445,7 @@ All endpoints return error responses in the following format:
 ## Status Codes
 - `200`: Success
 - `400`: Bad Request
+- `401`: Unauthorized (chỉ cho các endpoint bắt buộc xác thực)
 - `404`: Not Found
 - `500`: Internal Server Error
 
@@ -427,66 +476,28 @@ curl -X GET "http://localhost:8000/api/products/featured?limit=8" \
   -H "Content-Type: application/json"
 ```
 
-#### Search Products
-```bash
-curl -X GET "http://localhost:8000/api/products/search?q=iphone&category=1&min_price=1000000&max_price=5000000&limit=10" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json"
-```
-
-#### Get Products by Category
-```bash
-curl -X GET "http://localhost:8000/api/products/by-category/1?sort_by=name&sort_order=asc&limit=12" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json"
-```
-
-#### Get Product Variants
-```bash
-curl -X GET "http://localhost:8000/api/products/1/variants" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json"
-```
-
-### Product Category Endpoints
-
-#### Get All Categories
-```bash
-curl -X GET "http://localhost:8000/api/product-categories" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json"
-```
-
-#### Get Category Tree
-```bash
-curl -X GET "http://localhost:8000/api/product-categories/tree" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json"
-```
-
-#### Get Category Products
-```bash
-curl -X GET "http://localhost:8000/api/product-categories/1/products?limit=10" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json"
-```
-
 ### Cart Endpoints
 
-#### Get Cart
+#### Get Cart (Guest)
+```bash
+curl -X GET "http://localhost:8000/api/cart" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json"
+```
+
+#### Get Cart (Authenticated User)
 ```bash
 curl -X GET "http://localhost:8000/api/cart" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
-  -H "X-Cart-ID: cart_abc123def456"
+  -H "Authorization: Bearer your_auth_token_here"
 ```
 
-#### Add Item to Cart
+#### Add Item to Cart (Guest)
 ```bash
 curl -X POST "http://localhost:8000/api/cart" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
-  -H "X-Cart-ID: cart_abc123def456" \
   -d '{
     "product_id": 1,
     "product_variant_id": null,
@@ -494,70 +505,24 @@ curl -X POST "http://localhost:8000/api/cart" \
   }'
 ```
 
-#### Add Product Variant to Cart
+#### Add Item to Cart (Authenticated User)
 ```bash
 curl -X POST "http://localhost:8000/api/cart" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
-  -H "X-Cart-ID: cart_abc123def456" \
+  -H "Authorization: Bearer your_auth_token_here" \
   -d '{
     "product_id": 1,
-    "product_variant_id": 5,
-    "quantity": 1
+    "product_variant_id": null,
+    "quantity": 2
   }'
-```
-
-#### Update Cart Item
-```bash
-curl -X PUT "http://localhost:8000/api/cart/1" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -H "X-Cart-ID: cart_abc123def456" \
-  -d '{
-    "quantity": 3
-  }'
-```
-
-#### Remove Item from Cart
-```bash
-curl -X DELETE "http://localhost:8000/api/cart/1" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -H "X-Cart-ID: cart_abc123def456"
-```
-
-#### Clear Cart
-```bash
-curl -X DELETE "http://localhost:8000/api/cart" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -H "X-Cart-ID: cart_abc123def456"
-```
-
-#### Apply Coupon Code
-```bash
-curl -X POST "http://localhost:8000/api/cart/apply-coupon" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -H "X-Cart-ID: cart_abc123def456" \
-  -d '{
-    "code": "SAVE10"
-  }'
-```
-
-#### Remove Coupon Code
-```bash
-curl -X DELETE "http://localhost:8000/api/cart/remove-coupon" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -H "X-Cart-ID: cart_abc123def456"
 ```
 
 ### Order Endpoints
 
-#### Create Order (Guest Checkout)
+#### Create Order (Guest)
 ```bash
-curl -X POST "http://localhost:8000/api/orders/guest" \
+curl -X POST "http://localhost:8000/api/orders" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   -d '{
@@ -570,29 +535,8 @@ curl -X POST "http://localhost:8000/api/orders/guest" \
       "postal_code": "700000",
       "country": "Vietnam"
     },
-    "billing_address": {
-      "address": "123 Nguyen Hue Street",
-      "city": "Ho Chi Minh City",
-      "postal_code": "700000",
-      "country": "Vietnam"
-    },
-    "notes": "Giao hàng vào buổi chiều",
     "payment_method": "cod",
-    "shipping_method": "standard",
-    "items": [
-      {
-        "product_id": 1,
-        "product_variant_id": null,
-        "quantity": 2,
-        "unit_price": 90000
-      },
-      {
-        "product_id": 2,
-        "product_variant_id": 3,
-        "quantity": 1,
-        "unit_price": 150000
-      }
-    ]
+    "shipping_method": "standard"
   }'
 ```
 
@@ -612,27 +556,12 @@ curl -X POST "http://localhost:8000/api/orders" \
       "postal_code": "700000",
       "country": "Vietnam"
     },
-    "billing_address": {
-      "address": "123 Nguyen Hue Street",
-      "city": "Ho Chi Minh City",
-      "postal_code": "700000",
-      "country": "Vietnam"
-    },
-    "notes": "Giao hàng vào buổi chiều",
     "payment_method": "cod",
-    "shipping_method": "standard",
-    "cart_id": "cart_abc123"
+    "shipping_method": "standard"
   }'
 ```
 
-#### Get Order Details (Guest)
-```bash
-curl -X GET "http://localhost:8000/api/orders/guest/ORD-20231018-0001/nguyenvana@example.com" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json"
-```
-
-#### Get Order Details (Authenticated)
+#### Get Order Details (Authenticated User)
 ```bash
 curl -X GET "http://localhost:8000/api/orders/1" \
   -H "Accept: application/json" \
@@ -640,44 +569,9 @@ curl -X GET "http://localhost:8000/api/orders/1" \
   -H "Authorization: Bearer your_auth_token_here"
 ```
 
-#### Process Payment (Credit Card)
+#### Get Order Details (Guest)
 ```bash
-curl -X POST "http://localhost:8000/api/orders/1/payment" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your_auth_token_here" \
-  -d '{
-    "payment_method": "credit_card",
-    "transaction_id": "TXN123456789",
-    "payment_details": {
-      "card_number": "4111111111111111",
-      "card_holder": "NGUYEN VAN A",
-      "expiry_date": "12/25",
-      "cvv": "123"
-    }
-  }'
-```
-
-#### Process Payment (Bank Transfer)
-```bash
-curl -X POST "http://localhost:8000/api/orders/1/payment" \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your_auth_token_here" \
-  -d '{
-    "payment_method": "bank_transfer",
-    "transaction_id": "BANK123456789",
-    "payment_details": {
-      "bank_name": "Vietcombank",
-      "account_number": "1234567890",
-      "account_holder": "NGUYEN VAN A"
-    }
-  }'
-```
-
-#### Get Order Status
-```bash
-curl -X GET "http://localhost:8000/api/orders/status/ORD-20231018-0001" \
+curl -X GET "http://localhost:8000/api/orders/guest/ORD-20231018-0001/nguyenvana@example.com" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json"
 ```
@@ -701,49 +595,42 @@ curl -X POST "http://localhost:8000/api/register" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Nguyen Van A",
+    "username": "nguyenvana",
     "email": "nguyenvana@example.com",
     "password": "password123",
-    "password_confirmation": "password123"
+    "phone": "0123456789"
   }'
 ```
 
 ## Testing Tips
 
-1. **Cart Management**: For cart operations, include a cart ID in the `X-Cart-ID` header to maintain cart state across requests. The cart ID can be any unique identifier (e.g., `cart_abc123def456`).
-
-2. **Base URL**: Replace `http://localhost:8000` with your actual API base URL.
-
-3. **Authentication**: For authenticated endpoints, replace `your_auth_token_here` with a valid JWT token obtained from login.
-
-4. **Product IDs**: Replace product IDs (1, 2, etc.) with actual product IDs from your database.
-
-5. **Error Handling**: Always check the response status code and JSON body for error messages.
-
-6. **Content-Type**: Always include `Content-Type: application/json` header for POST/PUT requests.
-
-7. **Accept Header**: Include `Accept: application/json` to receive JSON responses.
+1. **Xác thực toàn cục**: Bạn có thể thêm token vào bất kỳ request nào để hệ thống nhận diện user
+2. **Cart Management**: Guest cart được lưu theo session, authenticated user cart được lưu theo user ID
+3. **Base URL**: Replace `http://localhost:8000` with your actual API base URL
+4. **Authentication**: Thay `your_auth_token_here` với token thực từ API login
+5. **Product IDs**: Thay product IDs (1, 2, etc.) với IDs thực từ database
+6. **Error Handling**: Luôn kiểm tra response status code và JSON body cho error messages
+7. **Content-Type**: Luôn include `Content-Type: application/json` header cho POST/PUT requests
+8. **Accept Header**: Include `Accept: application/json` để nhận JSON responses
 
 ## Complete Workflow Example
 
+### Workflow cho Guest User
 ```bash
 # 1. Get products
 curl -X GET "http://localhost:8000/api/products" -H "Accept: application/json"
 
-# 2. Add product to cart
+# 2. Add product to cart (guest)
 curl -X POST "http://localhost:8000/api/cart" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
-  -H "X-Cart-ID: cart_test_123456" \
   -d '{"product_id": 1, "quantity": 2}'
 
-# 3. View cart
-curl -X GET "http://localhost:8000/api/cart" \
-  -H "Accept: application/json" \
-  -H "X-Cart-ID: cart_test_123456"
+# 3. View cart (guest)
+curl -X GET "http://localhost:8000/api/cart" -H "Accept: application/json"
 
 # 4. Place order as guest
-curl -X POST "http://localhost:8000/api/orders/guest" \
+curl -X POST "http://localhost:8000/api/orders" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   -d '{
@@ -756,17 +643,56 @@ curl -X POST "http://localhost:8000/api/orders/guest" \
       "country": "Vietnam"
     },
     "payment_method": "cod",
-    "shipping_method": "standard",
-    "items": [
-      {
-        "product_id": 1,
-        "quantity": 2,
-        "unit_price": 90000
-      }
-    ]
+    "shipping_method": "standard"
   }'
-
-# 5. Check order status
-curl -X GET "http://localhost:8000/api/orders/status/ORD-20231018-0001" \
-  -H "Accept: application/json"
 ```
+
+### Workflow cho Authenticated User
+```bash
+# 1. Login
+TOKEN=$(curl -s -X POST "http://localhost:8000/api/login" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123"}' | \
+  jq -r '.data.token')
+
+# 2. Get products
+curl -X GET "http://localhost:8000/api/products" -H "Accept: application/json"
+
+# 3. Add product to cart (authenticated)
+curl -X POST "http://localhost:8000/api/cart" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"product_id": 1, "quantity": 2}'
+
+# 4. View cart (authenticated)
+curl -X GET "http://localhost:8000/api/cart" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer $TOKEN"
+
+# 5. Place order (authenticated)
+curl -X POST "http://localhost:8000/api/orders" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "customer_name": "Test User",
+    "customer_email": "test@example.com",
+    "customer_phone": "0123456789",
+    "shipping_address": {
+      "address": "123 Test Street",
+      "city": "Test City",
+      "country": "Vietnam"
+    },
+    "payment_method": "cod",
+    "shipping_method": "standard"
+  }'
+```
+
+## Lợi ích của Xác thực Toàn cục
+
+1. **Trải nghiệm liền mạch**: User có thể đăng nhập ở bất kỳ đâu và tiếp tục công việc
+2. **Không cần quản lý nhiều endpoint**: Cùng một endpoint hoạt động với cả guest và authenticated user
+3. **Tự động chuyển đổi**: Hệ thống tự động nhận diện và áp dụng logic phù hợp
+4. **Linh hoạt**: Frontend có thể quyết định khi nào yêu cầu xác thực
