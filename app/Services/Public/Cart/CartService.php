@@ -8,6 +8,7 @@ use App\Repositories\Product\ProductRepository;
 use App\Repositories\Product\ProductVariantRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class CartService extends BaseService
 {
@@ -44,9 +45,10 @@ class CartService extends BaseService
 
         // If no cart ID found, create one
         if (!$cartId) {
-            if ($request->user()) {
+            // Check if user is authenticated (middleware global đã xử lý)
+            if (Auth::check()) {
                 // For authenticated users, use user_id
-                $cartId = 'user_' . $request->user()->id;
+                $cartId = 'user_' . Auth::id();
             } else {
                 // For non-authenticated users, use browser session ID
                 if ($request->hasSession()) {

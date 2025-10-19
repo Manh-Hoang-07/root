@@ -20,7 +20,7 @@ use App\Http\Controllers\Api\Admin\Order\OrderController;
 use Illuminate\Support\Facades\Route;
 
 // Admin API
-Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth:api'])->prefix('admin')->group(function () {
     // Admin routes for enums
     Route::get('/enums/{type}', [EnumController::class, 'get']);
     Route::get('/enums/types', [EnumController::class, 'getTypes']);
@@ -65,7 +65,7 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
         Route::post('/bulk-update', [SystemConfigController::class, 'bulkUpdate']);
         Route::post('/clear-cache', [SystemConfigController::class, 'clearCache']);
     });
-    
+
     // Admin - System Config module - RESTful routes
     Route::apiResource('system-configs', SystemConfigController::class);
 

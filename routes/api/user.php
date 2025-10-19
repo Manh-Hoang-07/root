@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\User\User\UserController;
 use Illuminate\Support\Facades\Route;
 
 // User API
-Route::middleware(['auto.auth'])->group(function () {
+Route::middleware(['auth:api'])->group(function () {
     // User routes
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
