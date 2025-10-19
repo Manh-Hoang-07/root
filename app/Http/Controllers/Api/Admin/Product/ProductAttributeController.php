@@ -9,6 +9,10 @@ use App\Services\Admin\Product\ProductAttributeService;
 
 class ProductAttributeController extends CrudController
 {
+    /**
+     * @var ProductAttributeService
+     */
+    protected $service;
     protected $storeRequestClass = ProductAttributeRequest::class;
     protected $updateRequestClass = ProductAttributeRequest::class;
     protected $statusUpdateRequestClass = AttributeStatusUpdateRequest::class;

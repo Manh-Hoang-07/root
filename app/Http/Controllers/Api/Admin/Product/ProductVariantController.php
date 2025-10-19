@@ -10,6 +10,10 @@ use Illuminate\Http\JsonResponse;
 
 class ProductVariantController extends CrudController
 {
+    /**
+     * @var ProductVariantService
+     */
+    protected $service;
     protected $storeRequestClass = ProductVariantRequest::class;
     protected $updateRequestClass = ProductVariantRequest::class;
     protected $statusUpdateRequestClass = VariantStatusUpdateRequest::class;
@@ -32,11 +36,10 @@ class ProductVariantController extends CrudController
     public function variants($productId): JsonResponse
     {
         try {
-            $variants = $this->service->getRepo()->getBy(['product_id' => $productId]);
+            $variants = $this->service->getBy(['product_id' => $productId]);
             return $this->apiResponse(true, $variants, 'Lấy danh sách biến thể sản phẩm thành công');
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
     }
-
 }

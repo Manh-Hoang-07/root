@@ -15,6 +15,48 @@ class OrderRepository extends BaseRepository
         return Order::class;
     }
 
+    /**
+     * Find user order
+     */
+    public function findUserOrder($orderId, $userId): ?array
+    {
+        return $this->model->where('id', $orderId)
+            ->where('user_id', $userId)
+            ->with(['items.product:id,name,sku', 'items.variant:id,name,sku'])
+            ->first()
+            ?->toArray();
+    }
+
+    /**
+     * Find guest order by order number and email
+     */
+    public function findGuestOrder($orderNumber, $email): ?array
+    {
+        return $this->model->where('order_number', $orderNumber)
+            ->where('customer_email', $email)
+            ->with(['items.product:id,name,sku', 'items.variant:id,name,sku'])
+            ->first()
+            ?->toArray();
+    }
+
+    /**
+     * Find order by order number
+     */
+    public function findByOrderNumber($orderNumber): ?array
+    {
+        return $this->model->where('order_number', $orderNumber)
+            ->first()
+            ?->toArray();
+    }
+
+    /**
+     * Get order items
+     */
+    public function getOrderItems($orderId): array
+    {
+        return OrderItem::where('order_id', $orderId)->get()->toArray();
+    }
+
 
     /**
      * Update payment status

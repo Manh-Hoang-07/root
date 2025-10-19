@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 
 class ProductCategoryController extends CrudController
 {
+    /**
+     * @var ProductCategoryService
+     */
+    protected $service;
     protected $storeRequestClass = ProductCategoryRequest::class;
     protected $updateRequestClass = ProductCategoryRequest::class;
     protected $indexRelations = ['parent:id,name', 'children:id,parent_id,name'];
@@ -52,5 +56,4 @@ class ProductCategoryController extends CrudController
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
     }
-
 }

@@ -22,13 +22,13 @@ class PostController extends CrudController
 
     protected function getDefaultListFields(): array
     {
-        return ['id','name','slug','image','status','published_at','created_at'];
+        return ['id', 'name', 'slug', 'image', 'status', 'published_at', 'created_at'];
     }
 
-    protected function getOptimizedData(array $filters, int $perPage, string $context = 'index', bool $single = false): array
+    protected function processFilters(array $filters, string $context = 'index'): array
     {
         $filters['published_only'] = true;
-        return parent::getOptimizedData($filters, $perPage, $context, $single);
+        return $filters;
     }
 
     public function showBySlug($slug, Request $request)
@@ -45,4 +45,3 @@ class PostController extends CrudController
         return $this->successResponseWithFormat($item, 'Lấy thông tin thành công');
     }
 }
-

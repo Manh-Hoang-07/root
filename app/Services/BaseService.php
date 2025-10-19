@@ -7,8 +7,11 @@ use Illuminate\Support\Str;
 
 abstract class BaseService
 {
+    /**
+     * @var mixed
+     */
     protected $repo;
-    protected static array $fields =['*'];
+    protected static array $fields = ['*'];
 
     public function __construct($repo)
     {
@@ -279,4 +282,4 @@ abstract class BaseService
         // Status is different, update it
         return $this->updateField($id, $newStatus, 'status');
     }
-} 
+}

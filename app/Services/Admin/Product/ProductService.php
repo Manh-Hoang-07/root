@@ -7,6 +7,11 @@ use App\Repositories\Product\ProductRepository;
 
 class ProductService extends BaseService
 {
+    /**
+     * @var ProductRepository
+     */
+    protected $repo;
+
     public function __construct(ProductRepository $repo)
     {
         parent::__construct($repo);

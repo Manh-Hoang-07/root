@@ -3,6 +3,7 @@
 namespace App\Repositories\Cart;
 
 use App\Models\Cart;
+use App\Models\CartHeader;
 use App\Repositories\BaseRepository;
 
 class CartRepository extends BaseRepository
@@ -13,14 +14,144 @@ class CartRepository extends BaseRepository
     }
 
     /**
-     * Get cart by user ID
+     * Get cart with items by session ID
      */
-    public function getByUserId($userId, array $relations = [], array $fields = ['*']): array
+    public function getCartWithItems($sessionId): ?array
     {
-        $query = $this->buildQuery($relations, $fields);
-        $query->where('user_id', $userId);
-        
-        return $query->get()->toArray();
+        $items = Cart::with(['product:id,name,sku,price,sale_price', 'variant:id,name,sku,price,sale_price'])
+            ->where('session_id', $sessionId)
+            ->get();
+
+        if ($items->isEmpty()) {
+            return null;
+        }
+
+        $cartArray = [
+            'session_id' => $sessionId,
+            'items' => $items->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'quantity' => $item->quantity,
+                    'product' => $item->product,
+                    'variant' => $item->variant,
+                ];
+            })->toArray()
+        ];
+
+        // Calculate totals
+        $subtotal = 0;
+        foreach ($items as $item) {
+            $price = $item->variant
+                ? ($item->variant->sale_price ?? $item->variant->price)
+                : ($item->product->sale_price ?? $item->product->price);
+            $subtotal += $price * $item->quantity;
+        }
+
+        $taxAmount = $subtotal * 0.1; // 10% tax
+        $shippingAmount = 30000; // Fixed shipping
+        $totalAmount = $subtotal + $taxAmount + $shippingAmount;
+
+        $cartArray['subtotal'] = $subtotal;
+        $cartArray['tax_amount'] = $taxAmount;
+        $cartArray['shipping_amount'] = $shippingAmount;
+        $cartArray['discount_amount'] = 0;
+        $cartArray['total_amount'] = $totalAmount;
+        $cartArray['currency'] = 'VND';
+
+        return $cartArray;
+    }
+
+    /**
+     * Create a new empty cart
+     */
+    public function createEmptyCart($sessionId): array
+    {
+        return [
+            'session_id' => $sessionId,
+            'items' => [],
+            'subtotal' => 0,
+            'tax_amount' => 0,
+            'shipping_amount' => 0,
+            'discount_amount' => 0,
+            'total_amount' => 0,
+            'currency' => 'VND'
+        ];
+    }
+
+    /**
+     * Get cart item by ID
+     */
+    public function getCartItem($itemId): ?array
+    {
+        $item = Cart::find($itemId);
+        return $item ? $item->toArray() : null;
+    }
+
+    /**
+     * Add item to cart by session ID
+     */
+    public function addItem($sessionId, array $itemData): array
+    {
+        // Check if item already exists
+        $existingItem = Cart::where('session_id', $sessionId)
+            ->where('product_id', $itemData['product_id'])
+            ->where('product_variant_id', $itemData['product_variant_id'] ?? null)
+            ->first();
+
+        if ($existingItem) {
+            // Update quantity
+            $newQuantity = $existingItem->quantity + $itemData['quantity'];
+            $existingItem->update(['quantity' => $newQuantity]);
+            return $existingItem->fresh()->toArray();
+        } else {
+            // Create new item
+            $itemData['session_id'] = $sessionId;
+            $item = Cart::create($itemData);
+            return $item->toArray();
+        }
+    }
+
+    /**
+     * Update cart item
+     */
+    public function updateItem($itemId, array $data): bool
+    {
+        return Cart::where('id', $itemId)->update($data) > 0;
+    }
+
+    /**
+     * Remove cart item
+     */
+    public function removeItem($itemId): bool
+    {
+        return Cart::where('id', $itemId)->delete() > 0;
+    }
+
+    /**
+     * Clear cart by session ID
+     */
+    public function clearCart($sessionId): bool
+    {
+        return Cart::where('session_id', $sessionId)->delete() > 0;
+    }
+
+    /**
+     * Update cart (not applicable for current structure)
+     */
+    public function updateCart($sessionId, array $data): bool
+    {
+        // Not needed for current cart structure
+        return true;
+    }
+
+    /**
+     * Recalculate cart totals
+     */
+    public function recalculateTotals($sessionId): ?array
+    {
+        return $this->getCartWithItems($sessionId);
     }
 
     /**
@@ -28,31 +159,7 @@ class CartRepository extends BaseRepository
      */
     public function getBySessionId($sessionId, array $relations = [], array $fields = ['*']): array
     {
-        $query = $this->buildQuery($relations, $fields);
-        $query->where('session_id', $sessionId);
-        
-        return $query->get()->toArray();
-    }
-
-    /**
-     * Add item to cart
-     */
-    public function addItem(array $data): array
-    {
-        // Check if item already exists
-        $existingItem = $this->model->where('user_id', $data['user_id'])
-            ->where('product_id', $data['product_id'])
-            ->where('product_variant_id', $data['product_variant_id'] ?? null)
-            ->first();
-
-        if ($existingItem) {
-            // Update quantity
-            $newQuantity = $existingItem->quantity + $data['quantity'];
-            return $this->update($existingItem->id, ['quantity' => $newQuantity]);
-        } else {
-            // Create new item
-            return $this->create($data);
-        }
+        return $this->getCartWithItems($sessionId) ?? $this->createEmptyCart($sessionId);
     }
 
     /**
@@ -61,19 +168,12 @@ class CartRepository extends BaseRepository
     public function updateQuantity($id, int $quantity): ?array
     {
         if ($quantity <= 0) {
-            $this->delete($id);
+            Cart::where('id', $id)->delete();
             return null;
         }
-        
-        return $this->update($id, ['quantity' => $quantity]);
-    }
 
-    /**
-     * Clear cart by user ID
-     */
-    public function clearByUserId($userId): bool
-    {
-        return $this->model->where('user_id', $userId)->delete() > 0;
+        Cart::where('id', $id)->update(['quantity' => $quantity]);
+        return Cart::find($id)?->toArray();
     }
 
     /**
@@ -81,36 +181,30 @@ class CartRepository extends BaseRepository
      */
     public function clearBySessionId($sessionId): bool
     {
-        return $this->model->where('session_id', $sessionId)->delete() > 0;
+        return Cart::where('session_id', $sessionId)->delete() > 0;
     }
 
     /**
      * Get cart total
      */
-    public function getCartTotal($userId = null, $sessionId = null): array
+    public function getCartTotal($sessionId): array
     {
-        $query = $this->buildQuery(['product:id,name,price,sale_price', 'variant:id,name,price,sale_price']);
-        
-        if ($userId) {
-            $query->where('user_id', $userId);
-        } elseif ($sessionId) {
-            $query->where('session_id', $sessionId);
-        }
-        
-        $items = $query->get();
-        
+        $items = Cart::with(['product:id,name,price,sale_price', 'variant:id,name,price,sale_price'])
+            ->where('session_id', $sessionId)
+            ->get();
+
         $subtotal = 0;
         $totalItems = 0;
-        
+
         foreach ($items as $item) {
-            $price = $item->variant 
+            $price = $item->variant
                 ? ($item->variant->sale_price ?? $item->variant->price)
                 : ($item->product->sale_price ?? $item->product->price);
-            
+
             $subtotal += $price * $item->quantity;
             $totalItems += $item->quantity;
         }
-        
+
         return [
             'subtotal' => $subtotal,
             'total_items' => $totalItems,
@@ -124,22 +218,17 @@ class CartRepository extends BaseRepository
     protected function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
     {
         parent::applyFilters($query, $filters);
-        
-        // Filter by user ID
-        if (!empty($filters['user_id'])) {
-            $query->where('user_id', $filters['user_id']);
-        }
-        
+
         // Filter by session ID
         if (!empty($filters['session_id'])) {
             $query->where('session_id', $filters['session_id']);
         }
-        
+
         // Filter by product ID
         if (!empty($filters['product_id'])) {
             $query->where('product_id', $filters['product_id']);
         }
-        
+
         // Filter by variant ID
         if (!empty($filters['product_variant_id'])) {
             $query->where('product_variant_id', $filters['product_variant_id']);

@@ -7,6 +7,10 @@ use App\Services\Public\PostTag\PostTagService;
 
 class PostTagController extends CrudController
 {
+    /**
+     * @var PostTagService
+     */
+    protected $service;
     protected $indexRelations = [];
     protected $showRelations = [];
 
@@ -17,12 +21,12 @@ class PostTagController extends CrudController
 
     protected function getDefaultListFields(): array
     {
-        return ['id','name','slug','status','created_at'];
+        return ['id', 'name', 'slug', 'status', 'created_at'];
     }
 
-    protected function getOptimizedData(array $filters, int $perPage, string $context = 'index', bool $single = false): array
+    protected function processFilters(array $filters, string $context = 'index'): array
     {
         $filters['status'] = 'active';
-        return parent::getOptimizedData($filters, $perPage, $context, $single);
+        return $filters;
     }
 }

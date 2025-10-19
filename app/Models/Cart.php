@@ -10,6 +10,8 @@ class Cart extends Model
 {
     use HasFactory;
 
+    protected $table = 'carts';
+
     protected $fillable = [
         'user_id',
         'session_id',
@@ -25,11 +27,6 @@ class Cart extends Model
     ];
 
     // Relationships
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
@@ -37,7 +34,12 @@ class Cart extends Model
 
     public function variant(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class);
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function createdUser(): BelongsTo
@@ -67,32 +69,20 @@ class Cart extends Model
     }
 
     // Accessors & Mutators
-    public function getItemPriceAttribute()
+    public function getFormattedPriceAttribute()
     {
-        if ($this->variant) {
-            return $this->variant->final_price;
-        }
-        return $this->product->final_price;
+        $price = $this->variant
+            ? ($this->variant->sale_price ?? $this->variant->price)
+            : ($this->product->sale_price ?? $this->product->price);
+        return number_format($price, 0, ',', '.') . ' VND';
     }
 
-    public function getItemTotalAttribute()
+    public function getFormattedTotalPriceAttribute()
     {
-        return $this->item_price * $this->quantity;
-    }
-
-    public function getItemNameAttribute()
-    {
-        if ($this->variant) {
-            return $this->product->name . ' - ' . $this->variant->name;
-        }
-        return $this->product->name;
-    }
-
-    public function getItemSkuAttribute()
-    {
-        if ($this->variant) {
-            return $this->variant->sku;
-        }
-        return $this->product->sku;
+        $price = $this->variant
+            ? ($this->variant->sale_price ?? $this->variant->price)
+            : ($this->product->sale_price ?? $this->product->price);
+        $total = $price * $this->quantity;
+        return number_format($total, 0, ',', '.') . ' VND';
     }
 }

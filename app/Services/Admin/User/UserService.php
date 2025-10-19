@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\DB;
 
 class UserService extends BaseService
 {
+    /**
+     * @var UserRepository
+     */
+    protected $repo;
+
     public function __construct(UserRepository $repo)
     {
         parent::__construct($repo);
@@ -107,4 +112,4 @@ class UserService extends BaseService
             return $user;
         });
     }
-} 
+}

@@ -70,5 +70,4 @@ class ContactController extends CrudController
             return $this->apiResponse(false, null, 'Không thể cập nhật trạng thái hàng loạt', 500);
         }
     }
-
 }

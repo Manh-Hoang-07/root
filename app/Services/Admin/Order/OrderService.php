@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\DB;
 
 class OrderService extends BaseService
 {
+    /**
+     * @var OrderRepository
+     */
+    protected $repo;
+
     public function __construct(OrderRepository $repo)
     {
         parent::__construct($repo);
@@ -137,6 +142,4 @@ class OrderService extends BaseService
         $seq = str_pad((string) ($orderId % 10000), 4, '0', STR_PAD_LEFT);
         return 'ORD-' . $datePart . '-' . $seq;
     }
-
 }
-

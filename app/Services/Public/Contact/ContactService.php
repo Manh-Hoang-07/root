@@ -10,6 +10,11 @@ use Exception;
 
 class ContactService extends BaseService
 {
+    /**
+     * @var ContactRepository
+     */
+    protected $repo;
+
     public function __construct(ContactRepository $repo)
     {
         parent::__construct($repo);
@@ -46,7 +51,7 @@ class ContactService extends BaseService
                 'email' => is_array($contact) ? ($contact['email'] ?? null) : ($contact->email ?? null),
                 'subject' => is_array($contact) ? ($contact['subject'] ?? null) : ($contact->subject ?? null)
             ]);
-            
+
             // Uncomment and implement when email is configured
             /*
             Mail::to(config('mail.admin_email', 'admin@example.com'))

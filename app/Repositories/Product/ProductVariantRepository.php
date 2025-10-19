@@ -4,6 +4,7 @@ namespace App\Repositories\Product;
 
 use App\Models\ProductVariant;
 use App\Repositories\BaseRepository;
+use App\Enums\ProductStatus;
 
 class ProductVariantRepository extends BaseRepository
 {
@@ -12,7 +13,17 @@ class ProductVariantRepository extends BaseRepository
         return ProductVariant::class;
     }
 
-
+    /**
+     * Find active variant by ID
+     */
+    public function findActive($id)
+    {
+        return $this->model->where('id', $id)
+            ->where('status', ProductStatus::ACTIVE)
+            ->with('product:id,name,price,sale_price')
+            ->first()
+            ?->toArray();
+    }
 
     /**
      * Apply filters specific to variants

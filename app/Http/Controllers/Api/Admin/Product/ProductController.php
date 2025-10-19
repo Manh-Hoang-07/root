@@ -10,6 +10,10 @@ use Illuminate\Http\JsonResponse;
 
 class ProductController extends CrudController
 {
+    /**
+     * @var ProductService
+     */
+    protected $service;
     protected $storeRequestClass = ProductRequest::class;
     protected $updateRequestClass = ProductRequest::class;
     protected $statusUpdateRequestClass = StatusUpdateRequest::class;
@@ -43,7 +47,4 @@ class ProductController extends CrudController
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
     }
-
-
-
 }
