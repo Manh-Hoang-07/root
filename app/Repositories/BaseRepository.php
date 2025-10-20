@@ -110,9 +110,7 @@ abstract class BaseRepository
         }
         
         // Auto-assign updated_user_id if not provided
-        if (!isset($data['updated_user_id'])) {
-            $data['updated_user_id'] = $this->getTrackingUserId();
-        }
+        $data['updated_user_id'] = $this->getTrackingUserId();
         
         $model->update($data);
         // Reload model to get updated data without extra query
@@ -219,9 +217,7 @@ abstract class BaseRepository
     public function updateBy(array $conditions, array $data): int
     {
         // Auto-assign updated_user_id if not provided
-        if (!isset($data['updated_user_id'])) {
-            $data['updated_user_id'] = $this->getTrackingUserId();
-        }
+        $data['updated_user_id'] = $this->getTrackingUserId();
         
         $query = $this->model->query();
         $this->applyConditions($query, $conditions);

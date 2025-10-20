@@ -17,6 +17,11 @@ class OrderService extends BaseService
     protected ProductRepository $productRepo;
     protected ProductVariantRepository $variantRepo;
 
+    /**
+     * @var OrderRepository
+     */
+    protected $repo;
+
     public function __construct(
         OrderRepository $repo,
         CartRepository $cartRepo,
