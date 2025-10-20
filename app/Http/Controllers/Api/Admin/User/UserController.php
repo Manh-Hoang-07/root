@@ -40,7 +40,7 @@ class UserController extends CrudController
         try {
             $data = $request->validated();
             $result = $this->service->changePassword($id, $data['password']);
-            return $this->apiResponse(true, $result, 'Mật khẩu đã được thay đổi thành công');
+            return $this->apiResponse($result['success'], $result['data'], $result['message']);
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
@@ -54,7 +54,7 @@ class UserController extends CrudController
         try {
             $data = $request->validated();
             $result = $this->service->assignRoles($id, $data['role_ids']);
-            return $this->apiResponse(true, $result, 'Phân quyền thành công');
+            return $this->apiResponse($result['success'], $result['data'], $result['message']);
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }

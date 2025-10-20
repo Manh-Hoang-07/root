@@ -78,4 +78,60 @@ class ProductCategoryRepository extends BaseRepository
             ->paginate($limit)
             ->toArray();
     }
+
+    /**
+     * Get category products with filters and pagination
+     */
+    public function getCategoryProducts($categoryId, $filters = [], $perPage = 20, array $relations = [], array $fields = ['*'])
+    {
+        $category = $this->model->find($categoryId);
+        if (!$category) {
+            return [];
+        }
+
+        $query = $category->products()->with($relations);
+        
+        // Apply filters
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        
+        if (isset($filters['price_min'])) {
+            $query->where('price', '>=', $filters['price_min']);
+        }
+        
+        if (isset($filters['price_max'])) {
+            $query->where('price', '<=', $filters['price_max']);
+        }
+        
+        if (isset($filters['sort_by'])) {
+            $sortOrder = $filters['sort_order'] ?? 'asc';
+            $query->orderBy($filters['sort_by'], $sortOrder);
+        }
+        
+        return $query->paginate($perPage)->toArray();
+    }
+
+    /**
+     * Bulk update categories
+     */
+    public function bulkUpdate(array $ids, string $action, $value): array
+    {
+        $updated = 0;
+        
+        switch ($action) {
+            case 'status':
+                $updated = $this->model->whereIn('id', $ids)->update(['status' => $value]);
+                break;
+            case 'delete':
+                $updated = $this->model->whereIn('id', $ids)->delete();
+                break;
+            // Add more bulk actions as needed
+        }
+        
+        return [
+            'updated_count' => $updated,
+            'total_ids' => count($ids)
+        ];
+    }
 }

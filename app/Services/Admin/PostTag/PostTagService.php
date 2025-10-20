@@ -7,6 +7,11 @@ use App\Repositories\PostTag\PostTagRepository;
 
 class PostTagService extends BaseService
 {
+    /**
+     * @var PostTagRepository
+     */
+    protected $repo;
+
     public function __construct(PostTagRepository $repo)
     {
         parent::__construct($repo);
@@ -20,7 +25,7 @@ class PostTagService extends BaseService
         return parent::create($data);
     }
 
-    public function update($id, $data): ?array
+    public function update($id, $data): array
     {
         $data = $this->ensureSlug($data);
         return parent::update($id, $data);

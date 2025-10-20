@@ -17,31 +17,53 @@ class PermissionService extends BaseService
         parent::__construct($repo);
     }
 
-    public function update($id, $data): ?array
+    public function update($id, $data): array
     {
         $permission = $this->repo->find($id);
         if (!$permission) {
-            throw new ModelNotFoundException('Permission not found');
+            return [
+                'success' => false,
+                'message' => 'Không tìm thấy quyền',
+                'data' => null
+            ];
         }
         // Kiểm tra nếu permission có quyền con thì không cho phép sửa
         $permissionModel = $this->repo->getModel()->find($permission['id']);
         if ($permissionModel->children()->exists()) {
-            throw new \InvalidArgumentException('Không thể sửa quyền này vì nó có quyền con.');
+            return [
+                'success' => false,
+                'message' => 'Không thể sửa quyền này vì nó có quyền con.',
+                'data' => null
+            ];
         }
         return $this->repo->update($id, $data);
     }
 
-    public function delete($id): bool
+    public function delete($id): array
     {
         $permission = $this->repo->find($id);
         if (!$permission) {
-            throw new ModelNotFoundException('Permission not found');
+            return [
+                'success' => false,
+                'message' => 'Không tìm thấy quyền',
+                'data' => null
+            ];
         }
         // Kiểm tra nếu permission có quyền con thì không cho phép xóa
         $permissionModel = $this->repo->getModel()->find($permission['id']);
         if ($permissionModel->children()->exists()) {
-            throw new \InvalidArgumentException('Không thể xóa quyền này vì nó có quyền con.');
+            return [
+                'success' => false,
+                'message' => 'Không thể xóa quyền này vì nó có quyền con.',
+                'data' => null
+            ];
         }
-        return $this->repo->delete($id);
+        $result = $this->repo->delete($id);
+        
+        return [
+            'success' => $result,
+            'message' => $result ? 'Xóa quyền thành công' : 'Xóa quyền thất bại',
+            'data' => null
+        ];
     }
 } 

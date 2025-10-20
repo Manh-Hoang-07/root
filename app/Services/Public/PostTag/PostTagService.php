@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Collection;
 
 class PostTagService extends BaseService
 {
+    /**
+     * @var PostTagRepository
+     */
+    protected $repo;
+
     public function __construct(PostTagRepository $repo)
     {
         parent::__construct($repo);

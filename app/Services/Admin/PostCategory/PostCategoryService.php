@@ -7,6 +7,11 @@ use App\Repositories\PostCategory\PostCategoryRepository;
 
 class PostCategoryService extends BaseService
 {
+    /**
+     * @var PostCategoryRepository
+     */
+    protected $repo;
+
     public function __construct(PostCategoryRepository $repo)
     {
         parent::__construct($repo);
@@ -20,7 +25,7 @@ class PostCategoryService extends BaseService
         return parent::create($data);
     }
 
-    public function update($id, $data): ?array
+    public function update($id, $data): array
     {
         $data = $this->ensureSlug($data);
         return parent::update($id, $data);

@@ -36,7 +36,11 @@ class FileService
     public function uploadFile(UploadedFile $file): array
     {
         $fileType = $this->getFileType($file);
-        $this->validateFile($file, $fileType);
+        $validation = $this->validateFile($file, $fileType);
+        
+        if (!$validation['success']) {
+            return $validation;
+        }
         
         $fileName = $this->generateFileName($file);
         $path = $this->getStoragePath($fileType);
@@ -47,13 +51,17 @@ class FileService
         $storedPath = $file->storeAs($path, $fileName, 'public');
         
         return [
-            'url' => '/storage/' . $storedPath,
-            'path' => $storedPath,
-            'filename' => $fileName,
-            'original_name' => $file->getClientOriginalName(),
-            'size' => $file->getSize(),
-            'mime_type' => $file->getMimeType(),
-            'type' => $fileType
+            'success' => true,
+            'message' => 'Tải file lên thành công',
+            'data' => [
+                'url' => '/storage/' . $storedPath,
+                'path' => $storedPath,
+                'filename' => $fileName,
+                'original_name' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+                'type' => $fileType
+            ]
         ];
     }
 
@@ -63,17 +71,28 @@ class FileService
     public function uploadMultipleFiles(array $files): array
     {
         $results = [];
+        $errors = [];
         
         // Tạo thư mục trước khi upload tất cả file
         $this->ensureTodayDirectoriesExist();
         
-        foreach ($files as $file) {
+        foreach ($files as $index => $file) {
             if ($file instanceof UploadedFile) {
-                $results[] = $this->uploadFile($file);
+                $result = $this->uploadFile($file);
+                if ($result['success']) {
+                    $results[] = $result;
+                } else {
+                    $errors[] = "File {$index}: " . $result['message'];
+                }
             }
         }
         
-        return $results;
+        return [
+            'success' => empty($errors),
+            'message' => empty($errors) ? 'Tải tất cả file lên thành công' : 'Một số file tải lên thất bại',
+            'data' => $results,
+            'errors' => $errors
+        ];
     }
 
     /**
@@ -95,13 +114,17 @@ class FileService
     /**
      * Validate file
      */
-    protected function validateFile(UploadedFile $file, string $fileType): void
+    protected function validateFile(UploadedFile $file, string $fileType): array
     {
         $extension = strtolower($file->getClientOriginalExtension());
         
         // Kiểm tra extension
         if ($fileType !== 'general' && !in_array($extension, $this->allowedTypes[$fileType])) {
-            throw new \InvalidArgumentException("Định dạng file không được hỗ trợ cho loại {$fileType}");
+            return [
+                'success' => false,
+                'message' => "Định dạng file không được hỗ trợ cho loại {$fileType}",
+                'data' => null
+            ];
         }
         
         // Kiểm tra kích thước
@@ -109,8 +132,18 @@ class FileService
         $maxSizeBytes = $maxSize * 1024 * 1024;
         
         if ($file->getSize() > $maxSizeBytes) {
-            throw new \InvalidArgumentException("Kích thước file không được vượt quá {$maxSize}MB");
+            return [
+                'success' => false,
+                'message' => "Kích thước file không được vượt quá {$maxSize}MB",
+                'data' => null
+            ];
         }
+        
+        return [
+            'success' => true,
+            'message' => 'File hợp lệ',
+            'data' => null
+        ];
     }
 
     /**
@@ -162,12 +195,21 @@ class FileService
     /**
      * Xóa file
      */
-    public function deleteFile(string $path): bool
+    public function deleteFile(string $path): array
     {
         if (Storage::disk('public')->exists($path)) {
-            return Storage::disk('public')->delete($path);
+            $deleted = Storage::disk('public')->delete($path);
+            return [
+                'success' => $deleted,
+                'message' => $deleted ? 'Xóa file thành công' : 'Xóa file thất bại',
+                'data' => null
+            ];
         }
         
-        return false;
+        return [
+            'success' => false,
+            'message' => 'File không tồn tại',
+            'data' => null
+        ];
     }
 }

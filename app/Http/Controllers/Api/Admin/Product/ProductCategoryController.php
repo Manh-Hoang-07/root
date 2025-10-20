@@ -35,8 +35,8 @@ class ProductCategoryController extends CrudController
     public function tree(): JsonResponse
     {
         try {
-            $tree = $this->service->getRepo()->getCategoryTree();
-            return $this->apiResponse(true, $tree, 'Lấy cây danh mục thành công');
+            $result = $this->service->getCategoryTree();
+            return $this->apiResponse($result['success'], $result['data'], $result['message']);
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
@@ -50,8 +50,8 @@ class ProductCategoryController extends CrudController
     {
         try {
             $perPage = min($request->get('per_page', 20), 100);
-            $products = $this->service->getRepo()->getCategoryProducts($id, $request->all(), $perPage);
-            return $this->apiResponse(true, $products, 'Lấy danh sách sản phẩm theo danh mục thành công');
+            $result = $this->service->getCategoryProducts($id, $request->all(), $perPage);
+            return $this->apiResponse($result['success'], $result['data'], $result['message']);
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }

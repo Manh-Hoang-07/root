@@ -30,17 +30,17 @@ class RoleService extends BaseService
         return $role;
     }
 
-    public function update($id, $data): ?array
+    public function update($id, $data): array
     {
         $permissions = $data['permissions'] ?? [];
         unset($data['permissions']);
         $role = parent::update($id, $data);
-        if (!$role) {
-            return null;
+        if (!$role['success']) {
+            return $role;
         }
         // Đảm bảo permissions là array of integers
         $permissionIds = array_map('intval', (array) $permissions);
-        $roleModel = $this->repo->getModel()->find($role['id']);
+        $roleModel = $this->repo->getModel()->find($role['data']['id']);
         $roleModel->permissions()->sync($permissionIds);
         return $role;
     }

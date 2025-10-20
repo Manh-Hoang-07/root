@@ -16,6 +16,11 @@ use Exception;
 
 class SystemConfigService extends BaseService
 {
+    /**
+     * @var SystemConfigRepository
+     */
+    protected $repo;
+    
     protected ConfigValidationService $validationService;
     protected ConfigAuditService $auditService;
     protected ?array $oldConfig = null;
@@ -322,13 +327,17 @@ class SystemConfigService extends BaseService
     /**
      * Override BaseService update to handle validation
      */
-    public function update($id, $data): ?array
+    public function update($id, $data): array
     {
         try {
             // Get old config for audit
             $oldConfig = $this->find($id);
             if (!$oldConfig) {
-                return null;
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy cấu hình',
+                    'data' => null
+                ];
             }
             
             // Store old config for hook
@@ -517,13 +526,17 @@ class SystemConfigService extends BaseService
     /**
      * Override BaseService delete to handle audit logging
      */
-    public function delete($id): bool
+    public function delete($id): array
     {
         try {
             // Get config before deletion for audit
             $config = $this->find($id);
             if (!$config) {
-                return false;
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy cấu hình',
+                    'data' => null
+                ];
             }
             
             // Delete using BaseService method
@@ -538,11 +551,25 @@ class SystemConfigService extends BaseService
                     'action' => 'deleted',
                     'changed_by' => request()->user()?->id
                 ]);
+                
+                return [
+                    'success' => true,
+                    'message' => 'Xóa cấu hình thành công',
+                    'data' => null
+                ];
             }
             
-            return $deleted;
+            return [
+                'success' => false,
+                'message' => 'Xóa cấu hình thất bại',
+                'data' => null
+            ];
         } catch (Exception $e) {
-            return false;
+            return [
+                'success' => false,
+                'message' => 'Xóa cấu hình thất bại: ' . $e->getMessage(),
+                'data' => null
+            ];
         }
     }
 

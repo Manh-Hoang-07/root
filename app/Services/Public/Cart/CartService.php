@@ -15,6 +15,10 @@ class CartService extends BaseService
     protected ProductRepository $productRepo;
     protected ProductVariantRepository $variantRepo;
 
+    /**
+     * @var CartRepository
+     */
+    protected $repo;
     public function __construct(
         CartRepository $repo,
         ProductRepository $productRepo,
@@ -72,138 +76,276 @@ class CartService extends BaseService
     /**
      * Get cart with items
      */
-    public function getCart(string $cartId): ?array
+    public function getCart(string $cartId): array
     {
-        $cart = $this->repo->getCartWithItems($cartId);
+        try {
+            $cart = $this->repo->getCartWithItems($cartId);
 
-        // If cart doesn't exist, create empty cart
-        if (!$cart) {
-            $cart = $this->repo->createEmptyCart($cartId);
+            // If cart doesn't exist, create empty cart
+            if (!$cart) {
+                $cart = $this->repo->createEmptyCart($cartId);
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Lấy giỏ hàng thành công',
+                'data' => $cart
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy giỏ hàng',
+                'data' => null
+            ];
         }
-
-        return $cart;
     }
 
     /**
      * Add item to cart
      */
-    public function addItem(string $cartId, array $itemData): ?array
+    public function addItem(string $cartId, array $itemData): array
     {
-        $productId = $itemData['product_id'] ?? null;
-        $variantId = $itemData['product_variant_id'] ?? null;
-        $quantity = $itemData['quantity'];
+        try {
+            $productId = $itemData['product_id'] ?? null;
+            $variantId = $itemData['product_variant_id'] ?? null;
+            $quantity = $itemData['quantity'];
 
-        // Validate product/variant exists and is active
-        if ($variantId) {
-            $variant = $this->variantRepo->findActive($variantId);
-            if (!$variant || $variant['product_id'] != $productId) {
-                throw new \Exception('Biến thể sản phẩm không hợp lệ');
+            // Validate product/variant exists and is active
+            if ($variantId) {
+                $variant = $this->variantRepo->findActive($variantId);
+                if (!$variant || $variant['product_id'] != $productId) {
+                    return [
+                        'success' => false,
+                        'message' => 'Biến thể sản phẩm không hợp lệ',
+                        'data' => null
+                    ];
+                }
+                $price = $variant['sale_price'] ?? $variant['price'];
+                $stock = $variant['stock_quantity'];
+            } else {
+                $product = $this->productRepo->findActive($productId);
+                if (!$product) {
+                    return [
+                        'success' => false,
+                        'message' => 'Sản phẩm không tồn tại hoặc không hoạt động',
+                        'data' => null
+                    ];
+                }
+                $price = $product['sale_price'] ?? $product['price'];
+                $stock = $product['stock_quantity'];
             }
-            $price = $variant['sale_price'] ?? $variant['price'];
-            $stock = $variant['stock_quantity'];
-        } else {
-            $product = $this->productRepo->findActive($productId);
-            if (!$product) {
-                throw new \Exception('Sản phẩm không tồn tại hoặc không hoạt động');
+
+            if ($stock < $quantity) {
+                return [
+                    'success' => false,
+                    'message' => 'Số lượng sản phẩm trong kho không đủ',
+                    'data' => null
+                ];
             }
-            $price = $product['sale_price'] ?? $product['price'];
-            $stock = $product['stock_quantity'];
+
+            // Add item to cart
+            $cartItem = $this->repo->addItem($cartId, [
+                'product_id' => $productId,
+                'product_variant_id' => $variantId,
+                'quantity' => $quantity
+            ]);
+
+            $cart = $this->recalculateCart($cartId);
+            
+            return [
+                'success' => true,
+                'message' => 'Thêm sản phẩm vào giỏ hàng thành công',
+                'data' => $cart['data'] ?? null
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể thêm sản phẩm vào giỏ hàng',
+                'data' => null
+            ];
         }
-
-        if ($stock < $quantity) {
-            throw new \Exception('Số lượng sản phẩm trong kho không đủ');
-        }
-
-        // Add item to cart
-        $cartItem = $this->repo->addItem($cartId, [
-            'product_id' => $productId,
-            'product_variant_id' => $variantId,
-            'quantity' => $quantity
-        ]);
-
-        return $this->recalculateCart($cartId);
     }
 
     /**
      * Update cart item quantity
      */
-    public function updateItem(string $cartId, $itemId, array $data): ?array
+    public function updateItem(string $cartId, $itemId, array $data): array
     {
-        $item = $this->repo->getCartItem($itemId);
+        try {
+            $item = $this->repo->getCartItem($itemId);
 
-        if (!$item) {
-            throw new \Exception('Sản phẩm không tồn tại trong giỏ hàng');
-        }
-
-        $quantity = $data['quantity'];
-
-        // Check stock
-        if ($item['product_variant_id']) {
-            $variant = $this->variantRepo->findActive($item['product_variant_id']);
-            if (!$variant || $variant['stock_quantity'] < $quantity) {
-                throw new \Exception('Số lượng sản phẩm trong kho không đủ');
+            if (!$item) {
+                return [
+                    'success' => false,
+                    'message' => 'Sản phẩm không tồn tại trong giỏ hàng',
+                    'data' => null
+                ];
             }
-        } else {
-            $product = $this->productRepo->findActive($item['product_id']);
-            if (!$product || $product['stock_quantity'] < $quantity) {
-                throw new \Exception('Số lượng sản phẩm trong kho không đủ');
+
+            $quantity = $data['quantity'];
+
+            // Check stock
+            if ($item['product_variant_id']) {
+                $variant = $this->variantRepo->findActive($item['product_variant_id']);
+                if (!$variant || $variant['stock_quantity'] < $quantity) {
+                    return [
+                        'success' => false,
+                        'message' => 'Số lượng sản phẩm trong kho không đủ',
+                        'data' => null
+                    ];
+                }
+            } else {
+                $product = $this->productRepo->findActive($item['product_id']);
+                if (!$product || $product['stock_quantity'] < $quantity) {
+                    return [
+                        'success' => false,
+                        'message' => 'Số lượng sản phẩm trong kho không đủ',
+                        'data' => null
+                    ];
+                }
             }
+
+            $this->repo->updateItem($itemId, ['quantity' => $quantity]);
+
+            $cart = $this->recalculateCart($cartId);
+            
+            return [
+                'success' => true,
+                'message' => 'Cập nhật số lượng sản phẩm thành công',
+                'data' => $cart['data'] ?? null
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể cập nhật số lượng sản phẩm',
+                'data' => null
+            ];
         }
-
-        $this->repo->updateItem($itemId, ['quantity' => $quantity]);
-
-        return $this->recalculateCart($cartId);
     }
 
     /**
      * Remove item from cart
      */
-    public function removeItem(string $cartId, $itemId): ?array
+    public function removeItem(string $cartId, $itemId): array
     {
-        $item = $this->repo->getCartItem($itemId);
+        try {
+            $item = $this->repo->getCartItem($itemId);
 
-        if (!$item) {
-            throw new \Exception('Sản phẩm không tồn tại trong giỏ hàng');
+            if (!$item) {
+                return [
+                    'success' => false,
+                    'message' => 'Sản phẩm không tồn tại trong giỏ hàng',
+                    'data' => null
+                ];
+            }
+
+            $this->repo->removeItem($itemId);
+
+            $cart = $this->recalculateCart($cartId);
+            
+            return [
+                'success' => true,
+                'message' => 'Xóa sản phẩm khỏi giỏ hàng thành công',
+                'data' => $cart['data'] ?? null
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể xóa sản phẩm khỏi giỏ hàng',
+                'data' => null
+            ];
         }
-
-        $this->repo->removeItem($itemId);
-
-        return $this->recalculateCart($cartId);
     }
 
     /**
      * Clear cart
      */
-    public function clearCart(string $cartId): ?array
+    public function clearCart(string $cartId): array
     {
-        $this->repo->clearCart($cartId);
+        try {
+            $this->repo->clearCart($cartId);
 
-        return $this->getCart($cartId);
+            $cart = $this->getCart($cartId);
+            
+            return [
+                'success' => true,
+                'message' => 'Xóa giỏ hàng thành công',
+                'data' => $cart['data'] ?? null
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể xóa giỏ hàng',
+                'data' => null
+            ];
+        }
     }
 
     /**
      * Apply coupon code
      */
-    public function applyCoupon(string $cartId, string $couponCode): ?array
+    public function applyCoupon(string $cartId, string $couponCode): array
     {
-        // TODO: Implement coupon logic
-        // For now, just return cart without coupon
-        return $this->recalculateCart($cartId);
+        try {
+            // TODO: Implement coupon logic
+            // For now, just return cart without coupon
+            $cart = $this->recalculateCart($cartId);
+            
+            return [
+                'success' => true,
+                'message' => 'Áp dụng mã giảm giá thành công',
+                'data' => $cart['data'] ?? null
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể áp dụng mã giảm giá',
+                'data' => null
+            ];
+        }
     }
 
     /**
      * Remove coupon code
      */
-    public function removeCoupon(string $cartId): ?array
+    public function removeCoupon(string $cartId): array
     {
-        return $this->recalculateCart($cartId);
+        try {
+            $cart = $this->recalculateCart($cartId);
+            
+            return [
+                'success' => true,
+                'message' => 'Xóa mã giảm giá thành công',
+                'data' => $cart['data'] ?? null
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể xóa mã giảm giá',
+                'data' => null
+            ];
+        }
     }
 
     /**
      * Recalculate cart totals
      */
-    private function recalculateCart(string $cartId): ?array
+    private function recalculateCart(string $cartId): array
     {
-        return $this->repo->recalculateTotals($cartId);
+        try {
+            $cart = $this->repo->recalculateTotals($cartId);
+            
+            return [
+                'success' => true,
+                'message' => 'Tính toán lại giỏ hàng thành công',
+                'data' => $cart
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể tính toán lại giỏ hàng',
+                'data' => null
+            ];
+        }
     }
 }

@@ -113,9 +113,22 @@ class AuthService extends BaseService
     /**
      * Refresh token
      */
-    public function refreshToken(int $id): array
+    public function refreshToken(?int $id = null): array
     {
         try {
+            // If ID is not provided, get it from Auth
+            if ($id === null) {
+                $user = Auth::user();
+                if (!$user) {
+                    return [
+                        'success' => false,
+                        'message' => 'User not authenticated',
+                        'status' => 401
+                    ];
+                }
+                $id = $user->id;
+            }
+            
             // Revoke current token
             $user = $this->repo->arrayToModel($this->repo->find($id),$this->repo->model());
             $user->tokens()->delete();

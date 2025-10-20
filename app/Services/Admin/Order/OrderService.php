@@ -22,80 +22,270 @@ class OrderService extends BaseService
     /**
      * Update payment status
      */
-    public function updatePaymentStatus($id, string $status): ?array
+    public function updatePaymentStatus($id, string $status): array
     {
-        return $this->repo->updatePaymentStatus($id, $status);
+        try {
+            $result = $this->repo->updatePaymentStatus($id, $status);
+            
+            if ($result) {
+                return [
+                    'success' => true,
+                    'message' => 'Cập nhật trạng thái thanh toán thành công',
+                    'data' => $result
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy đơn hàng',
+                    'data' => null
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể cập nhật trạng thái thanh toán',
+                'data' => null
+            ];
+        }
     }
 
     /**
      * Update shipping status
      */
-    public function updateShippingStatus($id, string $status, ?string $trackingNumber = null): ?array
+    public function updateShippingStatus($id, string $status, ?string $trackingNumber = null): array
     {
-        return $this->repo->updateShippingStatus($id, $status, $trackingNumber);
+        try {
+            $result = $this->repo->updateShippingStatus($id, $status, $trackingNumber);
+            
+            if ($result) {
+                return [
+                    'success' => true,
+                    'message' => 'Cập nhật trạng thái vận chuyển thành công',
+                    'data' => $result
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy đơn hàng',
+                    'data' => null
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể cập nhật trạng thái vận chuyển',
+                'data' => null
+            ];
+        }
     }
 
-    public function addItem($orderId, array $itemData): ?array
+    public function addItem($orderId, array $itemData): array
     {
-        return DB::transaction(function () use ($orderId, $itemData) {
-            $order = $this->find($orderId);
-            if (!$order) return null;
-            $this->repo->addItem($orderId, $itemData);
-            return $this->recalculateTotals($orderId);
-        });
+        try {
+            $result = DB::transaction(function () use ($orderId, $itemData) {
+                $order = $this->find($orderId);
+                if (!$order) return null;
+                $this->repo->addItem($orderId, $itemData);
+                return $this->recalculateTotals($orderId);
+            });
+            
+            if ($result) {
+                return [
+                    'success' => true,
+                    'message' => 'Thêm sản phẩm vào đơn hàng thành công',
+                    'data' => $result
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy đơn hàng',
+                    'data' => null
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể thêm sản phẩm vào đơn hàng',
+                'data' => null
+            ];
+        }
     }
 
-    public function updateItem($orderId, $itemId, array $data): ?array
+    public function updateItem($orderId, $itemId, array $data): array
     {
-        return DB::transaction(function () use ($orderId, $itemId, $data) {
-            $order = $this->find($orderId);
-            if (!$order) return null;
-            $ok = $this->repo->updateItem($orderId, $itemId, $data);
-            if (!$ok) return null;
-            return $this->recalculateTotals($orderId);
-        });
+        try {
+            $result = DB::transaction(function () use ($orderId, $itemId, $data) {
+                $order = $this->find($orderId);
+                if (!$order) return null;
+                $ok = $this->repo->updateItem($orderId, $itemId, $data);
+                if (!$ok) return null;
+                return $this->recalculateTotals($orderId);
+            });
+            
+            if ($result) {
+                return [
+                    'success' => true,
+                    'message' => 'Cập nhật sản phẩm trong đơn hàng thành công',
+                    'data' => $result
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy dữ liệu',
+                    'data' => null
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể cập nhật sản phẩm trong đơn hàng',
+                'data' => null
+            ];
+        }
     }
 
-    public function removeItem($orderId, $itemId): ?array
+    public function removeItem($orderId, $itemId): array
     {
-        return DB::transaction(function () use ($orderId, $itemId) {
-            $order = $this->find($orderId);
-            if (!$order) return null;
-            $ok = $this->repo->removeItem($orderId, $itemId);
-            if (!$ok) return null;
-            return $this->recalculateTotals($orderId);
-        });
+        try {
+            $result = DB::transaction(function () use ($orderId, $itemId) {
+                $order = $this->find($orderId);
+                if (!$order) return null;
+                $ok = $this->repo->removeItem($orderId, $itemId);
+                if (!$ok) return null;
+                return $this->recalculateTotals($orderId);
+            });
+            
+            if ($result) {
+                return [
+                    'success' => true,
+                    'message' => 'Xóa sản phẩm khỏi đơn hàng thành công',
+                    'data' => $result
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy dữ liệu',
+                    'data' => null
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể xóa sản phẩm khỏi đơn hàng',
+                'data' => null
+            ];
+        }
     }
 
-    public function recalculateTotals($orderId): ?array
+    public function recalculateTotals($orderId): array
     {
-        return DB::transaction(function () use ($orderId) {
-            $order = $this->repo->recalculateTotals($orderId);
-            return $order;
-        });
+        try {
+            $result = DB::transaction(function () use ($orderId) {
+                $order = $this->repo->recalculateTotals($orderId);
+                return $order;
+            });
+            
+            if ($result) {
+                return [
+                    'success' => true,
+                    'message' => 'Tính lại tổng tiền thành công',
+                    'data' => $result
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy đơn hàng',
+                    'data' => null
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể tính lại tổng tiền',
+                'data' => null
+            ];
+        }
     }
 
-    public function confirmOrder($orderId, ?string $note = null): ?array
+    public function confirmOrder($orderId, ?string $note = null): array
     {
-        return DB::transaction(function () use ($orderId, $note) {
-            // Placeholder: stock reservations can be handled in repo in future
-            $updated = $this->repo->confirmOrder($orderId, $note);
-            return $updated;
-        });
+        try {
+            $result = DB::transaction(function () use ($orderId, $note) {
+                // Placeholder: stock reservations can be handled in repo in future
+                $updated = $this->repo->confirmOrder($orderId, $note);
+                return $updated;
+            });
+            
+            if ($result) {
+                return [
+                    'success' => true,
+                    'message' => 'Xác nhận đơn hàng thành công',
+                    'data' => $result
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy đơn hàng',
+                    'data' => null
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể xác nhận đơn hàng',
+                'data' => null
+            ];
+        }
     }
 
-    public function cancelOrder($orderId, string $reason): ?array
+    public function cancelOrder($orderId, string $reason): array
     {
-        return DB::transaction(function () use ($orderId, $reason) {
-            // Placeholder: restock logic can be handled in repo in future
-            $updated = $this->repo->cancelOrder($orderId, $reason);
-            return $updated;
-        });
+        try {
+            $result = DB::transaction(function () use ($orderId, $reason) {
+                // Placeholder: restock logic can be handled in repo in future
+                $updated = $this->repo->cancelOrder($orderId, $reason);
+                return $updated;
+            });
+            
+            if ($result) {
+                return [
+                    'success' => true,
+                    'message' => 'Hủy đơn hàng thành công',
+                    'data' => $result
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy đơn hàng',
+                    'data' => null
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể hủy đơn hàng',
+                'data' => null
+            ];
+        }
     }
 
-    public function bulkUpdateStatus(array $ids, string $status): int
+    public function bulkUpdateStatus(array $ids, string $status): array
     {
-        return $this->repo->bulkUpdateStatus($ids, $status);
+        try {
+            $count = $this->repo->bulkUpdateStatus($ids, $status);
+            
+            return [
+                'success' => true,
+                'message' => 'Cập nhật trạng thái hàng loạt thành công',
+                'data' => ['updated' => $count]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể cập nhật trạng thái hàng loạt',
+                'data' => null
+            ];
+        }
     }
 
     protected function onCreateSuccess(array $result, array $data): void

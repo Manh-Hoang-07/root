@@ -7,6 +7,11 @@ use App\Repositories\Menu\MenuRepository;
 
 class MenuService extends BaseService
 {
+    /**
+     * @var MenuRepository
+     */
+    protected $repo;
+
     public function __construct(MenuRepository $repo)
     {
         parent::__construct($repo);

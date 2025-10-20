@@ -86,12 +86,8 @@ class AuthController extends CrudController
     public function refreshToken(Request $request)
     {
         try {
-            $user = Auth::user();
-            if (!$user) {
-                return $this->apiResponse(false, null, '', 401);
-            }
-            // Sử dụng AuthService để refresh token
-            $result = $this->service->refreshToken($user->id);
+            // Sử dụng AuthService để refresh token - service sẽ tự lấy user ID
+            $result = $this->service->refreshToken();
             if ($result['success']) {
                 $response = $this->apiResponse(true, $result['data'], $result['message']);
                 // Set cookie với token mới

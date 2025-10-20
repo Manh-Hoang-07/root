@@ -29,13 +29,11 @@ class OrderController extends CrudController
     public function updateAddress(UpdateAddressRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $userId = \Illuminate\Support\Facades\Auth::id();
+        
+        // Store address information - service will handle user ID internally and return result
+        $result = $this->service->storeAddressInfo($data);
 
-        $this->service->storeAddressInfo($data, $userId);
-
-        $message = $userId ? 'Cập nhật thông tin địa chỉ thành công' : 'Lưu thông tin địa chỉ thành công';
-
-        return $this->successResponseWithFormat(null, $message);
+        return $this->successResponseWithFormat(null, $result['message']);
     }
 
     /**
@@ -53,8 +51,8 @@ class OrderController extends CrudController
             $data['cart_id'] = $cartId;
         }
 
-        // Create order with stored address information
-        $result = $this->service->createOrder($data, $userId);
+        // Create order with stored address information - service will handle user ID internally
+        $result = $this->service->createOrder($data);
 
         if ($result['success']) {
             return $this->successResponseWithFormat($result['data'], $result['message'], 201);
@@ -69,9 +67,8 @@ class OrderController extends CrudController
     public function createUnifiedOrder(UnifiedOrderRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $userId = \Illuminate\Support\Facades\Auth::id();
-
-        // Store address information first
+        
+        // Store address information first - service will handle user ID internally
         $addressData = [
             'customer_name' => $data['customer_name'],
             'customer_email' => $data['customer_email'],
@@ -80,8 +77,9 @@ class OrderController extends CrudController
             'billing_address' => $data['billing_address'] ?? $data['shipping_address'],
             'notes' => $data['notes'] ?? null,
         ];
-        $this->service->storeAddressInfo($addressData, $userId);
+        $this->service->storeAddressInfo($addressData);
 
+        $userId = \Illuminate\Support\Facades\Auth::id();
         // If user is authenticated and no cart_id provided, get it automatically
         if ($userId && !isset($data['cart_id'])) {
             $cartService = app(\App\Services\Public\Cart\CartService::class);
@@ -89,8 +87,8 @@ class OrderController extends CrudController
             $data['cart_id'] = $cartId;
         }
 
-        // Create order
-        $result = $this->service->createOrder($data, $userId);
+        // Create order - service will handle user ID internally
+        $result = $this->service->createOrder($data);
 
         if ($result['success']) {
             return $this->successResponseWithFormat($result['data'], $result['message'], 201);
@@ -104,14 +102,14 @@ class OrderController extends CrudController
      */
     public function show($id, ?Request $request = null): JsonResponse
     {
-        $userId = \Illuminate\Support\Facades\Auth::id();
-        $order = $this->service->getUserOrder($id, $userId);
+        // Get user order - service will handle user ID internally and return result
+        $result = $this->service->getUserOrder($id);
 
-        if (!$order) {
-            return $this->apiResponse(false, null, 'Không tìm thấy đơn hàng', 404);
+        if (!$result['success']) {
+            return $this->apiResponse(false, null, $result['message'], 404);
         }
 
-        return $this->successResponseWithFormat($order, 'Lấy chi tiết đơn hàng thành công');
+        return $this->successResponseWithFormat($result['data'], $result['message']);
     }
 
     /**
@@ -133,14 +131,14 @@ class OrderController extends CrudController
      */
     public function processPayment(PaymentRequest $request, $id): JsonResponse
     {
-        $userId = \Illuminate\Support\Facades\Auth::id();
-        $result = $this->service->processPayment($id, $request->validated(), $userId);
+        // Process payment - service will handle user ID internally and return result
+        $result = $this->service->processPayment($id, $request->validated());
 
-        if (!$result) {
-            return $this->apiResponse(false, null, 'Không thể xử lý thanh toán', 400);
+        if (!$result['success']) {
+            return $this->apiResponse(false, null, $result['message'], 400);
         }
 
-        return $this->successResponseWithFormat($result, 'Xử lý thanh toán thành công');
+        return $this->successResponseWithFormat($result['data'], $result['message']);
     }
 
     /**
@@ -167,14 +165,13 @@ class OrderController extends CrudController
      */
     public function getUserAddress(): JsonResponse
     {
-        $userId = \Illuminate\Support\Facades\Auth::id();
+        // Get user address information - service will handle user ID internally and return result
+        $result = $this->service->getUserAddressInfo();
 
-        if (!$userId) {
-            return $this->apiResponse(false, null, 'Người dùng chưa đăng nhập', 401);
+        if (!$result['success']) {
+            return $this->apiResponse(false, null, $result['message'], 401);
         }
 
-        $addressInfo = $this->service->getUserAddressInfo($userId);
-
-        return $this->successResponseWithFormat($addressInfo, 'Lấy thông tin địa chỉ thành công');
+        return $this->successResponseWithFormat($result['data'], $result['message']);
     }
 }

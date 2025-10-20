@@ -46,8 +46,13 @@ abstract class CrudController extends ListController
     {
         try {
             $request = app($this->getStoreRequestClass());
-            $data = $this->service->create($request->validated());
-            return $this->successResponseWithFormat($data, 'Tạo dữ liệu thành công', 201);
+            $result = $this->service->create($request->validated());
+            
+            if ($result['success']) {
+                return $this->successResponseWithFormat($result['data'], $result['message'], 201);
+            } else {
+                return $this->apiResponse(false, null, $result['message'], 500);
+            }
         } catch (ValidationException|HttpResponseException $e) {
             throw $e; // Let the framework return 422 with validation errors
         } catch (\Exception $e) {
@@ -65,11 +70,14 @@ abstract class CrudController extends ListController
     {
         try {
             $request = app($this->getUpdateRequestClass());
-            $data = $this->service->update($id, $request->validated());
-            if (!$data) {
-                return $this->apiResponse(false, null, '', 404);
+            $result = $this->service->update($id, $request->validated());
+            
+            if ($result['success']) {
+                return $this->successResponseWithFormat($result['data'], $result['message'], 200);
+            } else {
+                $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+                return $this->apiResponse(false, null, $result['message'], $statusCode);
             }
-            return $this->successResponseWithFormat($data, 'Cập nhật dữ liệu thành công', 200);
         } catch (ValidationException|HttpResponseException $e) {
             throw $e; // Let the framework return 422 with validation errors
         } catch (\Exception $e) {
@@ -86,10 +94,13 @@ abstract class CrudController extends ListController
     {
         try {
             $result = $this->service->delete($id);
-            if ($result) {
-                return $this->apiResponse(true, null, '', 200);
+            
+            if ($result['success']) {
+                return $this->apiResponse(true, null, $result['message'], 200);
+            } else {
+                $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+                return $this->apiResponse(false, null, $result['message'], $statusCode);
             }
-            return $this->apiResponse(false, null, 'Không thể xóa dữ liệu', 500);
         } catch (\Exception $e) {
             $this->logError('Destroy', $e, ['id' => $id]);
             return $this->apiResponse(false, null, 'Không thể xóa dữ liệu', 500);
@@ -107,11 +118,12 @@ abstract class CrudController extends ListController
             $request = app($this->getStatusUpdateRequestClass());
             $result = $this->service->updateStatus($id, $request->status);
 
-            if (!$result) {
-                return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu để cập nhật', 404);
+            if ($result['success']) {
+                return $this->apiResponse(true, $result['data'], $result['message']);
+            } else {
+                $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+                return $this->apiResponse(false, null, $result['message'], $statusCode);
             }
-
-            return $this->apiResponse(true, $result, 'Cập nhật trạng thái thành công');
         } catch (ValidationException|HttpResponseException $e) {
             throw $e; // Let the framework return 422 with validation errors
         } catch (\Exception $e) {

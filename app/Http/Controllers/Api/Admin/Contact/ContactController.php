@@ -35,12 +35,11 @@ class ContactController extends CrudController
     public function markAsResponded($id)
     {
         try {
-            $adminId = Auth::id();
-            $data = $this->service->markAsResponded($id, $adminId);
-            if (!$data) {
-                return $this->apiResponse(false, null, 'Không tìm thấy liên hệ để cập nhật', 404);
+            $result = $this->service->markAsResponded($id);
+            if (!$result['success']) {
+                return $this->apiResponse(false, null, $result['message'], 404);
             }
-            return $this->successResponseWithFormat($data, 'single');
+            return $this->successResponseWithFormat($result['data'], $result['message']);
         } catch (Exception $e) {
             $this->logError('MarkAsResponded', $e, ['id' => $id]);
             return $this->apiResponse(false, null, 'Không thể đánh dấu liên hệ đã phản hồi', 500);
@@ -60,11 +59,10 @@ class ContactController extends CrudController
                 'admin_notes' => 'nullable|string|max:2000',
             ]);
             $contactIds = $request->contact_ids;
-            $status = ContactStatus::from($request->status);
-            $adminId = Auth::id();
+            $status = $request->status; // Use string directly instead of enum
             $adminNotes = $request->admin_notes;
-            $results = $this->service->bulkUpdateStatus($contactIds, $status, $adminId, $adminNotes);
-            return $this->apiResponse(true, $results, 'Cập nhật trạng thái hàng loạt');
+            $result = $this->service->bulkUpdateStatus($contactIds, $status, null, $adminNotes);
+            return $this->apiResponse(true, $result['data'], $result['message']);
         } catch (Exception $e) {
             $this->logError('BulkUpdateStatus', $e);
             return $this->apiResponse(false, null, 'Không thể cập nhật trạng thái hàng loạt', 500);

@@ -7,6 +7,11 @@ use App\Repositories\Product\ProductVariantRepository;
 
 class ProductVariantService extends BaseService
 {
+    /**
+     * @var ProductVariantRepository
+     */
+    protected $repo;
+
     public function __construct(ProductVariantRepository $repo)
     {
         parent::__construct($repo);
@@ -25,7 +30,7 @@ class ProductVariantService extends BaseService
     /**
      * Override update to ensure SKU generation
      */
-    public function update($id, $data): ?array
+    public function update($id, $data): array
     {
         $data = $this->ensureSku($data);
         return parent::update($id, $data);

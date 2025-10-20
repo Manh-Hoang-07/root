@@ -35,20 +35,20 @@ class PostService extends BaseService
         return $post;
     }
 
-    public function update($id, $data): ?array
+    public function update($id, $data): array
     {
         $data = $this->ensureSlug($data);
         $tagIds = $data['tag_ids'] ?? null;
         $categoryIds = $data['category_ids'] ?? null;
         unset($data['tag_ids'], $data['category_ids']);
         $post = parent::update($id, $data);
-        if (!$post) return null;
+        if (!$post['success']) return $post;
         if (is_array($tagIds)) {
-            $postModel = $this->repo->getModel()->find($post['id']);
+            $postModel = $this->repo->getModel()->find($post['data']['id']);
             $postModel->tags()->sync($tagIds);
         }
         if (is_array($categoryIds)) {
-            $postModel = $this->repo->getModel()->find($post['id']);
+            $postModel = $this->repo->getModel()->find($post['data']['id']);
             $postModel->categories()->sync($categoryIds);
         }
         return $post;

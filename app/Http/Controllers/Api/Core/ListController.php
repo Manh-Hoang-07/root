@@ -144,8 +144,8 @@ abstract class ListController extends Controller
         $filters = $request ? $request->all() : [];
         $filters['id'] = $id;
         $item = $this->getOptimizedData($filters, 1, 'show', true);
-        if (!$item) {
-            return $this->apiResponse(false, null, '', 404);
+        if (empty($item)) {
+            return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu', 404);
         }
         return $this->successResponseWithFormat($item, 'Lấy thông tin chi tiết thành công', 200);
     }

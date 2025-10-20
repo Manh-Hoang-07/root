@@ -46,12 +46,14 @@ class OrderController extends CrudController
                 'payment_status' => 'required|in:pending,paid,failed,refunded,partially_refunded'
             ]);
 
-            $order = $this->service->getRepo()->updatePaymentStatus($id, $request->payment_status);
-            if (!$order) {
-                return $this->apiResponse(false, null, 'Không tìm thấy đơn hàng', 404);
+            $result = $this->service->updatePaymentStatus($id, $request->payment_status);
+            
+            if ($result['success']) {
+                return $this->apiResponse(true, $result['data'], $result['message']);
+            } else {
+                $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+                return $this->apiResponse(false, null, $result['message'], $statusCode);
             }
-
-            return $this->apiResponse(true, $order, 'Cập nhật trạng thái thanh toán thành công');
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
@@ -68,12 +70,14 @@ class OrderController extends CrudController
                 'tracking_number' => 'nullable|string|max:100'
             ]);
 
-            $order = $this->service->getRepo()->updateShippingStatus($id, $request->shipping_status, $request->tracking_number);
-            if (!$order) {
-                return $this->apiResponse(false, null, 'Không tìm thấy đơn hàng', 404);
+            $result = $this->service->updateShippingStatus($id, $request->shipping_status, $request->tracking_number);
+            
+            if ($result['success']) {
+                return $this->apiResponse(true, $result['data'], $result['message']);
+            } else {
+                $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+                return $this->apiResponse(false, null, $result['message'], $statusCode);
             }
-
-            return $this->apiResponse(true, $order, 'Cập nhật trạng thái vận chuyển thành công');
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }
@@ -85,8 +89,13 @@ class OrderController extends CrudController
     public function addItem(OrderItemStoreRequest $request, $id): JsonResponse
     {
         $result = $this->service->addItem($id, $request->validated());
-        if (!$result) return $this->apiResponse(false, null, 'Không tìm thấy đơn hàng', 404);
-        return $this->apiResponse(true, $result, 'Thêm sản phẩm vào đơn hàng thành công');
+        
+        if ($result['success']) {
+            return $this->apiResponse(true, $result['data'], $result['message']);
+        } else {
+            $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+            return $this->apiResponse(false, null, $result['message'], $statusCode);
+        }
     }
 
     /**
@@ -95,8 +104,13 @@ class OrderController extends CrudController
     public function updateItem(OrderItemUpdateRequest $request, $orderId, $itemId): JsonResponse
     {
         $result = $this->service->updateItem($orderId, $itemId, $request->validated());
-        if (!$result) return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu', 404);
-        return $this->apiResponse(true, $result, 'Cập nhật sản phẩm trong đơn hàng thành công');
+        
+        if ($result['success']) {
+            return $this->apiResponse(true, $result['data'], $result['message']);
+        } else {
+            $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+            return $this->apiResponse(false, null, $result['message'], $statusCode);
+        }
     }
 
     /**
@@ -105,8 +119,13 @@ class OrderController extends CrudController
     public function removeItem($orderId, $itemId): JsonResponse
     {
         $result = $this->service->removeItem($orderId, $itemId);
-        if (!$result) return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu', 404);
-        return $this->apiResponse(true, $result, 'Xóa sản phẩm khỏi đơn hàng thành công');
+        
+        if ($result['success']) {
+            return $this->apiResponse(true, $result['data'], $result['message']);
+        } else {
+            $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+            return $this->apiResponse(false, null, $result['message'], $statusCode);
+        }
     }
 
     /**
@@ -115,8 +134,13 @@ class OrderController extends CrudController
     public function recalculate($id): JsonResponse
     {
         $result = $this->service->recalculateTotals($id);
-        if (!$result) return $this->apiResponse(false, null, 'Không tìm thấy đơn hàng', 404);
-        return $this->apiResponse(true, $result, 'Tính lại tổng tiền thành công');
+        
+        if ($result['success']) {
+            return $this->apiResponse(true, $result['data'], $result['message']);
+        } else {
+            $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+            return $this->apiResponse(false, null, $result['message'], $statusCode);
+        }
     }
 
     /**
@@ -125,8 +149,13 @@ class OrderController extends CrudController
     public function confirm(ConfirmOrderRequest $request, $id): JsonResponse
     {
         $result = $this->service->confirmOrder($id, $request->validated()['note'] ?? null);
-        if (!$result) return $this->apiResponse(false, null, 'Không tìm thấy đơn hàng', 404);
-        return $this->apiResponse(true, $result, 'Xác nhận đơn hàng thành công');
+        
+        if ($result['success']) {
+            return $this->apiResponse(true, $result['data'], $result['message']);
+        } else {
+            $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+            return $this->apiResponse(false, null, $result['message'], $statusCode);
+        }
     }
 
     /**
@@ -136,8 +165,13 @@ class OrderController extends CrudController
     {
         $data = $request->validated();
         $result = $this->service->cancelOrder($id, $data['reason']);
-        if (!$result) return $this->apiResponse(false, null, 'Không tìm thấy đơn hàng', 404);
-        return $this->apiResponse(true, $result, 'Hủy đơn hàng thành công');
+        
+        if ($result['success']) {
+            return $this->apiResponse(true, $result['data'], $result['message']);
+        } else {
+            $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+            return $this->apiResponse(false, null, $result['message'], $statusCode);
+        }
     }
 
     /**
@@ -146,8 +180,13 @@ class OrderController extends CrudController
     public function bulkUpdateStatus(BulkStatusRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        $count = $this->service->bulkUpdateStatus($validated['ids'], $validated['status']);
-        return $this->apiResponse(true, ['updated' => $count], 'Cập nhật trạng thái hàng loạt thành công');
+        $result = $this->service->bulkUpdateStatus($validated['ids'], $validated['status']);
+        
+        if ($result['success']) {
+            return $this->apiResponse(true, $result['data'], $result['message']);
+        } else {
+            return $this->apiResponse(false, null, $result['message'], 500);
+        }
     }
 
 }

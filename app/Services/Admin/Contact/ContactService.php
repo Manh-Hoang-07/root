@@ -7,57 +7,97 @@ use App\Repositories\Contact\ContactRepository;
 use App\Enums\ContactStatus;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 use App\Mail\ContactResponseMail;
 use Exception;
 
 class ContactService extends BaseService
 {
+    /**
+     * @var ContactRepository
+     */
+    protected $repo;
     public function __construct(ContactRepository $repo)
     {
         parent::__construct($repo);
     }
 
     /**
-     * Update contact status
+     * Update contact status with admin tracking
      */
-    public function updateStatus($id, ContactStatus $status, $adminId = null, $adminNotes = null): ?array
+    public function updateContactStatus($id, string $status, $adminId = null, $adminNotes = null): array
     {
+        // If adminId is not provided, get it from Auth
+        if ($adminId === null) {
+            $adminId = Auth::id();
+        }
+        
         try {
             $contact = $this->repo->find($id);
             if (!$contact) {
-                throw new Exception('Contact not found');
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy liên hệ',
+                    'data' => null
+                ];
             }
             $result = $this->repo->updateStatus($id, $status, $adminId, $adminNotes);
             // Send response email to customer if status is completed
-            if ($status === ContactStatus::COMPLETED) {
+            if ($status === 'completed') {
                 $this->sendResponseEmail($contact);
             }
-            return $result;
+            
+            return [
+                'success' => true,
+                'message' => 'Cập nhật trạng thái liên hệ thành công',
+                'data' => $result
+            ];
         } catch (Exception $e) {
             Log::error('Error updating contact status: ' . $e->getMessage(), [
                 'contact_id' => $id,
-                'status' => $status->value,
+                'status' => $status,
                 'admin_id' => $adminId,
                 'trace' => $e->getTraceAsString()
             ]);
-            throw $e;
+            
+            return [
+                'success' => false,
+                'message' => 'Không thể cập nhật trạng thái liên hệ',
+                'data' => null
+            ];
         }
     }
 
     /**
      * Mark contact as responded
      */
-    public function markAsResponded($id, $adminId = null): ?array
+    public function markAsResponded($id, $adminId = null): array
     {
+        // If adminId is not provided, get it from Auth
+        if ($adminId === null) {
+            $adminId = Auth::id();
+        }
+        
         try {
-            return $this->repo->markAsResponded($id, $adminId);
+            $result = $this->repo->markAsResponded($id, $adminId);
+            
+            return [
+                'success' => true,
+                'message' => 'Đánh dấu liên hệ đã phản hồi thành công',
+                'data' => $result
+            ];
         } catch (Exception $e) {
             Log::error('Error marking contact as responded: ' . $e->getMessage(), [
                 'contact_id' => $id,
                 'admin_id' => $adminId,
                 'trace' => $e->getTraceAsString()
             ]);
-            throw $e;
+            
+            return [
+                'success' => false,
+                'message' => 'Không thể đánh dấu liên hệ đã phản hồi',
+                'data' => null
+            ];
         }
     }
 
@@ -78,12 +118,17 @@ class ContactService extends BaseService
     /**
      * Bulk update contact status
      */
-    public function bulkUpdateStatus(array $contactIds, ContactStatus $status, $adminId = null, $adminNotes = null): array
+    public function bulkUpdateStatus(array $contactIds, string $status, $adminId = null, $adminNotes = null): array
     {
+        // If adminId is not provided, get it from Auth
+        if ($adminId === null) {
+            $adminId = Auth::id();
+        }
+        
         $results = [];
         foreach ($contactIds as $contactId) {
             try {
-                $result = $this->updateStatus($contactId, $status, $adminId, $adminNotes);
+                $result = $this->updateContactStatus($contactId, $status, $adminId, $adminNotes);
                 $results[] = [
                     'id' => $contactId,
                     'success' => true,
@@ -97,6 +142,11 @@ class ContactService extends BaseService
                 ];
             }
         }
-        return $results;
+        
+        return [
+            'success' => true,
+            'message' => 'Cập nhật trạng thái hàng loạt thành công',
+            'data' => $results
+        ];
     }
 }

@@ -37,12 +37,14 @@ class ProductController extends CrudController
     public function toggleFeatured($id): JsonResponse
     {
         try {
-            $product = $this->service->getRepo()->toggleFeatured($id);
-            if (!$product) {
-                return $this->apiResponse(false, null, 'Không tìm thấy sản phẩm', 404);
+            $result = $this->service->toggleFeatured($id);
+            
+            if ($result['success']) {
+                return $this->apiResponse(true, $result['data'], $result['message']);
+            } else {
+                $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+                return $this->apiResponse(false, null, $result['message'], $statusCode);
             }
-
-            return $this->apiResponse(true, $product, 'Cập nhật trạng thái nổi bật thành công');
         } catch (\Exception $e) {
             return $this->apiResponse(false, null, $e->getMessage(), 500);
         }

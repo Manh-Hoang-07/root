@@ -27,8 +27,8 @@ class CartController extends CrudController
     public function index(Request $request): JsonResponse
     {
         $cartId = $this->service->getCartId($request);
-        $cart = $this->service->getCart($cartId);
-        return $this->successResponseWithFormat($cart, 'Lấy giỏ hàng thành công');
+        $result = $this->service->getCart($cartId);
+        return $this->apiResponse($result['success'], $result['data'], $result['message']);
     }
 
     /**
@@ -38,8 +38,8 @@ class CartController extends CrudController
     {
         $request = app(CartStoreRequest::class);
         $cartId = $this->service->getCartId($request);
-        $cart = $this->service->addItem($cartId, $request->validated());
-        return $this->successResponseWithFormat($cart, 'Thêm sản phẩm vào giỏ hàng thành công');
+        $result = $this->service->addItem($cartId, $request->validated());
+        return $this->apiResponse($result['success'], $result['data'], $result['message']);
     }
 
     /**
@@ -49,8 +49,8 @@ class CartController extends CrudController
     {
         $request = app(CartUpdateRequest::class);
         $cartId = $this->service->getCartId($request);
-        $cart = $this->service->updateItem($cartId, $id, $request->validated());
-        return $this->successResponseWithFormat($cart, 'Cập nhật giỏ hàng thành công');
+        $result = $this->service->updateItem($cartId, $id, $request->validated());
+        return $this->apiResponse($result['success'], $result['data'], $result['message']);
     }
 
     /**
@@ -60,8 +60,8 @@ class CartController extends CrudController
     {
         $request = app(Request::class);
         $cartId = $this->service->getCartId($request);
-        $cart = $this->service->removeItem($cartId, $id);
-        return $this->successResponseWithFormat($cart, 'Xóa sản phẩm khỏi giỏ hàng thành công');
+        $result = $this->service->removeItem($cartId, $id);
+        return $this->apiResponse($result['success'], $result['data'], $result['message']);
     }
 
     /**
@@ -70,8 +70,8 @@ class CartController extends CrudController
     public function clear(Request $request): JsonResponse
     {
         $cartId = $this->service->getCartId($request);
-        $cart = $this->service->clearCart($cartId);
-        return $this->successResponseWithFormat($cart, 'Xóa giỏ hàng thành công');
+        $result = $this->service->clearCart($cartId);
+        return $this->apiResponse($result['success'], $result['data'], $result['message']);
     }
 
     /**
@@ -80,8 +80,8 @@ class CartController extends CrudController
     public function applyCoupon(CartCouponRequest $request): JsonResponse
     {
         $cartId = $this->service->getCartId($request);
-        $cart = $this->service->applyCoupon($cartId, $request->validated()['code']);
-        return $this->successResponseWithFormat($cart, 'Áp dụng mã giảm giá thành công');
+        $result = $this->service->applyCoupon($cartId, $request->validated()['code']);
+        return $this->apiResponse($result['success'], $result['data'], $result['message']);
     }
 
     /**
@@ -90,7 +90,7 @@ class CartController extends CrudController
     public function removeCoupon(Request $request): JsonResponse
     {
         $cartId = $this->service->getCartId($request);
-        $cart = $this->service->removeCoupon($cartId);
-        return $this->successResponseWithFormat($cart, 'Xóa mã giảm giá thành công');
+        $result = $this->service->removeCoupon($cartId);
+        return $this->apiResponse($result['success'], $result['data'], $result['message']);
     }
 }

@@ -23,9 +23,31 @@ class ProductService extends BaseService
     /**
      * Toggle featured status
      */
-    public function toggleFeatured($id): ?array
+    public function toggleFeatured($id): array
     {
-        return $this->repo->toggleFeatured($id);
+        try {
+            $result = $this->repo->toggleFeatured($id);
+            
+            if ($result) {
+                return [
+                    'success' => true,
+                    'message' => 'Cập nhật trạng thái nổi bật thành công',
+                    'data' => $result
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy sản phẩm',
+                    'data' => null
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể cập nhật trạng thái nổi bật',
+                'data' => null
+            ];
+        }
     }
 
 
@@ -42,7 +64,7 @@ class ProductService extends BaseService
     /**
      * Override update to ensure slug generation
      */
-    public function update($id, $data): ?array
+    public function update($id, $data): array
     {
         $data = $this->ensureSlug($data);
         return parent::update($id, $data);

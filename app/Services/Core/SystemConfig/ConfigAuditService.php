@@ -12,6 +12,11 @@ use Exception;
 
 class ConfigAuditService extends BaseService
 {
+    /**
+     * @var ConfigAuditRepository
+     */
+    protected $repo;
+
     public function __construct(ConfigAuditRepository $repository)
     {
         parent::__construct($repository);

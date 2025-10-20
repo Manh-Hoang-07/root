@@ -7,6 +7,11 @@ use App\Repositories\Product\ProductAttributeRepository;
 
 class ProductAttributeService extends BaseService
 {
+    /**
+     * @var ProductAttributeRepository
+     */
+    protected $repo;
+
     public function __construct(ProductAttributeRepository $repo)
     {
         parent::__construct($repo);
@@ -26,7 +31,7 @@ class ProductAttributeService extends BaseService
     /**
      * Override update to ensure slug generation
      */
-    public function update($id, $data): ?array
+    public function update($id, $data): array
     {
         $data = $this->ensureSlug($data);
         return parent::update($id, $data);

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api\Public\Menu;
 
-use App\Http\Controllers\Api\BaseController;
+use App\Http\Controllers\Api\Core\CrudController;
 use App\Services\Public\Menu\MenuService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class MenuController extends BaseController
+class MenuController extends CrudController
 {
     protected $indexRelations = ['children'];
     protected $showRelations = ['parent', 'children'];
@@ -31,8 +31,8 @@ class MenuController extends BaseController
         $filters = [
             'type' => $request->input('type', 'public'),
         ];
-            $data = $this->service->getTree($filters);
-            return $this->successResponseWithFormat($data, 'Lấy danh sách menu thành công');
+            $result = $this->service->getTree($filters);
+            return $this->apiResponse($result['success'], $result['data'], $result['message']);
         } catch (\Exception $e) {
             $this->logError('Menu Index', $e);
             return $this->apiResponse(false, null, 'Không thể tải danh sách menu', 500);

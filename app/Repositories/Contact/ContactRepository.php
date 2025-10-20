@@ -24,7 +24,7 @@ class ContactRepository extends BaseRepository
     /**
      * Update contact status
      */
-    public function updateStatus(int $id, ContactStatus $status, $adminId = null, $adminNotes = null): ?array
+    public function updateStatus(int $id, string $status, $adminId = null, $adminNotes = null): ?array
     {
         $data = ['status' => $status];
         if ($adminId) {
@@ -34,7 +34,7 @@ class ContactRepository extends BaseRepository
             $data['admin_notes'] = $adminNotes;
         }
         // Mark as responded if status is completed
-        if ($status === ContactStatus::COMPLETED) {
+        if ($status === 'completed') {
             $data['responded_at'] = now();
         }
         return $this->update($id, $data);

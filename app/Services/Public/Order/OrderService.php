@@ -9,6 +9,7 @@ use App\Repositories\Product\ProductRepository;
 use App\Repositories\Product\ProductVariantRepository;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class OrderService extends BaseService
 {
@@ -33,6 +34,10 @@ class OrderService extends BaseService
      */
     public function createOrder(array $data, ?int $userId = null): array
     {
+        // If userId is not provided, get it from Auth
+        if ($userId === null) {
+            $userId = Auth::id();
+        }
         // Get stored address information
         $addressInfo = $this->getStoredAddressInfo($userId);
         if (!$addressInfo) {
@@ -283,7 +288,7 @@ class OrderService extends BaseService
     /**
      * Create guest order
      */
-    public function createGuestOrder(array $data): ?array
+    public function createGuestOrder(array $data): array
     {
         return $this->createOrder($data);
     }
@@ -291,66 +296,158 @@ class OrderService extends BaseService
     /**
      * Get user order
      */
-    public function getUserOrder($orderId, $userId): ?array
+    public function getUserOrder($orderId, $userId = null): array
     {
-        return $this->repo->findUserOrder($orderId, $userId);
+        // If userId is not provided, get it from Auth
+        if ($userId === null) {
+            $userId = Auth::id();
+        }
+        
+        $order = $this->repo->findUserOrder($orderId, $userId);
+        
+        if (!$order) {
+            return [
+                'success' => false,
+                'message' => 'Không tìm thấy đơn hàng',
+                'data' => null
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'message' => 'Lấy chi tiết đơn hàng thành công',
+            'data' => $order
+        ];
     }
 
     /**
      * Get guest order
      */
-    public function getGuestOrder($orderNumber, $email): ?array
+    public function getGuestOrder($orderNumber, $email): array
     {
-        return $this->repo->findGuestOrder($orderNumber, $email);
+        try {
+            $order = $this->repo->findGuestOrder($orderNumber, $email);
+            
+            if (!$order) {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy đơn hàng',
+                    'data' => null
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'Lấy chi tiết đơn hàng thành công',
+                'data' => $order
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy thông tin đơn hàng',
+                'data' => null
+            ];
+        }
     }
 
     /**
      * Get order by number
      */
-    public function getOrderByNumber($orderNumber): ?array
+    public function getOrderByNumber($orderNumber): array
     {
-        return $this->repo->findByOrderNumber($orderNumber);
+        try {
+            $order = $this->repo->findByOrderNumber($orderNumber);
+            
+            if (!$order) {
+                return [
+                    'success' => false,
+                    'message' => 'Không tìm thấy đơn hàng',
+                    'data' => null
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'Lấy chi tiết đơn hàng thành công',
+                'data' => $order
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể lấy thông tin đơn hàng',
+                'data' => null
+            ];
+        }
     }
 
     /**
      * Process payment
      */
-    public function processPayment($orderId, array $paymentData, ?int $userId = null): ?array
+    public function processPayment($orderId, array $paymentData, ?int $userId = null): array
     {
-        return DB::transaction(function () use ($orderId, $paymentData, $userId) {
-            $order = $this->repo->find($orderId);
+        // If userId is not provided, get it from Auth
+        if ($userId === null) {
+            $userId = Auth::id();
+        }
+        
+        try {
+            $result = DB::transaction(function () use ($orderId, $paymentData, $userId) {
+                $order = $this->repo->find($orderId);
 
-            if (!$order) {
-                throw new \Exception('Đơn hàng không tồn tại');
-            }
+                if (!$order) {
+                    return [
+                        'success' => false,
+                        'message' => 'Đơn hàng không tồn tại',
+                        'data' => null
+                    ];
+                }
 
-            if ($order['payment_status'] === 'paid') {
-                throw new \Exception('Đơn hàng đã được thanh toán');
-            }
+                if ($order['payment_status'] === 'paid') {
+                    return [
+                        'success' => false,
+                        'message' => 'Đơn hàng đã được thanh toán',
+                        'data' => null
+                    ];
+                }
 
-            // Update payment status
-            $updateData = [
-                'payment_status' => 'paid',
-                'updated_user_id' => $userId,
+                // Update payment status
+                $updateData = [
+                    'payment_status' => 'paid',
+                    'updated_user_id' => $userId,
+                ];
+
+                // Store payment details if needed
+                if (isset($paymentData['transaction_id'])) {
+                    $updateData['notes'] = trim(($order['notes'] ?? '') . "\n[Payment] Transaction ID: " . $paymentData['transaction_id']);
+                }
+
+                $this->repo->update($orderId, $updateData);
+
+                // Update order status if payment is successful
+                if ($order['status'] === 'pending') {
+                    $this->repo->update($orderId, ['status' => 'confirmed']);
+
+                    // Apply stock changes
+                    $this->applyStockChange($orderId, -1);
+                }
+
+                $updatedOrder = $this->repo->find($orderId);
+                
+                return [
+                    'success' => true,
+                    'message' => 'Xử lý thanh toán thành công',
+                    'data' => $updatedOrder
+                ];
+            });
+            
+            return $result;
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể xử lý thanh toán',
+                'data' => null
             ];
-
-            // Store payment details if needed
-            if (isset($paymentData['transaction_id'])) {
-                $updateData['notes'] = trim(($order['notes'] ?? '') . "\n[Payment] Transaction ID: " . $paymentData['transaction_id']);
-            }
-
-            $this->repo->update($orderId, $updateData);
-
-            // Update order status if payment is successful
-            if ($order['status'] === 'pending') {
-                $this->repo->update($orderId, ['status' => 'confirmed']);
-
-                // Apply stock changes
-                $this->applyStockChange($orderId, -1);
-            }
-
-            return $this->repo->find($orderId);
-        });
+        }
     }
 
     /**
@@ -438,12 +535,29 @@ class OrderService extends BaseService
     /**
      * Get user address information for checkout
      */
-    public function getUserAddressInfo(int $userId): array
+    public function getUserAddressInfo(?int $userId = null): array
     {
+        // If userId is not provided, get it from Auth
+        if ($userId === null) {
+            $userId = Auth::id();
+        }
+        
+        if (!$userId) {
+            return [
+                'success' => false,
+                'message' => 'Người dùng chưa đăng nhập',
+                'data' => null
+            ];
+        }
+        
         $user = $this->repo->findUser($userId);
 
         if (!$user) {
-            return [];
+            return [
+                'success' => false,
+                'message' => 'Không tìm thấy thông tin người dùng',
+                'data' => null
+            ];
         }
 
         // Get user profile if it exists
@@ -470,14 +584,22 @@ class OrderService extends BaseService
             $addressInfo['shipping_address']['address'] = $addressString;
         }
 
-        return $addressInfo;
+        return [
+            'success' => true,
+            'message' => 'Lấy thông tin địa chỉ thành công',
+            'data' => $addressInfo
+        ];
     }
 
     /**
      * Store address information in session for checkout
      */
-    public function storeAddressInfo(array $data, ?int $userId = null): bool
+    public function storeAddressInfo(array $data, ?int $userId = null): array
     {
+        // If userId is not provided, get it from Auth
+        if ($userId === null) {
+            $userId = Auth::id();
+        }
         $addressKey = $userId ? "order_address_user_{$userId}" : 'order_address_guest';
 
         // Store address information in session
@@ -490,7 +612,12 @@ class OrderService extends BaseService
             'notes' => $data['notes'] ?? null,
         ]]);
 
-        return true;
+        $message = $userId ? 'Cập nhật thông tin địa chỉ thành công' : 'Lưu thông tin địa chỉ thành công';
+        
+        return [
+            'success' => true,
+            'message' => $message
+        ];
     }
 
     /**
@@ -498,6 +625,10 @@ class OrderService extends BaseService
      */
     public function getStoredAddressInfo(?int $userId = null): ?array
     {
+        // If userId is not provided, get it from Auth
+        if ($userId === null) {
+            $userId = Auth::id();
+        }
         $addressKey = $userId ? "order_address_user_{$userId}" : 'order_address_guest';
         return session($addressKey);
     }
@@ -507,6 +638,10 @@ class OrderService extends BaseService
      */
     public function clearStoredAddressInfo(?int $userId = null): bool
     {
+        // If userId is not provided, get it from Auth
+        if ($userId === null) {
+            $userId = Auth::id();
+        }
         $addressKey = $userId ? "order_address_user_{$userId}" : 'order_address_guest';
         session()->forget($addressKey);
         return true;
