@@ -28,6 +28,7 @@ class AuthController extends CrudController
     public function login(LoginRequest $request): JsonResponse
     {
         $result = $this->service->login($request->validated());
+        
         if ($result['success']) {
             $response = $this->apiResponse(true, $result['data'], $result['message']);
             // Set cookie với token
@@ -37,6 +38,7 @@ class AuthController extends CrudController
             }
             return $response;
         }
+        
         return $this->apiResponse(false, null, $result['message'], $result['status'] ?? 401);
     }
 
@@ -46,9 +48,11 @@ class AuthController extends CrudController
     public function register(RegisterRequest $request): JsonResponse
     {
         $result = $this->service->register($request->validated());
+        
         if ($result['success']) {
             return $this->apiResponse(true, $result['data'], $result['message'], 201);
         }
+        
         return $this->apiResponse(false, null, $result['message'], $result['status'] ?? 422);
     }
 
@@ -61,10 +65,12 @@ class AuthController extends CrudController
         if (!$user) {
             return $this->apiResponse(false, null, '', 401);
         }
+        
         $result = $this->service->me($user->id);
         if ($result['success']) {
             return $this->successResponseWithFormat($result['data'], $result['message']);
         }
+        
         return $this->apiResponse(false, null, $result['message'], $result['status'] ?? 500);
     }
 

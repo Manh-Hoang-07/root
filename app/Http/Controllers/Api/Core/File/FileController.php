@@ -58,15 +58,20 @@ class FileController extends Controller
      */
     public function delete(DeleteFileRequest $request): JsonResponse
     {
+        $result = null;
+        
         try {
             $path = $request->get('path');
             $success = $this->fileService->deleteFile($path);
             if (!$success) {
-                return $this->apiResponse(false, null, 'Không thể xóa file hoặc file không tồn tại', 404);
+                $result = $this->apiResponse(false, null, 'Không thể xóa file hoặc file không tồn tại', 404);
+            } else {
+                $result = $this->apiResponse(true, null, 'Xóa file thành công');
             }
-            return $this->apiResponse(true, null, 'Xóa file thành công');
         } catch (Exception $e) {
-            return $this->apiResponse(false, null, 'Không thể xóa file', 500);
+            $result = $this->apiResponse(false, null, 'Không thể xóa file', 500);
         }
+        
+        return $result;
     }
 }

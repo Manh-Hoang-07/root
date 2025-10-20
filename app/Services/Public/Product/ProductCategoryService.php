@@ -22,16 +22,28 @@ class ProductCategoryService extends BaseService
     /**
      * Get category tree
      */
-    public function getCategoryTree()
+    public function getCategoryTree(): array
     {
-        return $this->repo->getCategoryTree();
+        $result = $this->repo->getCategoryTree();
+        
+        return [
+            'success' => true,
+            'message' => 'Lấy cây danh mục sản phẩm thành công',
+            'data' => $result
+        ];
     }
 
     /**
      * Get products by category
      */
-    public function getCategoryProducts($categoryId, $sortBy = 'created_at', $sortOrder = 'desc', $limit = 12)
+    public function getCategoryProducts($categoryId, $sortBy = 'created_at', $sortOrder = 'desc', $limit = 12): array
     {
-        return $this->repo->getProductsByCategory($categoryId, $sortBy, $sortOrder, $limit);
+        $result = $this->repo->getProductsByCategory($categoryId, $sortBy, $sortOrder, $limit);
+        
+        return [
+            'success' => true,
+            'message' => 'Lấy danh sách sản phẩm theo danh mục thành công',
+            'data' => $result
+        ];
     }
 }

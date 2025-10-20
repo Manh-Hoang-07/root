@@ -36,7 +36,21 @@ class PermissionService extends BaseService
                 'data' => null
             ];
         }
-        return $this->repo->update($id, $data);
+        $result = $this->repo->update($id, $data);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Cập nhật quyền thành công',
+                'data' => $result
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Cập nhật quyền thất bại',
+                'data' => null
+            ];
+        }
     }
 
     public function delete($id): array

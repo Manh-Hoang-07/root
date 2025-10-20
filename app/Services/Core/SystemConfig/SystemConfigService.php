@@ -528,15 +528,18 @@ class SystemConfigService extends BaseService
      */
     public function delete($id): array
     {
+        $result = [
+            'success' => false,
+            'message' => 'Xóa cấu hình thất bại',
+            'data' => null
+        ];
+        
         try {
             // Get config before deletion for audit
             $config = $this->find($id);
             if (!$config) {
-                return [
-                    'success' => false,
-                    'message' => 'Không tìm thấy cấu hình',
-                    'data' => null
-                ];
+                $result['message'] = 'Không tìm thấy cấu hình';
+                return $result;
             }
             
             // Delete using BaseService method
@@ -552,25 +555,17 @@ class SystemConfigService extends BaseService
                     'changed_by' => request()->user()?->id
                 ]);
                 
-                return [
+                $result = [
                     'success' => true,
                     'message' => 'Xóa cấu hình thành công',
                     'data' => null
                 ];
             }
-            
-            return [
-                'success' => false,
-                'message' => 'Xóa cấu hình thất bại',
-                'data' => null
-            ];
         } catch (Exception $e) {
-            return [
-                'success' => false,
-                'message' => 'Xóa cấu hình thất bại: ' . $e->getMessage(),
-                'data' => null
-            ];
+            $result['message'] = 'Xóa cấu hình thất bại: ' . $e->getMessage();
         }
+        
+        return $result;
     }
 
     /**

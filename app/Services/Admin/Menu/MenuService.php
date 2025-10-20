@@ -22,7 +22,13 @@ class MenuService extends BaseService
      */
     public function getTree(array $filters = []): array
     {
-        return $this->repo->getMenuTree($filters);
+        $result = $this->repo->getMenuTree($filters);
+        
+        return [
+            'success' => true,
+            'message' => 'Lấy cây menu thành công',
+            'data' => $result
+        ];
     }
 
     /**

@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Repositories\BaseRepository;
+use App\Services\Traits\HasServiceHooks;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
 
 abstract class BaseService
 {
+    use HasServiceHooks;
     /**
      * @var BaseRepository
      */
@@ -32,97 +34,95 @@ abstract class BaseService
 
     public function create($data): array
     {
+        $result = [
+            'success' => false,
+            'message' => 'Không thể tạo dữ liệu',
+            'data' => null
+        ];
+        
         try {
-            $result = $this->repo->create($data);
-            $this->onCreateSuccess($result, $data);
+            $createResult = $this->repo->create($data);
             
-            return [
-                'success' => true,
-                'message' => 'Tạo dữ liệu thành công',
-                'data' => $result
-            ];
+            // Check if create operation was successful
+            if ($createResult) {
+                $this->onCreateSuccess($createResult, $data);
+                
+                $result = [
+                    'success' => true,
+                    'message' => 'Tạo dữ liệu thành công',
+                    'data' => $createResult
+                ];
+            } else {
+                $this->onCreateFail($data);
+            }
         } catch (\Exception $e) {
             $this->onCreateFail($data);
-            
-            return [
-                'success' => false,
-                'message' => 'Không thể tạo dữ liệu',
-                'data' => null
-            ];
         }
+        
+        return $result;
     }
 
     public function update($id, $data): array
     {
+        $result = [
+            'success' => false,
+            'message' => 'Không thể cập nhật dữ liệu',
+            'data' => null
+        ];
+        
         try {
-            $result = $this->repo->update($id, $data);
-            if ($result) {
-                $this->onUpdateSuccess($result, $id, $data);
+            $updateResult = $this->repo->update($id, $data);
+            if ($updateResult) {
+                $this->onUpdateSuccess($updateResult, $id, $data);
                 
-                return [
+                $result = [
                     'success' => true,
                     'message' => 'Cập nhật dữ liệu thành công',
-                    'data' => $result
+                    'data' => $updateResult
                 ];
             } else {
                 $this->onUpdateFail($id, $data);
-                
-                return [
-                    'success' => false,
-                    'message' => 'Không tìm thấy dữ liệu để cập nhật',
-                    'data' => null
-                ];
+                $result['message'] = 'Không tìm thấy dữ liệu để cập nhật';
             }
         } catch (\Exception $e) {
             $this->onUpdateFail($id, $data);
-            
-            return [
-                'success' => false,
-                'message' => 'Không thể cập nhật dữ liệu',
-                'data' => null
-            ];
         }
+        
+        return $result;
     }
 
     public function delete($id): array
     {
+        $result = [
+            'success' => false,
+            'message' => 'Không thể xóa dữ liệu',
+            'data' => null
+        ];
+        
         try {
             $item = $this->find($id);
             if (!$item) {
-                return [
-                    'success' => false,
-                    'message' => 'Không tìm thấy dữ liệu để xóa',
-                    'data' => null
-                ];
+                $result['message'] = 'Không tìm thấy dữ liệu để xóa';
+                return $result;
             }
             
-            $result = $this->repo->delete($id);
-            if ($result) {
+            $deleteResult = $this->repo->delete($id);
+            if ($deleteResult) {
                 $this->onDeleteSuccess($item, $id);
                 
-                return [
+                $result = [
                     'success' => true,
                     'message' => 'Xóa dữ liệu thành công',
                     'data' => null
                 ];
             } else {
                 $this->onDeleteFail($id, $item);
-                
-                return [
-                    'success' => false,
-                    'message' => 'Không thể xóa dữ liệu',
-                    'data' => null
-                ];
             }
         } catch (\Exception $e) {
             $this->onDeleteFail($id, $item ?? null);
-            
-            return [
-                'success' => false,
-                'message' => 'Không thể xóa dữ liệu',
-                'data' => null
-            ];
         }
+        
+        return $result;
     }
 
     public function getRepo(): mixed
@@ -151,24 +151,32 @@ abstract class BaseService
      */
     public function createOrUpdate(array $conditions, array $data): array
     {
+        $result = [
+            'success' => false,
+            'message' => 'Không thể tạo hoặc cập nhật dữ liệu',
+            'data' => null
+        ];
+        
         try {
-            $result = $this->repo->createOrUpdate($conditions, $data);
-            $this->onCreateOrUpdateSuccess($result, $conditions, $data);
+            $createOrUpdateResult = $this->repo->createOrUpdate($conditions, $data);
             
-            return [
-                'success' => true,
-                'message' => 'Tạo hoặc cập nhật dữ liệu thành công',
-                'data' => $result
-            ];
+            // Check if createOrUpdate operation was successful
+            if ($createOrUpdateResult) {
+                $this->onCreateOrUpdateSuccess($createOrUpdateResult, $conditions, $data);
+                
+                $result = [
+                    'success' => true,
+                    'message' => 'Tạo hoặc cập nhật dữ liệu thành công',
+                    'data' => $createOrUpdateResult
+                ];
+            } else {
+                $this->onCreateOrUpdateFail($conditions, $data);
+            }
         } catch (\Exception $e) {
             $this->onCreateOrUpdateFail($conditions, $data);
-            
-            return [
-                'success' => false,
-                'message' => 'Không thể tạo hoặc cập nhật dữ liệu',
-                'data' => null
-            ];
         }
+        
+        return $result;
     }
 
 
@@ -209,102 +217,6 @@ abstract class BaseService
         }
     }
 
-    /**
-     * Hook method called when create operation succeeds
-     * Override in child classes to add custom logic
-     * 
-     * @param array $result The created record
-     * @param array $data The original data used for creation
-     */
-    protected function onCreateSuccess(array $result, array $data): void
-    {
-        // Override in child classes if needed
-    }
-
-    /**
-     * Hook method called when create operation fails
-     * Override in child classes to add custom error handling
-     * 
-     * @param array $data The original data used for creation
-     */
-    protected function onCreateFail(array $data): void
-    {
-        // Override in child classes if needed
-    }
-
-    /**
-     * Hook method called when update operation succeeds
-     * Override in child classes to add custom logic
-     * 
-     * @param array $result The updated record
-     * @param mixed $id The ID of the updated record
-     * @param array $data The original data used for update
-     */
-    protected function onUpdateSuccess(array $result, $id, array $data): void
-    {
-        // Override in child classes if needed
-    }
-
-    /**
-     * Hook method called when update operation fails
-     * Override in child classes to add custom error handling
-     * 
-     * @param mixed $id The ID of the record that failed to update
-     * @param array $data The original data used for update
-     */
-    protected function onUpdateFail($id, array $data): void
-    {
-        // Override in child classes if needed
-    }
-
-    /**
-     * Hook method called when delete operation succeeds
-     * Override in child classes to add custom logic
-     * 
-     * @param array|null $item The deleted record (before deletion)
-     * @param mixed $id The ID of the deleted record
-     */
-    protected function onDeleteSuccess(?array $item, $id): void
-    {
-        // Override in child classes if needed
-    }
-
-    /**
-     * Hook method called when delete operation fails
-     * Override in child classes to add custom error handling
-     * 
-     * @param mixed $id The ID of the record that failed to delete
-     * @param array|null $item The record that failed to delete
-     */
-    protected function onDeleteFail($id, ?array $item): void
-    {
-        // Override in child classes if needed
-    }
-
-    /**
-     * Hook method called when createOrUpdate operation succeeds
-     * Override in child classes to add custom logic
-     * 
-     * @param array $result The created/updated record
-     * @param array $conditions The conditions used for lookup
-     * @param array $data The original data used for create/update
-     */
-    protected function onCreateOrUpdateSuccess(array $result, array $conditions, array $data): void
-    {
-        // Override in child classes if needed
-    }
-
-    /**
-     * Hook method called when createOrUpdate operation fails
-     * Override in child classes to add custom error handling
-     * 
-     * @param array $conditions The conditions used for lookup
-     * @param array $data The original data used for create/update
-     */
-    protected function onCreateOrUpdateFail(array $conditions, array $data): void
-    {
-        // Override in child classes if needed
-    }
 
     /**
      * Update any field of a record
@@ -316,29 +228,27 @@ abstract class BaseService
      */
     public function updateField($id, $value, string $field): array
     {
+        $result = [
+            'success' => false,
+            'message' => "Không thể cập nhật trường {$field}",
+            'data' => null
+        ];
+        
         try {
-            $result = $this->repo->update($id, [$field => $value]);
+            $updateResult = $this->repo->update($id, [$field => $value]);
             
-            if ($result) {
-                return [
+            if ($updateResult) {
+                $result = [
                     'success' => true,
                     'message' => "Cập nhật trường {$field} thành công",
-                    'data' => $result
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'message' => "Không thể cập nhật trường {$field}",
-                    'data' => null
+                    'data' => $updateResult
                 ];
             }
         } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'message' => "Không thể cập nhật trường {$field}",
-                'data' => null
-            ];
+            // Exception already handled by default result
         }
+        
+        return $result;
     }
 
     /**
@@ -350,42 +260,42 @@ abstract class BaseService
      */
     public function updateStatus($id, $newStatus): array
     {
+        $result = [
+            'success' => false,
+            'message' => 'Không thể cập nhật trạng thái',
+            'data' => null
+        ];
+        
         // Get current record
         $currentRecord = $this->find($id);
         if (!$currentRecord) {
-            return [
-                'success' => false,
-                'message' => 'Không tìm thấy dữ liệu để cập nhật',
-                'data' => null
-            ];
+            $result['message'] = 'Không tìm thấy dữ liệu để cập nhật';
+            return $result;
         }
 
         // Check if status is different
         $currentStatus = $currentRecord['status'] ?? null;
         if ($currentStatus === $newStatus) {
             // Status is the same, return current record without update
-            return [
+            $result = [
                 'success' => true,
                 'message' => 'Trạng thái không thay đổi',
                 'data' => $currentRecord
             ];
+            return $result;
         }
 
         // Status is different, update it
-        $result = $this->updateField($id, $newStatus, 'status');
+        $updateResult = $this->updateField($id, $newStatus, 'status');
         
-        if ($result['success']) {
-            return [
+        if ($updateResult['success']) {
+            $result = [
                 'success' => true,
                 'message' => 'Cập nhật trạng thái thành công',
-                'data' => $result['data']
-            ];
-        } else {
-            return [
-                'success' => false,
-                'message' => 'Không thể cập nhật trạng thái',
-                'data' => null
+                'data' => $updateResult['data']
             ];
         }
+        
+        return $result;
     }
 }

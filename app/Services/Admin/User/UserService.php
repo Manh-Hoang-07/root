@@ -116,14 +116,42 @@ class UserService extends BaseService
         }
     }
 
-    public function profile($id): ?array
+    public function profile($id): array
     {
-        return $this->repo->profile($id);
+        $result = $this->repo->profile($id);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Lấy thông tin profile thành công',
+                'data' => $result
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Không tìm thấy thông tin profile',
+                'data' => null
+            ];
+        }
     }
 
-    public function updateProfile($id, $data): ?array
+    public function updateProfile($id, $data): array
     {
-        return $this->repo->updateProfile($id, $data);
+        $result = $this->repo->updateProfile($id, $data);
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'message' => 'Cập nhật profile thành công',
+                'data' => $result
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Không thể cập nhật profile',
+                'data' => null
+            ];
+        }
     }
 
     public function changePassword($id, $newPassword): array

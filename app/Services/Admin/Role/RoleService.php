@@ -21,12 +21,14 @@ class RoleService extends BaseService
         $permissions = $data['permissions'] ?? [];
         unset($data['permissions']);
         $role = parent::create($data);
-        if (!empty($permissions)) {
+        
+        if (!empty($permissions) && $role['success']) {
             // Đảm bảo permissions là array of integers
             $permissionIds = array_map('intval', (array) $permissions);
-            $roleModel = $this->repo->getModel()->find($role['id']);
+            $roleModel = $this->repo->getModel()->find($role['data']['id']);
             $roleModel->permissions()->sync($permissionIds);
         }
+        
         return $role;
     }
 
