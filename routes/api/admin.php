@@ -20,7 +20,7 @@ use App\Http\Controllers\Api\Admin\Order\OrderController;
 use Illuminate\Support\Facades\Route;
 
 // Admin API
-Route::middleware(['auth:api'])->prefix('admin')->group(function () {
+Route::middleware(['auth.sanctum'])->prefix('admin')->group(function () {
     // Admin routes for enums
     Route::get('/enums/{type}', [EnumController::class, 'get']);
     Route::get('/enums/types', [EnumController::class, 'getTypes']);

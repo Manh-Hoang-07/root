@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(\App\Http\Middleware\CorsMiddleware::class);
 
         // Áp dụng middleware toàn cục cho API group
+        // GlobalAuthMiddleware sẽ tự động xác thực nếu có token
         $middleware->group('api', [
             \App\Http\Middleware\Api\GlobalAuthMiddleware::class,
         ]);

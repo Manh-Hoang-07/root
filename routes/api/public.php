@@ -50,18 +50,20 @@ Route::prefix('system-configs')->group(function () {
 });
 
 // Public API - E-commerce module
-Route::apiResource('products', ProductController::class)->only(['index', 'show']);
-Route::get('/products/featured', [ProductController::class, 'featured']);
-Route::get('/products/search', [ProductController::class, 'search']);
-Route::get('/products/by-category/{categoryId}', [ProductController::class, 'byCategory']);
-Route::get('/products/{id}/variants', [ProductController::class, 'variants']);
+Route::group([], function () {
+    Route::apiResource('products', ProductController::class)->only(['index', 'show']);
+    Route::get('/products/featured', [ProductController::class, 'featured']);
+    Route::get('/products/search', [ProductController::class, 'search']);
+    Route::get('/products/by-category/{categoryId}', [ProductController::class, 'byCategory']);
+    Route::get('/products/{id}/variants', [ProductController::class, 'variants']);
 
-Route::apiResource('product-categories', ProductCategoryController::class)->only(['index', 'show']);
-Route::get('/product-categories/tree', [ProductCategoryController::class, 'tree']);
-Route::get('/product-categories/{id}/products', [ProductCategoryController::class, 'products']);
+    Route::apiResource('product-categories', ProductCategoryController::class)->only(['index', 'show']);
+    Route::get('/product-categories/tree', [ProductCategoryController::class, 'tree']);
+    Route::get('/product-categories/{id}/products', [ProductCategoryController::class, 'products']);
+});
 
-// Cart API - Không cần đăng nhập
-Route::prefix('cart')->group(function () {
+// Cart API - Hỗ trợ cả khách và người dùng đã đăng nhập
+Route::prefix('cart')->group([], function () {
     Route::get('/', [CartController::class, 'index']);
     Route::post('/', [CartController::class, 'store']);
     Route::put('/{id}', [CartController::class, 'update']);
@@ -72,7 +74,7 @@ Route::prefix('cart')->group(function () {
 });
 
 // Order API - Split checkout process
-Route::prefix('checkout')->group(function () {
+Route::prefix('checkout')->group([], function () {
     // Step 1: Update address information
     Route::post('/address', [OrderController::class, 'updateAddress']);
 
@@ -81,11 +83,13 @@ Route::prefix('checkout')->group(function () {
 });
 
 // Order API - Unified checkout for both authenticated and guest users (legacy)
-Route::post('/orders', [OrderController::class, 'createUnifiedOrder']);
-Route::apiResource('orders', OrderController::class)->only(['show']);
-Route::prefix('orders')->group(function () {
+Route::group([], function () {
+    Route::post('/orders', [OrderController::class, 'createUnifiedOrder']);
+    Route::apiResource('orders', OrderController::class)->only(['show']);
+});
+Route::prefix('orders')->group([], function () {
     Route::get('/guest/{orderNumber}/{email}', [OrderController::class, 'guestShow']);
     Route::post('/{id}/payment', [OrderController::class, 'processPayment']);
     Route::get('/status/{orderNumber}', [OrderController::class, 'getStatus']);
-    Route::get('/user-address', [OrderController::class, 'getUserAddress'])->middleware('auth:api');
+    Route::get('/user-address', [OrderController::class, 'getUserAddress'])->middleware('auth.sanctum');
 });

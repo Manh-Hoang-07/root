@@ -5,6 +5,7 @@ namespace App\Http\Middleware\Api;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Libraries\Core\CacheService;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -59,24 +60,29 @@ class GlobalAuthMiddleware
      */
     private function authenticateWithToken(string $token): void
     {
-        // Cache token validation để tránh query database mỗi lần
-        $cacheKey = 'auth_token_' . md5($token);
+        try {
+            // Cache token validation để tránh query database mỗi lần
+            $cacheKey = 'auth_token_' . md5($token);
 
-        $userId = CacheService::get($cacheKey, 'auth');
-        if ($userId === null) {
-            $accessToken = PersonalAccessToken::findToken($token);
-            if ($accessToken && $accessToken->tokenable) {
-                $userId = $accessToken->tokenable->id;
-                CacheService::put($cacheKey, $userId, 300, 'auth'); // Cache 5 phút
+            $userId = CacheService::get($cacheKey, 'auth');
+            if ($userId === null) {
+                $accessToken = PersonalAccessToken::findToken($token);
+                if ($accessToken && $accessToken->tokenable) {
+                    $userId = $accessToken->tokenable->id;
+                    CacheService::put($cacheKey, $userId, 300, 'auth'); // Cache 5 phút
+                }
             }
-        }
 
-        if ($userId) {
-            // Load user và authenticate
-            $user = \App\Models\User::find($userId);
-            if ($user) {
-                Auth::login($user);
+            if ($userId) {
+                // Load user và authenticate
+                $user = \App\Models\User::find($userId);
+                if ($user) {
+                    Auth::login($user);
+                }
             }
+        } catch (\Exception $e) {
+            // Ghi log lỗi nhưng không throw exception để không crash hệ thống
+            Log::error('GlobalAuthMiddleware error: ' . $e->getMessage());
         }
     }
 }
