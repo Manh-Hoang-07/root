@@ -155,14 +155,16 @@ class ProductRepository extends BaseRepository
      */
     protected function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): void
     {
-        parent::applyFilters($query, $filters);
-
-        // Handle category filter
+        // Handle category filter first
         if (!empty($filters['category_id'])) {
             $categoryIds = is_array($filters['category_id']) ? $filters['category_id'] : explode(',', $filters['category_id']);
             $query->whereHas('categories', function ($q) use ($categoryIds) {
                 $q->whereIn('product_categories.id', $categoryIds);
             });
+            // Remove category_id from filters to prevent parent from trying to process it
+            unset($filters['category_id']);
         }
+
+        parent::applyFilters($query, $filters);
     }
 }
