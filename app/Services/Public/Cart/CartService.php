@@ -6,6 +6,7 @@ use App\Services\BaseService;
 use App\Repositories\Cart\CartRepository;
 use App\Repositories\Product\ProductRepository;
 use App\Repositories\Product\ProductVariantRepository;
+use App\Models\CartHeader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -30,60 +31,89 @@ class CartService extends BaseService
     }
 
     /**
-     * Get or create cart ID based on request
+     * Get or create cart header ID based on request
      */
     public function getCartId(Request $request): string
     {
-        // Try to get cart ID from header first
-        $cartId = $request->header('X-Cart-ID');
+        // Try to get cart header ID from header first
+        $cartHeaderId = $request->header('X-Cart-ID');
 
         // Try to get from cookie
-        if (!$cartId) {
-            $cartId = $request->cookie('cart_id');
+        if (!$cartHeaderId) {
+            $cartHeaderId = $request->cookie('cart_header_id');
         }
 
         // Try to get from session (if available)
-        if (!$cartId && $request->hasSession()) {
-            $cartId = $request->session()->get('cart_id');
+        if (!$cartHeaderId && $request->hasSession()) {
+            $cartHeaderId = $request->session()->get('cart_header_id');
         }
 
-        // If no cart ID found, create one
-        if (!$cartId) {
+        // If no cart header ID found, create one
+        if (!$cartHeaderId) {
             // Check if user is authenticated (middleware global đã xử lý)
             if (Auth::check()) {
                 // For authenticated users, use user_id
-                $cartId = 'user_' . Auth::id();
+                $cartHeaderId = 'user_' . Auth::id();
             } else {
                 // For non-authenticated users, use browser session ID
                 if ($request->hasSession()) {
                     $sessionId = $request->session()->getId();
-                    $cartId = 'session_' . $sessionId;
+                    $cartHeaderId = 'session_' . $sessionId;
                 } else {
                     // Fallback to random string if no session available
-                    $cartId = 'cart_' . Str::random(20);
+                    $cartHeaderId = 'cart_' . Str::random(20);
                 }
             }
 
+            // Create cart header with user/session info
+            $cartHeader = CartHeader::create([
+                'id' => $cartHeaderId,
+                'user_id' => Auth::check() ? Auth::id() : null,
+                'session_id' => !Auth::check() && $request->hasSession() ? $request->session()->getId() : null,
+                'currency' => 'VND',
+                'subtotal' => 0,
+                'tax_amount' => 0,
+                'shipping_amount' => 0,
+                'discount_amount' => 0,
+                'total_amount' => 0,
+            ]);
+
             // Store in session if available
             if ($request->hasSession()) {
-                $request->session()->put('cart_id', $cartId);
+                $request->session()->put('cart_header_id', $cartHeaderId);
+            }
+        } else {
+            // Ensure cart header exists
+            $cartHeader = CartHeader::find($cartHeaderId);
+            if (!$cartHeader) {
+                $cartHeader = CartHeader::create([
+                    'id' => $cartHeaderId,
+                    'user_id' => Auth::check() ? Auth::id() : null,
+                    'session_id' => !Auth::check() && $request->hasSession() ? $request->session()->getId() : null,
+                    'currency' => 'VND',
+                    'subtotal' => 0,
+                    'tax_amount' => 0,
+                    'shipping_amount' => 0,
+                    'discount_amount' => 0,
+                    'total_amount' => 0,
+                ]);
             }
         }
 
-        return $cartId;
+        return $cartHeaderId;
     }
 
     /**
      * Get cart with items
      */
-    public function getCart(string $cartId): array
+    public function getCart(string $cartHeaderId): array
     {
         try {
-            $cart = $this->repo->getCartWithItems($cartId);
+            $cart = $this->repo->getCartWithItems($cartHeaderId);
 
             // If cart doesn't exist, create empty cart
             if (!$cart) {
-                $cart = $this->repo->createEmptyCart($cartId);
+                $cart = $this->repo->createEmptyCart($cartHeaderId);
             }
 
             return [
@@ -103,7 +133,7 @@ class CartService extends BaseService
     /**
      * Add item to cart
      */
-    public function addItem(string $cartId, array $itemData): array
+    public function addItem(string $cartHeaderId, array $itemData): array
     {
         try {
             $productId = $itemData['product_id'] ?? null;
@@ -120,7 +150,6 @@ class CartService extends BaseService
                         'data' => null
                     ];
                 }
-                $price = $variant['sale_price'] ?? $variant['price'];
                 $stock = $variant['stock_quantity'];
             } else {
                 $product = $this->productRepo->findActive($productId);
@@ -131,7 +160,6 @@ class CartService extends BaseService
                         'data' => null
                     ];
                 }
-                $price = $product['sale_price'] ?? $product['price'];
                 $stock = $product['stock_quantity'];
             }
 
@@ -144,13 +172,13 @@ class CartService extends BaseService
             }
 
             // Add item to cart
-            $cartItem = $this->repo->addItem($cartId, [
+            $cartItem = $this->repo->addItem($cartHeaderId, [
                 'product_id' => $productId,
                 'product_variant_id' => $variantId,
                 'quantity' => $quantity
             ]);
 
-            $cart = $this->recalculateCart($cartId);
+            $cart = $this->recalculateCart($cartHeaderId);
             
             return [
                 'success' => true,
@@ -169,7 +197,7 @@ class CartService extends BaseService
     /**
      * Update cart item quantity
      */
-    public function updateItem(string $cartId, $itemId, array $data): array
+    public function updateItem(string $cartHeaderId, $itemId, array $data): array
     {
         try {
             $item = $this->repo->getCartItem($itemId);
@@ -207,7 +235,7 @@ class CartService extends BaseService
 
             $this->repo->updateItem($itemId, ['quantity' => $quantity]);
 
-            $cart = $this->recalculateCart($cartId);
+            $cart = $this->recalculateCart($cartHeaderId);
             
             return [
                 'success' => true,
@@ -226,7 +254,7 @@ class CartService extends BaseService
     /**
      * Remove item from cart
      */
-    public function removeItem(string $cartId, $itemId): array
+    public function removeItem(string $cartHeaderId, $itemId): array
     {
         try {
             $item = $this->repo->getCartItem($itemId);
@@ -241,7 +269,7 @@ class CartService extends BaseService
 
             $this->repo->removeItem($itemId);
 
-            $cart = $this->recalculateCart($cartId);
+            $cart = $this->recalculateCart($cartHeaderId);
             
             return [
                 'success' => true,
@@ -260,12 +288,12 @@ class CartService extends BaseService
     /**
      * Clear cart
      */
-    public function clearCart(string $cartId): array
+    public function clearCart(string $cartHeaderId): array
     {
         try {
-            $this->repo->clearCart($cartId);
+            $this->repo->clearCart($cartHeaderId);
 
-            $cart = $this->getCart($cartId);
+            $cart = $this->getCart($cartHeaderId);
             
             return [
                 'success' => true,
@@ -284,12 +312,12 @@ class CartService extends BaseService
     /**
      * Apply coupon code
      */
-    public function applyCoupon(string $cartId, string $couponCode): array
+    public function applyCoupon(string $cartHeaderId, string $couponCode): array
     {
         try {
             // TODO: Implement coupon logic
             // For now, just return cart without coupon
-            $cart = $this->recalculateCart($cartId);
+            $cart = $this->recalculateCart($cartHeaderId);
             
             return [
                 'success' => true,
@@ -308,10 +336,10 @@ class CartService extends BaseService
     /**
      * Remove coupon code
      */
-    public function removeCoupon(string $cartId): array
+    public function removeCoupon(string $cartHeaderId): array
     {
         try {
-            $cart = $this->recalculateCart($cartId);
+            $cart = $this->recalculateCart($cartHeaderId);
             
             return [
                 'success' => true,
@@ -330,10 +358,10 @@ class CartService extends BaseService
     /**
      * Recalculate cart totals
      */
-    private function recalculateCart(string $cartId): array
+    private function recalculateCart(string $cartHeaderId): array
     {
         try {
-            $cart = $this->repo->recalculateTotals($cartId);
+            $cart = $this->repo->recalculateTotals($cartHeaderId);
             
             return [
                 'success' => true,

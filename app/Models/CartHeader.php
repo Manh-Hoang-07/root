@@ -38,7 +38,7 @@ class CartHeader extends Model
     // Relationships
     public function items(): HasMany
     {
-        return $this->hasMany(Cart::class, 'cart_id', 'id');
+        return $this->hasMany(Cart::class, 'cart_header_id', 'id');
     }
 
     public function user()

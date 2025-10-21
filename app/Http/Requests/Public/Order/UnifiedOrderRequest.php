@@ -40,9 +40,9 @@ class UnifiedOrderRequest extends FormRequest
             $rules['items.*.quantity'] = ['required', 'integer', 'min:1'];
             $rules['items.*.unit_price'] = ['required', 'numeric', 'min:0'];
         }
-        // For authenticated users, cart_id is optional (will be auto-generated)
+        // For authenticated users, cart_header_id is optional (will be auto-generated)
         else {
-            $rules['cart_id'] = ['nullable', 'string'];
+            $rules['cart_header_id'] = ['nullable', 'string'];
         }
 
         return $rules;
@@ -101,7 +101,7 @@ class UnifiedOrderRequest extends FormRequest
             $attributes['items.*.quantity'] = 'số lượng';
             $attributes['items.*.unit_price'] = 'đơn giá';
         } else {
-            $attributes['cart_id'] = 'giỏ hàng';
+            $attributes['cart_header_id'] = 'giỏ hàng';
         }
 
         return $attributes;

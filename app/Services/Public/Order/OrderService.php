@@ -58,14 +58,14 @@ class OrderService extends BaseService
         $taxAmount = 0;
         $discountAmount = 0;
 
-        // If cart_id is provided, get items from cart
-        if (isset($data['cart_id'])) {
-            $cartId = $data['cart_id'];
-            $cart = $this->cartRepo->getCartWithItems($cartId);
+        // If cart_header_id is provided, get items from cart
+        if (isset($data['cart_header_id'])) {
+            $cartHeaderId = $data['cart_header_id'];
+            $cart = $this->cartRepo->getCartWithItems($cartHeaderId);
 
             if (!$cart || empty($cart['items'])) {
                 // Check if this is a legacy unified order request and provide more helpful error
-                $hasCartId = isset($data['cart_id']);
+                $hasCartId = isset($data['cart_header_id']);
                 $hasItems = isset($data['items']) && !empty($data['items']);
 
                 if (!$hasCartId && !$hasItems) {
@@ -110,7 +110,7 @@ class OrderService extends BaseService
             $discountAmount = $cart['discount_amount'];
 
             // Clear cart after getting items
-            $this->cartRepo->clearCart($cartId);
+            $this->cartRepo->clearCart($cartHeaderId);
         }
         // Otherwise, use items directly from the request
         elseif (isset($data['items'])) {

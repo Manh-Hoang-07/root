@@ -30,7 +30,7 @@ class OrderStoreRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
             'payment_method' => ['required', 'string', 'in:cod,bank_transfer,credit_card'],
             'shipping_method' => ['required', 'string', 'in:standard,express'],
-            'cart_id' => ['required', 'string'],
+            'cart_header_id' => ['required', 'string'],
         ];
     }
 
@@ -49,7 +49,7 @@ class OrderStoreRequest extends FormRequest
             'payment_method.in' => 'Phương thức thanh toán không hợp lệ',
             'shipping_method.required' => 'Phương thức vận chuyển là bắt buộc',
             'shipping_method.in' => 'Phương thức vận chuyển không hợp lệ',
-            'cart_id.required' => 'Giỏ hàng là bắt buộc',
+            'cart_header_id.required' => 'Giỏ hàng là bắt buộc',
         ];
     }
 
@@ -64,7 +64,7 @@ class OrderStoreRequest extends FormRequest
             'notes' => 'ghi chú',
             'payment_method' => 'phương thức thanh toán',
             'shipping_method' => 'phương thức vận chuyển',
-            'cart_id' => 'giỏ hàng',
+            'cart_header_id' => 'giỏ hàng',
         ];
     }
 }

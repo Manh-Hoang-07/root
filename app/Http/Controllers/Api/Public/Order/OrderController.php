@@ -44,11 +44,11 @@ class OrderController extends CrudController
         $data = $request->validated();
         $userId = \Illuminate\Support\Facades\Auth::id();
 
-        // If user is authenticated and no cart_id provided, get it automatically
-        if ($userId && !isset($data['cart_id'])) {
+        // If user is authenticated and no cart_header_id provided, get it automatically
+        if ($userId && !isset($data['cart_header_id'])) {
             $cartService = app(\App\Services\Public\Cart\CartService::class);
-            $cartId = $cartService->getCartId($request);
-            $data['cart_id'] = $cartId;
+            $cartHeaderId = $cartService->getCartId($request);
+            $data['cart_header_id'] = $cartHeaderId;
         }
 
         // Create order with stored address information - service will handle user ID internally
@@ -80,11 +80,11 @@ class OrderController extends CrudController
         $this->service->storeAddressInfo($addressData);
 
         $userId = \Illuminate\Support\Facades\Auth::id();
-        // If user is authenticated and no cart_id provided, get it automatically
-        if ($userId && !isset($data['cart_id'])) {
+        // If user is authenticated and no cart_header_id provided, get it automatically
+        if ($userId && !isset($data['cart_header_id'])) {
             $cartService = app(\App\Services\Public\Cart\CartService::class);
-            $cartId = $cartService->getCartId($request);
-            $data['cart_id'] = $cartId;
+            $cartHeaderId = $cartService->getCartId($request);
+            $data['cart_header_id'] = $cartHeaderId;
         }
 
         // Create order - service will handle user ID internally

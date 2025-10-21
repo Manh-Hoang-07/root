@@ -14,63 +14,85 @@ class CartRepository extends BaseRepository
     }
 
     /**
-     * Get cart with items by session ID or user ID
+     * Get cart with items by cart header ID
      */
-    public function getCartWithItems($cartId): ?array
+    public function getCartWithItems($cartHeaderId): ?array
     {
-        // Determine if cartId is for user or session
-        $isUserCart = strpos($cartId, 'user_') === 0;
-        $userId = $isUserCart ? (int)substr($cartId, 5) : null;
-        $sessionId = $isUserCart ? null : $cartId;
-
-        // Build query based on cart type
-        $query = Cart::with(['product:id,name,sku,price,sale_price', 'variant:id,name,sku,price,sale_price']);
-
-        if ($userId) {
-            $query->where('user_id', $userId);
-        } else {
-            $query->where('session_id', $sessionId);
-        }
-
-        $items = $query->get();
-
-        if ($items->isEmpty()) {
+        // Get cart header
+        $cartHeader = CartHeader::find($cartHeaderId);
+        if (!$cartHeader) {
             return null;
         }
 
+        // Get cart items
+        $items = Cart::with(['product:id,name,sku,price,sale_price', 'variant:id,name,sku,price,sale_price'])
+            ->where('cart_header_id', $cartHeaderId)
+            ->get();
+
+        if ($items->isEmpty()) {
+            return [
+                'cart_header_id' => $cartHeaderId,
+                'items' => [],
+                'subtotal' => 0,
+                'tax_amount' => 0,
+                'shipping_amount' => 0,
+                'discount_amount' => 0,
+                'total_amount' => 0,
+                'currency' => $cartHeader->currency ?? 'VND'
+            ];
+        }
+
         $cartArray = [
-            'cart_id' => $cartId,
+            'cart_header_id' => $cartHeaderId,
             'items' => $items->map(function ($item) {
                 return [
                     'id' => $item->id,
                     'product_id' => $item->product_id,
                     'product_variant_id' => $item->product_variant_id,
                     'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'total_price' => $item->total_price,
                     'product' => $item->product,
                     'variant' => $item->variant,
                 ];
             })->toArray()
         ];
 
-        // Calculate totals
-        $subtotal = 0;
-        foreach ($items as $item) {
-            $price = $item->variant
-                ? ($item->variant->sale_price ?? $item->variant->price)
-                : ($item->product->sale_price ?? $item->product->price);
-            $subtotal += $price * $item->quantity;
+        // Use cart header totals if available, otherwise calculate
+        if ($cartHeader->total_amount > 0) {
+            $cartArray['subtotal'] = $cartHeader->subtotal;
+            $cartArray['tax_amount'] = $cartHeader->tax_amount;
+            $cartArray['shipping_amount'] = $cartHeader->shipping_amount;
+            $cartArray['discount_amount'] = $cartHeader->discount_amount;
+            $cartArray['total_amount'] = $cartHeader->total_amount;
+            $cartArray['currency'] = $cartHeader->currency;
+        } else {
+            // Calculate totals
+            $subtotal = 0;
+            foreach ($items as $item) {
+                $subtotal += $item->total_price;
+            }
+
+            $taxAmount = $subtotal * 0.1; // 10% tax
+            $shippingAmount = 30000; // Fixed shipping
+            $totalAmount = $subtotal + $taxAmount + $shippingAmount;
+
+            $cartArray['subtotal'] = $subtotal;
+            $cartArray['tax_amount'] = $taxAmount;
+            $cartArray['shipping_amount'] = $shippingAmount;
+            $cartArray['discount_amount'] = 0;
+            $cartArray['total_amount'] = $totalAmount;
+            $cartArray['currency'] = 'VND';
+
+            // Update cart header with calculated totals
+            $cartHeader->update([
+                'subtotal' => $subtotal,
+                'tax_amount' => $taxAmount,
+                'shipping_amount' => $shippingAmount,
+                'discount_amount' => 0,
+                'total_amount' => $totalAmount,
+            ]);
         }
-
-        $taxAmount = $subtotal * 0.1; // 10% tax
-        $shippingAmount = 30000; // Fixed shipping
-        $totalAmount = $subtotal + $taxAmount + $shippingAmount;
-
-        $cartArray['subtotal'] = $subtotal;
-        $cartArray['tax_amount'] = $taxAmount;
-        $cartArray['shipping_amount'] = $shippingAmount;
-        $cartArray['discount_amount'] = 0;
-        $cartArray['total_amount'] = $totalAmount;
-        $cartArray['currency'] = 'VND';
 
         return $cartArray;
     }
@@ -78,17 +100,31 @@ class CartRepository extends BaseRepository
     /**
      * Create a new empty cart
      */
-    public function createEmptyCart($cartId): array
+    public function createEmptyCart($cartHeaderId): array
     {
+        // Create cart header if not exists
+        $cartHeader = CartHeader::find($cartHeaderId);
+        if (!$cartHeader) {
+            $cartHeader = CartHeader::create([
+                'id' => $cartHeaderId,
+                'currency' => 'VND',
+                'subtotal' => 0,
+                'tax_amount' => 0,
+                'shipping_amount' => 0,
+                'discount_amount' => 0,
+                'total_amount' => 0,
+            ]);
+        }
+
         return [
-            'cart_id' => $cartId,
+            'cart_header_id' => $cartHeaderId,
             'items' => [],
             'subtotal' => 0,
             'tax_amount' => 0,
             'shipping_amount' => 0,
             'discount_amount' => 0,
             'total_amount' => 0,
-            'currency' => 'VND'
+            'currency' => $cartHeader->currency
         ];
     }
 
@@ -102,39 +138,65 @@ class CartRepository extends BaseRepository
     }
 
     /**
-     * Add item to cart by session ID or user ID
+     * Add item to cart
      */
-    public function addItem($cartId, array $itemData): array
+    public function addItem($cartHeaderId, array $itemData): array
     {
-        // Determine if cartId is for user or session
-        $isUserCart = strpos($cartId, 'user_') === 0;
-        $userId = $isUserCart ? (int)substr($cartId, 5) : null;
-        $sessionId = $isUserCart ? null : $cartId;
+        // Get product and variant info
+        $productId = $itemData['product_id'];
+        $variantId = $itemData['product_variant_id'] ?? null;
+        $quantity = $itemData['quantity'];
 
-        // Build query based on cart type
-        $query = Cart::where('product_id', $itemData['product_id'])
-            ->where('product_variant_id', $itemData['product_variant_id'] ?? null);
-
-        if ($userId) {
-            $query->where('user_id', $userId);
-        } else {
-            $query->where('session_id', $sessionId);
+        // Get product info
+        $product = \App\Models\Product::find($productId);
+        if (!$product) {
+            throw new \Exception('Product not found');
         }
 
-        $existingItem = $query->first();
+        // Get variant info if provided
+        $variant = null;
+        if ($variantId) {
+            $variant = \App\Models\ProductVariant::find($variantId);
+            if (!$variant) {
+                throw new \Exception('Product variant not found');
+            }
+        }
+
+        // Determine price
+        $unitPrice = $variant ? ($variant->sale_price ?? $variant->price) : ($product->sale_price ?? $product->price);
+        $totalPrice = $unitPrice * $quantity;
+
+        // Check if item already exists
+        $existingItem = Cart::where('cart_header_id', $cartHeaderId)
+            ->where('product_id', $productId)
+            ->where('product_variant_id', $variantId)
+            ->first();
 
         if ($existingItem) {
-            // Update quantity
-            $newQuantity = $existingItem->quantity + $itemData['quantity'];
-            $existingItem->update(['quantity' => $newQuantity]);
+            // Update quantity and price
+            $newQuantity = $existingItem->quantity + $quantity;
+            $newTotalPrice = $unitPrice * $newQuantity;
+            
+            $existingItem->update([
+                'quantity' => $newQuantity,
+                'total_price' => $newTotalPrice
+            ]);
+            
             return $existingItem->fresh()->toArray();
         } else {
-            // Create new item with appropriate fields
-            if ($userId) {
-                $itemData['user_id'] = $userId;
-            } else {
-                $itemData['session_id'] = $sessionId;
-            }
+            // Create new item
+            $itemData = [
+                'cart_header_id' => $cartHeaderId,
+                'product_id' => $productId,
+                'product_variant_id' => $variantId,
+                'product_name' => $product->name,
+                'product_sku' => $variant ? $variant->sku : $product->sku,
+                'variant_name' => $variant ? $variant->name : null,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'total_price' => $totalPrice,
+            ];
+            
             $item = Cart::create($itemData);
             return $item->toArray();
         }
@@ -157,25 +219,26 @@ class CartRepository extends BaseRepository
     }
 
     /**
-     * Clear cart by session ID or user ID
+     * Clear cart by cart header ID
      */
-    public function clearCart($cartId): bool
+    public function clearCart($cartHeaderId): bool
     {
-        // Determine if cartId is for user or session
-        $isUserCart = strpos($cartId, 'user_') === 0;
-        $userId = $isUserCart ? (int)substr($cartId, 5) : null;
-        $sessionId = $isUserCart ? null : $cartId;
-
-        // Build query based on cart type
-        $query = Cart::query();
-
-        if ($userId) {
-            $query->where('user_id', $userId);
-        } else {
-            $query->where('session_id', $sessionId);
+        // Delete all cart items for this cart header
+        $deleted = Cart::where('cart_header_id', $cartHeaderId)->delete();
+        
+        // Reset cart header totals
+        $cartHeader = CartHeader::find($cartHeaderId);
+        if ($cartHeader) {
+            $cartHeader->update([
+                'subtotal' => 0,
+                'tax_amount' => 0,
+                'shipping_amount' => 0,
+                'discount_amount' => 0,
+                'total_amount' => 0,
+            ]);
         }
-
-        return $query->delete() > 0;
+        
+        return $deleted > 0;
     }
 
     /**
@@ -190,17 +253,17 @@ class CartRepository extends BaseRepository
     /**
      * Recalculate cart totals
      */
-    public function recalculateTotals($sessionId): ?array
+    public function recalculateTotals($cartHeaderId): ?array
     {
-        return $this->getCartWithItems($sessionId);
+        return $this->getCartWithItems($cartHeaderId);
     }
 
     /**
-     * Get cart by session ID or user ID
+     * Get cart by cart header ID
      */
-    public function getBySessionId($cartId, array $relations = [], array $fields = ['*']): array
+    public function getBySessionId($cartHeaderId, array $relations = [], array $fields = ['*']): array
     {
-        return $this->getCartWithItems($cartId) ?? $this->createEmptyCart($cartId);
+        return $this->getCartWithItems($cartHeaderId) ?? $this->createEmptyCart($cartHeaderId);
     }
 
     /**
@@ -218,43 +281,41 @@ class CartRepository extends BaseRepository
     }
 
     /**
-     * Clear cart by session ID or user ID
+     * Clear cart by cart header ID
      */
-    public function clearBySessionId($cartId): bool
+    public function clearBySessionId($cartHeaderId): bool
     {
-        return $this->clearCart($cartId);
+        return $this->clearCart($cartHeaderId);
     }
 
     /**
-     * Get cart total by session ID or user ID
+     * Get cart total by cart header ID
      */
-    public function getCartTotal($cartId): array
+    public function getCartTotal($cartHeaderId): array
     {
-        // Determine if cartId is for user or session
-        $isUserCart = strpos($cartId, 'user_') === 0;
-        $userId = $isUserCart ? (int)substr($cartId, 5) : null;
-        $sessionId = $isUserCart ? null : $cartId;
-
-        // Build query based on cart type
-        $query = Cart::with(['product:id,name,price,sale_price', 'variant:id,name,price,sale_price']);
-
-        if ($userId) {
-            $query->where('user_id', $userId);
-        } else {
-            $query->where('session_id', $sessionId);
+        $cartHeader = CartHeader::find($cartHeaderId);
+        
+        if ($cartHeader && $cartHeader->total_amount > 0) {
+            $items = Cart::where('cart_header_id', $cartHeaderId)->get();
+            
+            return [
+                'subtotal' => $cartHeader->subtotal,
+                'total_items' => $items->sum('quantity'),
+                'items_count' => $items->count(),
+                'total_amount' => $cartHeader->total_amount
+            ];
         }
-
-        $items = $query->get();
+        
+        // Fallback to calculation if cart header totals are not set
+        $items = Cart::with(['product:id,name,price,sale_price', 'variant:id,name,price,sale_price'])
+            ->where('cart_header_id', $cartHeaderId)
+            ->get();
 
         $subtotal = 0;
         $totalItems = 0;
 
         foreach ($items as $item) {
-            $price = $item->variant
-                ? ($item->variant->sale_price ?? $item->variant->price)
-                : ($item->product->sale_price ?? $item->product->price);
-
-            $subtotal += $price * $item->quantity;
+            $subtotal += $item->total_price;
             $totalItems += $item->quantity;
         }
 
@@ -272,9 +333,9 @@ class CartRepository extends BaseRepository
     {
         parent::applyFilters($query, $filters);
 
-        // Filter by session ID
-        if (!empty($filters['session_id'])) {
-            $query->where('session_id', $filters['session_id']);
+        // Filter by cart header ID
+        if (!empty($filters['cart_header_id'])) {
+            $query->where('cart_header_id', $filters['cart_header_id']);
         }
 
         // Filter by product ID
