@@ -48,7 +48,7 @@ curl -X POST "http://your-domain.com/api/checkout/order" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer {token}" \
   -d '{
-    "cart_id": "abc123",
+    "cart_header_id": "abc123",
     "payment_method": "cod",
     "shipping_method": "standard"
   }'
@@ -96,7 +96,7 @@ curl -X POST "http://your-domain.com/api/orders" \
     "billing_address": "123 Đường ABC, Quận 1, TP.HCM",
     "payment_method": "cod",
     "shipping_method": "standard",
-    "cart_id": "abc123",
+    "cart_header_id": "abc123",
     "notes": "Giao hàng vào buổi sáng"
   }'
 ```
