@@ -39,7 +39,6 @@ class MenuController extends BaseController
                 $filters['permissions'] = $user->getAllPermissions()->pluck('name')->toArray();
             }
             $data = $this->service->getTree($filters);
-
             return $this->successResponseWithFormat($data, 'Lấy danh sách menu thành công');
         } catch (\Exception $e) {
             $this->logError('Menu Index', $e);
