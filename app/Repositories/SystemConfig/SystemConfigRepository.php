@@ -5,7 +5,6 @@ namespace App\Repositories\SystemConfig;
 use App\Repositories\BaseRepository;
 use App\Models\SystemConfig;
 use App\Enums\ConfigGroup;
-use App\Enums\ConfigType;
 
 class SystemConfigRepository extends BaseRepository
 {

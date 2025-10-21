@@ -4,7 +4,6 @@ namespace App\Repositories\Menu;
 
 use App\Repositories\BaseRepository;
 use App\Models\Menu;
-use Illuminate\Database\Eloquent\Collection;
 
 class MenuRepository extends BaseRepository
 {

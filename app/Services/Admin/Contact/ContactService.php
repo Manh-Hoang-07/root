@@ -6,9 +6,7 @@ use App\Services\BaseService;
 use App\Repositories\Contact\ContactRepository;
 use App\Enums\ContactStatus;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
-use App\Mail\ContactResponseMail;
 use Exception;
 
 class ContactService extends BaseService

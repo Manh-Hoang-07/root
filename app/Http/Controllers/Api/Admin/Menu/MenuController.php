@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\Menu\MenuRequest;
 use App\Services\Admin\Menu\MenuService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MenuController extends CrudController
 {
@@ -31,7 +32,7 @@ class MenuController extends CrudController
     public function index(Request $request): JsonResponse
     {
         try {
-            $user = auth()->user();
+            $user = Auth::user();
         $filters = [
             'type' => $request->input('type', 'admin'),
         ];

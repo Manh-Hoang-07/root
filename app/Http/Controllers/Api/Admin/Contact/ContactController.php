@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Admin\Contact;
 
-use App\Enums\ContactStatus;
 use App\Http\Controllers\Api\Core\CrudController;
 use App\Http\Requests\Admin\Contact\ContactRequest;
 use App\Http\Requests\Admin\Contact\ContactStatusUpdateRequest;

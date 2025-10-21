@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Public\Product;
 
 use App\Http\Controllers\Api\Core\CrudController;
-use App\Http\Controllers\Api\Core\ListController;
 use App\Services\Public\Product\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

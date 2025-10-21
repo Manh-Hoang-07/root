@@ -460,7 +460,6 @@ class OrderService extends BaseService
      */
     private function calculateShipping($shippingMethod): float
     {
-        // TODO: Implement shipping calculation based on method and address
         switch ($shippingMethod) {
             case 'standard':
                 return 30000; // 30,000 VND

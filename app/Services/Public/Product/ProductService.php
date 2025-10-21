@@ -4,7 +4,6 @@ namespace App\Services\Public\Product;
 
 use App\Services\BaseService;
 use App\Repositories\Product\ProductRepository;
-use App\Enums\ProductStatus;
 
 class ProductService extends BaseService
 {

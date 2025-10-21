@@ -3,7 +3,6 @@ namespace App\Repositories\Permission;
 
 use App\Models\Permission;
 use App\Repositories\BaseRepository;
-use Illuminate\Support\Facades\Log;
 
 class PermissionRepository extends BaseRepository
 {

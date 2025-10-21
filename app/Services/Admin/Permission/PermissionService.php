@@ -3,7 +3,6 @@ namespace App\Services\Admin\Permission;
 
 use App\Repositories\Permission\PermissionRepository;
 use App\Services\BaseService;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class PermissionService extends BaseService
 {
