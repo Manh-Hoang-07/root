@@ -264,3 +264,14 @@ Distributed under the MIT License. See `LICENSE` for more information.
 - Error handling tốt hơn
 - Testing coverage
 - Performance optimization
+
+
+
+
+
+- Cách chạy seed của tỉnh thành
+# 1. Convert Excel → JSON
+php artisan convert:admin-excel storage/app/vietnam.xlsx
+# 2. Seed DB
+php artisan db:seed --class=AdminUnitsSeeder
+

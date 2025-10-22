@@ -7,16 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 class Menu extends Model
 {
     protected $fillable = [
-        'title', 
-        'api', 
-        'path', 
-        'icon', 
-        'parent_id', 
-        'sort_order', 
-        'permissions', 
+        'title',
+        'api',
+        'path',
+        'icon',
+        'parent_id',
+        'sort_order',
+        'permissions',
         'status',
         'created_user_id',
         'updated_user_id'
+    ];
+
+    protected $casts = [
+        'permissions' => 'array',
     ];
 
     public function children()
