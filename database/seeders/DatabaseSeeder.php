@@ -21,7 +21,12 @@ class DatabaseSeeder extends Seeder
             // 3. Tạo roles và gán quyền
             RoleSeeder::class,
             
-            // 4. Các seeder khác
+            // 4. Seeder sản phẩm
+            ProductCategorySeeder::class,
+            ProductAttributeSeeder::class,
+            ProductSeeder::class,
+            
+            // 5. Các seeder khác
             SystemConfigSeeder::class,
             MenuSeeder::class,
             NotificationTemplateSeeder::class,

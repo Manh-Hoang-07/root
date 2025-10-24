@@ -13,8 +13,16 @@ class ProductController extends CrudController
      * @var ProductService
      */
     protected $service;
-    protected $indexRelations = ['categories:id,name,slug', 'variants:id,name,sku,price,stock_quantity,sale_price'];
-    protected $showRelations = ['categories:id,name,slug', 'variants:id,name,sku,price,stock_quantity,sale_price,images'];
+    
+    /**
+     * Relations to load for index operations
+     */
+    protected $indexRelations = ['categories:id,name,slug', 'variants:id,product_id,name,sku,price,stock_quantity,sale_price,image'];
+    
+    /**
+     * Relations to load for show operations
+     */
+    protected $showRelations = ['categories:id,name,slug', 'variants:id,product_id,name,sku,price,stock_quantity,sale_price,image'];
 
     public function __construct(ProductService $service)
     {
@@ -22,82 +30,33 @@ class ProductController extends CrudController
     }
 
     /**
-     * Get featured products
+     * Hiển thị sản phẩm theo slug
      */
-    public function featured(Request $request): JsonResponse
+    public function showBySlug(string $slug, Request $request): JsonResponse
     {
-        $limit = $request->get('limit', 12);
-        $products = $this->service->getFeaturedProducts($limit);
-        return $this->successResponseWithFormat($products, 'Lấy sản phẩm nổi bật thành công');
-    }
+        try {
+            $filters = $request ? $request->all() : [];
 
-    /**
-     * Search products
-     */
-    public function search(Request $request): JsonResponse
-    {
-        // Use parent search method with custom filters
-        $filters = $this->parseRequestData($request);
-        $filters['search_query'] = $request->get('q');
-        $filters['category'] = $request->get('category');
-        $filters['min_price'] = $request->get('min_price');
-        $filters['max_price'] = $request->get('max_price');
-        $filters['sort_by'] = $request->get('sort_by', 'created_at');
-        $filters['sort_order'] = $request->get('sort_order', 'desc');
+            // Quan hệ: ưu tiên từ request, fallback sang cấu hình mặc định cho show
+            $requestRelations = $this->parseRelations($filters['relations'] ?? null);
+            $relations = !empty($requestRelations) ? $requestRelations : $this->showRelations;
 
-        $limit = min($request->get('limit', 12), $this->maxPerPage);
-        $fields = $this->getSearchFields();
-        $relations = $this->getSearchRelations();
+            // Fields: ưu tiên từ request, fallback sang mặc định cho show
+            $requestFields = $filters['fields'] ?? null;
+            $fields = $this->parseFields($requestFields);
+            if (empty($fields) || $fields === ['*']) {
+                $fields = $this->getDefaultShowFields();
+            }
 
-        $products = $this->service->list($filters, $limit, $relations, $fields);
-        return $this->successResponseWithFormat($products, 'Tìm kiếm sản phẩm thành công');
-    }
+            $item = $this->service->findOneBy(['slug' => $slug, 'status' => 'active'], $relations, $fields);
+            if (!$item) {
+                return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu', 404);
+            }
 
-    /**
-     * Get products by category
-     */
-    public function byCategory(Request $request, $categoryId): JsonResponse
-    {
-        // Add category_id filter and use parent index method
-        $request->merge(['category_id' => $categoryId]);
-        return $this->index($request);
-    }
-
-    /**
-     * Get product variants
-     */
-    public function variants($id): JsonResponse
-    {
-        $variants = $this->service->getProductVariants($id);
-        if (!$variants) {
-            return $this->apiResponse(false, null, 'Không tìm thấy sản phẩm', 404);
+            return $this->successResponseWithFormat($item, 'Lấy thông tin chi tiết thành công', 200);
+        } catch (\Exception $e) {
+            $this->logError('ShowBySlug', $e, ['slug' => $slug]);
+            return $this->apiResponse(false, null, 'Không thể tải thông tin chi tiết', 500);
         }
-        return $this->successResponseWithFormat($variants, 'Lấy biến thể sản phẩm thành công');
-    }
-
-    /**
-     * Override show to only show active products
-     */
-    public function show($id, ?Request $request = null): JsonResponse
-    {
-        $product = $this->service->getActiveProduct($id);
-        if (!$product) {
-            return $this->apiResponse(false, null, 'Không tìm thấy sản phẩm', 404);
-        }
-        return $this->successResponseWithFormat($product, 'Lấy chi tiết sản phẩm thành công');
-    }
-
-    /**
-     * Process filters to only show active products
-     */
-    protected function processFilters(array $filters, string $context = 'index'): array
-    {
-        $filters['status'] = 'active';
-        return $filters;
-    }
-
-    protected function getSearchFields(): array
-    {
-        return ['name', 'description', 'sku', 'content'];
     }
 }

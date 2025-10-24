@@ -9,14 +9,12 @@ use Illuminate\Http\Request;
 
 class ProductCategoryController extends CrudController
 {
-    protected ProductCategoryService $service;
     protected $indexRelations = ['parent:id,name,slug', 'children:id,name,slug,parent_id'];
     protected $showRelations = ['parent:id,name,slug', 'children:id,name,slug,parent_id'];
 
     public function __construct(ProductCategoryService $service)
     {
         parent::__construct($service);
-        $this->service = $service;
     }
 
     /**
@@ -24,8 +22,10 @@ class ProductCategoryController extends CrudController
      */
     public function tree(): JsonResponse
     {
-        $tree = $this->service->getCategoryTree();
-        return $this->successResponseWithFormat($tree, 'Lấy cây danh mục thành công');
+        /** @var ProductCategoryService $service */
+        $service = $this->service;
+        $result = $service->getCategoryTree();
+        return $this->successResponseWithFormat($result['data'], $result['message']);
     }
 
     /**
@@ -37,8 +37,10 @@ class ProductCategoryController extends CrudController
         $sortOrder = $request->get('sort_order', 'desc');
         $limit = $request->get('limit', 12);
 
-        $products = $this->service->getCategoryProducts($id, $sortBy, $sortOrder, $limit);
-        return $this->successResponseWithFormat($products, 'Lấy sản phẩm theo danh mục thành công');
+        /** @var ProductCategoryService $service */
+        $service = $this->service;
+        $result = $service->getCategoryProducts($id, $sortBy, $sortOrder, $limit);
+        return $this->successResponseWithFormat($result['data'], $result['message']);
     }
 
     /**

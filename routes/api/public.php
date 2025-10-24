@@ -55,6 +55,7 @@ Route::group([], function () {
     Route::get('/products/featured', [ProductController::class, 'featured']);
     Route::get('/products/search', [ProductController::class, 'search']);
     Route::get('/products/by-category/{categoryId}', [ProductController::class, 'byCategory']);
+    Route::get('/products/slug/{slug}', [ProductController::class, 'showBySlug']);
     Route::get('/products/{id}/variants', [ProductController::class, 'variants']);
 
     Route::apiResource('product-categories', ProductCategoryController::class)->only(['index', 'show']);

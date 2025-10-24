@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BasicStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -33,7 +34,7 @@ class ProductVariant extends Model
         'sale_price' => 'decimal:2',
         'cost_price' => 'decimal:2',
         'weight' => 'decimal:2',
-        'status' => 'string',
+        'status' => BasicStatus::class,
     ];
 
     // Relationships
@@ -80,7 +81,7 @@ class ProductVariant extends Model
     // Scopes
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', BasicStatus::Active);
     }
 
     public function scopeInStock($query)
