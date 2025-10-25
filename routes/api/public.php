@@ -60,7 +60,8 @@ Route::group([], function () {
 
     Route::apiResource('product-categories', ProductCategoryController::class)->only(['index', 'show']);
     Route::get('/product-categories/tree', [ProductCategoryController::class, 'tree']);
-    Route::get('/product-categories/{id}/products', [ProductCategoryController::class, 'products']);
+    Route::get('/product-categories/slug/{slug}', [ProductCategoryController::class, 'showBySlug']);
+    Route::get('/product-categories/{slug}/products', [ProductCategoryController::class, 'products']);
 });
 
 // Cart API - Hỗ trợ cả khách và người dùng đã đăng nhập

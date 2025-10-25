@@ -73,7 +73,7 @@ class ProductCategoryRepository extends BaseRepository
 
         return $category->products()
             ->where('status', \App\Enums\ProductStatus::ACTIVE)
-            ->with(['category:id,name,slug', 'variants:id,name,sku,price,stock_quantity,sale_price'])
+            ->with(['categories:id,name,slug', 'variants:id,product_id,name,sku,price,stock_quantity,sale_price,image'])
             ->orderBy($sortBy, $sortOrder)
             ->paginate($limit)
             ->toArray();
@@ -134,4 +134,23 @@ class ProductCategoryRepository extends BaseRepository
             'total_ids' => count($ids)
         ];
     }
+
+    /**
+     * Get products by category slug with sorting
+     */
+    public function getProductsByCategorySlug(string $slug, $sortBy = 'created_at', $sortOrder = 'desc', $limit = 12)
+    {
+        $category = $this->model->where('slug', $slug)->first();
+        if (!$category) {
+            return [];
+        }
+
+        return $category->products()
+            ->where('status', \App\Enums\ProductStatus::ACTIVE)
+            ->with(['categories:id,name,slug', 'variants:id,product_id,name,sku,price,stock_quantity,sale_price,image'])
+            ->orderBy($sortBy, $sortOrder)
+            ->paginate($limit)
+            ->toArray();
+    }
 }
+

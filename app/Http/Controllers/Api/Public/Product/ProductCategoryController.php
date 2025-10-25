@@ -29,9 +29,9 @@ class ProductCategoryController extends CrudController
     }
 
     /**
-     * Get products by category
+     * Get products by category (slug)
      */
-    public function products(Request $request, $id): JsonResponse
+    public function products(Request $request, string $slug): JsonResponse
     {
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
@@ -39,7 +39,7 @@ class ProductCategoryController extends CrudController
 
         /** @var ProductCategoryService $service */
         $service = $this->service;
-        $result = $service->getCategoryProducts($id, $sortBy, $sortOrder, $limit);
+        $result = $service->getCategoryProductsBySlug($slug, $sortBy, $sortOrder, $limit);
         return $this->successResponseWithFormat($result['data'], $result['message']);
     }
 
@@ -69,5 +69,36 @@ class ProductCategoryController extends CrudController
     protected function getSearchFields(): array
     {
         return ['name', 'description'];
+    }
+
+    /**
+     * Hiển thị danh mục theo slug (chỉ trả về danh mục active)
+     */
+    public function showBySlug(string $slug, Request $request): JsonResponse
+    {
+        try {
+            $filters = $request ? $request->all() : [];
+
+            // Quan hệ: ưu tiên từ request, fallback sang cấu hình mặc định cho show
+            $requestRelations = $this->parseRelations($filters['relations'] ?? null);
+            $relations = !empty($requestRelations) ? $requestRelations : $this->showRelations;
+
+            // Fields: ưu tiên từ request, fallback sang mặc định cho show
+            $fields = $this->parseFields($filters['fields'] ?? null);
+            if (empty($fields) || $fields === ['*']) {
+                $fields = $this->getDefaultShowFields();
+            }
+
+            // Bắt buộc trạng thái active khi lấy theo slug
+            $item = $this->service->findOneBy(['slug' => $slug, 'status' => 'active'], $relations, $fields);
+            if (!$item) {
+                return $this->apiResponse(false, null, 'Không tìm thấy dữ liệu', 404);
+            }
+
+            return $this->successResponseWithFormat($item, 'Lấy thông tin chi tiết thành công', 200);
+        } catch (\Exception $e) {
+            $this->logError('ShowBySlug', $e, ['slug' => $slug]);
+            return $this->apiResponse(false, null, 'Không thể tải thông tin chi tiết', 500);
+        }
     }
 }

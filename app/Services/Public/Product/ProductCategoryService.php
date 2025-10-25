@@ -46,4 +46,19 @@ class ProductCategoryService extends BaseService
             'data' => $result
         ];
     }
+
+    /**
+     * Lấy sản phẩm theo slug danh mục
+     */
+    public function getCategoryProductsBySlug(string $slug, $sortBy = 'created_at', $sortOrder = 'desc', $limit = 12): array
+    {
+        $result = $this->repo->getProductsByCategorySlug($slug, $sortBy, $sortOrder, $limit);
+
+        return [
+            'success' => true,
+            'message' => 'Lấy danh sách sản phẩm theo danh mục thành công',
+            'data' => $result
+        ];
+    }
 }
+
