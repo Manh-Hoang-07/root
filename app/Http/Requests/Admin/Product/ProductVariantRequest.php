@@ -21,9 +21,12 @@ class ProductVariantRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Get the ID from route parameter (apiResource uses 'product_variant' as default)
+        $id = $this->route('product_variant') ?? $this->route('id');
+        
         $rules = [
             'product_id' => 'required|integer|exists:products,id',
-            'sku' => 'nullable|string|max:100|unique:product_variants,sku,' . $this->route('id'),
+            'sku' => 'nullable|string|max:100|unique:product_variants,sku,' . $id,
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0|lt:price',

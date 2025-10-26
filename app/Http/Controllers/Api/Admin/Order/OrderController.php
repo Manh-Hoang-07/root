@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 
 class OrderController extends CrudController
 {
-    protected OrderService $service;
+    protected $service;
     protected $statusUpdateRequestClass = StatusUpdateRequest::class;
     protected $storeRequestClass = OrderStoreRequest::class;
     protected $updateRequestClass = OrderUpdateRequest::class;

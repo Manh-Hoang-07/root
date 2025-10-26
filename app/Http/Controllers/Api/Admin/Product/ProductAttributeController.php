@@ -28,4 +28,22 @@ class ProductAttributeController extends CrudController
     {
         return ['id', 'name'];
     }
+
+    /**
+     * Get values of a product attribute
+     */
+    public function values($id)
+    {
+        try {
+            $attribute = $this->service->find($id, ['values']);
+            
+            if (!$attribute) {
+                return $this->apiResponse(false, null, 'Không tìm thấy thuộc tính sản phẩm', 404);
+            }
+
+            return $this->apiResponse(true, $attribute['values'] ?? [], 'Lấy danh sách giá trị thuộc tính thành công');
+        } catch (\Exception $e) {
+            return $this->apiResponse(false, null, $e->getMessage(), 500);
+        }
+    }
 }

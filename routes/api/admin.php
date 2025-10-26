@@ -102,6 +102,7 @@ Route::middleware(['auth.sanctum'])->prefix('admin')->group(function () {
     Route::apiResource('product-attributes', ProductAttributeController::class);
     Route::prefix('product-attributes')->group(function () {
         Route::patch('/status/{id}', [ProductAttributeController::class, 'updateStatus']);
+        Route::get('/{id}/values', [ProductAttributeController::class, 'values']);
     });
 
     Route::apiResource('orders', OrderController::class);
