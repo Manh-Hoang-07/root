@@ -18,7 +18,7 @@ class ProductController extends CrudController
     protected $updateRequestClass = ProductRequest::class;
     protected $statusUpdateRequestClass = StatusUpdateRequest::class;
     protected $indexRelations = ['categories:id,name', 'variants:id,product_id,name,price,stock_quantity'];
-    protected $showRelations = ['categories:id,name', 'variants:id,product_id,name,price,stock_quantity', 'createdUser:id,name', 'updatedUser:id,name'];
+    protected $showRelations = ['categories:id,name', 'variants:id,product_id,name,price,stock_quantity', 'createdUser:id,username', 'updatedUser:id,username'];
 
     public function __construct(ProductService $service)
     {

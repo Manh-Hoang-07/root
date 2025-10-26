@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin\Product;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductAttributeRequest extends FormRequest
 {
@@ -21,9 +22,29 @@ class ProductAttributeRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Detect current record id from route parameters (supports implicit binding or numeric id)
+        $id = null;
+        $routeModel = $this->route('product_attribute');
+        $routeId = $this->route('id');
+
+        if ($routeModel instanceof \App\Models\ProductAttribute) {
+            $id = $routeModel->id;
+        } elseif (is_array($routeModel) && isset($routeModel['id'])) {
+            $id = $routeModel['id'];
+        } elseif (is_numeric($routeModel)) {
+            $id = (int) $routeModel;
+        } elseif (is_numeric($routeId)) {
+            $id = (int) $routeId;
+        }
+
+        $slugRule = Rule::unique('product_attributes', 'slug');
+        if ($id) {
+            $slugRule = $slugRule->ignore($id);
+        }
+
         $rules = [
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:product_attributes,slug,' . $this->route('id'),
+            'slug' => ['nullable', 'string', 'max:255', $slugRule],
             'type' => 'required|in:text,textarea,select,multiselect,radio,checkbox,color,image',
             'description' => 'nullable|string',
             'is_required' => 'boolean',

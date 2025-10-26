@@ -16,6 +16,10 @@ class CartController extends CrudController
      * @var CartService
      */
     protected $service;
+    
+    protected $storeRequestClass = CartStoreRequest::class;
+    protected $updateRequestClass = CartUpdateRequest::class;
+    
     public function __construct(CartService $cartService)
     {
         parent::__construct($cartService);
@@ -28,7 +32,13 @@ class CartController extends CrudController
     {
         $cartId = $this->service->getCartId($request);
         $result = $this->service->getCart($cartId);
-        return $this->apiResponse($result['success'], $result['data'], $result['message']);
+        
+        $response = $this->apiResponse($result['success'], $result['data'], $result['message']);
+        
+        // Add cart ID to response headers for client to store
+        $response->header('X-Cart-ID', $cartId);
+        
+        return $response;
     }
 
     /**
@@ -36,10 +46,25 @@ class CartController extends CrudController
      */
     public function store(): JsonResponse
     {
-        $request = app(CartStoreRequest::class);
-        $cartId = $this->service->getCartId($request);
-        $result = $this->service->addItem($cartId, $request->validated());
-        return $this->apiResponse($result['success'], $result['data'], $result['message']);
+        try {
+            $request = app($this->getStoreRequestClass());
+            $cartId = $this->service->getCartId($request);
+            $result = $this->service->create($request->validated());
+            
+            if ($result['success']) {
+                $response = $this->successResponseWithFormat($result['data'], $result['message'], 201);
+            } else {
+                $response = $this->apiResponse(false, null, $result['message'], 500);
+            }
+            
+            // Add cart ID to response headers for client to store
+            $response->header('X-Cart-ID', $cartId);
+            
+            return $response;
+        } catch (\Exception $e) {
+            $this->logError('Store', $e);
+            return $this->apiResponse(false, null, 'Không thể thêm sản phẩm vào giỏ hàng', 500);
+        }
     }
 
     /**
@@ -47,10 +72,20 @@ class CartController extends CrudController
      */
     public function update($id): JsonResponse
     {
-        $request = app(CartUpdateRequest::class);
-        $cartId = $this->service->getCartId($request);
-        $result = $this->service->updateItem($cartId, $id, $request->validated());
-        return $this->apiResponse($result['success'], $result['data'], $result['message']);
+        try {
+            $request = app($this->getUpdateRequestClass());
+            $result = $this->service->update($id, $request->validated());
+            
+            if ($result['success']) {
+                return $this->successResponseWithFormat($result['data'], $result['message'], 200);
+            } else {
+                $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+                return $this->apiResponse(false, null, $result['message'], $statusCode);
+            }
+        } catch (\Exception $e) {
+            $this->logError('Update', $e, ['id' => $id]);
+            return $this->apiResponse(false, null, 'Không thể cập nhật sản phẩm trong giỏ hàng', 500);
+        }
     }
 
     /**
@@ -58,10 +93,19 @@ class CartController extends CrudController
      */
     public function destroy($id): JsonResponse
     {
-        $request = app(Request::class);
-        $cartId = $this->service->getCartId($request);
-        $result = $this->service->removeItem($cartId, $id);
-        return $this->apiResponse($result['success'], $result['data'], $result['message']);
+        try {
+            $result = $this->service->delete($id);
+            
+            if ($result['success']) {
+                return $this->apiResponse(true, null, $result['message'], 200);
+            } else {
+                $statusCode = strpos($result['message'], 'Không tìm thấy') !== false ? 404 : 500;
+                return $this->apiResponse(false, null, $result['message'], $statusCode);
+            }
+        } catch (\Exception $e) {
+            $this->logError('Destroy', $e, ['id' => $id]);
+            return $this->apiResponse(false, null, 'Không thể xóa sản phẩm khỏi giỏ hàng', 500);
+        }
     }
 
     /**

@@ -18,7 +18,7 @@ class ProductVariantController extends CrudController
     protected $updateRequestClass = ProductVariantRequest::class;
     protected $statusUpdateRequestClass = VariantStatusUpdateRequest::class;
     protected $indexRelations = ['product:id,name,sku', 'attributes.attribute:id,name', 'attributes.value:id,value'];
-    protected $showRelations = ['product:id,name,sku', 'attributes.attribute:id,name', 'attributes.value:id,value', 'createdUser:id,name', 'updatedUser:id,name'];
+    protected $showRelations = ['product:id,name,sku', 'attributes.attribute:id,name', 'attributes.value:id,value', 'createdUser:id,username', 'updatedUser:id,username'];
 
     public function __construct(ProductVariantService $service)
     {

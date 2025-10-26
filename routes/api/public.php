@@ -65,7 +65,10 @@ Route::group([], function () {
 });
 
 // Cart API - Hỗ trợ cả khách và người dùng đã đăng nhập
-Route::prefix('cart')->group([], function () {
+Route::prefix('cart')->middleware([
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+])->group(function () {
     Route::get('/', [CartController::class, 'index']);
     Route::post('/', [CartController::class, 'store']);
     Route::put('/{id}', [CartController::class, 'update']);
@@ -76,7 +79,7 @@ Route::prefix('cart')->group([], function () {
 });
 
 // Order API - Split checkout process
-Route::prefix('checkout')->group([], function () {
+Route::prefix('checkout')->group(function () {
     // Step 1: Update address information
     Route::post('/address', [OrderController::class, 'updateAddress']);
 
@@ -89,7 +92,7 @@ Route::group([], function () {
     Route::post('/orders', [OrderController::class, 'createUnifiedOrder']);
     Route::apiResource('orders', OrderController::class)->only(['show']);
 });
-Route::prefix('orders')->group([], function () {
+Route::prefix('orders')->group(function () {
     Route::get('/guest/{orderNumber}/{email}', [OrderController::class, 'guestShow']);
     Route::post('/{id}/payment', [OrderController::class, 'processPayment']);
     Route::get('/status/{orderNumber}', [OrderController::class, 'getStatus']);

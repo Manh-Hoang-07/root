@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin\Product;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductCategoryRequest extends FormRequest
 {
@@ -21,9 +22,29 @@ class ProductCategoryRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Detect current record id from route parameters (supports implicit binding or numeric id)
+        $id = null;
+        $routeModel = $this->route('product_category');
+        $routeId = $this->route('id');
+
+        if ($routeModel instanceof \App\Models\ProductCategory) {
+            $id = $routeModel->id;
+        } elseif (is_array($routeModel) && isset($routeModel['id'])) {
+            $id = $routeModel['id'];
+        } elseif (is_numeric($routeModel)) {
+            $id = (int) $routeModel;
+        } elseif (is_numeric($routeId)) {
+            $id = (int) $routeId;
+        }
+
+        $slugRule = Rule::unique('product_categories', 'slug');
+        if ($id) {
+            $slugRule = $slugRule->ignore($id);
+        }
+
         $rules = [
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:product_categories,slug,' . $this->route('id'),
+            'slug' => ['nullable', 'string', 'max:255', $slugRule],
             'description' => 'nullable|string',
             'parent_id' => 'nullable|integer|exists:product_categories,id',
             'image' => 'nullable|string|max:500',

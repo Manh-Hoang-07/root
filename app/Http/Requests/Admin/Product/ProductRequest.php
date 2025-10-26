@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin\Product;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductRequest extends FormRequest
 {
@@ -21,10 +22,33 @@ class ProductRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Detect current record id from route parameters (supports implicit binding or numeric id)
+        $id = null;
+        $routeProduct = $this->route('product');
+        $routeId = $this->route('id');
+
+        if ($routeProduct instanceof \App\Models\Product) {
+            $id = $routeProduct->id;
+        } elseif (is_array($routeProduct) && isset($routeProduct['id'])) {
+            $id = $routeProduct['id'];
+        } elseif (is_numeric($routeProduct)) {
+            $id = (int) $routeProduct;
+        } elseif (is_numeric($routeId)) {
+            $id = (int) $routeId;
+        }
+
+        $slugRule = Rule::unique('products', 'slug');
+        $skuRule = Rule::unique('products', 'sku');
+
+        if ($id) {
+            $slugRule = $slugRule->ignore($id);
+            $skuRule = $skuRule->ignore($id);
+        }
+
         $rules = [
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:products,slug,' . $this->route('id'),
-            'sku' => 'required|string|max:100|unique:products,sku,' . $this->route('id'),
+            'slug' => ['nullable', 'string', 'max:255', $slugRule],
+            'sku' => ['required', 'string', 'max:100', $skuRule],
             'description' => 'nullable|string',
             'short_description' => 'nullable|string|max:500',
             'price' => 'required|numeric|min:0',
@@ -55,7 +79,7 @@ class ProductRequest extends FormRequest
         // For update requests, make some fields optional
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
             $rules['name'] = 'sometimes|required|string|max:255';
-            $rules['sku'] = 'sometimes|required|string|max:100|unique:products,sku,' . $this->route('id');
+            $rules['sku'] = ['sometimes', 'required', 'string', 'max:100', $skuRule];
             $rules['price'] = 'sometimes|required|numeric|min:0';
             $rules['stock_quantity'] = 'sometimes|required|integer|min:0';
             $rules['status'] = 'sometimes|required|in:active,inactive,draft';

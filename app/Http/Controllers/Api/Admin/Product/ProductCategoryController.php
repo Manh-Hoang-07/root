@@ -17,7 +17,7 @@ class ProductCategoryController extends CrudController
     protected $storeRequestClass = ProductCategoryRequest::class;
     protected $updateRequestClass = ProductCategoryRequest::class;
     protected $indexRelations = ['parent:id,name', 'children:id,parent_id,name'];
-    protected $showRelations = ['parent:id,name', 'children:id,parent_id,name', 'createdUser:id,name', 'updatedUser:id,name'];
+    protected $showRelations = ['parent:id,name', 'children:id,parent_id,name', 'createdUser:id,username', 'updatedUser:id,username'];
 
     public function __construct(ProductCategoryService $service)
     {

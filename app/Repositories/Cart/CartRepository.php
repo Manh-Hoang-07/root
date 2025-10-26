@@ -102,8 +102,10 @@ class CartRepository extends BaseRepository
      */
     public function createEmptyCart($cartHeaderId): array
     {
-        // Create cart header if not exists
+        // First try to find existing cart header
         $cartHeader = CartHeader::find($cartHeaderId);
+        
+        // If not found, create a new one
         if (!$cartHeader) {
             $cartHeader = CartHeader::create([
                 'id' => $cartHeaderId,

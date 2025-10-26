@@ -21,8 +21,8 @@ class OrderController extends CrudController
     protected $statusUpdateRequestClass = StatusUpdateRequest::class;
     protected $storeRequestClass = OrderStoreRequest::class;
     protected $updateRequestClass = OrderUpdateRequest::class;
-    protected $indexRelations = ['user:id,name,email', 'items.product:id,name,sku', 'items.variant:id,name,sku'];
-    protected $showRelations = ['user:id,name,email,phone', 'items.product:id,name,sku,image', 'items.variant:id,name,sku', 'createdUser:id,name', 'updatedUser:id,name'];
+    protected $indexRelations = ['user:id,username,email', 'items.product:id,name,sku', 'items.variant:id,name,sku'];
+    protected $showRelations = ['user:id,username,email,phone', 'items.product:id,name,sku,image', 'items.variant:id,name,sku', 'createdUser:id,username', 'updatedUser:id,username'];
 
     public function __construct(OrderService $service)
     {

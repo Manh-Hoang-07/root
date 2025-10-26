@@ -48,48 +48,37 @@ class CartService extends BaseService
             $cartHeaderId = $request->session()->get('cart_header_id');
         }
 
-        // If no cart header ID found, create one
+        // If no cart header ID found, generate one
         if (!$cartHeaderId) {
-            // Check if user is authenticated (middleware global đã xử lý)
-            if (Auth::check()) {
-                // For authenticated users, use user_id
-                $cartHeaderId = 'user_' . Auth::id();
-            } else {
-                // For non-authenticated users, use browser session ID
-                if ($request->hasSession()) {
-                    $sessionId = $request->session()->getId();
-                    $cartHeaderId = 'session_' . $sessionId;
-                } else {
-                    // Fallback to random string if no session available
-                    $cartHeaderId = 'cart_' . Str::random(20);
-                }
-            }
-
-            // Create cart header with user/session info
-            $cartHeader = CartHeader::create([
-                'id' => $cartHeaderId,
-                'user_id' => Auth::check() ? Auth::id() : null,
-                'session_id' => !Auth::check() && $request->hasSession() ? $request->session()->getId() : null,
-                'currency' => 'VND',
-                'subtotal' => 0,
-                'tax_amount' => 0,
-                'shipping_amount' => 0,
-                'discount_amount' => 0,
-                'total_amount' => 0,
-            ]);
-
-            // Store in session if available
+            // For API requests, we need to ensure we have a session
             if ($request->hasSession()) {
+                $sessionId = $request->session()->getId();
+                $cartHeaderId = 'session_' . $sessionId;
+                
+                // Store in session
                 $request->session()->put('cart_header_id', $cartHeaderId);
+            } else {
+                // For API without session, generate a unique ID and store in cookie
+                $cartHeaderId = 'guest_' . Str::random(20);
+                
+                // Set cookie for future requests (1 year expiry)
+                cookie()->queue('cart_header_id', $cartHeaderId, 525600);
             }
-        } else {
-            // Ensure cart header exists
-            $cartHeader = CartHeader::find($cartHeaderId);
-            if (!$cartHeader) {
+        }
+
+        // First try to find an existing cart header
+        $cartHeader = CartHeader::find($cartHeaderId);
+        
+        // Get session ID if available
+        $sessionId = $request->hasSession() ? $request->session()->getId() : null;
+        
+        // If not found, create a new one
+        if (!$cartHeader) {
+            try {
                 $cartHeader = CartHeader::create([
                     'id' => $cartHeaderId,
                     'user_id' => Auth::check() ? Auth::id() : null,
-                    'session_id' => !Auth::check() && $request->hasSession() ? $request->session()->getId() : null,
+                    'session_id' => $sessionId, // Always save session ID if available
                     'currency' => 'VND',
                     'subtotal' => 0,
                     'tax_amount' => 0,
@@ -97,6 +86,29 @@ class CartService extends BaseService
                     'discount_amount' => 0,
                     'total_amount' => 0,
                 ]);
+            } catch (\Exception $e) {
+                // If creation fails (likely due to duplicate ID), try to find it again
+                $cartHeader = CartHeader::find($cartHeaderId);
+                if (!$cartHeader) {
+                    throw $e;
+                }
+            }
+        } else {
+            // Update the cart header with current user and session info
+            $updateData = [];
+            
+            // If the user logs in later, attach user_id to existing guest cart
+            if (Auth::check() && is_null($cartHeader->user_id)) {
+                $updateData['user_id'] = Auth::id();
+            }
+            
+            // Always update session_id if it's different
+            if ($sessionId && $cartHeader->session_id !== $sessionId) {
+                $updateData['session_id'] = $sessionId;
+            }
+            
+            if (!empty($updateData)) {
+                $cartHeader->update($updateData);
             }
         }
 
@@ -372,6 +384,63 @@ class CartService extends BaseService
             return [
                 'success' => false,
                 'message' => 'Không thể tính toán lại giỏ hàng',
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Create method for CrudController compatibility
+     */
+    public function create($data): array
+    {
+        try {
+            $request = request();
+            $cartId = $this->getCartId($request);
+            $result = $this->addItem($cartId, $data);
+            return $result;
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể thêm sản phẩm vào giỏ hàng',
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Update method for CrudController compatibility
+     */
+    public function update($id, $data): array
+    {
+        try {
+            $request = request();
+            $cartId = $this->getCartId($request);
+            $result = $this->updateItem($cartId, $id, $data);
+            return $result;
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể cập nhật sản phẩm trong giỏ hàng',
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Delete method for CrudController compatibility
+     */
+    public function delete($id): array
+    {
+        try {
+            $request = request();
+            $cartId = $this->getCartId($request);
+            $result = $this->removeItem($cartId, $id);
+            return $result;
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Không thể xóa sản phẩm khỏi giỏ hàng',
                 'data' => null
             ];
         }

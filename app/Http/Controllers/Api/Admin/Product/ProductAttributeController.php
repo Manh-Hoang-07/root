@@ -17,7 +17,7 @@ class ProductAttributeController extends CrudController
     protected $updateRequestClass = ProductAttributeRequest::class;
     protected $statusUpdateRequestClass = AttributeStatusUpdateRequest::class;
     protected $indexRelations = ['values:id,product_attribute_id,value'];
-    protected $showRelations = ['values:id,product_attribute_id,value', 'createdUser:id,name', 'updatedUser:id,name'];
+    protected $showRelations = ['values:id,product_attribute_id,value', 'createdUser:id,username', 'updatedUser:id,username'];
 
     public function __construct(ProductAttributeService $service)
     {
