@@ -22,18 +22,31 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : 'Internal server error';
+    const errorBody =
+      exception instanceof HttpException ? exception.getResponse() : undefined;
+
+    // Extract message and optional code from Nest/Validation/Custom exceptions
+    let message: string | string[] = 'Internal server error';
+    let code: string | number | undefined = undefined;
+    if (typeof errorBody === 'string') {
+      message = errorBody;
+    } else if (errorBody && typeof errorBody === 'object') {
+      const m = (errorBody as any).message;
+      const c = (errorBody as any).code ?? (errorBody as any).errorCode;
+      message = m ?? 'Internal server error';
+      code = c;
+    }
 
     const errorResponse = {
-      statusCode: status,
+      success: false,
+      httpStatus: status,
+      message,
+      code,
+      data: null,
       timestamp: new Date().toISOString(),
       path: request.url,
       method: request.method,
-      message: typeof message === 'string' ? message : (message as any).message || message,
-    };
+    } as any;
 
     this.logger.error(
       `${request.method} ${request.url}`,

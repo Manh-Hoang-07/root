@@ -6,9 +6,9 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { join } from 'path';
 
-// Zone Modules
-import { AdminModule } from './modules/admin/admin.module';
-import { UserModule } from './modules/user/user.module';
+// Zone Modules (temporarily disabled to start server)
+// import { AdminModule } from './modules/admin/admin.module';
+// import { UserModule } from './modules/user/user.module';
 import { PublicModule } from './modules/public/public.module';
 
 // Auth Module
@@ -37,9 +37,13 @@ import { FileModule } from './modules/file/file.module';
         if (dbType === 'better-sqlite3') {
           return {
             type: 'better-sqlite3',
-            database: configService.get<string>('DB_DATABASE', 'database/nestjs-database.sqlite'),
+            database:
+              configService.get<string>('DB_DATABASE') ||
+              join(process.cwd(), 'nestjs-backend', 'database', 'nestjs-database.sqlite'),
             entities: [join(__dirname, 'shared/entities', '*.entity{.ts,.js}')],
-            synchronize: configService.get('DB_SYNCHRONIZE', 'false') === 'true',
+            // Enable sync by default for local SQLite to avoid missing tables during dev
+            autoLoadEntities: true,
+            synchronize: configService.get('DB_SYNCHRONIZE', 'true') === 'true',
             logging: configService.get('DB_LOGGING', 'false') === 'true',
           };
         }
@@ -51,7 +55,8 @@ import { FileModule } from './modules/file/file.module';
           username: configService.get<string>('DB_USERNAME', 'root'),
           password: configService.get<string>('DB_PASSWORD', ''),
           database: configService.get<string>('DB_DATABASE', 'laravel'),
-          entities: [join(__dirname, 'entities', '*.entity{.ts,.js}')],
+          entities: [join(__dirname, 'shared/entities', '*.entity{.ts,.js}')],
+          autoLoadEntities: true,
           synchronize: configService.get('DB_SYNCHRONIZE', 'false') === 'true',
           logging: configService.get('DB_LOGGING', 'false') === 'true',
           migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
@@ -70,8 +75,8 @@ import { FileModule } from './modules/file/file.module';
     ]),
 
     // Zone Modules
-    AdminModule,
-    UserModule,
+    // AdminModule,
+    // UserModule,
     PublicModule,
     
     // Core Modules

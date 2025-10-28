@@ -1,19 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { Post } from '../../../shared/entities/post.entity';
 import { PostStatus } from '../../../shared/enums/post-status.enum';
-import { BaseService } from '../../../common/base/base-public.service';
 
 @Injectable()
-export class PostService extends BaseService<Post> {
+export class PostService {
   private readonly postRepo: Repository<Post>;
 
   constructor(
     @InjectRepository(Post)
     postRepository: Repository<Post>,
   ) {
-    super(postRepository);
     this.postRepo = postRepository;
   }
 
@@ -39,7 +37,7 @@ export class PostService extends BaseService<Post> {
     const where: any = { status: PostStatus.PUBLISHED };
     
     if (filters.search) {
-      where.name = ILike(`%${filters.search}%`);
+      where.name = Like(`%${filters.search}%`);
     }
     
     return where;
@@ -65,28 +63,29 @@ export class PostService extends BaseService<Post> {
     });
   }
 
-  // Public API methods - Override to make public
-  async getAll(filters: any = {}, perPage: number = 20, page: number = 1, relations?: string[]) {
-    return super.getAll(filters, perPage, page, relations);
+  async list(filters: any = {}, perPage: number = 20, page: number = 1, relations: string[] = []) {
+    const [items, total] = await this.postRepo.findAndCount({
+      where: this.buildBaseQuery(filters),
+      relations: relations.length > 0 ? relations : this.getIndexRelations(),
+      take: perPage,
+      skip: (page - 1) * perPage,
+      order: { id: 'DESC' },
+    });
+    return {
+      data: items,
+      meta: {
+        total,
+        per_page: perPage,
+        current_page: page,
+        last_page: Math.ceil(total / perPage),
+      },
+    };
   }
 
-  // Public API methods with additional logic
-  async getPosts(filters: any = {}, perPage: number = 20, page: number = 1, relations: string[] = []) {
-    return this.getAll(filters, perPage, page, relations.length > 0 ? relations : undefined);
-  }
-
-  async getPost(id: string, relations: string[] = []) {
+  async get(id: string, relations: string[] = []) {
     const post = await this.getOne(id, relations.length > 0 ? relations : undefined);
     if (post) {
-      await super.incrementViewCount(post);
-    }
-    return post;
-  }
-
-  async getBySlug(slug: string, relations: string[] = []) {
-    const post = await super.getBySlug(slug, relations.length > 0 ? relations : undefined);
-    if (post) {
-      await super.incrementViewCount(post);
+      await this.postRepo.update({ id: post.id }, { view_count: (post.view_count || 0) + 1 });
     }
     return post;
   }

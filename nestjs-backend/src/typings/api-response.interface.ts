@@ -1,7 +1,9 @@
-export interface ApiResponse<T = any> {
-  statusCode: number;
-  message: string;
+export interface ApiSuccessResponse<T = any> {
+  success: true;
+  httpStatus: number;
   data: T;
+  meta?: any;
+  message?: string;
   timestamp?: string;
 }
 
@@ -16,9 +18,11 @@ export interface PaginatedResponse<T> {
 }
 
 export interface ApiErrorResponse {
-  statusCode: number;
+  success: false;
+  httpStatus: number;
   message: string | string[];
-  error: string;
+  code?: string | number;
+  data: null;
   timestamp: string;
-  path: string;
+  path?: string;
 }

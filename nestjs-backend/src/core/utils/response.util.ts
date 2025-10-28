@@ -1,7 +1,9 @@
-export interface ApiResponse<T = any> {
-  statusCode: number;
-  message: string;
+export interface ApiSuccessResponse<T = any> {
+  success: true;
+  httpStatus: number;
   data: T;
+  meta?: any;
+  message?: string;
   timestamp: string;
 }
 
@@ -9,13 +11,15 @@ export class ResponseUtil {
   /**
    * Success response
    */
-  static success<T>(data: T, message: string = 'Success'): ApiResponse<T> {
-    return {
-      statusCode: 200,
-      message,
+  static success<T>(data: T, message?: string, httpStatus: number = 200): ApiSuccessResponse<T> {
+    const resp: ApiSuccessResponse<T> = {
+      success: true,
+      httpStatus,
       data,
       timestamp: new Date().toISOString(),
     };
+    if (message) resp.message = message;
+    return resp;
   }
 
   /**
@@ -24,13 +28,16 @@ export class ResponseUtil {
   static error(
     message: string = 'Error',
     statusCode: number = 400,
-  ): ApiResponse<null> {
+    code?: string | number,
+  ) {
     return {
-      statusCode,
+      success: false,
+      httpStatus: statusCode,
       message,
+      code,
       data: null,
       timestamp: new Date().toISOString(),
-    };
+    } as any;
   }
 
   /**
@@ -41,29 +48,22 @@ export class ResponseUtil {
     total: number,
     page: number,
     limit: number,
-    message: string = 'Success',
-  ): ApiResponse<{
-    items: T[];
-    meta: {
-      total: number;
-      page: number;
-      limit: number;
-      totalPages: number;
+    message?: string,
+  ): ApiSuccessResponse<T[]> {
+    const meta = {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
     };
-  }> {
-    return {
-      statusCode: 200,
-      message,
-      data: {
-        items: data,
-        meta: {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        },
-      },
+    const resp: ApiSuccessResponse<T[]> = {
+      success: true,
+      httpStatus: 200,
+      data,
+      meta,
       timestamp: new Date().toISOString(),
     };
+    if (message) resp.message = message;
+    return resp;
   }
 }

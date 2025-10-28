@@ -139,9 +139,9 @@ export class EnumHelperService {
   getGender() {
     return this.enumToArray(Gender, (gender) => {
       const labels: Record<string, string> = {
-        [Gender.MALE]: 'Nam',
-        [Gender.FEMALE]: 'Nữ',
-        [Gender.OTHER]: 'Khác',
+        [Gender.Male]: 'Nam',
+        [Gender.Female]: 'Nữ',
+        [Gender.Other]: 'Khác',
       };
       return labels[gender] || gender;
     });
@@ -152,11 +152,10 @@ export class EnumHelperService {
     return this.enumToArray(AttributeType, (type) => {
       const labels: Record<string, string> = {
         [AttributeType.TEXT]: 'Văn bản',
-        [AttributeType.NUMBER]: 'Số',
-        [AttributeType.BOOLEAN]: 'Boolean',
-        [AttributeType.DATE]: 'Ngày tháng',
         [AttributeType.SELECT]: 'Lựa chọn',
-        [AttributeType.MULTI_SELECT]: 'Lựa chọn nhiều',
+        [AttributeType.MULTISELECT]: 'Lựa chọn nhiều',
+        [AttributeType.COLOR]: 'Màu sắc',
+        [AttributeType.IMAGE]: 'Hình ảnh',
       };
       return labels[type] || type;
     });
@@ -166,12 +165,10 @@ export class EnumHelperService {
   getConfigAction() {
     return this.enumToArray(ConfigAction, (action) => {
       const labels: Record<string, string> = {
-        [ConfigAction.CREATE]: 'Tạo mới',
-        [ConfigAction.UPDATE]: 'Cập nhật',
-        [ConfigAction.DELETE]: 'Xóa',
-        [ConfigAction.VIEW]: 'Xem',
-        [ConfigAction.EXPORT]: 'Xuất',
-        [ConfigAction.IMPORT]: 'Nhập',
+        [ConfigAction.CREATED]: 'Tạo mới',
+        [ConfigAction.UPDATED]: 'Cập nhật',
+        [ConfigAction.DELETED]: 'Xóa',
+        [ConfigAction.RESTORED]: 'Khôi phục',
       };
       return labels[action] || action;
     });
@@ -181,12 +178,8 @@ export class EnumHelperService {
   getConfigGroup() {
     return this.enumToArray(ConfigGroup, (group) => {
       const labels: Record<string, string> = {
-        [ConfigGroup.SYSTEM]: 'Hệ thống',
-        [ConfigGroup.EMAIL]: 'Email',
-        [ConfigGroup.SMS]: 'SMS',
-        [ConfigGroup.PAYMENT]: 'Thanh toán',
-        [ConfigGroup.SHIPPING]: 'Vận chuyển',
-        [ConfigGroup.SOCIAL]: 'Mạng xã hội',
+        [ConfigGroup.GENERAL]: 'Cài đặt chung',
+        [ConfigGroup.EMAIL]: 'Cấu hình Email',
       };
       return labels[group] || group;
     });
@@ -197,11 +190,11 @@ export class EnumHelperService {
     return this.enumToArray(ConfigType, (type) => {
       const labels: Record<string, string> = {
         [ConfigType.STRING]: 'Chuỗi',
-        [ConfigType.NUMBER]: 'Số',
+        [ConfigType.INTEGER]: 'Số nguyên',
         [ConfigType.BOOLEAN]: 'Boolean',
         [ConfigType.JSON]: 'JSON',
         [ConfigType.ARRAY]: 'Mảng',
-        [ConfigType.OBJECT]: 'Đối tượng',
+        [ConfigType.FLOAT]: 'Số thực',
       };
       return labels[type] || type;
     });

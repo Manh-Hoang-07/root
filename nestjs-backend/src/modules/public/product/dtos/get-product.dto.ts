@@ -20,4 +20,8 @@ export class GetProductDto {
   @IsOptional()
   @IsString()
   category?: string;
+
+  @IsOptional()
+  @IsString()
+  relations?: string;
 }

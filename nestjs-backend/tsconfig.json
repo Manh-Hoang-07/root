@@ -21,7 +21,23 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/main.ts",
+    "src/app.module.ts",
+    "src/common/filters/**/*",
+    "src/common/interceptors/**/*",
+    "src/core/**/*",
+    "src/modules/public/**/*",
+    "src/modules/enum/**/*",
+    "src/modules/auth/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/common/base/**",
+    "src/modules/admin/**",
+    "src/modules/user/**",
+    "src/shared/services/**"
+  ]
 }
 
