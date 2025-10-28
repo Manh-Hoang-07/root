@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PostTag } from '../../../entities/post-tag.entity';
-import { BaseService } from './base.service';
+import { BaseService } from '../base.service';
 
 @Injectable()
-export class PostTagsService extends BaseService<PostTag> {
+export class PostTagService extends BaseService<PostTag> {
   constructor(
     @InjectRepository(PostTag)
     tagRepository: Repository<PostTag>,
@@ -33,3 +33,4 @@ export class PostTagsService extends BaseService<PostTag> {
     });
   }
 }
+

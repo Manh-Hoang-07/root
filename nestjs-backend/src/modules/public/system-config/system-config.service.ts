@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SystemConfig } from '../../../entities/system-config.entity';
-import { BaseService } from './base.service';
+import { BaseService } from '../base.service';
 
 @Injectable()
-export class SystemConfigsService extends BaseService<SystemConfig> {
+export class SystemConfigService extends BaseService<SystemConfig> {
   constructor(
     @InjectRepository(SystemConfig)
     configRepository: Repository<SystemConfig>,
@@ -33,3 +33,4 @@ export class SystemConfigsService extends BaseService<SystemConfig> {
     });
   }
 }
+

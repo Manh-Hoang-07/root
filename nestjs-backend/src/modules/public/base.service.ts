@@ -1,4 +1,4 @@
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 
 export abstract class BaseService<T> {
   constructor(protected readonly repository: Repository<T>) {}
@@ -41,21 +41,18 @@ export abstract class BaseService<T> {
     const validPerPage = Math.min(perPage, 100);
     const skip = (page - 1) * validPerPage;
 
-    const queryBuilder = this.buildBaseQuery(filters);
+    // Build where clause from base query
+    const where = this.buildBaseQuery(filters);
     
-    console.log('listItems - adding relations:', relations);
-    this.addRelations(queryBuilder, relations);
+    const findOptions: any = {
+      where,
+      order: { created_at: 'DESC' },
+      relations: relations,
+      skip,
+      take: validPerPage,
+    };
     
-    queryBuilder
-      .orderBy('entity.created_at', 'DESC')
-      .skip(skip)
-      .take(validPerPage);
-
-    console.log('Generated SQL:', queryBuilder.getSql());
-    
-    const [data, total] = await queryBuilder.getManyAndCount();
-    
-    console.log('Query executed, got', total, 'total items');
+    const [data, total] = await this.repository.findAndCount(findOptions);
 
     return {
       data,
@@ -71,49 +68,41 @@ export abstract class BaseService<T> {
   }
 
   protected async findItem(id: string, relations: string[] = []) {
-    const queryBuilder = this.buildBaseQuery()
-      .where('entity.id = :id', { id: Number(id) });
-
-    this.addRelations(queryBuilder, relations);
-
-    return queryBuilder.getOne();
+    const where = this.buildBaseQuery();
+    where.id = Number(id);
+    
+    return this.repository.findOne({
+      where,
+      relations,
+    });
   }
 
   protected async findItemBySlug(slug: string, relations: string[] = []) {
-    const queryBuilder = this.buildBaseQuery()
-      .where('entity.slug = :slug', { slug });
-
-    this.addRelations(queryBuilder, relations);
-
-    return queryBuilder.getOne();
+    const where = this.buildBaseQuery();
+    where.slug = slug;
+    
+    return this.repository.findOne({
+      where,
+      relations,
+    });
   }
 
-  // Helper: Build base query
-  protected buildBaseQuery(filters: any = {}): SelectQueryBuilder<T> {
-    const queryBuilder = this.repository.createQueryBuilder('entity');
+  // Helper: Build base where clause
+  protected buildBaseQuery(filters: any = {}): any {
+    const where: any = {};
 
     // Add search if exists
     if (filters.search) {
       const searchFields = ['name', 'title', 'email'];
       for (const field of searchFields) {
         if (this.hasProperty(field)) {
-          queryBuilder.andWhere(`entity.${field} LIKE :search`, { search: `%${filters.search}%` });
+          where[field] = ILike(`%${filters.search}%`);
           break;
         }
       }
     }
 
-    return queryBuilder;
-  }
-
-  // Helper: Add relations to query
-  protected addRelations(queryBuilder: SelectQueryBuilder<T>, relations: string[]) {
-    const availableRelations = this.getAvailableRelations();
-    const validRelations = relations.filter(r => availableRelations.includes(r));
-    
-    for (const relation of validRelations) {
-      queryBuilder.leftJoinAndSelect(`entity.${relation}`, relation);
-    }
+    return where;
   }
 
   // Helper: Check if entity has property
@@ -138,3 +127,4 @@ export abstract class BaseService<T> {
     });
   }
 }
+

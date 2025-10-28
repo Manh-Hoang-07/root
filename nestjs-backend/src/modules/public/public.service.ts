@@ -1,23 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { PostsService } from './services/posts.service';
-import { ProductsService } from './services/products.service';
-import { PostCategoriesService, ProductCategoriesService } from './services/categories.service';
-import { PostTagsService } from './services/tags.service';
-import { ContactsService } from './services/contacts.service';
-import { MenusService } from './services/menus.service';
-import { SystemConfigsService } from './services/configs.service';
+import { PostService } from './post/post.service';
+import { ProductService } from './product/product.service';
+import { PostCategoryService } from './post-category/post-category.service';
+import { ProductCategoryService } from './product-category/product-category.service';
+import { PostTagService } from './post-tag/post-tag.service';
+import { ContactService } from './contact/contact.service';
+import { MenuService } from './menu/menu.service';
+import { SystemConfigService } from './system-config/system-config.service';
 
 @Injectable()
 export class PublicService {
   constructor(
-    private readonly postsService: PostsService,
-    private readonly productsService: ProductsService,
-    private readonly postCategoriesService: PostCategoriesService,
-    private readonly productCategoriesService: ProductCategoriesService,
-    private readonly postTagsService: PostTagsService,
-    private readonly contactsService: ContactsService,
-    private readonly menusService: MenusService,
-    private readonly systemConfigsService: SystemConfigsService,
+    private readonly postsService: PostService,
+    private readonly productsService: ProductService,
+    private readonly postCategoriesService: PostCategoryService,
+    private readonly productCategoriesService: ProductCategoryService,
+    private readonly postTagsService: PostTagService,
+    private readonly contactsService: ContactService,
+    private readonly menusService: MenuService,
+    private readonly systemConfigsService: SystemConfigService,
   ) {}
 
   // Posts

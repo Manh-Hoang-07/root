@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Contact } from '../../../entities/contact.entity';
 
 @Injectable()
-export class ContactsService {
+export class ContactService {
   constructor(
     @InjectRepository(Contact)
     private readonly contactRepository: Repository<Contact>,
@@ -15,3 +15,4 @@ export class ContactsService {
     return this.contactRepository.save(contact);
   }
 }
+

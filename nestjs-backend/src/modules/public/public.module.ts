@@ -3,16 +3,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PublicController } from './public.controller';
 import { PublicService } from './public.service';
 import { CartsController } from './controllers/carts.controller';
-import { CartsService } from './services/carts.service';
 
-// Import all services
-import { PostsService } from './services/posts.service';
-import { ProductsService } from './services/products.service';
-import { PostCategoriesService, ProductCategoriesService } from './services/categories.service';
-import { PostTagsService } from './services/tags.service';
-import { ContactsService } from './services/contacts.service';
-import { MenusService } from './services/menus.service';
-import { SystemConfigsService } from './services/configs.service';
+// Import all services from new structure
+import { PostService } from './post/post.service';
+import { ProductService } from './product/product.service';
+import { PostCategoryService } from './post-category/post-category.service';
+import { ProductCategoryService } from './product-category/product-category.service';
+import { PostTagService } from './post-tag/post-tag.service';
+import { ContactService } from './contact/contact.service';
+import { MenuService } from './menu/menu.service';
+import { SystemConfigService } from './system-config/system-config.service';
+import { CartService } from './cart/cart.service';
 
 // Import all entities
 import { Post } from '../../entities/post.entity';
@@ -44,16 +45,16 @@ import { ProductVariant } from '../../entities/product-variant.entity';
   controllers: [PublicController, CartsController],
   providers: [
     PublicService,
-    CartsService,
-    PostsService,
-    ProductsService,
-    PostCategoriesService,
-    ProductCategoriesService,
-    PostTagsService,
-    ContactsService,
-    MenusService,
-    SystemConfigsService,
+    CartService,
+    PostService,
+    ProductService,
+    PostCategoryService,
+    ProductCategoryService,
+    PostTagService,
+    ContactService,
+    MenuService,
+    SystemConfigService,
   ],
-  exports: [PublicService, CartsService],
+  exports: [PublicService, CartService],
 })
 export class PublicModule {}

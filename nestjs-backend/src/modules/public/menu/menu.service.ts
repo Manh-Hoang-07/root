@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Menu } from '../../../entities/menu.entity';
-import { BaseService } from './base.service';
+import { BaseService } from '../base.service';
 
 @Injectable()
-export class MenusService extends BaseService<Menu> {
+export class MenuService extends BaseService<Menu> {
   constructor(
     @InjectRepository(Menu)
     menuRepository: Repository<Menu>,
@@ -24,3 +24,4 @@ export class MenusService extends BaseService<Menu> {
     );
   }
 }
+
