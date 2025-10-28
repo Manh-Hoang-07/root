@@ -23,9 +23,6 @@ export class PostTag {
   @Column('text', { nullable: true })
   description: string;
 
-  @Column({ length: 255, nullable: true })
-  color: string;
-
   @Column({ type: 'varchar', length: 50, nullable: true })
   status: string;
 

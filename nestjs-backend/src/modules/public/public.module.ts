@@ -5,6 +5,15 @@ import { PublicService } from './public.service';
 import { CartsController } from './controllers/carts.controller';
 import { CartsService } from './services/carts.service';
 
+// Import all services
+import { PostsService } from './services/posts.service';
+import { ProductsService } from './services/products.service';
+import { PostCategoriesService, ProductCategoriesService } from './services/categories.service';
+import { PostTagsService } from './services/tags.service';
+import { ContactsService } from './services/contacts.service';
+import { MenusService } from './services/menus.service';
+import { SystemConfigsService } from './services/configs.service';
+
 // Import all entities
 import { Post } from '../../entities/post.entity';
 import { PostCategory } from '../../entities/post-category.entity';
@@ -33,7 +42,18 @@ import { ProductVariant } from '../../entities/product-variant.entity';
     ]),
   ],
   controllers: [PublicController, CartsController],
-  providers: [PublicService, CartsService],
+  providers: [
+    PublicService,
+    CartsService,
+    PostsService,
+    ProductsService,
+    PostCategoriesService,
+    ProductCategoriesService,
+    PostTagsService,
+    ContactsService,
+    MenusService,
+    SystemConfigsService,
+  ],
   exports: [PublicService, CartsService],
 })
 export class PublicModule {}
