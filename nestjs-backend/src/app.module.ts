@@ -38,7 +38,7 @@ import { FileModule } from './modules/file/file.module';
           return {
             type: 'better-sqlite3',
             database: configService.get<string>('DB_DATABASE', 'database/nestjs-database.sqlite'),
-            entities: [join(__dirname, 'entities', '*.entity{.ts,.js}')],
+            entities: [join(__dirname, 'shared/entities', '*.entity{.ts,.js}')],
             synchronize: configService.get('DB_SYNCHRONIZE', 'false') === 'true',
             logging: configService.get('DB_LOGGING', 'false') === 'true',
           };

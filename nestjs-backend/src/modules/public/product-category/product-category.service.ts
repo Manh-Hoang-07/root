@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ProductCategory } from '../../../entities/product-category.entity';
-import { BaseService } from '../base.service';
+import { ProductCategory } from '../../../shared/entities/product-category.entity';
+import { BaseService } from '../../../common/base/base-public.service';
 
 @Injectable()
 export class ProductCategoryService extends BaseService<ProductCategory> {
@@ -18,11 +18,15 @@ export class ProductCategoryService extends BaseService<ProductCategory> {
   }
 
   // Get simple list
-  async list() {
+  async getProductCategories() {
     return this.getSimpleList(
       { status: 'active' } as any,
       { name: 'ASC' } as any,
     );
+  }
+
+  async getProductCategory(id: string) {
+    return this.getOne(id);
   }
 
   async getOne(id: string) {

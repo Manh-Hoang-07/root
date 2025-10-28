@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
-import { Post } from '../../../entities/post.entity';
-import { PostStatus } from '../../../enums/post-status.enum';
-import { BaseService } from '../base.service';
+import { Post } from '../../../shared/entities/post.entity';
+import { PostStatus } from '../../../shared/enums/post-status.enum';
+import { BaseService } from '../../../common/base/base-public.service';
 
 @Injectable()
 export class PostService extends BaseService<Post> {
@@ -83,8 +83,8 @@ export class PostService extends BaseService<Post> {
     return post;
   }
 
-  async getPostBySlug(slug: string, relations: string[] = []) {
-    const post = await this.getBySlug(slug, relations.length > 0 ? relations : undefined);
+  async getBySlug(slug: string, relations: string[] = []) {
+    const post = await super.getBySlug(slug, relations.length > 0 ? relations : undefined);
     if (post) {
       await super.incrementViewCount(post);
     }

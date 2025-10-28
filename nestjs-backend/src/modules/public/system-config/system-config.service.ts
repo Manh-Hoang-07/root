@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SystemConfig } from '../../../entities/system-config.entity';
-import { BaseService } from '../base.service';
+import { SystemConfig } from '../../../shared/entities/system-config.entity';
+import { BaseService } from '../../../common/base/base-public.service';
 
 @Injectable()
 export class SystemConfigService extends BaseService<SystemConfig> {
@@ -17,14 +17,14 @@ export class SystemConfigService extends BaseService<SystemConfig> {
     return [];
   }
 
-  async list() {
+  async getConfig() {
     return this.getSimpleList(
       { status: 'active' } as any,
       {},
     );
   }
 
-  async getByKey(key: string) {
+  async getConfigByKey(key: string) {
     return this.repository.findOne({
       where: { 
         key,
