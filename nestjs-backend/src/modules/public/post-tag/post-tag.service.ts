@@ -2,34 +2,24 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PostTag } from '../../../shared/entities/post-tag.entity';
-import { BaseService } from '../../../common/base/base-public.service';
 
 @Injectable()
-export class PostTagService extends BaseService<PostTag> {
+export class PostTagService {
   constructor(
     @InjectRepository(PostTag)
-    tagRepository: Repository<PostTag>,
-  ) {
-    super(tagRepository);
-  }
-
-  protected getAvailableRelations(): string[] {
-    return [];
-  }
+    private readonly tagRepository: Repository<PostTag>,
+  ) {}
 
   async getPostTags() {
-    return this.getSimpleList(
-      { status: 'active' } as any,
-      { name: 'ASC' } as any,
-    );
+    return this.tagRepository.find({
+      where: { status: 'active' } as any,
+      order: { name: 'ASC' },
+    });
   }
 
   async getPostTag(id: string) {
-    return this.repository.findOne({
-      where: { 
-        id: Number(id),
-        status: 'active'
-      } as any,
+    return this.tagRepository.findOne({
+      where: { id: Number(id), status: 'active' } as any,
     });
   }
 }

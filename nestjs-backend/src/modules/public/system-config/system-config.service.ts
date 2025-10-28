@@ -2,34 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SystemConfig } from '../../../shared/entities/system-config.entity';
-import { BaseService } from '../../../common/base/base-public.service';
 
 @Injectable()
-export class SystemConfigService extends BaseService<SystemConfig> {
+export class SystemConfigService {
   constructor(
     @InjectRepository(SystemConfig)
-    configRepository: Repository<SystemConfig>,
-  ) {
-    super(configRepository);
-  }
-
-  protected getAvailableRelations(): string[] {
-    return [];
-  }
+    private readonly configRepository: Repository<SystemConfig>,
+  ) {}
 
   async getConfig() {
-    return this.getSimpleList(
-      { status: 'active' } as any,
-      {},
-    );
+    return this.configRepository.find({
+      where: { status: true } as any,
+    });
   }
 
   async getConfigByKey(key: string) {
-    return this.repository.findOne({
-      where: { 
-        key,
-        status: 'active'
-      } as any,
+    return this.configRepository.findOne({
+      where: { key, status: true } as any,
     });
   }
 }

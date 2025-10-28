@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, ILike, FindManyOptions } from 'typeorm';
+import { Repository, FindOptionsWhere, ILike, FindManyOptions, DeepPartial } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 @Injectable()
 export abstract class BaseService<T> {
@@ -35,19 +36,19 @@ export abstract class BaseService<T> {
     return this.repository.find();
   }
 
-  async findOne(id: number): Promise<T> {
+  async findOne(id: number): Promise<T | null> {
     return this.repository.findOne({
-      where: { id } as FindOptionsWhere<T>,
+      where: { id } as any,
     });
   }
 
-  async create(data: Partial<T>): Promise<T> {
-    const entity = this.repository.create(data);
+  async create(data: DeepPartial<T>): Promise<T> {
+    const entity = this.repository.create(data as DeepPartial<T>);
     return this.repository.save(entity);
   }
 
-  async update(id: number, data: Partial<T>): Promise<T> {
-    await this.repository.update(id, data);
+  async update(id: number, data: QueryDeepPartialEntity<T>): Promise<T | null> {
+    await this.repository.update(id as any, data);
     return this.findOne(id);
   }
 

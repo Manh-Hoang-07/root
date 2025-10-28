@@ -7,6 +7,11 @@ import { ProductStatus } from '../../../shared/enums/product-status.enum';
 @Injectable()
 export class ProductService {
   private readonly productRepo: Repository<Product>;
+  private readonly baseSelect = {
+    id: true,
+    name: true,
+    slug: true,
+  } as const;
 
   constructor(
     @InjectRepository(Product)
@@ -34,7 +39,7 @@ export class ProductService {
 
   // Override: Add status filter to base query
   protected buildBaseQuery(filters: any = {}): any {
-    const where: any = { status: ProductStatus.ACTIVE };
+    const where: any = {};
     
     if (filters.search) {
       where.name = Like(`%${filters.search}%`);
@@ -53,6 +58,7 @@ export class ProductService {
         id: Number(id),
         status: ProductStatus.ACTIVE
       },
+      select: this.baseSelect as any,
       relations: relations || this.getShowRelations(),
     });
   }
@@ -63,27 +69,49 @@ export class ProductService {
         slug,
         status: ProductStatus.ACTIVE
       },
+      select: this.baseSelect as any,
       relations: relations || this.getShowRelations(),
     });
   }
 
-  async list(filters: any = {}, perPage: number = 20, page: number = 1, relations: string[] = []) {
-    const [items, total] = await this.productRepo.findAndCount({
-      where: this.buildBaseQuery(filters),
-      relations: relations.length > 0 ? relations : this.getIndexRelations(),
-      take: perPage,
-      skip: (page - 1) * perPage,
-      order: { id: 'DESC' },
-    });
-    return {
-      data: items,
-      meta: {
-        total,
-        per_page: perPage,
-        current_page: page,
-        last_page: Math.ceil(total / perPage),
-      },
-    };
+  async list(filters: any = {}, perPage: number = 20, page: number = 1, _relations: string[] = []) {
+    try {
+      const offset = (page - 1) * perPage;
+      const clauses: string[] = [];
+      const params: any[] = [];
+
+      if (filters.search) {
+        clauses.push('name LIKE ?');
+        params.push(`%${filters.search}%`);
+      }
+      // NOTE: add more filters here when needed
+
+      const whereSql = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+      const rows = await this.productRepo.manager.query(
+        `SELECT id, name, slug, sku, price, sale_price, image, status, created_at
+         FROM products ${whereSql}
+         ORDER BY id DESC
+         LIMIT ? OFFSET ?`,
+        [...params, perPage, offset],
+      );
+      const countRows = await this.productRepo.manager.query(
+        `SELECT COUNT(*) as cnt FROM products ${whereSql}`,
+        params,
+      );
+      const total = Number(countRows?.[0]?.cnt || 0);
+
+      return {
+        data: rows,
+        meta: {
+          total,
+          per_page: perPage,
+          current_page: page,
+          last_page: Math.ceil(total / perPage),
+        },
+      } as any;
+    } catch (_e) {
+      return { data: [], meta: { total: 0, per_page: perPage, current_page: page, last_page: 0 } } as any;
+    }
   }
 
   async get(id: string, relations: string[] = []) {

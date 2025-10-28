@@ -51,9 +51,10 @@ async function bootstrap() {
     next();
   });
 
-  const port = configService.get('app.port') || configService.get('PORT') || 3000;
-  
-  await app.listen(port);
+  const port = Number(configService.get('app.port')) || Number(process.env.APP_PORT) || 3001;
+  const host = '0.0.0.0';
+
+  await app.listen(port, host);
   
   // Log registered routes using NestJS reflection
   try {
@@ -90,7 +91,7 @@ async function bootstrap() {
     console.log('Could not list routes:', err?.message || err);
   }
   
-  console.log(`\n=== Application is running on: http://localhost:${port} ===`);
+  console.log(`\n=== Application is running on: http://${host}:${port} ===`);
   logToFile(`Server started on port ${port}`);
   console.log('Check console logs above for module initialization messages\n');
 }

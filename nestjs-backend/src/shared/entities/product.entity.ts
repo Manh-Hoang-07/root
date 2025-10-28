@@ -29,7 +29,7 @@ export class Product {
   @Column('text', { nullable: true })
   description: string;
 
-  @Column('longtext', { nullable: true })
+  @Column('longtext', { nullable: true, select: false })
   content: string;
 
   @Column({ length: 255, nullable: true })

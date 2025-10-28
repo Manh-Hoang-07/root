@@ -21,11 +21,8 @@ export class ProductAttribute {
   @Column({ length: 255, unique: true })
   slug: string;
 
-  @Column({
-    type: 'enum',
-    enum: AttributeType,
-    default: AttributeType.TEXT,
-  })
+  // Use varchar to be compatible with SQLite; map enum manually in code
+  @Column({ type: 'varchar', length: 50, default: AttributeType.TEXT })
   type: AttributeType;
 
   @Column({ type: 'boolean', default: true })
