@@ -5,6 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity('menus')
@@ -38,4 +41,12 @@ export class Menu {
 
   @DeleteDateColumn()
   deleted_at: Date;
+
+  // Relations
+  @ManyToOne(() => Menu, (menu) => menu.children)
+  @JoinColumn({ name: 'parent_id' })
+  parent: Menu;
+
+  @OneToMany(() => Menu, (menu) => menu.parent)
+  children: Menu[];
 }

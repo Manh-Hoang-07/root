@@ -15,6 +15,7 @@ import { Contact } from '../../entities/contact.entity';
 import { Menu } from '../../entities/menu.entity';
 import { SystemConfig } from '../../entities/system-config.entity';
 import { Cart } from '../../entities/cart.entity';
+import { ProductVariant } from '../../entities/product-variant.entity';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Cart } from '../../entities/cart.entity';
       PostTag,
       Product,
       ProductCategory,
+      ProductVariant,
       Contact,
       Menu,
       SystemConfig,

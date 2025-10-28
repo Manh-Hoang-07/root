@@ -13,6 +13,8 @@ import { UserStatus } from '../enums/user-status.enum';
 import { Gender } from '../enums/gender.enum';
 import { Profile } from './profile.entity';
 import { Order } from './order.entity';
+import { Cart } from './cart.entity';
+import { Contact } from './contact.entity';
 
 @Entity('users')
 export class User {
@@ -81,4 +83,10 @@ export class User {
 
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
+
+  @OneToMany(() => Cart, (cart) => cart.user)
+  carts: Cart[];
+
+  @OneToMany(() => Contact, (contact) => contact.user)
+  contacts: Contact[];
 }

@@ -15,6 +15,7 @@ import { Order } from '../../entities/order.entity';
 import { Contact } from '../../entities/contact.entity';
 import { Cart } from '../../entities/cart.entity';
 import { Profile } from '../../entities/profile.entity';
+import { OrderItem } from '../../entities/order-item.entity';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { Profile } from '../../entities/profile.entity';
       User,
       Product,
       Order,
+      OrderItem,
       Contact,
       Cart,
       Profile,

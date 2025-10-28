@@ -47,6 +47,8 @@ import { ProductAttribute } from '../../entities/product-attribute.entity';
 import { ProductAttributeValue } from '../../entities/product-attribute-value.entity';
 import { ProductVariant } from '../../entities/product-variant.entity';
 import { ProductVariantAttribute } from '../../entities/product-variant-attribute.entity';
+import { OrderItem } from '../../entities/order-item.entity';
+import { Profile } from '../../entities/profile.entity';
 
 @Module({
   imports: [
@@ -58,6 +60,7 @@ import { ProductVariantAttribute } from '../../entities/product-variant-attribut
       Product,
       ProductCategory,
       Order,
+      OrderItem,
       Contact,
       Menu,
       SystemConfig,
@@ -68,6 +71,7 @@ import { ProductVariantAttribute } from '../../entities/product-variant-attribut
       ProductAttributeValue,
       ProductVariant,
       ProductVariantAttribute,
+      Profile,
     ]),
   ],
   controllers: [

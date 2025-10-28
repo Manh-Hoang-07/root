@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { RoleStatus } from '../enums/role-status.enum';
 import { Permission } from './permission.entity';
@@ -42,5 +43,10 @@ export class Role {
 
   // Relations
   @ManyToMany(() => Permission, (permission) => permission.roles)
+  @JoinTable({
+    name: 'role_permission',
+    joinColumn: { name: 'role_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
+  })
   permissions: Permission[];
 }

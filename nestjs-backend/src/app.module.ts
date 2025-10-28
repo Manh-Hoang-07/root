@@ -31,19 +31,33 @@ import { FileModule } from './modules/file/file.module';
     // TypeORM Configuration
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'mysql',
-        host: configService.get<string>('DB_HOST', 'localhost'),
-        port: configService.get<number>('DB_PORT', 3306),
-        username: configService.get<string>('DB_USERNAME', 'root'),
-        password: configService.get<string>('DB_PASSWORD', ''),
-        database: configService.get<string>('DB_DATABASE', 'laravel'),
-        entities: [join(__dirname, 'entities', '*.entity{.ts,.js}')],
-        synchronize: configService.get('DB_SYNCHRONIZE', 'false') === 'true',
-        logging: configService.get('DB_LOGGING', 'false') === 'true',
-        migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
-        migrationsRun: true,
-      }),
+      useFactory: (configService: ConfigService) => {
+        const dbType = configService.get<string>('DB_TYPE', 'better-sqlite3');
+        
+        if (dbType === 'better-sqlite3') {
+          return {
+            type: 'better-sqlite3',
+            database: configService.get<string>('DB_DATABASE', 'database/nestjs-database.sqlite'),
+            entities: [join(__dirname, 'entities', '*.entity{.ts,.js}')],
+            synchronize: configService.get('DB_SYNCHRONIZE', 'false') === 'true',
+            logging: configService.get('DB_LOGGING', 'false') === 'true',
+          };
+        }
+        
+        return {
+          type: 'mysql',
+          host: configService.get<string>('DB_HOST', 'localhost'),
+          port: configService.get<number>('DB_PORT', 3306),
+          username: configService.get<string>('DB_USERNAME', 'root'),
+          password: configService.get<string>('DB_PASSWORD', ''),
+          database: configService.get<string>('DB_DATABASE', 'laravel'),
+          entities: [join(__dirname, 'entities', '*.entity{.ts,.js}')],
+          synchronize: configService.get('DB_SYNCHRONIZE', 'false') === 'true',
+          logging: configService.get('DB_LOGGING', 'false') === 'true',
+          migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
+          migrationsRun: true,
+        };
+      },
       inject: [ConfigService],
     }),
 

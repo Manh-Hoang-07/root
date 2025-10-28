@@ -34,11 +34,11 @@ export class Cart {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, (user) => user.carts)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => Product)
+  @ManyToOne(() => Product, (product) => product.carts)
   @JoinColumn({ name: 'product_id' })
   product: Product;
 }
