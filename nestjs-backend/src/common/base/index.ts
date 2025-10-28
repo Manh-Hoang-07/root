@@ -15,6 +15,3 @@ export { Filters, Options, PaginatedListResult, ApiResponse, PaginatedApiRespons
 // Interceptors
 export { ResponseInterceptor } from './interceptors';
 
-// Controllers
-export { BaseController } from './controllers';
-
