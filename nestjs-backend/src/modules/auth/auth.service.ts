@@ -10,6 +10,9 @@ import { ConfigService } from '@nestjs/config';
 import { UserStatus } from '../../shared/enums/user-status.enum';
 import { ResponseUtil } from '../../common/utils/response.util';
 
+// Simple in-memory token blacklist (in production, use Redis or database)
+const tokenBlacklist = new Set<string>();
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -48,12 +51,9 @@ export class AuthService {
 
     const payload = { sub: user.id, email: user.email };
     const accessToken = this.jwtService.sign(payload);
-    const refreshSecret = this.configService.get<string>('jwt.refreshSecret');
-    const refreshExpiresIn = this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
-    const refreshToken = this.jwtService.sign(payload, { secret: refreshSecret, expiresIn: refreshExpiresIn as any });
 
     return ResponseUtil.success(
-      { token: accessToken, refreshToken },
+      { token: accessToken },
       'Đăng nhập thành công.',
     );
   }
@@ -93,28 +93,38 @@ export class AuthService {
     return ResponseUtil.success({ user: this.safeUser(saved) }, 'Đăng ký thành công.');
   }
 
-  async logout() {
+  async logout(userId: number, token?: string) {
+    // Tìm người dùng để đảm bảo họ tồn tại
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      return ResponseUtil.unauthorized('Người dùng không tồn tại');
+    }
+
+    // Nếu có token, thêm vào blacklist để ngăn sử dụng lại
+    if (token) {
+      tokenBlacklist.add(token);
+    }
+
+    // Xóa refresh token của người dùng (nếu có lưu trong database)
+    // Điều này ngăn người dùng sử dụng refresh token cũ để lấy token mới
+    await this.userRepository
+      .update({ id: userId }, {
+        updated_at: new Date(),
+        remember_token: null // Xóa refresh token
+      })
+      .catch(() => undefined);
+
     return ResponseUtil.success(null, 'Đăng xuất thành công.');
   }
 
-  async refreshToken(token: string) {
+  // Kiểm tra token có trong blacklist không
+  isTokenBlacklisted(token: string): boolean {
+    return tokenBlacklist.has(token);
+  }
+
+  async refreshToken(userId: number) {
     try {
-      // First try to verify as a refresh token
-      const refreshSecret = this.configService.get<string>('jwt.refreshSecret');
-      let payload;
-
-      try {
-        payload = this.jwtService.verify(token, { secret: refreshSecret });
-      } catch (refreshError) {
-        // If refresh token verification fails, try as access token
-        try {
-          payload = this.jwtService.verify(token);
-        } catch (accessError) {
-          return ResponseUtil.unauthorized('Invalid or expired token');
-        }
-      }
-
-      const user = await this.userRepository.findOne({ where: { id: payload.sub } });
+      const user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) return ResponseUtil.unauthorized('User not authenticated');
 
       const newPayload = { sub: user.id, email: user.email };

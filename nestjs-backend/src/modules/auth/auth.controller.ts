@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Res, ValidationPipe, UsePipes, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Res, ValidationPipe, UsePipes, BadRequestException, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -7,6 +7,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { User } from '../../common/decorators/user.decorator';
 import { ResponseUtil } from '../../common/utils/response.util';
+import { TokenBlacklistGuard } from '../../common/guards/token-blacklist.guard';
 
 @Controller()
 export class AuthController {
@@ -31,37 +32,36 @@ export class AuthController {
   }
 
   @Get('me')
+  @UseGuards(TokenBlacklistGuard)
   async me(@User('id') userId: number) {
     return this.authService.me(userId);
   }
 
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.logout();
+  @UseGuards(TokenBlacklistGuard)
+  async logout(@User('id') userId: number, @Headers('authorization') authHeader: string, @Res({ passthrough: true }) res: Response) {
+    // Extract token from authorization header
+    let token = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    }
+
+    const result = await this.authService.logout(userId, token);
     const domain = (res.req.hostname === 'localhost') ? 'localhost' : undefined;
     res.clearCookie('auth_token', { domain, path: '/' });
     return result;
   }
 
-  @Public()
   @Post('refresh')
-  async refresh(@Headers('authorization') authHeader: string, @Res({ passthrough: true }) res: Response) {
-    try {
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return ResponseUtil.unauthorized('Authorization header with Bearer token is required');
-      }
+  @UseGuards(TokenBlacklistGuard)
+  async refresh(@User('id') userId: number, @Res({ passthrough: true }) res: Response) {
+    const result: any = await this.authService.refreshToken(userId);
 
-      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-      const result: any = await this.authService.refreshToken(token);
-
-      if (result?.success && result?.data?.token) {
-        const domain = (res.req.hostname === 'localhost') ? 'localhost' : undefined;
-        res.cookie('auth_token', result.data.token, { maxAge: 60 * 60 * 1000, httpOnly: false, secure: false, domain, path: '/' });
-      }
-      return result;
-    } catch (error) {
-      return ResponseUtil.badRequest('Invalid refresh token format');
+    if (result?.success && result?.data?.token) {
+      const domain = (res.req.hostname === 'localhost') ? 'localhost' : undefined;
+      res.cookie('auth_token', result.data.token, { maxAge: 60 * 60 * 1000, httpOnly: false, secure: false, domain, path: '/' });
     }
+    return result;
   }
 }
 
