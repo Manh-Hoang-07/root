@@ -5,12 +5,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { User } from '../../shared/entities/user.entity';
+import { Profile } from '../../shared/entities/profile.entity';
 import jwtConfig from '../../core/config/jwt.config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Profile]),
     ConfigModule.forFeature(jwtConfig),
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -29,6 +30,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }
 
 

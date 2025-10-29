@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../../shared/entities/user.entity';
+import { Profile } from '../../shared/entities/profile.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
@@ -17,6 +18,7 @@ const tokenBlacklist = new Set<string>();
 export class AuthService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Profile) private readonly profileRepository: Repository<Profile>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) { }
@@ -90,6 +92,16 @@ export class AuthService {
       status: UserStatus.Active,
     });
     const saved = await this.userRepository.save(user);
+
+    // Tạo profile cho người dùng mới
+    if (saved && saved.id) {
+      const profile = this.profileRepository.create({
+        userId: saved.id,
+        name: saved.username || saved.email,
+      });
+      await this.profileRepository.save(profile).catch(() => undefined);
+    }
+
     return ResponseUtil.success({ user: this.safeUser(saved) }, 'Đăng ký thành công.');
   }
 
