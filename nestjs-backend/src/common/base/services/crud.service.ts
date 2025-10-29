@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Repository, FindOptionsWhere, DeepPartial } from 'typeorm';
+import { FindOptionsWhere, DeepPartial } from 'typeorm';
 import { BaseEntity } from '../entities/base.entity';
 import { ListService } from './list.service';
 import { ResponseUtil, ApiResponse } from '../../utils/response.util';
+import { BaseRepository } from '../repositories/base.repository';
 
 /**
  * CRUD Service
@@ -10,7 +11,7 @@ import { ResponseUtil, ApiResponse } from '../../utils/response.util';
  */
 @Injectable()
 export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
-  constructor(repository: Repository<T>) {
+  constructor(repository: BaseRepository<T>) {
     super(repository);
   }
 

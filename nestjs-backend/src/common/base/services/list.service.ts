@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { Repository, FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere } from 'typeorm';
 import { BaseEntity } from '../entities/base.entity';
 import { Filters, Options, PaginatedListResult } from '../interfaces/list.interface';
+import { BaseRepository } from '../repositories/base.repository';
 
 /**
  * List Service với các phương thức cơ bản cho việc lấy danh sách
  */
 @Injectable()
 export abstract class ListService<T extends BaseEntity> {
-  constructor(protected readonly repository: Repository<T>) {}
+  constructor(protected readonly repository: BaseRepository<T>) {}
 
   /**
    * Tìm tất cả entities với phân trang
