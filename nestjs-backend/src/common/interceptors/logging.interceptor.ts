@@ -31,21 +31,21 @@ export class LoggingInterceptor implements NestInterceptor {
     // Add request ID to response headers
     response.setHeader('X-Request-ID', requestId);
 
-    // Log incoming request
-    this.logger.log(
-      `Incoming Request: ${method} ${url}`,
-      JSON.stringify({
-        requestId,
-        method,
-        url,
-        userAgent,
-        ip,
-        params: Object.keys(params).length ? params : undefined,
-        query: Object.keys(query).length ? query : undefined,
-        body: this.sanitizeBody(body),
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    // // Log incoming request
+    // this.logger.log(
+    //   `Incoming Request: ${method} ${url}`,
+    //   JSON.stringify({
+    //     requestId,
+    //     method,
+    //     url,
+    //     userAgent,
+    //     ip,
+    //     params: Object.keys(params).length ? params : undefined,
+    //     query: Object.keys(query).length ? query : undefined,
+    //     body: this.sanitizeBody(body),
+    //     timestamp: new Date().toISOString(),
+    //   }),
+    // );
 
     return next.handle().pipe(
       tap(() => {
@@ -92,20 +92,20 @@ export class LoggingInterceptor implements NestInterceptor {
     return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private sanitizeBody(body: any): any {
-    if (!body || typeof body !== 'object') {
-      return body;
-    }
+  // private sanitizeBody(body: any): any {
+  //   if (!body || typeof body !== 'object') {
+  //     return body;
+  //   }
 
-    const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization'];
-    const sanitized = { ...body };
+  //   const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization'];
+  //   const sanitized = { ...body };
 
-    for (const field of sensitiveFields) {
-      if (sanitized[field]) {
-        sanitized[field] = '[REDACTED]';
-      }
-    }
+  //   for (const field of sensitiveFields) {
+  //     if (sanitized[field]) {
+  //       sanitized[field] = '[REDACTED]';
+  //     }
+  //   }
 
-    return sanitized;
-  }
+  //   return sanitized;
+  // }
 }

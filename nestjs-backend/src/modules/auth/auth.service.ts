@@ -19,7 +19,16 @@ export class AuthService {
   ) {}
 
   async login(dto: LoginDto) {
-    const user = await this.userRepository.findOne({ where: { email: dto.email } });
+    const user = await this.userRepository.findOne({
+      where: { email: dto.email },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        password: true,
+        status: true,
+      },
+    });
     if (!user || !user.password) {
       return ResponseUtil.unauthorized('Email hoặc mật khẩu không đúng.');
     }
@@ -33,10 +42,11 @@ export class AuthService {
       return ResponseUtil.unauthorized('Tài khoản đã bị khóa hoặc không hoạt động.');
     }
 
-    await this.userRepository.update({ id: user.id }, { last_login_at: new Date() });
+    this.userRepository
+      .update({ id: user.id }, { last_login_at: new Date() })
+      .catch(() => undefined);
 
-    const roles = await this.getUserRoles(user);
-    const payload = { sub: user.id, email: user.email, roles };
+    const payload = { sub: user.id, email: user.email };
     const accessToken = this.jwtService.sign(payload);
 
     return ResponseUtil.success(
@@ -87,8 +97,7 @@ export class AuthService {
   async refreshToken(userId: number) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) return ResponseUtil.unauthorized('User not authenticated');
-    const roles = await this.getUserRoles(user);
-    const payload = { sub: user.id, email: user.email, roles };
+    const payload = { sub: user.id, email: user.email };
     const accessToken = this.jwtService.sign(payload);
     const refreshSecret = this.configService.get<string>('jwt.refreshSecret');
     const refreshExpiresIn = this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
@@ -107,19 +116,7 @@ export class AuthService {
     return user || null;
   }
 
-  private async getUserRoles(user: User): Promise<string[]> {
-    const adminEmails = (process.env.ADMIN_EMAILS || '')
-      .split(',')
-      .map((e) => e.trim())
-      .filter(Boolean);
-    const roles: string[] = [];
-    if (user.email && adminEmails.includes(user.email)) {
-      roles.push('admin');
-    } else {
-      roles.push('user');
-    }
-    return roles;
-  }
+  // roles not used at the moment
 
   private safeUser(user: User) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

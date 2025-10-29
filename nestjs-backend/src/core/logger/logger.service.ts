@@ -45,7 +45,7 @@ export class CustomLoggerService implements LoggerService {
       userId: context?.userId,
       requestId: context?.requestId,
       trace: context?.trace,
-      extra: context,
+      extra: {},
     };
   }
 
