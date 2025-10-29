@@ -10,7 +10,7 @@ export { BaseRepository } from './repositories';
 export { ListService, CrudService } from './services';
 
 // Types
-export { Filters, Options, PaginatedListResult, ApiResponse, PaginatedApiResponse, ResponseBuilder } from './interfaces';
+export { Filters, Options, PaginatedListResult } from './interfaces';
 
 // Interceptors
 export { ResponseInterceptor } from './interceptors';

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, FindOptionsWhere } from 'typeorm';
-import { BaseRepository } from '../../common/base/base.repository';
+import { BaseRepository } from '../../common/base/repositories/base.repository';
 import { Product, ProductStatus } from '../entities/product.entity';
 
 @Injectable()
@@ -13,14 +13,18 @@ export class ProductRepository extends BaseRepository<Product> {
    * Find product by slug
    */
   async findBySlug(slug: string): Promise<Product | null> {
-    return this.findOneActive({ slug } as FindOptionsWhere<Product>);
+    return this.findOne({
+      where: { slug, deletedAt: null } as FindOptionsWhere<Product>,
+    });
   }
 
   /**
    * Find product by SKU
    */
   async findBySku(sku: string): Promise<Product | null> {
-    return this.findOneActive({ sku } as FindOptionsWhere<Product>);
+    return this.findOne({
+      where: { sku, deletedAt: null } as FindOptionsWhere<Product>,
+    });
   }
 
   /**

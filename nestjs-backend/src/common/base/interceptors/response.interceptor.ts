@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ResponseBuilder, ApiResponse, PaginatedApiResponse } from '../interfaces/api-response.interface';
+import { ResponseUtil } from '../../../core/utils/response.util';
 
 interface ControllerResponse {
   data?: any;
@@ -17,13 +17,13 @@ interface ControllerResponse {
 }
 
 @Injectable()
-export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<ApiResponse<T>> {
+export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       map((data) => {
         // Nếu data đã có format ApiResponse rồi thì trả về nguyên
         if (data && typeof data === 'object' && 'success' in data) {
-          return data as ApiResponse<T>;
+          return data;
         }
 
         // Nếu data có format ControllerResponse (có message, meta, etc.)
@@ -32,36 +32,38 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponse<T>
           
           // Nếu có meta -> paginated response
           if (response.meta) {
-            return ResponseBuilder.paginated(
+            return ResponseUtil.paginated(
               response.data,
-              response.meta,
+              response.meta.page || 1,
+              response.meta.limit || 10,
+              response.meta.totalItems || 0,
               response.message || 'Thành công',
-              response.httpStatus || 200,
               response.code,
-            ) as PaginatedApiResponse<T>;
+            );
           }
           
           // Nếu không có meta -> action response
-          return ResponseBuilder.success(
+          return ResponseUtil.success(
             response.data,
             response.message || 'Thành công',
-            response.httpStatus || 200,
             response.code,
+            response.httpStatus || 200,
           );
         }
 
         // Nếu data có PaginatedListResult format (từ service)
         if (data && typeof data === 'object' && 'data' in data && 'meta' in data) {
-          return ResponseBuilder.paginated(
+          return ResponseUtil.paginated(
             data.data,
-            data.meta,
+            data.meta.page || 1,
+            data.meta.limit || 10,
+            data.meta.totalItems || 0,
             'Thành công',
-            200,
-          ) as PaginatedApiResponse<T>;
+          );
         }
 
         // Format thông thường (data trực tiếp)
-        return ResponseBuilder.success(data, 'Thành công', 200);
+        return ResponseUtil.success(data, 'Thành công');
       }),
     );
   }

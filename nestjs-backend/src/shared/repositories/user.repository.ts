@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, FindOptionsWhere } from 'typeorm';
-import { BaseRepository } from '../../common/base/base.repository';
+import { BaseRepository } from '../../common/base/repositories/base.repository';
 import { User } from '../entities/user.entity';
 
 @Injectable()
@@ -13,14 +13,18 @@ export class UserRepository extends BaseRepository<User> {
    * Find user by email
    */
   async findByEmail(email: string): Promise<User | null> {
-    return this.findOneActive({ email } as FindOptionsWhere<User>);
+    return this.findOne({
+      where: { email, deletedAt: null } as FindOptionsWhere<User>,
+    });
   }
 
   /**
    * Find user by username
    */
   async findByUsername(username: string): Promise<User | null> {
-    return this.findOneActive({ username } as FindOptionsWhere<User>);
+    return this.findOne({
+      where: { username, deletedAt: null } as FindOptionsWhere<User>,
+    });
   }
 
   /**
@@ -51,7 +55,9 @@ export class UserRepository extends BaseRepository<User> {
    * Find user by verification token
    */
   async findByEmailVerificationToken(token: string): Promise<User | null> {
-    return this.findOneActive({ emailVerificationToken: token } as FindOptionsWhere<User>);
+    return this.findOne({
+      where: { emailVerificationToken: token, deletedAt: null } as FindOptionsWhere<User>,
+    });
   }
 
   /**
