@@ -34,15 +34,12 @@ export interface Options {
   // Pagination
   page?: number;
   limit?: number;
-  
   // Sorting
   // Accepts: "field:ASC" | "field" (defaults DESC) | array of them | or structured SortOptions[]
   sort?: string | string[] | SortOptions[];
-  
   // Relations
   // Accepts: ["author", { name: "category", select: ["id", "name"] }]
   relations?: Array<string | { name: string; select?: string[] }>;
-  
   // Other
   select?: string[];
   includeDeleted?: boolean;

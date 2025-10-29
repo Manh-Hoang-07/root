@@ -11,6 +11,6 @@ export default registerAs('database', () => ({
   logging: process.env.DB_LOGGING === 'true' || false,
   ssl: process.env.DB_SSL === 'true' || false,
   charset: process.env.DB_CHARSET || 'utf8mb4',
-  timezone: process.env.DB_TIMEZONE || '+00:00',
+  timezone: process.env.DB_TIMEZONE || '+07:00',
   autoLoadEntities: true,
 }));

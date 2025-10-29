@@ -6,11 +6,17 @@ import {
   RequestTimeoutException,
 } from '@nestjs/common';
 import { Observable, throwError, TimeoutError } from 'rxjs';
+import { ConfigService } from '@nestjs/config';
 import { catchError, timeout } from 'rxjs/operators';
 
 @Injectable()
 export class TimeoutInterceptor implements NestInterceptor {
-  constructor(private readonly timeoutMs: number = 30000) {} // Default 30 seconds
+  private readonly timeoutMs: number;
+
+  constructor(private readonly configService: ConfigService) {
+    const configured = this.configService.get<number>('app.requestTimeoutMs');
+    this.timeoutMs = configured && configured > 0 ? configured : 30000; // Default 30s
+  }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
@@ -28,6 +34,4 @@ export class TimeoutInterceptor implements NestInterceptor {
 /**
  * Factory function to create timeout interceptor with custom timeout
  */
-export function createTimeoutInterceptor(timeoutMs: number) {
-  return new TimeoutInterceptor(timeoutMs);
-}
+// Factory removed; interceptor reads timeout from ConfigService

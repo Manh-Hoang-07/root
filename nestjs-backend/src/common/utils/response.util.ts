@@ -1,146 +1,212 @@
 import { HttpStatus } from '@nestjs/common';
 
 export interface ApiResponse<T = any> {
-  data: T;
+  success: boolean;
   message: string;
-  code: string;
-  httpStatus?: HttpStatus;
-  success?: boolean;
+  code?: string;
+  httpStatus?: number;
+  data?: T;
+  meta?: any;
+  errors?: any;
+  timestamp: string;
 }
 
-export interface PaginatedMeta {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages?: number;
-}
-
-export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
-  meta: PaginatedMeta;
+export interface PaginationMeta {
+  currentPage: number;
+  itemCount: number;
+  itemsPerPage: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
 export class ResponseUtil {
+  private static now(): string {
+    const tz = process.env.APP_TIMEZONE || 'Asia/Ho_Chi_Minh';
+    const date = new Date();
+    // Format YYYY-MM-DDTHH:mm:ss+07:00 (VN has fixed +07:00, no DST)
+    const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    const seconds = pad(date.getSeconds());
+    // If timezone is VN, force +07:00 suffix; else fall back to local offset
+    if (tz === 'Asia/Ho_Chi_Minh') {
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}+07:00`;
+    }
+    const offsetMin = -date.getTimezoneOffset();
+    const sign = offsetMin >= 0 ? '+' : '-';
+    const abs = Math.abs(offsetMin);
+    const offH = pad(Math.floor(abs / 60));
+    const offM = pad(abs % 60);
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${sign}${offH}:${offM}`;
+  }
   /**
-   * Tạo response thành công với data
+   * Create a success response
    */
-  static success<T>(data: T, message: string = 'Thành công', code: string = 'SUCCESS'): ApiResponse<T> {
+  static success<T>(data?: T, message = 'Success', code = 'SUCCESS', httpStatus = 200, meta?: any): ApiResponse<T> {
     return {
-      data,
+      success: true,
       message,
       code,
-      httpStatus: HttpStatus.OK,
-      success: true,
+      httpStatus,
+      data,
+      meta,
+      timestamp: this.now(),
     };
   }
 
   /**
-   * Tạo response thành công với pagination
+   * Create an error response
+   */
+  static error(message = 'Error', code = 'ERROR', httpStatus = HttpStatus.BAD_REQUEST, errors?: any): ApiResponse {
+    return {
+      success: false,
+      message,
+      code,
+      httpStatus,
+      data: null,
+      errors,
+      timestamp: this.now(),
+    };
+  }
+
+  /**
+   * Create a paginated response
    */
   static paginated<T>(
     data: T[],
-    meta: PaginatedMeta,
-    message: string = 'Lấy danh sách thành công',
-    code: string = 'SUCCESS',
-  ): PaginatedResponse<T> {
+    currentPage: number,
+    itemsPerPage: number,
+    totalItems: number,
+    message = 'Success',
+    code = 'SUCCESS',
+  ): ApiResponse<T[]> {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const hasNextPage = currentPage < totalPages;
+    const hasPreviousPage = currentPage > 1;
+
+    const meta: PaginationMeta = {
+      currentPage,
+      itemCount: data.length,
+      itemsPerPage,
+      totalItems,
+      totalPages,
+      hasNextPage,
+      hasPreviousPage,
+    };
+
+    return this.success(data, message, code, HttpStatus.OK, meta);
+  }
+
+  /**
+   * Create a created response (201)
+   */
+  static created<T>(data?: T, message = 'Created'): ApiResponse<T> {
+    return this.success(data, message, 'CREATED', HttpStatus.CREATED);
+  }
+
+  /**
+   * Create an updated response
+   */
+  static updated<T>(data?: T, message = 'Updated'): ApiResponse<T> {
+    return this.success(data, message, 'UPDATED', HttpStatus.OK);
+  }
+
+  /**
+   * Create a deleted response
+   */
+  static deleted(message = 'Deleted'): ApiResponse {
+    return this.success(null, message, 'DELETED', HttpStatus.OK);
+  }
+
+  /**
+   * Create a not found response
+   */
+  static notFound(message = 'Not found'): ApiResponse {
+    return this.error(message, 'NOT_FOUND', HttpStatus.NOT_FOUND);
+  }
+
+  /**
+   * Create a validation error response
+   */
+  static validationError(errors: any, message = 'Validation failed'): ApiResponse {
+    return this.error(message, 'VALIDATION_ERROR', HttpStatus.BAD_REQUEST, errors);
+  }
+
+  /**
+   * Create a forbidden response
+   */
+  static forbidden(message = 'Forbidden'): ApiResponse {
+    return this.error(message, 'FORBIDDEN', HttpStatus.FORBIDDEN);
+  }
+
+  /**
+   * Create an unauthorized response
+   */
+  static unauthorized(message = 'Unauthorized'): ApiResponse {
+    return this.error(message, 'UNAUTHORIZED', HttpStatus.UNAUTHORIZED);
+  }
+
+  /**
+   * Create a bad request response
+   */
+  static badRequest(message = 'Bad request', errors?: any): ApiResponse {
+    return this.error(message, 'BAD_REQUEST', HttpStatus.BAD_REQUEST, errors);
+  }
+
+  /**
+   * Create an internal server error response
+   */
+  static internalServerError(message = 'Internal server error'): ApiResponse {
+    return this.error(message, 'INTERNAL_SERVER_ERROR', HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  /**
+   * Create a conflict response
+   */
+  static conflict(message = 'Conflict'): ApiResponse {
+    return this.error(message, 'CONFLICT', HttpStatus.CONFLICT);
+  }
+
+  /**
+   * Create a too many requests response
+   */
+  static tooManyRequests(message = 'Too many requests'): ApiResponse {
+    return this.error(message, 'TOO_MANY_REQUESTS', HttpStatus.TOO_MANY_REQUESTS);
+  }
+
+  /**
+   * Create an invalid query response for pagination errors
+   */
+  static invalidQuery(message = 'Invalid query parameters'): ApiResponse {
+    return this.error(message, 'INVALID_QUERY', HttpStatus.BAD_REQUEST);
+  }
+
+  /**
+   * Transform any data into a standardized response format
+   */
+  static transform<T>(
+    data: T,
+    success = true,
+    message?: string,
+    code?: string,
+    httpStatus?: number,
+    meta?: any,
+    errors?: any,
+  ): ApiResponse<T> {
     return {
-      data,
+      success,
+      message: message || (success ? 'Success' : 'Error'),
+      code: code || (success ? 'SUCCESS' : 'ERROR'),
+      httpStatus: httpStatus || (success ? HttpStatus.OK : HttpStatus.BAD_REQUEST),
+      data: success ? data : undefined,
       meta,
-      message,
-      code,
-      httpStatus: HttpStatus.OK,
-      success: true,
-    };
-  }
-
-  /**
-   * Tạo response thành công với HTTP status cụ thể
-   */
-  static created<T>(data: T, message: string = 'Tạo mới thành công'): ApiResponse<T> {
-    return {
-      data,
-      message,
-      code: 'CREATED',
-      httpStatus: HttpStatus.CREATED,
-      success: true,
-    };
-  }
-
-  /**
-   * Tạo response cập nhật thành công
-   */
-  static updated<T>(data: T, message: string = 'Cập nhật thành công'): ApiResponse<T> {
-    return {
-      data,
-      message,
-      code: 'UPDATED',
-      httpStatus: HttpStatus.OK,
-      success: true,
-    };
-  }
-
-  /**
-   * Tạo response xóa thành công
-   */
-  static deleted(message: string = 'Xóa thành công'): ApiResponse<null> {
-    return {
-      data: null,
-      message,
-      code: 'DELETED',
-      httpStatus: HttpStatus.OK,
-      success: true,
-    };
-  }
-
-  /**
-   * Tạo response khôi phục thành công
-   */
-  static restored<T>(data: T, message: string = 'Khôi phục thành công'): ApiResponse<T> {
-    return {
-      data,
-      message,
-      code: 'RESTORED',
-      httpStatus: HttpStatus.OK,
-      success: true,
-    };
-  }
-
-  /**
-   * Tạo response lỗi validation
-   */
-  static invalidQuery(message: string = 'Tham số không hợp lệ'): PaginatedResponse {
-    return {
-      data: [],
-      meta: { page: 1, limit: 0, total: 0 },
-      message,
-      code: 'INVALID_QUERY',
-      httpStatus: HttpStatus.BAD_REQUEST,
-      success: false,
-    };
-  }
-
-  /**
-   * Tạo response không tìm thấy
-   */
-  static notFound(message: string = 'Không tìm thấy dữ liệu'): ApiResponse<null> {
-    return {
-      data: null,
-      message,
-      code: 'NOT_FOUND',
-      httpStatus: HttpStatus.NOT_FOUND,
-      success: false,
-    };
-  }
-
-  /**
-   * Tạo response lỗi server
-   */
-  static error(message: string = 'Có lỗi xảy ra', code: string = 'ERROR'): ApiResponse<null> {
-    return {
-      data: null,
-      message,
-      code,
-      httpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
-      success: false,
+      errors: success ? undefined : errors,
+      timestamp: this.now(),
     };
   }
 }

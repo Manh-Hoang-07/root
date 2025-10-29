@@ -9,4 +9,5 @@ export default registerAs('app', () => ({
   globalPrefix: process.env.GLOBAL_PREFIX || 'api',
   corsEnabled: process.env.CORS_ENABLED === 'true' || true,
   corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['*'],
+  timezone: process.env.APP_TIMEZONE || 'Asia/Ho_Chi_Minh',
 }));

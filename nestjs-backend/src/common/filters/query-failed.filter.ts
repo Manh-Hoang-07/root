@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { QueryFailedError } from 'typeorm';
-import { ResponseUtil } from '../../core/utils/response.util';
+import { ResponseUtil } from '../../common/utils/response.util';
 
 @Catch(QueryFailedError)
 export class QueryFailedFilter implements ExceptionFilter {

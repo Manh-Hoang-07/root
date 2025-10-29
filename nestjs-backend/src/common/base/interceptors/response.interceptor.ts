@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ResponseUtil } from '../../../core/utils/response.util';
+import { ResponseUtil } from '../../../common/utils/response.util';
 
 interface ControllerResponse {
   data?: any;

@@ -26,7 +26,14 @@ async function bootstrap() {
     environment: configService.get('app.environment', 'development'),
     name: configService.get('app.name', 'NestJS Backend'),
     version: configService.get('app.version', '1.0.0'),
+    timezone: configService.get('app.timezone', 'Asia/Ho_Chi_Minh'),
   };
+
+  // Set process timezone (best effort; DB timezone configured separately)
+  try {
+    process.env.TZ = appConfig.timezone;
+    Logger.log(`Timezone set to ${appConfig.timezone}`, 'Application');
+  } catch {}
 
   // Enable CORS if configured
   if (appConfig.corsEnabled) {
