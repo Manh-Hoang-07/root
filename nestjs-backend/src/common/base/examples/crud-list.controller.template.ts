@@ -67,15 +67,23 @@ export class CrudListControllerTemplate<T extends BaseEntity> extends BaseCrudCo
   // GET /replace-path/:id
   @Get(':id')
   async find(@Param('id') id: string) {
-    const data = await this.service.findByIdOrFail(id);
+    const data = await this.service.findOne({ id } as any);
+    if (!data) {
+      return ResponseUtil.notFound('Không tìm thấy bản ghi');
+    }
     return ResponseUtil.success(data, 'Lấy thông tin thành công');
   }
 
   // POST /replace-path
   @Post()
   async create(@Body() createDto: any) {
-    const data = await this.service.create(createDto);
-    return ResponseUtil.created(data);
+    const result = await this.service.create(createDto);
+    
+    if (result.success) {
+      return ResponseUtil.created(result.data, result.message);
+    } else {
+      return ResponseUtil.error(result.message, result.code, 400);
+    }
   }
 
   // (createMany removed as requested)
@@ -83,50 +91,49 @@ export class CrudListControllerTemplate<T extends BaseEntity> extends BaseCrudCo
   // PUT /replace-path/:id
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateDto: any) {
-    const data = await this.service.update(id, updateDto);
-    return ResponseUtil.updated(data);
+    const result = await this.service.update(id, updateDto);
+    
+    if (result.success) {
+      return ResponseUtil.updated(result.data, result.message);
+    } else {
+      return ResponseUtil.error(result.message, result.code, 400);
+    }
   }
 
   // PUT /replace-path/bulk
   @Put('bulk')
   async updateMany(@Body() body: { updates: Array<{ id: string; data: any }> }) {
-    const data = await this.service.updateMany(body.updates);
-    return ResponseUtil.updated(data, 'Cập nhật nhiều bản ghi thành công');
+    const result = await this.service.updateMany(body.updates);
+    
+    if (result.success) {
+      return ResponseUtil.updated(result.data, result.message);
+    } else {
+      return ResponseUtil.error(result.message, result.code, 400);
+    }
   }
 
   // DELETE /replace-path/:id
   @Delete(':id')
-  async softDelete(@Param('id') id: string) {
-    await this.service.softDelete(id);
-    return ResponseUtil.deleted();
+  async delete(@Param('id') id: string) {
+    const result = await this.service.delete(id);
+    
+    if (result.success) {
+      return ResponseUtil.deleted(result.message);
+    } else {
+      return ResponseUtil.error(result.message, result.code, 400);
+    }
   }
 
   // DELETE /replace-path/bulk
   @Delete('bulk')
-  async softDeleteMany(@Body() body: { ids: string[] }) {
-    await this.service.softDeleteMany(body.ids);
-    return ResponseUtil.deleted('Xóa nhiều bản ghi thành công');
-  }
-
-  // DELETE /replace-path/:id/hard
-  @Delete(':id/hard')
-  async hardDelete(@Param('id') id: string) {
-    await this.service.delete(id);
-    return ResponseUtil.deleted('Xóa vĩnh viễn thành công');
-  }
-
-  // POST /replace-path/:id/restore
-  @Post(':id/restore')
-  async restore(@Param('id') id: string) {
-    const data = await this.service.restore(id);
-    return ResponseUtil.restored(data);
-  }
-
-  // POST /replace-path/restore
-  @Post('restore')
-  async restoreMany(@Body() body: { ids: string[] }) {
-    const data = await this.service.restoreMany(body.ids);
-    return ResponseUtil.restored(data, 'Khôi phục nhiều bản ghi thành công');
+  async deleteMany(@Body() body: { ids: string[] }) {
+    const result = await this.service.deleteMany(body.ids);
+    
+    if (result.success) {
+      return ResponseUtil.deleted(result.message);
+    } else {
+      return ResponseUtil.error(result.message, result.code, 400);
+    }
   }
 
   // (exists, count removed as requested)

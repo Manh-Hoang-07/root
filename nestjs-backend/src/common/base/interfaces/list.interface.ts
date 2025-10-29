@@ -1,5 +1,21 @@
 import { FindOptionsWhere } from 'typeorm';
-import { SortOptions, FilterOptions } from '../../../typings/api-response.interface';
+
+/**
+ * Sort Options Interface
+ */
+export interface SortOptions {
+  field: string;
+  direction: 'ASC' | 'DESC';
+}
+
+/**
+ * Filter Options Interface
+ */
+export interface FilterOptions {
+  field: string;
+  operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'nin' | 'like' | 'between';
+  value: any;
+}
 
 /**
  * Filters - Điều kiện tìm kiếm (conditions)
@@ -19,17 +35,13 @@ export interface Options {
   page?: number;
   limit?: number;
   
-  // Search
-  search?: string;
-  searchFields?: string[];
-  
   // Sorting
-  sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
-  sort?: SortOptions[];
+  // Accepts: "field:ASC" | "field" (defaults DESC) | array of them | or structured SortOptions[]
+  sort?: string | string[] | SortOptions[];
   
   // Relations
-  relations?: string[];
+  // Accepts: ["author", { name: "category", select: ["id", "name"] }]
+  relations?: Array<string | { name: string; select?: string[] }>;
   
   // Other
   select?: string[];
