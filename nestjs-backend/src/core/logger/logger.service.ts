@@ -71,45 +71,33 @@ export class CustomLoggerService implements LoggerService {
   }
 
   log(message: any, context?: LogContext): void {
-    const formattedMessage = this.formatMessage('log', message, context);
-    console.log(formattedMessage);
-    const entry = this.buildLogEntry('log', message, context);
-    this.writeJsonToFiles('log', entry);
+    // Suppress console output
+    // Only errors are persisted to files to reduce I/O
   }
 
   error(message: any, trace?: string, context?: LogContext): void {
     const contextWithTrace = { ...context, trace };
-    const formattedMessage = this.formatMessage('error', message, contextWithTrace);
-    console.error(formattedMessage);
-    if (trace) {
-      console.error(trace);
-    }
+    // Suppress console output
     const entry = this.buildLogEntry('error', message, contextWithTrace);
     this.writeJsonToFiles('error', entry);
   }
 
   warn(message: any, context?: LogContext): void {
-    const formattedMessage = this.formatMessage('warn', message, context);
-    console.warn(formattedMessage);
-    const entry = this.buildLogEntry('warn', message, context);
-    this.writeJsonToFiles('warn', entry);
+    // Suppress console output
+    // Only errors are persisted to files to reduce I/O
   }
 
   debug(message: any, context?: LogContext): void {
     if (this.configService.get('NODE_ENV') !== 'production') {
-      const formattedMessage = this.formatMessage('debug', message, context);
-      console.debug(formattedMessage);
-      const entry = this.buildLogEntry('debug', message, context);
-      this.writeJsonToFiles('debug', entry);
+      // Suppress console output
+      // Only errors are persisted to files to reduce I/O
     }
   }
 
   verbose(message: any, context?: LogContext): void {
     if (this.configService.get('NODE_ENV') === 'development') {
-      const formattedMessage = this.formatMessage('verbose', message, context);
-      console.log(formattedMessage);
-      const entry = this.buildLogEntry('verbose', message, context);
-      this.writeJsonToFiles('verbose', entry);
+      // Suppress console output
+      // Only errors are persisted to files to reduce I/O
     }
   }
 

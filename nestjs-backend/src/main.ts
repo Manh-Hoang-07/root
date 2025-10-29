@@ -46,6 +46,16 @@ async function bootstrap() {
     logger.log('CORS enabled', { origins: appConfig.corsOrigins });
   }
 
+  // Suppress all native console outputs globally (use CustomLoggerService instead)
+  try {
+    const noop = () => {};
+    (console as any).log = noop;
+    ;(console as any).info = noop;
+    ;(console as any).warn = noop;
+    ;(console as any).error = noop;
+    ;(console as any).debug = noop;
+  } catch {}
+
   // Set global prefix
   app.setGlobalPrefix(appConfig.globalPrefix);
 
