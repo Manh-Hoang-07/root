@@ -16,7 +16,7 @@ export class AuthService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async login(dto: LoginDto) {
     const user = await this.userRepository.findOne({
@@ -48,9 +48,12 @@ export class AuthService {
 
     const payload = { sub: user.id, email: user.email };
     const accessToken = this.jwtService.sign(payload);
+    const refreshSecret = this.configService.get<string>('jwt.refreshSecret');
+    const refreshExpiresIn = this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
+    const refreshToken = this.jwtService.sign(payload, { secret: refreshSecret, expiresIn: refreshExpiresIn as any });
 
     return ResponseUtil.success(
-      { token: accessToken },
+      { token: accessToken, refreshToken },
       'Đăng nhập thành công.',
     );
   }
@@ -94,15 +97,33 @@ export class AuthService {
     return ResponseUtil.success(null, 'Đăng xuất thành công.');
   }
 
-  async refreshToken(userId: number) {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) return ResponseUtil.unauthorized('User not authenticated');
-    const payload = { sub: user.id, email: user.email };
-    const accessToken = this.jwtService.sign(payload);
-    const refreshSecret = this.configService.get<string>('jwt.refreshSecret');
-    const refreshExpiresIn = this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
-    const refreshToken = this.jwtService.sign(payload, { secret: refreshSecret, expiresIn: refreshExpiresIn });
-    return ResponseUtil.success({ token: accessToken, refreshToken }, 'Token refreshed successfully.');
+  async refreshToken(token: string) {
+    try {
+      // First try to verify as a refresh token
+      const refreshSecret = this.configService.get<string>('jwt.refreshSecret');
+      let payload;
+
+      try {
+        payload = this.jwtService.verify(token, { secret: refreshSecret });
+      } catch (refreshError) {
+        // If refresh token verification fails, try as access token
+        try {
+          payload = this.jwtService.verify(token);
+        } catch (accessError) {
+          return ResponseUtil.unauthorized('Invalid or expired token');
+        }
+      }
+
+      const user = await this.userRepository.findOne({ where: { id: payload.sub } });
+      if (!user) return ResponseUtil.unauthorized('User not authenticated');
+
+      const newPayload = { sub: user.id, email: user.email };
+      const accessToken = this.jwtService.sign(newPayload);
+
+      return ResponseUtil.success({ token: accessToken }, 'Token refreshed successfully.');
+    } catch (error) {
+      return ResponseUtil.unauthorized('Invalid or expired token');
+    }
   }
 
   async me(userId: number) {

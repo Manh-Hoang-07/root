@@ -17,7 +17,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('jwt.secret'),
         signOptions: {
-          expiresIn: configService.get<string>('jwt.expiresIn') || '60m',
+          // jsonwebtoken@9 has stricter typings for expiresIn
+          expiresIn: (configService.get<string>('jwt.expiresIn') || '60m') as any,
           issuer: configService.get<string>('jwt.issuer'),
           audience: configService.get<string>('jwt.audience'),
         },

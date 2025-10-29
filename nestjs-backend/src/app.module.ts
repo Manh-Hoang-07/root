@@ -30,7 +30,7 @@ import { AuthModule } from './modules/auth/auth.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      envFilePath: ['.env.local', '.env', 'env.mysql'],
       load: [
         appConfig,
         databaseConfig,

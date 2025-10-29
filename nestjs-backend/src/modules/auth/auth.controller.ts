@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Res, ValidationPipe, UsePipes, BadRequestException } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -10,7 +10,7 @@ import { ResponseUtil } from '../../common/utils/response.util';
 
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Public()
   @Post('login')
@@ -45,16 +45,23 @@ export class AuthController {
 
   @Public()
   @Post('refresh')
-  async refresh(@User('id') userId: number, @Res({ passthrough: true }) res: Response, @Body() _dto: RefreshTokenDto) {
-    if (!userId) {
-      return ResponseUtil.unauthorized('User not authenticated');
+  async refresh(@Headers('authorization') authHeader: string, @Res({ passthrough: true }) res: Response) {
+    try {
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return ResponseUtil.unauthorized('Authorization header with Bearer token is required');
+      }
+
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      const result: any = await this.authService.refreshToken(token);
+
+      if (result?.success && result?.data?.token) {
+        const domain = (res.req.hostname === 'localhost') ? 'localhost' : undefined;
+        res.cookie('auth_token', result.data.token, { maxAge: 60 * 60 * 1000, httpOnly: false, secure: false, domain, path: '/' });
+      }
+      return result;
+    } catch (error) {
+      return ResponseUtil.badRequest('Invalid refresh token format');
     }
-    const result: any = await this.authService.refreshToken(userId);
-    if (result?.success && result?.data?.token) {
-      const domain = (res.req.hostname === 'localhost') ? 'localhost' : undefined;
-      res.cookie('auth_token', result.data.token, { maxAge: 60 * 60 * 1000, httpOnly: false, secure: false, domain, path: '/' });
-    }
-    return result;
   }
 }
 

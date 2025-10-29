@@ -7,7 +7,7 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 255, unique: true, nullable: true })
+  @Column({ length: 50, unique: true, nullable: true })
   username?: string | null;
 
   @Column({ length: 255, unique: true, nullable: true })
@@ -19,7 +19,7 @@ export class User {
   @Column({ length: 255, nullable: true })
   password?: string | null;
 
-  @Column({ type: 'enum', enum: UserStatus, default: UserStatus.Active })
+  @Column({ type: 'varchar', length: 255, default: UserStatus.Active })
   status: UserStatus;
 
   @Column({ type: 'datetime', nullable: true })

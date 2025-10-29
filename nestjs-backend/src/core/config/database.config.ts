@@ -6,7 +6,7 @@ export default registerAs('database', () => ({
   port: parseInt(process.env.DB_PORT, 10) || 3306,
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_DATABASE || 'nestjs_backend',
+  database: process.env.DB_DATABASE || 'base',
   synchronize: process.env.DB_SYNCHRONIZE === 'true' || false,
   logging: process.env.DB_LOGGING === 'true' || false,
   ssl: process.env.DB_SSL === 'true' || false,
