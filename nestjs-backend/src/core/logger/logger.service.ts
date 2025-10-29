@@ -2,18 +2,50 @@ import { Injectable, LoggerService, LogLevel } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
+import { performance } from 'perf_hooks';
 
 export interface LogContext {
   context?: string;
   trace?: string;
   userId?: string;
+  username?: string;
   requestId?: string;
+  method?: string;
+  url?: string;
+  ip?: string;
+  userAgent?: string;
+  extra?: Record<string, any>;
   [key: string]: any;
+}
+
+export interface LogWriteOptions {
+  /** Absolute or relative file path. If provided, write to this exact file. */
+  filePath?: string;
+  /** Custom base name; final file becomes <base>.<YYYY-MM-DD>.log if filePath is not provided */
+  fileBaseName?: string;
+}
+
+export class CheckpointTracker {
+  private readonly startTimeMs: number;
+  private readonly checkpoints: Record<string, number> = {};
+
+  constructor() {
+    this.startTimeMs = performance.now();
+  }
+
+  addCheckpoint(key: string): void {
+    const now = performance.now();
+    this.checkpoints[key] = Math.round(now - this.startTimeMs);
+  }
+
+  toLogDetails(): Record<string, number> {
+    return { ...this.checkpoints };
+  }
 }
 
 @Injectable()
 export class CustomLoggerService implements LoggerService {
-  private logLevels: LogLevel[] = ['log', 'error', 'warn', 'debug', 'verbose'];
   private logDirectory: string;
 
   constructor(private readonly configService: ConfigService) {
@@ -27,31 +59,77 @@ export class CustomLoggerService implements LoggerService {
     }
   }
 
-  private formatMessage(level: LogLevel, message: any, context?: LogContext): string {
-    const timestamp = new Date().toISOString();
-    const contextStr = context?.context || 'Application';
-    const userId = context?.userId ? `[User: ${context.userId}]` : '';
-    const requestId = context?.requestId ? `[Request: ${context.requestId}]` : '';
-    
-    return `[${timestamp}] [${level.toUpperCase()}] [${contextStr}] ${userId} ${requestId} ${message}`;
-  }
+  // Minimal API: build structured entry then write
 
   private buildLogEntry(level: LogLevel, message: any, context?: LogContext & { trace?: string }) {
+    const environment = this.configService.get('app.environment') || this.configService.get('NODE_ENV') || process.env.NODE_ENV || 'development';
+    const appName = this.configService.get('app.name') || 'NestJS App';
+    const appVersion = this.configService.get('app.version') || '1.0.0';
     return {
       timestamp: new Date().toISOString(),
       level: level.toUpperCase(),
       message,
       context: context?.context || 'Application',
-      userId: context?.userId,
-      requestId: context?.requestId,
+      account: {
+        userId: context?.userId,
+        username: context?.username,
+      },
+      api: {
+        method: context?.method,
+        url: context?.url,
+        requestId: context?.requestId,
+      },
+      device: {
+        ip: context?.ip,
+        userAgent: context?.userAgent,
+      },
+      server: {
+        hostname: os.hostname(),
+        pid: process.pid,
+        environment,
+        appName,
+        appVersion,
+      },
       trace: context?.trace,
-      extra: {},
+      extra: context?.extra || {},
     };
   }
 
-  private writeJsonToFiles(level: LogLevel, entry: any): void {
+  private extractErrorInfo(message: any, trace?: string): { errorMessage?: string; stackTrace?: string } | undefined {
+    if (message instanceof Error) {
+      return {
+        errorMessage: message.message,
+        stackTrace: message.stack,
+      };
+    }
+    if (trace) {
+      return {
+        errorMessage: typeof message === 'string' ? message : undefined,
+        stackTrace: trace,
+      };
+    }
+    return undefined;
+  }
+
+  private writeJsonToFiles(level: LogLevel, entry: any, options?: LogWriteOptions): void {
     const line = JSON.stringify(entry);
     const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+    if (options?.filePath) {
+      const dir = path.dirname(options.filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.appendFileSync(options.filePath, line + '\n', { encoding: 'utf8' });
+      return;
+    }
+
+    const base = options?.fileBaseName;
+    if (base) {
+      const customPath = path.join(this.logDirectory, `${base}.${date}.log`);
+      fs.appendFileSync(customPath, line + '\n', { encoding: 'utf8' });
+    }
+
     const levelFilePath = path.join(this.logDirectory, `${level}.${date}.log`);
     fs.appendFileSync(levelFilePath, line + '\n', { encoding: 'utf8' });
 
@@ -59,83 +137,50 @@ export class CustomLoggerService implements LoggerService {
     fs.appendFileSync(appDailyPath, line + '\n', { encoding: 'utf8' });
   }
 
+  // ---
+
   /**
-   * Write arbitrary JSON value to a specific daily log file.
-   * fileBaseName: without extension; file will be <fileBaseName>.<YYYY-MM-DD>.log
+   * Generic structured log with metadata and optional custom file path.
    */
-  public writeJsonLine(fileBaseName: string, value: any): void {
-    const date = new Date().toISOString().slice(0, 10);
-    const filePath = path.join(this.logDirectory, `${fileBaseName}.${date}.log`);
-    const line = JSON.stringify(value);
-    fs.appendFileSync(filePath, line + '\n', { encoding: 'utf8' });
+  public write(level: LogLevel, message: any, context?: LogContext, options?: LogWriteOptions): void {
+    const entry = this.buildLogEntry(level, message, context);
+    this.writeJsonToFiles(level, entry, options);
   }
 
-  log(message: any, context?: LogContext): void {
-    // Suppress console output
-    // Only errors are persisted to files to reduce I/O
+  /**
+   * Create a new checkpoint tracker to record step timings.
+   */
+  public createTracker(): CheckpointTracker {
+    return new CheckpointTracker();
   }
 
-  error(message: any, trace?: string, context?: LogContext): void {
+  log(message: any, context?: LogContext, options?: LogWriteOptions): void {
+    const entry = this.buildLogEntry('log', message, context);
+    this.writeJsonToFiles('log', entry, options);
+  }
+
+  error(message: any, trace?: string, context?: LogContext, options?: LogWriteOptions): void {
     const contextWithTrace = { ...context, trace };
-    // Suppress console output
     const entry = this.buildLogEntry('error', message, contextWithTrace);
-    this.writeJsonToFiles('error', entry);
-  }
-
-  warn(message: any, context?: LogContext): void {
-    // Suppress console output
-    // Only errors are persisted to files to reduce I/O
-  }
-
-  debug(message: any, context?: LogContext): void {
-    if (this.configService.get('NODE_ENV') !== 'production') {
-      // Suppress console output
-      // Only errors are persisted to files to reduce I/O
+    const errInfo = this.extractErrorInfo(message, trace);
+    if (errInfo) {
+      entry.extra = { ...(entry.extra || {}), error: errInfo };
     }
+    this.writeJsonToFiles('error', entry, options);
   }
 
-  verbose(message: any, context?: LogContext): void {
-    if (this.configService.get('NODE_ENV') === 'development') {
-      // Suppress console output
-      // Only errors are persisted to files to reduce I/O
-    }
+  warn(message: any, context?: LogContext, options?: LogWriteOptions): void {
+    const entry = this.buildLogEntry('warn', message, context);
+    this.writeJsonToFiles('warn', entry, options);
   }
 
-  // Additional utility methods
-  logWithContext(level: LogLevel, message: any, context: LogContext): void {
-    switch (level) {
-      case 'log':
-        this.log(message, context);
-        break;
-      case 'error':
-        this.error(message, context.trace, context);
-        break;
-      case 'warn':
-        this.warn(message, context);
-        break;
-      case 'debug':
-        this.debug(message, context);
-        break;
-      case 'verbose':
-        this.verbose(message, context);
-        break;
-    }
+  debug(message: any, context?: LogContext, options?: LogWriteOptions): void {
+    // no-op per requirement to remove debug logs
   }
 
-  // Clear old logs (utility method)
-  clearOldLogs(daysToKeep: number = 30): void {
-    const files = fs.readdirSync(this.logDirectory);
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-
-    files.forEach(file => {
-      const filePath = path.join(this.logDirectory, file);
-      const stats = fs.statSync(filePath);
-      
-      if (stats.mtime < cutoffDate) {
-        fs.unlinkSync(filePath);
-        this.log(`Deleted old log file: ${file}`);
-      }
-    });
+  verbose(message: any, context?: LogContext, options?: LogWriteOptions): void {
+    // no-op per requirement to remove verbose logs
   }
+
+  // ---
 }

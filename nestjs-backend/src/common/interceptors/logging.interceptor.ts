@@ -3,15 +3,15 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  Logger,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Request, Response } from 'express';
+import { CustomLoggerService } from '../../core/logger/logger.service';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-  private readonly logger = new Logger(LoggingInterceptor.name);
+  constructor(private readonly logger: CustomLoggerService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     if (context.getType() !== 'http') {
@@ -26,61 +26,70 @@ export class LoggingInterceptor implements NestInterceptor {
     const startTime = Date.now();
 
     // Generate unique request ID if not present
-    const requestId = headers['x-request-id'] || this.generateRequestId();
+    const ridHeader = headers['x-request-id'] as unknown;
+    const requestId = Array.isArray(ridHeader)
+      ? (ridHeader[0] as string)
+      : (typeof ridHeader === 'string' && ridHeader.length > 0
+          ? ridHeader
+          : this.generateRequestId());
     
     // Add request ID to response headers
     response.setHeader('X-Request-ID', requestId);
 
-    // // Log incoming request
-    // this.logger.log(
-    //   `Incoming Request: ${method} ${url}`,
-    //   JSON.stringify({
-    //     requestId,
-    //     method,
-    //     url,
-    //     userAgent,
-    //     ip,
-    //     params: Object.keys(params).length ? params : undefined,
-    //     query: Object.keys(query).length ? query : undefined,
-    //     body: this.sanitizeBody(body),
-    //     timestamp: new Date().toISOString(),
-    //   }),
-    // );
+    const filePathHeader = (headers['x-log-file'] as string) || undefined;
+    const contextBase = {
+      context: 'HTTP',
+      requestId,
+      method,
+      url,
+      userAgent,
+      ip,
+      // Account info if framework/auth puts it on request
+      userId: (request as any)?.user?.id,
+      username: (request as any)?.user?.username || (request as any)?.user?.email,
+      extra: {
+        params: Object.keys(params || {}).length ? params : undefined,
+        query: Object.keys(query || {}).length ? query : undefined,
+        bodySize: body ? JSON.stringify(body).length : 0,
+      },
+    } as const;
 
     return next.handle().pipe(
       tap(() => {
         const duration = Date.now() - startTime;
         const { statusCode } = response;
-        
-        // Log successful response
+
         this.logger.log(
-          `Outgoing Response: ${method} ${url} - ${statusCode} - ${duration}ms`,
-          JSON.stringify({
-            requestId,
-            method,
-            url,
-            statusCode,
-            duration: `${duration}ms`,
-            timestamp: new Date().toISOString(),
-          }),
+          `Outgoing Response`,
+          {
+            ...contextBase,
+            extra: {
+              ...contextBase.extra,
+              statusCode,
+              durationMs: duration,
+              logDetails: { end: duration },
+            },
+          },
+          filePathHeader ? { filePath: filePathHeader } : undefined,
         );
       }),
       catchError((error) => {
         const duration = Date.now() - startTime;
-        
-        // Log error response
+
         this.logger.error(
-          `Error Response: ${method} ${url} - ${error.status || 500} - ${duration}ms`,
-          JSON.stringify({
-            requestId,
-            method,
-            url,
-            statusCode: error.status || 500,
-            duration: `${duration}ms`,
-            error: error.message,
-            timestamp: new Date().toISOString(),
-          }),
-          error.stack,
+          `Error Response`,
+          error?.stack,
+          {
+            ...contextBase,
+            extra: {
+              ...contextBase.extra,
+              statusCode: (error as any)?.status || 500,
+              durationMs: duration,
+              errorMessage: error?.message,
+              logDetails: { end: duration },
+            },
+          },
+          filePathHeader ? { filePath: filePathHeader } : undefined,
         );
 
         throw error;
