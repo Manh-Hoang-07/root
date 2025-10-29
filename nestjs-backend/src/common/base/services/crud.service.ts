@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Repository, FindOptionsWhere, DeepPartial } from 'typeorm';
 import { BaseEntity } from '../entities/base.entity';
 import { ListService } from './list.service';
-import { ResponseUtil } from '../../utils/response.util';
+import { ResponseUtil, ApiResponse } from '../../utils/response.util';
 
 /**
  * CRUD Service
@@ -15,55 +15,33 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
   }
 
   /**
-   * Tìm entity theo ID hoặc throw NotFoundException
-   */
-  async findByIdOrFail(id: string): Promise<T> {
-    const entity = await this.repository.findOne({
-      where: { id } as FindOptionsWhere<T>,
-    });
-    
-    if (!entity) {
-      throw new NotFoundException(`Entity with ID ${id} not found`);
-    }
-    
-    return entity;
-  }
-
-  /**
    * Tạo mới một entity
    */
   async create(
     createDto: DeepPartial<T>,
     createdBy?: string,
-  ): Promise<{ data: T | null; message: string; code: string; success: boolean }> {
+  ): Promise<ApiResponse<T | null>> {
+    let result: ApiResponse<T | null>;
     try {
       const entity = this.repository.create({
         ...createDto,
         createdBy,
       } as DeepPartial<T>);
 
-      // Hook before create - override để thêm logic tùy chỉnh
-      await this.beforeCreate(entity, createDto);
-
-      const savedEntity = await this.repository.save(entity);
-
-      // Hook after create - override để thêm logic tùy chỉnh
-      await this.afterCreate(savedEntity, createDto);
-
-      return {
-        data: savedEntity,
-        message: 'Tạo mới thành công',
-        code: 'CREATED',
-        success: true,
-      };
+      // Hook before create - override để thêm logic tùy chỉnh (must return true to proceed)
+      const canProceed = await this.beforeCreate(entity, createDto);
+      if (!canProceed) {
+        result = ResponseUtil.error('Điều kiện tiền xử lý không đạt', 'PRECONDITION_FAILED');
+      } else {
+        const savedEntity = await this.repository.save(entity);
+        // Hook after create - chỉ gọi khi thao tác thành công
+        await this.afterCreate(savedEntity, createDto);
+        result = ResponseUtil.created(savedEntity);
+      }
     } catch (error) {
-      return {
-        data: null,
-        message: `Tạo mới thất bại: ${error.message}`,
-        code: 'CREATE_FAILED',
-        success: false,
-      };
+      result = ResponseUtil.error(`Tạo mới thất bại: ${error.message}`, 'CREATE_FAILED');
     }
+    return result;
   }
 
   /**
@@ -72,7 +50,8 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
   async createMany(
     createDtos: DeepPartial<T>[],
     createdBy?: string,
-  ): Promise<{ data: T[] | null; message: string; code: string; success: boolean }> {
+  ): Promise<ApiResponse<(T[] | null)>> {
+    let result: ApiResponse<T[] | null>;
     try {
       const entities = createDtos.map((dto) =>
         this.repository.create({
@@ -81,28 +60,20 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
         } as DeepPartial<T>),
       );
 
-      // Hook before create many
-      await this.beforeCreateMany(entities, createDtos);
-
-      const savedEntities = await this.repository.save(entities);
-
-      // Hook after create many
-      await this.afterCreateMany(savedEntities, createDtos);
-
-      return {
-        data: savedEntities,
-        message: `Tạo mới ${savedEntities.length} bản ghi thành công`,
-        code: 'CREATED',
-        success: true,
-      };
+      // Hook before create many (must return true to proceed)
+      const canProceed = await this.beforeCreateMany(entities, createDtos);
+      if (!canProceed) {
+        result = ResponseUtil.error('Điều kiện tiền xử lý không đạt', 'PRECONDITION_FAILED');
+      } else {
+        const savedEntities = await this.repository.save(entities);
+        // Hook after create many - chỉ gọi khi thao tác thành công
+        await this.afterCreateMany(savedEntities, createDtos);
+        result = ResponseUtil.created(savedEntities, `Tạo mới ${savedEntities.length} bản ghi thành công`);
+      }
     } catch (error) {
-      return {
-        data: null,
-        message: `Tạo mới thất bại: ${error.message}`,
-        code: 'CREATE_FAILED',
-        success: false,
-      };
+      result = ResponseUtil.error(`Tạo mới thất bại: ${error.message}`, 'CREATE_FAILED');
     }
+    return result;
   }
 
   /**
@@ -112,36 +83,33 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
     id: string,
     updateDto: DeepPartial<T>,
     updatedBy?: string,
-  ): Promise<{ data: T | null; message: string; code: string; success: boolean }> {
+  ): Promise<ApiResponse<T | null>> {
+    let result: ApiResponse<T | null>;
     try {
-      const entity = await this.findByIdOrFail(id);
-
-      // Hook before update
-      await this.beforeUpdate(entity, updateDto);
-
-      // Update entity
-      Object.assign(entity, {
-        ...updateDto,
-        updatedBy,
-      });
-      
-      const updatedEntity = await this.repository.save(entity);
-      await this.afterUpdate(updatedEntity, updateDto);
-      
-      return {
-        data: updatedEntity,
-        message: 'Cập nhật thành công',
-        code: 'UPDATED',
-        success: true,
-      };
+      const entity = await this.repository.findOne({ where: { id } as FindOptionsWhere<T> });
+      if (!entity) {
+        result = ResponseUtil.notFound(`Entity with ID ${id} not found`);
+      } else {
+        // Hook before update (must return true to proceed)
+        const canProceed = await this.beforeUpdate(entity, updateDto);
+        if (!canProceed) {
+          result = ResponseUtil.error('Điều kiện tiền xử lý không đạt', 'PRECONDITION_FAILED');
+        } else {
+          // Update entity
+          Object.assign(entity, {
+            ...updateDto,
+            updatedBy,
+          });
+          
+          const updatedEntity = await this.repository.save(entity);
+          await this.afterUpdate(updatedEntity, updateDto);
+          result = ResponseUtil.updated(updatedEntity);
+        }
+      }
     } catch (error) {
-      return {
-        data: null,
-        message: `Cập nhật thất bại: ${error.message}`,
-        code: 'UPDATE_FAILED',
-        success: false,
-      };
+      result = ResponseUtil.error(`Cập nhật thất bại: ${error.message}`, 'UPDATE_FAILED');
     }
+    return result;
   }
 
   /**
@@ -150,36 +118,24 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
   async updateMany(
     updates: Array<{ id: string; data: DeepPartial<T> }>,
     updatedBy?: string,
-  ): Promise<{ data: T[] | null; message: string; code: string; success: boolean }> {
+  ) {
     try {
       const updatedEntities = await Promise.all(
         updates.map(({ id, data }) => this.update(id, data, updatedBy))
       );
 
       // Check if any update failed
-      const failedCount = updatedEntities.filter(result => !result.success).length;
+      const failedCount = updatedEntities.filter((result: any) => result.code !== 'UPDATED').length;
       if (failedCount > 0) {
-        return {
-          data: null,
-          message: `${failedCount}/${updates.length} bản ghi cập nhật thất bại`,
-          code: 'UPDATE_PARTIAL_FAILED',
-          success: false,
-        };
+        return ResponseUtil.error(`${failedCount}/${updates.length} bản ghi cập nhật thất bại`, 'UPDATE_PARTIAL_FAILED');
       }
 
-      return {
-        data: updatedEntities.map(result => result.data!),
-        message: `Cập nhật ${updatedEntities.length} bản ghi thành công`,
-        code: 'UPDATED',
-        success: true,
-      };
+      return ResponseUtil.updated(
+        updatedEntities.map((result: any) => result.data),
+        `Cập nhật ${updatedEntities.length} bản ghi thành công`
+      );
     } catch (error) {
-      return {
-        data: null,
-        message: `Cập nhật thất bại: ${error.message}`,
-        code: 'UPDATE_FAILED',
-        success: false,
-      };
+      return ResponseUtil.error(`Cập nhật thất bại: ${error.message}`, 'UPDATE_FAILED');
     }
   }
 
@@ -188,32 +144,28 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
    */
   async delete(
     id: string,
-  ): Promise<{ data: null; message: string; code: string; success: boolean }> {
+  ): Promise<ApiResponse<null>> {
+    let result: ApiResponse<null>;
     try {
-      const entity = await this.findByIdOrFail(id);
-
-      // Hook before delete
-      await this.beforeDelete(entity);
-
-      await this.repository.remove(entity);
-
-      // Hook after delete
-      await this.afterDelete(entity);
-
-      return {
-        data: null,
-        message: 'Xóa thành công',
-        code: 'DELETED',
-        success: true,
-      };
+      const entity = await this.repository.findOne({ where: { id } as FindOptionsWhere<T> });
+      if (!entity) {
+        result = ResponseUtil.notFound(`Entity with ID ${id} not found`);
+      } else {
+        // Hook before delete (must return true to proceed)
+        const canProceed = await this.beforeDelete(entity);
+        if (!canProceed) {
+          result = ResponseUtil.error('Điều kiện tiền xử lý không đạt', 'PRECONDITION_FAILED');
+        } else {
+          await this.repository.remove(entity);
+          // Hook after delete
+          await this.afterDelete(entity);
+          result = ResponseUtil.deleted();
+        }
+      }
     } catch (error) {
-      return {
-        data: null,
-        message: `Xóa thất bại: ${error.message}`,
-        code: 'DELETE_FAILED',
-        success: false,
-      };
+      result = ResponseUtil.error(`Xóa thất bại: ${error.message}`, 'DELETE_FAILED');
     }
+    return result;
   }
 
   /**
@@ -221,53 +173,34 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
    */
   async deleteMany(
     ids: string[],
-  ): Promise<{ data: null; message: string; code: string; success: boolean }> {
+  ): Promise<ApiResponse<null>> {
     try {
       const entities = await this.repository.find({
         where: ids.map((id) => ({ id } as FindOptionsWhere<T>)),
       } as any);
 
+      let result: ApiResponse<null>;
       if (entities.length === 0) {
-        return {
-          data: null,
-          message: 'Không tìm thấy bản ghi nào để xóa',
-          code: 'DELETE_NOT_FOUND',
-          success: false,
-        };
+        result = ResponseUtil.error('Không tìm thấy bản ghi nào để xóa', 'DELETE_NOT_FOUND');
+      } else if (await this.beforeDeleteMany(entities)) {
+        await this.repository.remove(entities);
+        await this.afterDeleteMany(entities);
+        result = ResponseUtil.deleted(`Xóa ${entities.length} bản ghi thành công`);
+      } else {
+        result = ResponseUtil.error('Điều kiện tiền xử lý không đạt', 'PRECONDITION_FAILED');
       }
-
-      // Hook before delete many
-      await this.beforeDeleteMany(entities);
-
-      await this.repository.remove(entities);
-
-      // Hook after delete many
-      await this.afterDeleteMany(entities);
-
-      return {
-        data: null,
-        message: `Xóa ${entities.length} bản ghi thành công`,
-        code: 'DELETED',
-        success: true,
-      };
+      return result;
     } catch (error) {
-      return {
-        data: null,
-        message: `Xóa thất bại: ${error.message}`,
-        code: 'DELETE_FAILED',
-        success: false,
-      };
+      return ResponseUtil.error(`Xóa thất bại: ${error.message}`, 'DELETE_FAILED');
     }
   }
-
-  // ==================== Hooks - Override trong service con để thêm logic tùy chỉnh ====================
-
+  
   /**
    * Hook được gọi trước khi tạo entity
    * Override method này để thêm validation hoặc logic tùy chỉnh
    */
-  protected async beforeCreate(entity: T, createDto: DeepPartial<T>): Promise<void> {
-    // Override trong service con
+  protected async beforeCreate(entity: T, createDto: DeepPartial<T>): Promise<boolean> {
+    return true;
   }
 
   /**
@@ -284,8 +217,8 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
   protected async beforeCreateMany(
     entities: T[],
     createDtos: DeepPartial<T>[],
-  ): Promise<void> {
-    // Override trong service con
+  ): Promise<boolean> {
+    return true;
   }
 
   /**
@@ -304,8 +237,8 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
   protected async beforeUpdate(
     entity: T,
     updateDto: DeepPartial<T>,
-  ): Promise<void> {
-    // Override trong service con
+  ): Promise<boolean> {
+    return true;
   }
 
   /**
@@ -321,8 +254,8 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
   /**
    * Hook được gọi trước khi xóa cứng entity
    */
-  protected async beforeDelete(entity: T): Promise<void> {
-    // Override trong service con
+  protected async beforeDelete(entity: T): Promise<boolean> {
+    return true;
   }
 
   /**
@@ -335,8 +268,8 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
   /**
    * Hook được gọi trước khi xóa cứng nhiều entities
    */
-  protected async beforeDeleteMany(entities: T[]): Promise<void> {
-    // Override trong service con
+  protected async beforeDeleteMany(entities: T[]): Promise<boolean> {
+    return true;
   }
 
   /**

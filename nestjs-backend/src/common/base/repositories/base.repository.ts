@@ -7,9 +7,9 @@ import { BaseEntity } from '../entities/base.entity';
  */
 export class BaseRepository<T extends BaseEntity> extends Repository<T> {
   /**
-   * Tìm tất cả entities với phân trang
-   */
-  async findWithPagination(
+  * Tìm tất cả entities với phân trang
+  */
+  async findAll(
     page: number = 1,
     limit: number = 10,
     options?: FindManyOptions<T> & {

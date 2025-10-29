@@ -5,6 +5,7 @@ export interface ApiResponse<T = any> {
   message: string;
   code: string;
   httpStatus?: HttpStatus;
+  success?: boolean;
 }
 
 export interface PaginatedMeta {
@@ -27,6 +28,8 @@ export class ResponseUtil {
       data,
       message,
       code,
+      httpStatus: HttpStatus.OK,
+      success: true,
     };
   }
 
@@ -44,6 +47,8 @@ export class ResponseUtil {
       meta,
       message,
       code,
+      httpStatus: HttpStatus.OK,
+      success: true,
     };
   }
 
@@ -56,6 +61,7 @@ export class ResponseUtil {
       message,
       code: 'CREATED',
       httpStatus: HttpStatus.CREATED,
+      success: true,
     };
   }
 
@@ -67,6 +73,8 @@ export class ResponseUtil {
       data,
       message,
       code: 'UPDATED',
+      httpStatus: HttpStatus.OK,
+      success: true,
     };
   }
 
@@ -78,6 +86,8 @@ export class ResponseUtil {
       data: null,
       message,
       code: 'DELETED',
+      httpStatus: HttpStatus.OK,
+      success: true,
     };
   }
 
@@ -89,6 +99,8 @@ export class ResponseUtil {
       data,
       message,
       code: 'RESTORED',
+      httpStatus: HttpStatus.OK,
+      success: true,
     };
   }
 
@@ -101,6 +113,8 @@ export class ResponseUtil {
       meta: { page: 1, limit: 0, total: 0 },
       message,
       code: 'INVALID_QUERY',
+      httpStatus: HttpStatus.BAD_REQUEST,
+      success: false,
     };
   }
 
@@ -112,6 +126,8 @@ export class ResponseUtil {
       data: null,
       message,
       code: 'NOT_FOUND',
+      httpStatus: HttpStatus.NOT_FOUND,
+      success: false,
     };
   }
 
@@ -123,6 +139,8 @@ export class ResponseUtil {
       data: null,
       message,
       code,
+      httpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
+      success: false,
     };
   }
 }
