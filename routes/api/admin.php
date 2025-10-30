@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Admin\PostTag\PostTagController;
 use App\Http\Controllers\Api\Admin\SystemConfig\SystemConfigController;
 use App\Http\Controllers\Api\Admin\SystemConfig\ConfigAuditController;
 use App\Http\Controllers\Api\Admin\NotificationTemplate\NotificationTemplateController;
+use App\Http\Controllers\Api\Admin\Slider\SliderController as AdminSliderController;
 use App\Http\Controllers\Api\Admin\Product\ProductController;
 use App\Http\Controllers\Api\Admin\Product\ProductCategoryController;
 use App\Http\Controllers\Api\Admin\Order\OrderController;
@@ -59,7 +60,7 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
         Route::post('/bulk-update', [SystemConfigController::class, 'bulkUpdate']);
         Route::post('/clear-cache', [SystemConfigController::class, 'clearCache']);
     });
-    
+
     // Admin - System Config module - RESTful routes
     Route::apiResource('system-configs', SystemConfigController::class);
 
@@ -71,6 +72,9 @@ Route::middleware(['auto.auth'])->prefix('admin')->group(function () {
 
     // Admin - Notification Template module
     Route::apiResource('notification-templates', NotificationTemplateController::class);
+
+    // Admin - Slider module
+    Route::apiResource('sliders', AdminSliderController::class);
 
     // Admin - E-commerce module
     Route::apiResource('products', ProductController::class);

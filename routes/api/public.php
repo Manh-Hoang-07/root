@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Public\PostCategory\PostCategoryController;
 use App\Http\Controllers\Api\Public\PostTag\PostTagController;
 use App\Http\Controllers\Api\Public\Contact\ContactController;
 use App\Http\Controllers\Api\Public\SystemConfig\SystemConfigController;
+use App\Http\Controllers\Api\Public\Slider\SliderController as PublicSliderController;
 use Illuminate\Support\Facades\Route;
 
 // Public API - Auth module
@@ -39,6 +40,9 @@ Route::get('/post-tags/slug/{slug}', [PostTagController::class, 'showBySlug']);
 
 // Public API - Contact module
 Route::apiResource('contacts', ContactController::class)->only(['store']);
+
+// Public API - Slider module
+Route::apiResource('sliders', PublicSliderController::class)->only(['index']);
 
 // Public API - System Config module (chỉ cho phép lấy configs theo group)
 Route::prefix('system-configs')->group(function () {
