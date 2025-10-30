@@ -3,8 +3,11 @@ import {
   Column,
   ManyToMany,
   Index,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
-import { BaseEntity } from '../../common/base/entities/base.entity';
 import { Post } from './post.entity';
 
 @Entity('posttag')
@@ -13,7 +16,28 @@ import { Post } from './post.entity';
 @Index('idx_status', ['status'])
 @Index('idx_created_at', ['createdAt'])
 @Index('idx_status_created_at', ['status', 'createdAt'])
-export class PostTag extends BaseEntity {
+export class PostTag {
+
+  @PrimaryGeneratedColumn({ unsigned: true })
+  id: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date;
+
+  @Column({ name: 'created_user_id', type: 'bigint', unsigned: true, nullable: true })
+  createdBy?: number;
+
+  @Column({ name: 'updated_user_id', type: 'bigint', unsigned: true, nullable: true })
+  updatedBy?: number;
+
+  @Column({ name: 'deleted_by', nullable: true, select: false })
+  deletedBy?: string;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;

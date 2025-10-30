@@ -6,8 +6,11 @@ import {
   JoinColumn,
   JoinTable,
   Index,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
-import { BaseEntity } from '../../common/base/entities/base.entity';
 import { PostCategory } from './post-category.entity';
 import { PostTag } from './post-tag.entity';
 
@@ -24,7 +27,28 @@ import { PostTag } from './post-tag.entity';
 @Index('idx_status_published_at', ['status', 'published_at'])
 @Index('idx_is_featured_status', ['is_featured', 'status'])
 @Index('idx_primary_category_status', ['primary_postcategory_id', 'status'])
-export class Post extends BaseEntity {
+export class Post {
+
+  @PrimaryGeneratedColumn({ unsigned: true })
+  id: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date;
+
+  @Column({ name: 'created_user_id', type: 'bigint', unsigned: true, nullable: true })
+  createdBy?: number;
+
+  @Column({ name: 'updated_user_id', type: 'bigint', unsigned: true, nullable: true })
+  updatedBy?: number;
+
+  @Column({ name: 'deleted_by', nullable: true, select: false })
+  deletedBy?: string;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
