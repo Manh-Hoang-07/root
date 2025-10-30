@@ -20,7 +20,6 @@ export class PostService extends ListService<Post> {
     // Always filter for published posts that are not soft-deleted
     const baseFilters = {
       status: 'published',
-      deletedAt: null,
       ...(filters || {}),
     };
     

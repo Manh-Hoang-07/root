@@ -118,14 +118,18 @@ export abstract class ListService<T> {
    */
   private applySorting(queryBuilder: any, sort?: any): void {
     const parsed = this.parseSort(sort);
+    const validFields = this.repository.metadata.columns.map(col => col.propertyName);
     if (!parsed || parsed.length === 0) {
       const { field, direction } = this.getDefaultOrderField();
-      queryBuilder.orderBy(`entity.${field}`, direction);
+      if (validFields.includes(field)) {
+        queryBuilder.orderBy(`entity.${field}`, direction);
+      }
       return;
     }
     parsed.forEach((s: any, idx: number) => {
       const order: 'ASC' | 'DESC' = (s.direction || 'DESC').toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
       const field = s.field;
+      if (!validFields.includes(field)) return;
       if (idx === 0) {
         queryBuilder.orderBy(`entity.${field}`, order);
       } else {

@@ -32,15 +32,13 @@ export class PostController {
 
     const result = await this.postService.findAll(filters, options);
 
-    return ResponseUtil.success(
-      {
-        data: result.data,
-        total: result.meta.totalItems,
-        page: result.meta.page,
-        limit: result.meta.limit,
-        totalPages: result.meta.totalPages,
-      },
+    return ResponseUtil.transform(
+      result.data,
+      true,
       'Lấy danh sách bài viết thành công.',
+      'SUCCESS',
+      200,
+      result.meta,
     );
   }
 
