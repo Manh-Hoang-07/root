@@ -13,25 +13,25 @@ import {
  * Bao gồm: id, timestamps, audit fields, soft delete
  */
 export abstract class BaseEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn({ unsigned: true })
+  id: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt?: Date;
 
-  @Column({ nullable: true })
-  createdBy?: string;
+  @Column({ name: 'created_user_id', type: 'bigint', unsigned: true, nullable: true })
+  createdBy?: number;
 
-  @Column({ nullable: true })
-  updatedBy?: string;
+  @Column({ name: 'updated_user_id', type: 'bigint', unsigned: true, nullable: true })
+  updatedBy?: number;
 
-  @Column({ nullable: true })
+  @Column({ name: 'deleted_by', nullable: true, select: false })
   deletedBy?: string;
 
   /**
@@ -68,7 +68,7 @@ export abstract class BaseEntity {
   /**
    * Get entity info for logging
    */
-  getEntityInfo(): { id: string; type: string; createdAt: Date } {
+  getEntityInfo(): { id: number; type: string; createdAt: Date } {
     return {
       id: this.id,
       type: this.constructor.name,

@@ -24,6 +24,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
+import { PublicModule } from './modules/public/public.module';
 // import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
@@ -40,6 +41,7 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
     DatabaseModule,
     AuthModule,
+    PublicModule,
   ],
   controllers: [AppController],
   providers: [

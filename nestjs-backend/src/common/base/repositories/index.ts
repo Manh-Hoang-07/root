@@ -2,5 +2,5 @@
  * Repositories Exports
  */
 
-export { BaseRepository } from './base.repository';
+// No repositories exported (services use Repository<T> directly)
 

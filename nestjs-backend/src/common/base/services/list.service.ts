@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { FindOptionsWhere } from 'typeorm';
-import { BaseEntity } from '../entities/base.entity';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { Filters, Options, PaginatedListResult } from '../interfaces/list.interface';
-import { BaseRepository } from '../repositories/base.repository';
 
 /**
  * List Service với các phương thức cơ bản cho việc lấy danh sách
  */
 @Injectable()
-export abstract class ListService<T extends BaseEntity> {
-  constructor(protected readonly repository: BaseRepository<T>) {}
+export abstract class ListService<T> {
+  constructor(protected readonly repository: Repository<T>) {}
 
   /**
    * Tìm tất cả entities với phân trang
@@ -45,7 +43,7 @@ export abstract class ListService<T extends BaseEntity> {
       // Apply select columns (always include primary keys)
       this.applySelectColumns(queryBuilder, options?.select);
       // Apply relations (default select all fields; allow per-relation select override)
-      this.applyRelations(queryBuilder, relations);
+      this.applyRelations(queryBuilder, relations as any);
       // Apply sorting
       this.applySorting(queryBuilder, options?.sort);
       // Apply pagination
@@ -165,17 +163,13 @@ export abstract class ListService<T extends BaseEntity> {
 
   private getDefaultOrderField(): { field: string; direction: 'ASC' | 'DESC' } {
     const meta = this.repository.metadata;
-    const columnNames = new Set(meta.columns.map(c => c.propertyName));
-    const indexedColumns = new Set(
-      meta.indices.flatMap(i => i.columns?.map(c => (typeof c === 'string' ? c : c.propertyName)) || []),
-    );
-    // Prefer createdAt if exists (and ideally indexed)
-    if (columnNames.has('createdAt')) return { field: 'createdAt', direction: 'DESC' };
-    // Next prefer id/primary column
-    if (columnNames.has('id')) return { field: 'id', direction: 'DESC' };
+    // Prefer primary column
     if (meta.primaryColumns[0]) return { field: meta.primaryColumns[0].propertyName, direction: 'DESC' };
-    // As a last resort, use the first column
-    return { field: meta.columns[0]?.propertyName || 'createdAt', direction: 'DESC' };
+    // Fallback to 'id' if present
+    const idCol = meta.columns.find(c => c.propertyName === 'id');
+    if (idCol) return { field: 'id', direction: 'DESC' };
+    // Last resort: first column
+    return { field: meta.columns[0]?.propertyName || 'id', direction: 'DESC' };
   }
 
   /**
@@ -194,6 +188,22 @@ export abstract class ListService<T extends BaseEntity> {
   }
 
   /**
+   * Apply relations into queryBuilder; supports string (all fields) or {name, select} for partial join
+   */
+  private applyRelations(queryBuilder: any, relations: Array<string | { name: string; select?: string[] }>) {
+    if (!Array.isArray(relations) || relations.length === 0) return;
+    for (const rel of relations) {
+      if (typeof rel === 'string') {
+        queryBuilder.leftJoinAndSelect(`entity.${rel}`, rel);
+      } else if (rel && typeof rel === 'object' && rel.name) {
+        const alias = rel.name;
+        // Temporarily always select full relation to avoid driver metadata issues
+        queryBuilder.leftJoinAndSelect(`entity.${alias}`, alias);
+      }
+    }
+  }
+
+  /**
    * Chuẩn hóa/merge filters trước khi build query
    * Override trong service con để thêm điều kiện mặc định hoặc chuyển đổi filters phức tạp
    */
@@ -206,32 +216,5 @@ export abstract class ListService<T extends BaseEntity> {
     // - true: proceed using original filters
     // - object/array: use as effective filters
     return filters as any;
-  }
-
-  /**
-   * Apply relations into queryBuilder; supports string (all fields) or {name, select} for partial join
-   */
-  private applyRelations(queryBuilder: any, relations: Array<string | { name: string; select?: string[] }>) {
-    if (!Array.isArray(relations) || relations.length === 0) return;
-    for (const rel of relations) {
-      if (typeof rel === 'string') {
-        queryBuilder.leftJoinAndSelect(`entity.${rel}`, rel);
-      } else if (rel && typeof rel === 'object' && rel.name) {
-        const alias = rel.name;
-        const cols: string[] = Array.isArray(rel.select) ? rel.select.filter((c: any) => typeof c === 'string' && c.trim()) : [];
-        if (cols.length > 0) {
-          // Ensure primary columns of relation are included
-          const relationMeta = this.repository.manager.connection.getMetadata(
-            this.repository.metadata.relations.find(r => r.propertyName === alias)?.type as any
-          );
-          const relPrimaryProps = relationMeta?.primaryColumns?.map((c: any) => c.propertyName) || [];
-          const uniq = new Set<string>([...relPrimaryProps, ...cols]);
-          queryBuilder.leftJoin(`entity.${alias}`, alias);
-          queryBuilder.addSelect(Array.from(uniq).map(c => `${alias}.${c}`));
-        } else {
-          queryBuilder.leftJoinAndSelect(`entity.${alias}`, alias);
-        }
-      }
-    }
   }
 }

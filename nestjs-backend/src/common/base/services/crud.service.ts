@@ -20,7 +20,7 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
    */
   async create(
     createDto: DeepPartial<T>,
-    createdBy?: string,
+    createdBy?: number,
   ): Promise<ApiResponse<T | null>> {
     let result: ApiResponse<T | null>;
     try {
@@ -50,7 +50,7 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
    */
   async createMany(
     createDtos: DeepPartial<T>[],
-    createdBy?: string,
+    createdBy?: number,
   ): Promise<ApiResponse<(T[] | null)>> {
     let result: ApiResponse<T[] | null>;
     try {
@@ -81,13 +81,13 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
    * Cập nhật một entity
    */
   async update(
-    id: string,
+    id: number,
     updateDto: DeepPartial<T>,
-    updatedBy?: string,
+    updatedBy?: number,
   ): Promise<ApiResponse<T | null>> {
     let result: ApiResponse<T | null>;
     try {
-      const entity = await this.repository.findOne({ where: { id } as FindOptionsWhere<T> });
+      const entity = await this.repository.findOne({ where: { id } as any });
       if (!entity) {
         result = ResponseUtil.notFound(`Entity with ID ${id} not found`);
       } else {
@@ -117,8 +117,8 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
    * Cập nhật nhiều entities cùng lúc (tối giản)
    */
   async updateMany(
-    updates: Array<{ id: string; data: DeepPartial<T> }>,
-    updatedBy?: string,
+    updates: Array<{ id: number; data: DeepPartial<T> }>,
+    updatedBy?: number,
   ) {
     try {
       const updatedEntities = await Promise.all(
@@ -144,11 +144,11 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
    * Xóa cứng (hard delete) một entity
    */
   async delete(
-    id: string,
+    id: number,
   ): Promise<ApiResponse<null>> {
     let result: ApiResponse<null>;
     try {
-      const entity = await this.repository.findOne({ where: { id } as FindOptionsWhere<T> });
+      const entity = await this.repository.findOne({ where: { id } as any });
       if (!entity) {
         result = ResponseUtil.notFound(`Entity with ID ${id} not found`);
       } else {
@@ -173,11 +173,11 @@ export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
    * Xóa cứng nhiều entities cùng lúc
    */
   async deleteMany(
-    ids: string[],
+    ids: number[],
   ): Promise<ApiResponse<null>> {
     try {
       const entities = await this.repository.find({
-        where: ids.map((id) => ({ id } as FindOptionsWhere<T>)),
+        where: ids.map((id) => ({ id })),
       } as any);
 
       let result: ApiResponse<null>;
