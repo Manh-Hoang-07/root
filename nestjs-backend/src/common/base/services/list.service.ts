@@ -45,9 +45,9 @@ export abstract class ListService<T> {
       if (whereFilters) {
         applyWhereConditions(queryBuilder, whereFilters);
       }
-      applySelectColumns(queryBuilder, (options as any)?.select);
+      applySelectColumns(queryBuilder, (normalizedOptions as any)?.select, this.repository);
       applyRelations(queryBuilder, relations as any);
-      applySorting(queryBuilder, normalizedOptions?.sort);
+      applySorting(queryBuilder, normalizedOptions?.sort, this.repository);
       queryBuilder.skip((page - 1) * limit).take(limit);
       const [rows, total] = await queryBuilder.getManyAndCount();
       data = rows;
@@ -105,7 +105,6 @@ export abstract class ListService<T> {
     const page = Number(queryOptions.page) || 1;
     const limit = Number(queryOptions.limit) || 10;
     const sort = queryOptions.sort;
-    const sortOrder = queryOptions.sort_order || 'DESC';
     return {
       page,
       limit,

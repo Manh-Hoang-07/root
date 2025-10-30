@@ -42,7 +42,7 @@ export class PostController {
   }
 
   @Get(':slug')
-  async findOne(@Param(ValidationPipe) params: GetPostDto) {
+  async findBySlug(@Param(ValidationPipe) params: GetPostDto) {
     const post = await this.postService.getOne(
       { slug: params.slug, status: 'published' } as any,
     );

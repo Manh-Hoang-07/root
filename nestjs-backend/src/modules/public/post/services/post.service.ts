@@ -2,10 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post } from '../../../../shared/entities/post.entity';
-import { GetPostDto } from '../dtos/get-post.dto';
-import { ResponseUtil } from '../../../../common/utils/response.util';
 import { ListService } from '../../../../common/base/services/list.service';
-import { Filters, Options } from '../../../../common/base/interfaces/list.interface';
 
 @Injectable()
 export class PostService extends ListService<Post> {
@@ -15,10 +12,28 @@ export class PostService extends ListService<Post> {
     super(repo);
   }
 
+  protected override prepareFilters(filters: any = {}) {
+    return {
+      ...filters,
+      status: 'published',
+    };
+  }
+
   protected override prepareOptions(queryOptions: any = {}) {
     const base = super.prepareOptions(queryOptions);
     return {
       ...base,
+      select: [
+        'id',
+        'name',
+        'slug',
+        'excerpt',
+        'image',
+        'cover_image',
+        'published_at',
+        'view_count',
+        'createdAt',
+      ],
       relations: [
         { name: 'primary_category', select: ['id', 'name', 'slug', 'description'], where: { status: 'active' } },
         { name: 'categories',       select: ['id', 'name', 'slug', 'description'], where: { status: 'active' } },
