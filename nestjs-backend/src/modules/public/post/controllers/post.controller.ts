@@ -26,11 +26,15 @@ export class PostController {
     const options: any = {
       page: query.page || 1,
       limit: query.limit || 10,
-      relations: ['primary_category', 'categories', 'tags'],
+      relations: [
+        { name: 'primary_category', select: ['id', 'name', 'slug', 'description'] },
+        { name: 'categories', select: ['id', 'name', 'slug', 'description'] },
+        { name: 'tags', select: ['id', 'name', 'slug', 'description'] }
+      ],
       sort: query.sort_by ? `${query.sort_by}:${query.sort_order || 'DESC'}` : 'id:DESC',
     };
 
-    const result = await this.postService.findAll(filters, options);
+    const result = await this.postService.getList(filters, options);
 
     return ResponseUtil.transform(
       result.data,
@@ -45,16 +49,22 @@ export class PostController {
   @Get('featured')
   async getFeatured(@Query('limit') limit?: string) {
     const limitNum = limit ? parseInt(limit, 10) : 5;
-    const result = await this.postService.findAll(
+    const result = await this.postService.getList(
       { is_featured: true } as any,
-      { page: 1, limit: limitNum, relations: ['primary_category', 'categories', 'tags'], sort: 'id:DESC' },
+      { page: 1, limit: limitNum, relations: [
+        { name: 'primary_category', select: ['id', 'name', 'slug', 'description'] },
+        { name: 'categories', select: ['id', 'name', 'slug', 'description'] },
+        { name: 'tags', select: ['id', 'name', 'slug', 'description'] }
+      ], sort: 'id:DESC' },
     );
     return ResponseUtil.success(result.data, 'Lấy bài viết nổi bật thành công.');
   }
 
   @Get(':slug')
   async findOne(@Param(ValidationPipe) params: GetPostDto) {
-    const post = await this.postService.findOne({ slug: params.slug, status: 'published' } as any);
+    const post = await this.postService.getOne(
+      { slug: params.slug, status: 'published' } as any,
+    );
     if (!post || (post as any).deletedAt) {
       return ResponseUtil.notFound('Không tìm thấy bài viết.');
     }

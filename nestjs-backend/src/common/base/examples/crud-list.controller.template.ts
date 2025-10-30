@@ -67,7 +67,7 @@ export class CrudListControllerTemplate<T extends BaseEntity> extends BaseCrudCo
   // GET /replace-path/:id
   @Get(':id')
   async find(@Param('id') id: string) {
-    const data = await this.service.findOne({ id } as any);
+    const data = await this.service.getOne({ id } as any);
     if (!data) {
       return ResponseUtil.notFound('Không tìm thấy bản ghi');
     }
