@@ -29,7 +29,10 @@ export function applySelectColumns(queryBuilder: any, select?: string[], reposit
   queryBuilder.select(columns);
 }
 
-export function applyRelations(queryBuilder: any, relations: Array<string | { name: string; select?: string[] }>): void {
+export function applyRelations(
+  queryBuilder: any,
+  relations: Array<string | { name: string; select?: string[]; where?: Record<string, any> }>
+): void {
   if (!Array.isArray(relations) || relations.length === 0) return;
   for (const rel of relations) {
     if (typeof rel === 'string') {
@@ -37,13 +40,23 @@ export function applyRelations(queryBuilder: any, relations: Array<string | { na
     } else if (rel && typeof rel === 'object' && rel.name) {
       const alias = rel.name;
       if (rel.select && Array.isArray(rel.select) && rel.select.length > 0) {
-        // Dùng leftJoin và addSelect từng trường, KHÔNG dùng leftJoinAndSelect
         queryBuilder.leftJoin(`entity.${alias}`, alias);
         for (const field of rel.select) {
           queryBuilder.addSelect(`${alias}.${field}`, `${alias}_${field}`);
         }
       } else {
         queryBuilder.leftJoinAndSelect(`entity.${alias}`, alias);
+      }
+      // Nếu có where thì andWhere alias.field = :field cho từng key trong where
+      if (rel.where && typeof rel.where === 'object') {
+        Object.entries(rel.where).forEach(([key, val]) => {
+          // where hỗ trợ giá trị là array (IN)
+          if (Array.isArray(val)) {
+            queryBuilder.andWhere(`${alias}.${key} IN (:...${alias}_${key})`, { [`${alias}_${key}`]: val });
+          } else {
+            queryBuilder.andWhere(`${alias}.${key} = :${alias}_${key}`, { [`${alias}_${key}`]: val });
+          }
+        });
       }
     }
   }
@@ -82,4 +95,24 @@ export function applySorting(queryBuilder: any, sort?: any, repository?: any): v
       queryBuilder.addOrderBy(`entity.${s.field}`, s.direction);
     }
   });
+}
+
+export function prepareQuery(query: any = {}): { filters: any; options: any } {
+  const filterInput: any = {};
+  const optionInput: any = {};
+  if (query && typeof query === 'object') {
+    if (query.filters && typeof query.filters === 'object') {
+      Object.assign(filterInput, query.filters);
+    }
+    if (query.options && typeof query.options === 'object') {
+      Object.assign(optionInput, query.options);
+    }
+  }
+  const rootCompat: any = {};
+  if (query.page !== undefined) rootCompat.page = query.page;
+  if (query.limit !== undefined) rootCompat.limit = query.limit;
+  if (query.sort_by !== undefined) rootCompat.sort_by = query.sort_by;
+  if (query.sort_order !== undefined) rootCompat.sort_order = query.sort_order;
+  const options = { ...rootCompat, ...optionInput };
+  return { filters: filterInput, options };
 }

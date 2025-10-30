@@ -15,14 +15,15 @@ export class PostService extends ListService<Post> {
     super(repo);
   }
 
-  // Force default filters for public posts
-  protected prepareFilters(filters?: Filters<Post>, options?: Options): any {
-    // Always filter for published posts that are not soft-deleted
-    const baseFilters = {
-      status: 'published',
-      ...(filters || {}),
-    };
-    
-    return baseFilters;
+  protected override prepareOptions(queryOptions: any = {}) {
+    const base = super.prepareOptions(queryOptions);
+    return {
+      ...base,
+      relations: [
+        { name: 'primary_category', select: ['id', 'name', 'slug', 'description'], where: { status: 'active' } },
+        { name: 'categories',       select: ['id', 'name', 'slug', 'description'], where: { status: 'active' } },
+        { name: 'tags',             select: ['id', 'name', 'slug', 'description'], where: { status: 'active' } }
+      ],
+    } as any;
   }
 }

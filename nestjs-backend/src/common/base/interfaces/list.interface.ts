@@ -28,6 +28,15 @@ export type Filters<T> =
   | FilterOptions[];
 
 /**
+ * Relation Options Interface
+ */
+export interface RelationOptions {
+  name: string;
+  select?: string[];
+  where?: Record<string, any>;
+}
+
+/**
  * Options - Các tùy chọn phân trang, sắp xếp, relations, etc.
  */
 export interface Options {
@@ -38,8 +47,8 @@ export interface Options {
   // Accepts: "field:ASC" | "field" (defaults DESC) | array of them | or structured SortOptions[]
   sort?: string | string[] | SortOptions[];
   // Relations
-  // Accepts: ["author", { name: "category", select: ["id", "name"] }]
-  relations?: Array<string | { name: string; select?: string[] }>;
+  // Accepts: ["author", { name: "category", select: ["id", "name"], where: { status: ... } }]
+  relations?: Array<string | RelationOptions>;
   // Other
   select?: string[];
   includeDeleted?: boolean;

@@ -22,9 +22,10 @@ export abstract class ListService<T> {
     filters?: Filters<T>,
     options?: Options,
   ): Promise<PaginatedListResult<T>> {
-    const page = options?.page || 1;
-    const limit = options?.limit || 10;
-    const relations = options?.relations || [];
+    const normalizedOptions = this.prepareOptions(options || {});
+    const page = normalizedOptions.page || 1;
+    const limit = normalizedOptions.limit || 10;
+    const relations = normalizedOptions.relations || [];
 
     let data: T[] = [];
     let meta: PaginatedListResult<T>["meta"] = {
@@ -37,16 +38,16 @@ export abstract class ListService<T> {
       nextPage: undefined,
       previousPage: page > 1 ? page - 1 : undefined,
     };
-    const prepared = this.prepareFilters(filters, options);
+    const prepared = this.prepareFilters(filters, normalizedOptions);
     if (prepared) {
       const queryBuilder = this.repository.createQueryBuilder('entity');
       const whereFilters = prepared === true ? filters : prepared;
       if (whereFilters) {
         applyWhereConditions(queryBuilder, whereFilters);
       }
-      applySelectColumns(queryBuilder, options?.select);
+      applySelectColumns(queryBuilder, (options as any)?.select);
       applyRelations(queryBuilder, relations as any);
-      applySorting(queryBuilder, options?.sort);
+      applySorting(queryBuilder, normalizedOptions?.sort);
       queryBuilder.skip((page - 1) * limit).take(limit);
       const [rows, total] = await queryBuilder.getManyAndCount();
       data = rows;
@@ -86,13 +87,6 @@ export abstract class ListService<T> {
   }
 
   /**
-   * Đếm số lượng entities
-   */
-  async count(where?: FindOptionsWhere<T> | FindOptionsWhere<T>[]): Promise<number> {
-    return this.repository.count({ where });
-  }
-
-  /**
    * Chuẩn hóa/merge filters trước khi build query
    * Override trong service con để thêm điều kiện mặc định hoặc chuyển đổi filters phức tạp
    */
@@ -100,10 +94,24 @@ export abstract class ListService<T> {
     filters?: Filters<T>,
     _options?: Options,
   ): boolean | any {
-    // Return one of:
-    // - false/null/undefined: stop query and return empty result
-    // - true: proceed using original filters
-    // - object/array: use as effective filters
     return filters as any;
   }
+
+  /**
+   * Chuẩn bị options mặc định trước khi query list/getOne.
+   * Có thể override tại service con để sinh options riêng module.
+   */
+  protected prepareOptions(queryOptions: any = {}) {
+    const page = Number(queryOptions.page) || 1;
+    const limit = Number(queryOptions.limit) || 10;
+    const sort = queryOptions.sort;
+    const sortOrder = queryOptions.sort_order || 'DESC';
+    return {
+      page,
+      limit,
+      relations: [],
+      sort: sort || 'id:DESC',
+    };
+  }
+
 }
