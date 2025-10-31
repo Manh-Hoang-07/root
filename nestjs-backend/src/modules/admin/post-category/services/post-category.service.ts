@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DeepPartial } from 'typeorm';
 import { PostCategory } from '../../../../shared/entities/post-category.entity';
 import { CrudService } from '../../../../common/base/services/crud.service';
-import { DeepPartial } from 'typeorm';
 
 @Injectable()
 export class PostCategoryService extends CrudService<PostCategory> {
@@ -46,28 +45,19 @@ export class PostCategoryService extends CrudService<PostCategory> {
   }
 
   /**
-   * Tạo mới category
+   * Hook trước khi tạo - xử lý slug
    */
-  async create(
-    createDto: DeepPartial<PostCategory>,
-    createdBy?: number,
-  ) {
-    const data = { ...createDto };
-    this.ensureSlug(data);
-    return super.create(data, createdBy);
+  protected async beforeCreate(entity: PostCategory, createDto: DeepPartial<PostCategory>): Promise<boolean> {
+    await this.ensureSlug(createDto);
+    return true;
   }
 
   /**
-   * Cập nhật category
+   * Hook trước khi cập nhật - xử lý slug
    */
-  async update(
-    id: number,
-    updateDto: DeepPartial<PostCategory>,
-    updatedBy?: number,
-  ) {
-    const data = { ...updateDto };
-    this.ensureSlug(data);
-    return super.update(id, data, updatedBy);
+  protected async beforeUpdate(entity: PostCategory, updateDto: DeepPartial<PostCategory>): Promise<boolean> {
+    await this.ensureSlug(updateDto, entity.id, entity.slug);
+    return true;
   }
 }
 

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { FindOptionsWhere, DeepPartial, Repository, ObjectLiteral } from 'typeorm';
+import { DeepPartial, Repository, ObjectLiteral } from 'typeorm';
 import { ListService } from './list.service';
 import { ResponseUtil, ApiResponse } from '../../utils/response.util';
 import { StringUtil } from '../../../core/utils/string.util';
+import { ResponseRef, handleResponseRef } from '../utils/response-ref.helper';
 
 /**
  * CRUD Service
@@ -23,52 +24,23 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
   ): Promise<ApiResponse<T | null>> {
     let result: ApiResponse<T | null>;
     try {
-      const entity = this.repository.create({
-        ...createDto,
-        createdBy,
-      } as DeepPartial<T>);
-
-      // Hook before create - override để thêm logic tùy chỉnh (must return true to proceed)
-      const canProceed = await this.beforeCreate(entity, createDto);
+      // Clone createDto để không mutate original
+      const dto = { ...createDto } as any;
+      // Hook before create - cho phép xử lý và loại bỏ các field không phải entity columns
+      const tempEntity = this.repository.create({} as DeepPartial<T>);
+      const responseRef: ResponseRef<T | null> = {};
+      const canProceed = await this.beforeCreate(tempEntity, dto, responseRef);
       if (!canProceed) {
-        result = ResponseUtil.error('Điều kiện tiền xử lý không đạt', 'PRECONDITION_FAILED');
+        result = handleResponseRef(responseRef);
       } else {
-        const savedEntity = await this.repository.save(entity);
-        // Hook after create - chỉ gọi khi thao tác thành công
-        await this.afterCreate(savedEntity, createDto);
-        result = ResponseUtil.created(savedEntity);
-      }
-    } catch (error) {
-      result = ResponseUtil.error(`Tạo mới thất bại: ${error.message}`, 'CREATE_FAILED');
-    }
-    return result;
-  }
-
-  /**
-   * Tạo nhiều entities cùng lúc
-   */
-  async createMany(
-    createDtos: DeepPartial<T>[],
-    createdBy?: number,
-  ): Promise<ApiResponse<(T[] | null)>> {
-    let result: ApiResponse<T[] | null>;
-    try {
-      const entities = createDtos.map((dto) =>
-        this.repository.create({
+        // Sau khi beforeCreate xử lý, tạo entity từ dto đã được clean
+        const entity = this.repository.create({
           ...dto,
           createdBy,
-        } as DeepPartial<T>),
-      );
-
-      // Hook before create many (must return true to proceed)
-      const canProceed = await this.beforeCreateMany(entities, createDtos);
-      if (!canProceed) {
-        result = ResponseUtil.error('Điều kiện tiền xử lý không đạt', 'PRECONDITION_FAILED');
-      } else {
-        const savedEntities = await this.repository.save(entities);
-        // Hook after create many - chỉ gọi khi thao tác thành công
-        await this.afterCreateMany(savedEntities, createDtos);
-        result = ResponseUtil.created(savedEntities, `Tạo mới ${savedEntities.length} bản ghi thành công`);
+        } as DeepPartial<T>);
+        const savedEntity = await this.repository.save(entity);
+        await this.afterCreate(savedEntity, createDto);
+        result = ResponseUtil.created(savedEntity);
       }
     } catch (error) {
       result = ResponseUtil.error(`Tạo mới thất bại: ${error.message}`, 'CREATE_FAILED');
@@ -90,17 +62,18 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
       if (!entity) {
         result = ResponseUtil.notFound(`Entity with ID ${id} not found`);
       } else {
-        // Hook before update (must return true to proceed)
-        const canProceed = await this.beforeUpdate(entity, updateDto);
+        // Clone updateDto để không mutate original
+        const dto = { ...updateDto } as any;
+        // Hook before update - cho phép xử lý và loại bỏ các field không phải entity columns
+        const responseRef: ResponseRef<T | null> = {};
+        const canProceed = await this.beforeUpdate(entity, dto, responseRef);
         if (!canProceed) {
-          result = ResponseUtil.error('Điều kiện tiền xử lý không đạt', 'PRECONDITION_FAILED');
+          result = handleResponseRef(responseRef);
         } else {
-          // Update entity
           Object.assign(entity, {
-            ...updateDto,
+            ...dto,
             updatedBy,
           });
-          
           const updatedEntity = await this.repository.save(entity);
           await this.afterUpdate(updatedEntity, updateDto);
           result = ResponseUtil.updated(updatedEntity);
@@ -110,33 +83,6 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
       result = ResponseUtil.error(`Cập nhật thất bại: ${error.message}`, 'UPDATE_FAILED');
     }
     return result;
-  }
-
-  /**
-   * Cập nhật nhiều entities cùng lúc (tối giản)
-   */
-  async updateMany(
-    updates: Array<{ id: number; data: DeepPartial<T> }>,
-    updatedBy?: number,
-  ) {
-    try {
-      const updatedEntities = await Promise.all(
-        updates.map(({ id, data }) => this.update(id, data, updatedBy))
-      );
-
-      // Check if any update failed
-      const failedCount = updatedEntities.filter((result: any) => result.code !== 'UPDATED').length;
-      if (failedCount > 0) {
-        return ResponseUtil.error(`${failedCount}/${updates.length} bản ghi cập nhật thất bại`, 'UPDATE_PARTIAL_FAILED');
-      }
-
-      return ResponseUtil.updated(
-        updatedEntities.map((result: any) => result.data),
-        `Cập nhật ${updatedEntities.length} bản ghi thành công`
-      );
-    } catch (error) {
-      return ResponseUtil.error(`Cập nhật thất bại: ${error.message}`, 'UPDATE_FAILED');
-    }
   }
 
   /**
@@ -152,12 +98,12 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
         result = ResponseUtil.notFound(`Entity with ID ${id} not found`);
       } else {
         // Hook before delete (must return true to proceed)
-        const canProceed = await this.beforeDelete(entity);
+        const responseRef: ResponseRef<null> = {};
+        const canProceed = await this.beforeDelete(entity, responseRef);
         if (!canProceed) {
-          result = ResponseUtil.error('Điều kiện tiền xử lý không đạt', 'PRECONDITION_FAILED');
+          result = handleResponseRef(responseRef);
         } else {
           await this.repository.remove(entity);
-          // Hook after delete
           await this.afterDelete(entity);
           result = ResponseUtil.deleted();
         }
@@ -167,39 +113,20 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
     }
     return result;
   }
-
-  /**
-   * Xóa cứng nhiều entities cùng lúc
-   */
-  async deleteMany(
-    ids: number[],
-  ): Promise<ApiResponse<null>> {
-    try {
-      const entities = await this.repository.find({
-        where: ids.map((id) => ({ id })),
-      } as any);
-
-      let result: ApiResponse<null>;
-      if (entities.length === 0) {
-        result = ResponseUtil.error('Không tìm thấy bản ghi nào để xóa', 'DELETE_NOT_FOUND');
-      } else if (await this.beforeDeleteMany(entities)) {
-        await this.repository.remove(entities);
-        await this.afterDeleteMany(entities);
-        result = ResponseUtil.deleted(`Xóa ${entities.length} bản ghi thành công`);
-      } else {
-        result = ResponseUtil.error('Điều kiện tiền xử lý không đạt', 'PRECONDITION_FAILED');
-      }
-      return result;
-    } catch (error) {
-      return ResponseUtil.error(`Xóa thất bại: ${error.message}`, 'DELETE_FAILED');
-    }
-  }
   
   /**
    * Hook được gọi trước khi tạo entity
    * Override method này để thêm validation hoặc logic tùy chỉnh
+   * @param entity - Entity tạm
+   * @param createDto - DTO để tạo (có thể mutate để xử lý dữ liệu)
+   * @param response - Object tham chiếu để set response tùy chỉnh
+   * @returns true để tiếp tục, false để dừng
    */
-  protected async beforeCreate(entity: T, createDto: DeepPartial<T>): Promise<boolean> {
+  protected async beforeCreate(
+    entity: T, 
+    createDto: DeepPartial<T>,
+    response?: ResponseRef<T | null>
+  ): Promise<boolean> {
     return true;
   }
 
@@ -212,31 +139,16 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
   }
 
   /**
-   * Hook được gọi trước khi tạo nhiều entities
-   */
-  protected async beforeCreateMany(
-    entities: T[],
-    createDtos: DeepPartial<T>[],
-  ): Promise<boolean> {
-    return true;
-  }
-
-  /**
-   * Hook được gọi sau khi tạo nhiều entities
-   */
-  protected async afterCreateMany(
-    entities: T[],
-    createDtos: DeepPartial<T>[],
-  ): Promise<void> {
-    // Override trong service con
-  }
-
-  /**
    * Hook được gọi trước khi cập nhật entity
+   * @param entity - Entity hiện tại
+   * @param updateDto - DTO để cập nhật (có thể mutate để xử lý dữ liệu)
+   * @param response - Object tham chiếu để set response tùy chỉnh
+   * @returns true để tiếp tục, false để dừng
    */
   protected async beforeUpdate(
     entity: T,
     updateDto: DeepPartial<T>,
+    response?: ResponseRef<T | null>
   ): Promise<boolean> {
     return true;
   }
@@ -253,8 +165,14 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
 
   /**
    * Hook được gọi trước khi xóa cứng entity
+   * @param entity - Entity cần xóa
+   * @param response - Object tham chiếu để set response tùy chỉnh
+   * @returns true để tiếp tục, false để dừng
    */
-  protected async beforeDelete(entity: T): Promise<boolean> {
+  protected async beforeDelete(
+    entity: T,
+    response?: ResponseRef<null>
+  ): Promise<boolean> {
     return true;
   }
 
@@ -266,28 +184,49 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
   }
 
   /**
-   * Hook được gọi trước khi xóa cứng nhiều entities
-   */
-  protected async beforeDeleteMany(entities: T[]): Promise<boolean> {
-    return true;
-  }
-
-  /**
-   * Hook được gọi sau khi xóa cứng nhiều entities
-   */
-  protected async afterDeleteMany(entities: T[]): Promise<void> {
-    // Override trong service con
-  }
-
-  /**
    * Đảm bảo slug được tạo từ name nếu chưa có
-   * Có thể override trong service con nếu cần logic khác
+   * @param data - Data object chứa name hoặc slug
+   * @param excludeId - ID của record cần loại trừ khi check (dùng khi update)
+   * @param currentSlug - Slug hiện tại của entity (khi update, để so sánh trực tiếp)
+   * @returns Data object đã được xử lý slug
    */
-  protected ensureSlug(data: any): any {
+  protected async ensureSlug(data: any, excludeId?: number, currentSlug?: string): Promise<any> {
+    // Nếu chưa có slug → tạo từ name
     if (data.name && !data.slug) {
-      const baseSlug = StringUtil.toSlug(data.name);
-      data.slug = baseSlug;
-    } else if (data.slug) {
+      data.slug = StringUtil.toSlug(data.name);
+      return data;
+    }
+    // Nếu có slug → kiểm tra có trùng với chính nó không (khi update)
+    if (data.slug && excludeId) {
+      const normalizedSlug = StringUtil.toSlug(data.slug);
+      const normalizedCurrentSlug = currentSlug ? StringUtil.toSlug(currentSlug) : null;
+      // So sánh trực tiếp với slug hiện tại (nhanh hơn, không cần query)
+      if (normalizedCurrentSlug && normalizedSlug === normalizedCurrentSlug) {
+        // Đảm bảo xóa slug khỏi data
+        delete data.slug;
+        // Kiểm tra lại để chắc chắn
+        if ('slug' in data) {
+          delete data.slug;
+        }
+        return data;
+      }
+      // Nếu không có currentSlug, query để check (fallback)
+      if (!normalizedCurrentSlug) {
+        const existing = await this.repository.findOne({ 
+          where: { slug: normalizedSlug } as any 
+        });
+        // Nếu trùng với chính nó → unset slug (không cập nhật slug)
+        if (existing && (existing as any).id === excludeId) {
+          delete data.slug;
+          if ('slug' in data) {
+            delete data.slug;
+          }
+          return data;
+        }
+      }
+    }
+    // Nếu có slug, normalize nó
+    if (data.slug) {
       data.slug = StringUtil.toSlug(data.slug);
     }
     return data;

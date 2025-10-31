@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DeepPartial } from 'typeorm';
 import { PostTag } from '../../../../shared/entities/post-tag.entity';
 import { CrudService } from '../../../../common/base/services/crud.service';
-import { DeepPartial } from 'typeorm';
 
 @Injectable()
 export class PostTagService extends CrudService<PostTag> {
@@ -40,28 +39,19 @@ export class PostTagService extends CrudService<PostTag> {
   }
 
   /**
-   * Tạo mới tag
+   * Hook trước khi tạo - xử lý slug
    */
-  async create(
-    createDto: DeepPartial<PostTag>,
-    createdBy?: number,
-  ) {
-    const data = { ...createDto };
-    this.ensureSlug(data);
-    return super.create(data, createdBy);
+  protected async beforeCreate(entity: PostTag, createDto: DeepPartial<PostTag>): Promise<boolean> {
+    await this.ensureSlug(createDto);
+    return true;
   }
 
   /**
-   * Cập nhật tag
+   * Hook trước khi cập nhật - xử lý slug
    */
-  async update(
-    id: number,
-    updateDto: DeepPartial<PostTag>,
-    updatedBy?: number,
-  ) {
-    const data = { ...updateDto };
-    this.ensureSlug(data);
-    return super.update(id, data, updatedBy);
+  protected async beforeUpdate(entity: PostTag, updateDto: DeepPartial<PostTag>): Promise<boolean> {
+    await this.ensureSlug(updateDto, entity.id, entity.slug);
+    return true;
   }
 }
 
