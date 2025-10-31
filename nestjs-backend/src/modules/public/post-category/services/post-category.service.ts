@@ -27,9 +27,7 @@ export class PostCategoryService extends ListService<PostCategory> {
         { name: 'parent',   select: ['id', 'name', 'slug'] },
         { name: 'children', select: ['id', 'name', 'slug'] },
       ],
-      sort: base.sort ?? (queryOptions.sort_by
-        ? `${queryOptions.sort_by}:${queryOptions.sort_order || 'ASC'}`
-        : 'sort_order:ASC'),
+      sort: base.sort ?? 'sort_order:ASC',
     } as any;
   }
 }

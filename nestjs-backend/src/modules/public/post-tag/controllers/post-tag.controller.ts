@@ -7,7 +7,8 @@ import {
 } from '@nestjs/common';
 import { Public } from '../../../../common/decorators/public.decorator';
 import { PostTagService } from '../services/post-tag.service';
-import { GetTagsDto } from '../../post/dtos/get-tags.dto';
+import { GetTagsDto } from '../dtos/get-tags.dto';
+import { GetTagDto } from '../dtos/get-tag.dto';
 import { prepareQuery } from '../../../../common/base/utils/list-query.helper';
 import { ResponseUtil } from '../../../../common/utils/response.util';
 
@@ -31,9 +32,9 @@ export class PostTagController {
   }
 
   @Get(':slug')
-  async findBySlug(@Param('slug') slug: string) {
+  async findBySlug(@Param(ValidationPipe) params: GetTagDto) {
     const tag = await this.postTagService.getOne(
-      { slug, status: 'active' } as any,
+      { slug: params.slug, status: 'active' } as any,
     );
     if (!tag || (tag as any).deletedAt) {
       return ResponseUtil.notFound('Không tìm thấy thẻ.');

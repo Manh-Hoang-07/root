@@ -26,9 +26,7 @@ export class PostTagService extends ListService<PostTag> {
     return {
       ...base,
       select: ['id', 'name', 'slug', 'description', 'createdAt'],
-      sort: base.sort ?? (queryOptions.sort_by
-        ? `${queryOptions.sort_by}:${queryOptions.sort_order || 'DESC'}`
-        : 'createdAt:DESC'),
+      sort: base.sort ?? 'createdAt:DESC',
     } as any;
   }
 }

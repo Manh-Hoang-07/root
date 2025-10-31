@@ -7,7 +7,8 @@ import {
 } from '@nestjs/common';
 import { Public } from '../../../../common/decorators/public.decorator';
 import { PostCategoryService } from '../services/post-category.service';
-import { GetCategoriesDto } from '../../post/dtos/get-categories.dto';
+import { GetCategoriesDto } from '../dtos/get-categories.dto';
+import { GetCategoryDto } from '../dtos/get-category.dto';
 import { prepareQuery } from '../../../../common/base/utils/list-query.helper';
 import { ResponseUtil } from '../../../../common/utils/response.util';
 
@@ -31,9 +32,9 @@ export class PostCategoryController {
   }
 
   @Get(':slug')
-  async findBySlug(@Param('slug') slug: string) {
+  async findBySlug(@Param(ValidationPipe) params: GetCategoryDto) {
     const category = await this.postCategoryService.getOne(
-      { slug, status: 'active' } as any,
+      { slug: params.slug, status: 'active' } as any,
       { relations: [
         { name: 'parent',   select: ['id', 'name', 'slug'] },
         { name: 'children', select: ['id', 'name', 'slug'] },

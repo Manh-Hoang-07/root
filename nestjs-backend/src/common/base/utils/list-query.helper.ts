@@ -19,12 +19,27 @@ export function applyWhereConditions(queryBuilder: any, where: any): void {
 
 export function applySelectColumns(queryBuilder: any, select?: string[], repository?: any): void {
   if (!Array.isArray(select) || select.length === 0 || !repository) return;
+  
+  // Lấy danh sách columns hợp lệ từ entity metadata
+  const validColumns = repository.metadata.columns.map((c: any) => c.propertyName);
   const primaryProps = repository.metadata.primaryColumns.map((c: any) => c.propertyName);
+  
   const uniq = new Set<string>();
+  // Luôn thêm primary keys
   for (const p of primaryProps) uniq.add(p);
+  
+  // Chỉ thêm các columns hợp lệ từ select array
   for (const col of select) {
-    if (typeof col === 'string' && col.trim()) uniq.add(col.trim());
+    if (typeof col === 'string') {
+      const trimmed = col.trim();
+      // Chỉ thêm nếu column tồn tại trong entity
+      if (trimmed && validColumns.includes(trimmed)) {
+        uniq.add(trimmed);
+      }
+      // Nếu không hợp lệ, sẽ bị bỏ qua (không throw error để linh hoạt hơn)
+    }
   }
+  
   const columns = Array.from(uniq).map(col => `entity.${col}`);
   queryBuilder.select(columns);
 }
@@ -111,8 +126,7 @@ export function prepareQuery(query: any = {}): { filters: any; options: any } {
   const rootCompat: any = {};
   if (query.page !== undefined) rootCompat.page = query.page;
   if (query.limit !== undefined) rootCompat.limit = query.limit;
-  if (query.sort_by !== undefined) rootCompat.sort_by = query.sort_by;
-  if (query.sort_order !== undefined) rootCompat.sort_order = query.sort_order;
+  if (query.sort !== undefined) rootCompat.sort = query.sort;
   const options = { ...rootCompat, ...optionInput };
   return { filters: filterInput, options };
 }

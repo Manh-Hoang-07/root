@@ -24,10 +24,6 @@ export class GetTagsDto {
 
   @IsOptional()
   @IsString()
-  sort_by?: string = 'created_at';
-
-  @IsOptional()
-  @IsEnum(['ASC', 'DESC'])
-  sort_order?: 'ASC' | 'DESC' = 'DESC';
+  sort?: string = 'createdAt:DESC';
 }
 

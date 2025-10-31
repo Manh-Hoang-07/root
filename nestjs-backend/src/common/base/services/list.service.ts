@@ -51,27 +51,7 @@ export abstract class ListService<T> {
       applySorting(queryBuilder, normalizedOptions?.sort, this.repository);
       queryBuilder.skip((page - 1) * limit).take(limit);
       const [rows, total] = await queryBuilder.getManyAndCount();
-      const selected = (normalizedOptions as any)?.select as string[] | undefined;
-      if (Array.isArray(rows) && Array.isArray(selected) && selected.length > 0) {
-        const primaryProps = this.repository.metadata.primaryColumns.map((c: any) => c.propertyName);
-        const allowed = new Set<string>([...primaryProps, ...selected]);
-        data = rows.map((row: any) => {
-          const pruned: any = {};
-          for (const key of allowed) {
-            if (row[key] !== undefined) pruned[key] = row[key];
-          }
-          // keep loaded relation objects if any
-          for (const key of Object.keys(row)) {
-            const value = row[key];
-            if (typeof value === 'object' && value !== null && !(key in pruned)) {
-              pruned[key] = value;
-            }
-          }
-          return pruned as T;
-        });
-      } else {
-        data = rows;
-      }
+      data = rows;
       const totalPages = Math.ceil(total / limit);
       meta = {
         page,
@@ -106,23 +86,6 @@ export abstract class ListService<T> {
     applySorting(qb, options?.sort as any, this.repository);
     qb.limit(1);
     const one = await qb.getOne();
-    if (!one) return one;
-    if (Array.isArray(options?.select) && options!.select!.length > 0) {
-      const primaryProps = this.repository.metadata.primaryColumns.map((c: any) => c.propertyName);
-      const allowed = new Set<string>([...primaryProps, ...options!.select!]);
-      const row: any = one as any;
-      const pruned: any = {};
-      for (const key of allowed) {
-        if (row[key] !== undefined) pruned[key] = row[key];
-      }
-      for (const key of Object.keys(row)) {
-        const value = row[key];
-        if (typeof value === 'object' && value !== null && !(key in pruned)) {
-          pruned[key] = value;
-        }
-      }
-      return pruned as any;
-    }
     return one;
   }
 

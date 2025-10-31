@@ -1,17 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { FindOptionsWhere, DeepPartial } from 'typeorm';
-import { BaseEntity } from '../entities/base.entity';
+import { FindOptionsWhere, DeepPartial, Repository, ObjectLiteral } from 'typeorm';
 import { ListService } from './list.service';
 import { ResponseUtil, ApiResponse } from '../../utils/response.util';
-import { BaseRepository } from '../repositories/base.repository';
 
 /**
  * CRUD Service
  * Kế thừa từ ListService và thêm các phương thức Create, Update, Delete
  */
 @Injectable()
-export abstract class CrudService<T extends BaseEntity> extends ListService<T> {
-  constructor(repository: BaseRepository<T>) {
+export abstract class CrudService<T extends ObjectLiteral> extends ListService<T> {
+  constructor(protected readonly repository: Repository<T>) {
     super(repository);
   }
 

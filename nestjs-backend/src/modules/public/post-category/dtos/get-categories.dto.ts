@@ -1,4 +1,4 @@
-import { IsOptional, IsInt, Min, IsString, IsEnum, IsBoolean } from 'class-validator';
+import { IsOptional, IsInt, Min, IsString, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class GetCategoriesDto {
@@ -29,10 +29,6 @@ export class GetCategoriesDto {
 
   @IsOptional()
   @IsString()
-  sort_by?: string = 'sort_order';
-
-  @IsOptional()
-  @IsEnum(['ASC', 'DESC'])
-  sort_order?: 'ASC' | 'DESC' = 'ASC';
+  sort?: string = 'sort_order:ASC';
 }
 
