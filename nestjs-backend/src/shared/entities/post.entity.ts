@@ -47,9 +47,6 @@ export class Post {
   @Column({ name: 'updated_user_id', type: 'bigint', unsigned: true, nullable: true })
   updatedBy?: number;
 
-  @Column({ name: 'deleted_by', nullable: true, select: false })
-  deletedBy?: string;
-
   @Column({ type: 'varchar', length: 255 })
   name: string;
 

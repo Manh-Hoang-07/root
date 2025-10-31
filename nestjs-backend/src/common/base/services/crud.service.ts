@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { FindOptionsWhere, DeepPartial, Repository, ObjectLiteral } from 'typeorm';
 import { ListService } from './list.service';
 import { ResponseUtil, ApiResponse } from '../../utils/response.util';
+import { StringUtil } from '../../../core/utils/string.util';
 
 /**
  * CRUD Service
@@ -276,6 +277,20 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
    */
   protected async afterDeleteMany(entities: T[]): Promise<void> {
     // Override trong service con
+  }
+
+  /**
+   * Đảm bảo slug được tạo từ name nếu chưa có
+   * Có thể override trong service con nếu cần logic khác
+   */
+  protected ensureSlug(data: any): any {
+    if (data.name && !data.slug) {
+      const baseSlug = StringUtil.toSlug(data.name);
+      data.slug = baseSlug;
+    } else if (data.slug) {
+      data.slug = StringUtil.toSlug(data.slug);
+    }
+    return data;
   }
 }
 

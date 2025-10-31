@@ -18,7 +18,7 @@ export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Get()
-  async findList(@Query(ValidationPipe) query: GetPostsDto) {
+  async getList(@Query(ValidationPipe) query: GetPostsDto) {
     const { filters, options } = prepareQuery(query);
     const result = await this.postService.getList(filters, options);
     return ResponseUtil.transform(
@@ -42,21 +42,17 @@ export class PostController {
   }
 
   @Get(':slug')
-  async findBySlug(@Param(ValidationPipe) params: GetPostDto) {
+  async getBySlug(@Param(ValidationPipe) params: GetPostDto) {
     const post = await this.postService.getOne(
       { slug: params.slug, status: 'published' } as any,
     );
     if (!post || (post as any).deletedAt) {
       return ResponseUtil.notFound('Không tìm thấy bài viết.');
     }
-    // tăng view
-    await (this.postService as any)['repository']
-      .createQueryBuilder()
-      .update('posts')
-      .set({ view_count: () => 'view_count + 1' })
-      .where('id = :id', { id: (post as any).id })
-      .execute()
-      .catch(() => undefined);
+    
+    // Tăng view count (không chặn response nếu lỗi)
+    await this.postService.incrementViewCount((post as any).id);
+    
     return ResponseUtil.success(post, 'Lấy thông tin bài viết thành công.');
   }
 }

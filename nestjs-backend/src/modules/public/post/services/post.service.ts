@@ -41,4 +41,20 @@ export class PostService extends ListService<Post> {
       ],
     } as any;
   }
+
+  /**
+   * Tăng view count cho post (không chặn nếu lỗi)
+   */
+  async incrementViewCount(postId: number): Promise<void> {
+    try {
+      await this.repository
+        .createQueryBuilder()
+        .update('posts')
+        .set({ view_count: () => 'view_count + 1' })
+        .where('id = :id', { id: postId })
+        .execute();
+    } catch (error) {
+      // Ignore errors khi tăng view count
+    }
+  }
 }
