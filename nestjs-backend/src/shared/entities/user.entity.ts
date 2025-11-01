@@ -1,10 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToMany, JoinTable } from 'typeorm';
 import { UserStatus } from '../enums/user-status.enum';
 import { Gender } from '../enums/gender.enum';
+import { Role } from './role.entity';
+import { Permission } from './permission.entity';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
   id: number;
 
   @Column({ length: 50, unique: true, nullable: true })
@@ -46,7 +48,24 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
 
-  // Note: Laravel migration does not include deleted_at
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deleted_at?: Date;
+
+  @ManyToMany(() => Role, (role) => role.users, { cascade: false })
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles?: Role[];
+
+  @ManyToMany(() => Permission, (permission) => permission.users, { cascade: false })
+  @JoinTable({
+    name: 'user_permissions',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
+  })
+  direct_permissions?: Permission[];
 }
 
 

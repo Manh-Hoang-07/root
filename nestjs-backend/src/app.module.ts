@@ -26,6 +26,8 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { PublicModule } from './modules/public/public.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { RbacModule } from './modules/rbac/rbac.module';
+import { RolesPermissionsGuard } from './common/guards/roles-permissions.guard';
 // import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
@@ -44,6 +46,7 @@ import { AdminModule } from './modules/admin/admin.module';
     AuthModule,
     PublicModule,
     AdminModule,
+    RbacModule,
   ],
   controllers: [AppController],
   providers: [
@@ -76,7 +79,10 @@ import { AdminModule } from './modules/admin/admin.module';
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
-    // Roles/Permissions checks disabled temporarily
+    {
+      provide: APP_GUARD,
+      useClass: RolesPermissionsGuard,
+    },
   ],
 })
 export class AppModule {}

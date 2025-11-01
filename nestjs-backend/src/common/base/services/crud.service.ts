@@ -22,30 +22,36 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
     createDto: DeepPartial<T>,
     createdBy?: number,
   ): Promise<ApiResponse<T | null>> {
-    let result: ApiResponse<T | null>;
     try {
-      // Clone createDto để không mutate original
+      // 1️⃣ Chuẩn bị dữ liệu đầu vào
       const dto = { ...createDto } as any;
-      // Hook before create - cho phép xử lý và loại bỏ các field không phải entity columns
-      const tempEntity = this.repository.create({} as DeepPartial<T>);
+      const entity = this.repository.create({} as DeepPartial<T>);
       const responseRef: ResponseRef<T | null> = {};
-      const canProceed = await this.beforeCreate(tempEntity, dto, responseRef);
-      if (!canProceed) {
-        result = handleResponseRef(responseRef);
-      } else {
-        // Sau khi beforeCreate xử lý, tạo entity từ dto đã được clean
-        const entity = this.repository.create({
-          ...dto,
-          createdBy,
-        } as DeepPartial<T>);
-        const savedEntity = await this.repository.save(entity);
-        await this.afterCreate(savedEntity, createDto);
-        result = ResponseUtil.created(savedEntity);
-      }
+
+      // 2️⃣ Gọi hook trước khi tạo (cho phép validate hoặc sửa DTO)
+      const allowCreate = await this.beforeCreate(entity, dto, responseRef);
+      if (!allowCreate) return handleResponseRef(responseRef);
+
+      // 3️⃣ Làm sạch DTO và thêm thông tin audit
+      const filteredDto = this.filterDtoByColumns(dto);
+      const auditedDto = this.applyAuditFields(filteredDto, createdBy, 'create');
+
+      // 4️⃣ Tạo và lưu vào DB
+      const newEntity = this.repository.create(auditedDto as DeepPartial<T>);
+      const savedEntity = await this.repository.save(newEntity);
+
+      // 5️⃣ Gọi hook sau khi tạo
+      await this.afterCreate(savedEntity, createDto);
+
+      // 6️⃣ Trả kết quả thành công
+      return ResponseUtil.created(savedEntity);
+
     } catch (error) {
-      result = ResponseUtil.error(`Tạo mới thất bại: ${error.message}`, 'CREATE_FAILED');
+      return ResponseUtil.error(
+        `Tạo mới thất bại: ${error.message}`,
+        'CREATE_FAILED',
+      );
     }
-    return result;
   }
 
   /**
@@ -56,33 +62,36 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
     updateDto: DeepPartial<T>,
     updatedBy?: number,
   ): Promise<ApiResponse<T | null>> {
-    let result: ApiResponse<T | null>;
     try {
+      // 1️⃣ Tìm entity cần cập nhật
       const entity = await this.repository.findOne({ where: { id } as any });
       if (!entity) {
-        result = ResponseUtil.notFound(`Entity with ID ${id} not found`);
-      } else {
-        // Clone updateDto để không mutate original
-        const dto = { ...updateDto } as any;
-        // Hook before update - cho phép xử lý và loại bỏ các field không phải entity columns
-        const responseRef: ResponseRef<T | null> = {};
-        const canProceed = await this.beforeUpdate(entity, dto, responseRef);
-        if (!canProceed) {
-          result = handleResponseRef(responseRef);
-        } else {
-          Object.assign(entity, {
-            ...dto,
-            updatedBy,
-          });
-          const updatedEntity = await this.repository.save(entity);
-          await this.afterUpdate(updatedEntity, updateDto);
-          result = ResponseUtil.updated(updatedEntity);
-        }
+        return ResponseUtil.notFound(`Entity with ID ${id} not found`);
       }
+
+      // 2️⃣ Chuẩn bị dữ liệu và gọi hook trước update
+      const dto = { ...updateDto } as any;
+      const responseRef: ResponseRef<T | null> = {};
+      const allowUpdate = await this.beforeUpdate(entity, dto, responseRef);
+      if (!allowUpdate) return handleResponseRef(responseRef);
+
+      // 3️⃣ Làm sạch DTO và thêm thông tin audit
+      const filteredDto = this.filterDtoByColumns(dto);
+      const auditedDto = this.applyAuditFields(filteredDto, updatedBy, 'update');
+
+      // 4️⃣ Áp dụng thay đổi và lưu DB
+      Object.assign(entity, auditedDto);
+      const updatedEntity = await this.repository.save(entity);
+
+      // 5️⃣ Gọi hook sau khi cập nhật
+      await this.afterUpdate(updatedEntity, updateDto);
+
+      // 6️⃣ Trả kết quả thành công
+      return ResponseUtil.updated(updatedEntity);
+
     } catch (error) {
-      result = ResponseUtil.error(`Cập nhật thất bại: ${error.message}`, 'UPDATE_FAILED');
+      return ResponseUtil.error(`Cập nhật thất bại: ${error.message}`, 'UPDATE_FAILED');
     }
-    return result;
   }
 
   /**
@@ -181,6 +190,78 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
    */
   protected async afterDelete(entity: T): Promise<void> {
     // Override trong service con
+  }
+
+  /**
+   * Soft delete nếu entity có deleteDateColumn, ngược lại fallback remove
+   */
+  async softDelete(id: number): Promise<ApiResponse<null>> {
+    let result: ApiResponse<null>;
+    try {
+      const entity = await this.repository.findOne({ where: { id } as any });
+      if (!entity) {
+        return ResponseUtil.notFound(`Entity with ID ${id} not found`);
+      }
+      if (this.repository.metadata.deleteDateColumn) {
+        await (this.repository as any).softDelete(id as any);
+      } else {
+        await this.repository.remove(entity);
+      }
+      result = ResponseUtil.deleted();
+    } catch (error) {
+      result = ResponseUtil.error(`Xóa thất bại: ${error.message}`, 'DELETE_FAILED');
+    }
+    return result;
+  }
+
+  /**
+   * Khôi phục nếu entity có deleteDateColumn
+   */
+  async restore(id: number): Promise<ApiResponse<null>> {
+    if (!this.repository.metadata.deleteDateColumn) {
+      return ResponseUtil.error('Entity không hỗ trợ restore', 'RESTORE_UNSUPPORTED');
+    }
+    try {
+      await (this.repository as any).restore(id as any);
+      return ResponseUtil.success(null, 'Khôi phục thành công');
+    } catch (error) {
+      return ResponseUtil.error(`Khôi phục thất bại: ${error.message}`, 'RESTORE_FAILED');
+    }
+  }
+
+  /**
+   * Chỉ giữ lại các thuộc tính thuộc về entity columns
+   */
+  protected filterDtoByColumns(input: DeepPartial<T>): DeepPartial<T> {
+    const allowed = new Set(this.repository.metadata.columns.map(c => c.propertyName));
+    const output: any = {};
+    for (const key of Object.keys(input || {})) {
+      if (allowed.has(key)) {
+        output[key] = (input as any)[key];
+      }
+    }
+    return output as DeepPartial<T>;
+  }
+
+  /**
+   * Gắn createdBy/updatedBy nếu entity có các cột này
+   */
+  protected applyAuditFields(
+    input: DeepPartial<T>,
+    userId: number | undefined,
+    type: 'create' | 'update'
+  ): DeepPartial<T> {
+    if (!userId) return input;
+    const hasCreatedBy = !!this.repository.metadata.findColumnWithPropertyName('createdBy');
+    const hasUpdatedBy = !!this.repository.metadata.findColumnWithPropertyName('updatedBy');
+    const output: any = { ...input };
+    if (type === 'create' && hasCreatedBy) {
+      output.createdBy = userId as any;
+    }
+    if (type === 'update' && hasUpdatedBy) {
+      output.updatedBy = userId as any;
+    }
+    return output as DeepPartial<T>;
   }
 
   /**

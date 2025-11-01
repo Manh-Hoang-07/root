@@ -33,20 +33,41 @@ See `.env.example` for all available environment variables.
 
 ## Database
 
-This application uses SQLite by default. The database file will be created automatically when you start the application.
+This application uses MySQL/MariaDB by default (configurable via environment variables).
 
-### Running Migrations
+### Quick Start
 
 ```bash
-# Generate migration
-npm run migration:generate -- --name=MigrationName
-
-# Run migrations
+# 1. Run migrations to create tables
 npm run migration:run
 
-# Revert migration
-npm run migration:revert
+# 2. Seed initial data
+npm run seed
 ```
+
+### Database Commands
+
+```bash
+# Run all pending migrations
+npm run migration:run
+
+# Revert last migration
+npm run migration:revert
+
+# Show migration status
+npm run migration:show
+
+# Generate new migration from entity changes
+npm run migration:generate -- src/core/database/migrations/YourMigrationName
+
+# Create empty migration file
+npm run migration:create -- src/core/database/migrations/YourMigrationName
+
+# Seed database with sample data
+npm run seed
+```
+
+📖 **Xem tài liệu chi tiết**: [docs/DATABASE.md](./docs/DATABASE.md)
 
 ## API Structure
 

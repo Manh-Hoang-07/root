@@ -2,6 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { databaseProviders } from './database.providers';
+import { SeedService } from './seeder/seed-data';
+import { SeedPermissions } from './seeder/seed-permissions';
+import { SeedRoles } from './seeder/seed-roles';
+import { SeedUsers } from './seeder/seed-users';
+import { SeedPostCategories } from './seeder/seed-post-categories';
+import { SeedPostTags } from './seeder/seed-post-tags';
+import { SeedPosts } from './seeder/seed-posts';
 
 @Module({
   imports: [
@@ -31,7 +38,19 @@ import { databaseProviders } from './database.providers';
       inject: [ConfigService],
     }),
   ],
-  providers: [...databaseProviders],
-  exports: [...databaseProviders],
+  providers: [
+    ...databaseProviders,
+    SeedService,
+    SeedPermissions,
+    SeedRoles,
+    SeedUsers,
+    SeedPostCategories,
+    SeedPostTags,
+    SeedPosts,
+  ],
+  exports: [
+    ...databaseProviders,
+    SeedService,
+  ],
 })
 export class DatabaseModule {}

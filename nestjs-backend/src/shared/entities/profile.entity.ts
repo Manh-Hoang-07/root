@@ -1,9 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 import { User } from './user.entity';
 
 @Entity('profiles')
 export class Profile {
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
     id: number;
 
     @Column({ name: 'user_id' })
@@ -42,4 +42,7 @@ export class Profile {
 
     @UpdateDateColumn({ name: 'updated_at' })
     updated_at: Date;
+
+    @DeleteDateColumn({ name: 'deleted_at' })
+    deleted_at?: Date;
 }
