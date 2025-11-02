@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
 import { Permission } from '../../../../shared/entities/permission.entity';
 import { CrudService } from '../../../../common/base/services/crud.service';
-import { ResponseRef, handleResponseRef } from '../../../../common/base/utils/response-ref.helper';
+import { ResponseRef } from '../../../../common/base/utils/response-ref.helper';
 
 @Injectable()
 export class PermissionService extends CrudService<Permission> {
@@ -97,23 +97,6 @@ export class PermissionService extends CrudService<Permission> {
       if (response) {
         response.message = 'Cannot delete permission with children';
         response.code = 'PERMISSION_HAS_CHILDREN';
-      }
-      return false;
-    }
-
-    // Check if permission is assigned to roles or users
-    const roleCount = await this.repository.manager
-      .getRepository('Role')
-      .count({ where: { permissions: { id: entity.id } } as any });
-    
-    const userCount = await this.repository.manager
-      .getRepository('User')
-      .count({ where: { direct_permissions: { id: entity.id } } as any });
-    
-    if (roleCount > 0 || userCount > 0) {
-      if (response) {
-        response.message = 'Cannot delete permission assigned to roles or users';
-        response.code = 'PERMISSION_ASSIGNED';
       }
       return false;
     }

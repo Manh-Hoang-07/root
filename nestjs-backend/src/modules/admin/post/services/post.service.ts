@@ -5,7 +5,6 @@ import { Post } from '../../../../shared/entities/post.entity';
 import { PostCategory } from '../../../../shared/entities/post-category.entity';
 import { PostTag } from '../../../../shared/entities/post-tag.entity';
 import { CrudService } from '../../../../common/base/services/crud.service';
-import { ApiResponse, ResponseUtil } from '../../../../common/utils/response.util';
 
 @Injectable()
 export class PostService extends CrudService<Post> {
@@ -73,10 +72,6 @@ export class PostService extends CrudService<Post> {
    */
   protected async beforeUpdate(entity: Post, updateDto: DeepPartial<Post>): Promise<boolean> {
     await this.ensureSlug(updateDto, entity.id, entity.slug);
-    // Dọn dẹp trường quan hệ dạng IDs khỏi DTO trước khi persist
-    // (việc sync quan hệ sẽ làm trong afterUpdate)
-    // Lưu ý: undefined = không đụng tới; null/[] = clear
-    // Chỉ xóa key để không làm TypeORM cố map vào cột không tồn tại
     if ('tag_ids' in (updateDto as any)) {
       delete (updateDto as any).tag_ids;
     }

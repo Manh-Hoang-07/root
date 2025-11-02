@@ -92,7 +92,7 @@ Guard là một class thực hiện interface `CanActivate`, chạy **TRƯỚC**
 // File: src/app.module.ts
 {
   provide: APP_GUARD,
-  useClass: RolesPermissionsGuard,  // Guard này được chạy cho TẤT CẢ routes
+  useClass: RbacGuard,  // Guard này được chạy cho TẤT CẢ routes
 }
 ```
 
@@ -108,8 +108,8 @@ Guard là một class thực hiện interface `CanActivate`, chạy **TRƯỚC**
 ### Reflector - Công cụ đọc metadata
 
 ```typescript
-// File: src/common/guards/roles-permissions.guard.ts
-export class RolesPermissionsGuard implements CanActivate {
+// File: src/common/guards/rbac.guard.ts
+export class RbacGuard implements CanActivate {
   constructor(
     private reflector: Reflector,  // Inject Reflector để đọc metadata
     private rbac: RbacService
@@ -153,10 +153,12 @@ export class RolesPermissionsGuard implements CanActivate {
 2. NestJS routing → Tìm controller và method tương ứng
    ↓
 3. Chạy JwtAuthGuard (đã register global)
+   - Kiểm tra token blacklist trước (nếu token bị blacklist → từ chối)
    - Kiểm tra JWT token
    - Nếu hợp lệ → Gắn user vào req.user
+   - Xử lý public/optional routes (mặc định route không có @Permission() là public)
    ↓
-4. Chạy RolesPermissionsGuard (đã register global)
+4. Chạy RbacGuard (đã register global)
    ↓
    a) Reflector đọc metadata từ method createPost()
       - Tìm metadata có key = 'perms_required'
@@ -281,7 +283,7 @@ Metadata được lưu trong **Reflect metadata** của JavaScript/TypeScript, k
 
 ### Tại sao guard phải là global?
 
-- Nếu không global, bạn phải gắn `@UseGuards(RolesPermissionsGuard)` ở mỗi controller
+- Nếu không global, bạn phải gắn `@UseGuards(RbacGuard)` ở mỗi controller
 - Global guard tự động chạy cho mọi route, chỉ cần dùng decorator
 
 ---
@@ -289,10 +291,16 @@ Metadata được lưu trong **Reflect metadata** của JavaScript/TypeScript, k
 ## Tóm tắt
 
 1. **`@Permission('post.create')`** → Gắn metadata `['post.create']` vào method
-2. **`RolesPermissionsGuard`** (global) → Tự động chạy cho mọi request
+2. **`RbacGuard`** (global) → Tự động chạy cho mọi request
 3. **`Reflector`** → Đọc metadata từ method đang được gọi
-4. **Nếu có metadata** → Kiểm tra quyền với `RbacService`
-5. **Nếu có quyền** → Cho phép, **Nếu không** → Throw error
+4. **Nếu không có metadata** → Route mặc định là public (cho phép truy cập)
+5. **Nếu có metadata** → Kiểm tra quyền với `RbacService`
+6. **Nếu có quyền** → Cho phép, **Nếu không** → Throw error
+
+**Lưu ý quan trọng:**
+- Route không có `@Permission()` → **Mặc định là public** (không cần khai báo `@Public()`)
+- Route có `@Permission('public')` → Explicit public route
+- `JwtAuthGuard` tự động check token blacklist trước khi validate JWT
 
 **Kết luận:** Decorator chỉ là cách "đánh dấu", Guard mới là phần "thực thi". NestJS tự động kết nối 2 phần này thông qua Reflect Metadata.
 

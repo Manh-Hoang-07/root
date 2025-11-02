@@ -44,19 +44,18 @@ async updateOrDelete(@Param('id') id: number, @Body() dto: any) {
 
 ```typescript
 import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
-import { Permission } from '../../common/decorators/rbac.decorators';
-import { Public } from '../../common/decorators/public.decorator';
+import { Permission, Public } from '../../common/decorators/rbac.decorators';
 
 @Controller('posts')
 export class PostController {
-  // Route public - không cần authentication và permission
-  @Public()
+  // Route public - explicit (có thể dùng @Public() hoặc @Permission('public'))
+  @Permission('public')
   @Get('public')
   async getPublicPosts() {
     return this.postService.getPublicPosts();
   }
 
-  // Route cần authentication nhưng không cần permission
+  // Route mặc định là public - không cần khai báo gì
   @Get()
   async getAll() {
     return this.postService.findAll();
@@ -126,38 +125,152 @@ export class AdminUserController {
 
 ## Cách hoạt động
 
-1. **Guard tự động chạy**: `RolesPermissionsGuard` đã được register global, tự động check cho mọi route
-2. **Kiểm tra authentication**: User phải đã đăng nhập (JWT token hợp lệ)
-3. **Kiểm tra permission**: 
+1. **Guard tự động chạy**: `RbacGuard` đã được register global, tự động check cho mọi route
+2. **Mặc định route là public**: Route không có `@Permission()` → mặc định là public (không cần authentication)
+3. **Kiểm tra authentication**: Route có `@Permission()` → User phải đã đăng nhập (JWT token hợp lệ)
+   - `JwtAuthGuard` check token blacklist trước
+   - Validate JWT token và gắn user vào `req.user`
+4. **Kiểm tra permission**: 
    - Lấy `userId` từ `req.user`
    - Gọi `RbacService.userHasPermissions(userId, requiredPermissions)`
-   - Chỉ kiểm tra permissions có `status = 'active'` từ roles của user
-   - Nếu không có quyền → throw `ForbiddenException`
+   - Chỉ kiểm tra permissions có `status = 'active'` từ roles có `status = 'active'` của user
+   - Nếu không có quyền → throw `ForbiddenException` với `ResponseUtil` format
+
+## Public Routes
+
+Route mặc định là public (không cần khai báo):
+
+```typescript
+// Route này là public, không cần authentication
+@Get('posts')
+async getPosts() {
+  return this.postService.findAll();
+}
+```
+
+Nếu muốn explicit public route:
+
+```typescript
+// Explicit public route
+@Permission('public')
+@Get('public-posts')
+async getPublicPosts() {
+  return this.postService.getPublicPosts();
+}
+
+// Hoặc dùng @Public() (backward compatibility)
+@Public()
+@Get('old-public')
+async getOldPublic() {
+  return this.postService.getOldPublic();
+}
+```
+
+**Lưu ý:** Public route vẫn validate token nếu có, nhưng không bắt buộc. User có thể đăng nhập để có thêm thông tin.
 
 ## Error Responses
+
+Tất cả errors đều trả về format `ResponseUtil`:
 
 ### Unauthorized (401)
 ```json
 {
-  "statusCode": 401,
-  "message": "Authentication required"
+  "success": false,
+  "message": "Authentication required",
+  "code": "UNAUTHORIZED",
+  "httpStatus": 401,
+  "data": null,
+  "errors": null,
+  "timestamp": "2024-01-01T12:00:00+07:00"
 }
 ```
 
 ### Forbidden (403)
 ```json
 {
-  "statusCode": 403,
-  "message": "Access denied. Required permissions: post.create"
+  "success": false,
+  "message": "Access denied. Required permissions: post.create",
+  "code": "FORBIDDEN",
+  "httpStatus": 403,
+  "data": null,
+  "errors": null,
+  "timestamp": "2024-01-01T12:00:00+07:00"
 }
 ```
+
+## Decorators có sẵn
+
+Tất cả decorators đều được export từ `src/common/decorators/rbac.decorators.ts`:
+
+```typescript
+import { Permission, Public, Optional, RolesRequired } from '../../common/decorators/rbac.decorators';
+```
+
+### @Permission()
+
+Decorator chính để kiểm tra permissions:
+
+```typescript
+@Permission('post.create')  // Kiểm tra một permission
+@Permission('post.update', 'post.delete')  // Kiểm tra nhiều permissions (OR)
+@Permission('public')  // Explicit public route
+```
+
+### @Public() (deprecated)
+
+Backward compatibility - tương đương với `@Permission('public')`:
+
+```typescript
+@Public()  // Tương đương @Permission('public')
+```
+
+### @Optional()
+
+Cho phép cả authenticated và unauthenticated access:
+
+```typescript
+@Optional()  // Vẫn validate token nếu có, nhưng không bắt buộc
+```
+
+### @RolesRequired()
+
+Kiểm tra roles thay vì permissions:
+
+```typescript
+@RolesRequired('admin', 'moderator')  // User phải có một trong các roles
+```
+
+## Guards
+
+### JwtAuthGuard (Global)
+
+- **Chức năng**: Validate JWT token, check token blacklist
+- **Tự động chạy**: Cho tất cả routes
+- **Logic**:
+  - Check token blacklist trước khi validate
+  - Validate JWT token
+  - Route không có `@Permission()` → mặc định public (validate token nếu có, nhưng không bắt buộc)
+  - Route có `@Permission()` → bắt buộc authentication
+  - Set `req.user` nếu token hợp lệ
+
+### RbacGuard (Global)
+
+- **Chức năng**: Kiểm tra roles và permissions
+- **Tự động chạy**: Cho tất cả routes
+- **Logic**:
+  - Route không có `@Permission()` → Allow (public)
+  - Route có `@Permission('public')` → Allow
+  - Route có `@Permission()` khác → Check quyền với `RbacService`
+  - Route có `@RolesRequired()` → Check roles với `RbacService`
 
 ## Lưu ý quan trọng
 
 1. **Permission phải tồn tại trong DB** với `status = 'active'`
-2. **User phải có role** và role đó phải có permission
+2. **User phải có role** và role đó phải có permission với `status = 'active'`
 3. **Nếu role hoặc permission bị inactive** → user mất quyền ngay lập tức
 4. **KHÔNG có direct permissions** - tất cả đều phải qua roles
+5. **Route mặc định là public** - không cần khai báo `@Public()` hay `@Permission('public')`
+6. **Token blacklist** được check tự động bởi `JwtAuthGuard`
 
 ## Ví dụ thực tế
 
