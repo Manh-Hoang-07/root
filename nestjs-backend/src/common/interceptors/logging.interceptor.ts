@@ -8,6 +8,7 @@ import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Request, Response } from 'express';
 import { CustomLoggerService } from '../../core/logger/logger.service';
+import { Auth } from '../../common/utils/auth.util';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -37,6 +38,7 @@ export class LoggingInterceptor implements NestInterceptor {
     response.setHeader('X-Request-ID', requestId);
 
     const filePathHeader = (headers['x-log-file'] as string) || undefined;
+    const user = Auth.user(context);
     const contextBase = {
       context: 'HTTP',
       requestId,
@@ -45,8 +47,8 @@ export class LoggingInterceptor implements NestInterceptor {
       userAgent,
       ip,
       // Account info if framework/auth puts it on request
-      userId: (request as any)?.user?.id,
-      username: (request as any)?.user?.username || (request as any)?.user?.email,
+      userId: Auth.id(context),
+      username: user?.username || user?.email || null,
       extra: {
         params: Object.keys(params || {}).length ? params : undefined,
         query: Object.keys(query || {}).length ? query : undefined,

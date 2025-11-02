@@ -4,7 +4,7 @@ import { Request } from 'express';
 import { AuthUser } from '../decorators/user.decorator';
 
 /**
- * Auth Service - Tương tự Laravel's Auth facade
+ * Auth Service
  * Cho phép truy cập user hiện tại trong service/controller methods
  * 
  * Lưu ý về public routes:
@@ -16,37 +16,9 @@ import { AuthUser } from '../decorators/user.decorator';
  * - this.auth.guest() = false nếu đã đăng nhập, true nếu chưa đăng nhập
  * - Cho phép user đăng nhập vào public route để có thêm thông tin (ví dụ: bài viết đã like chưa)
  * 
- * Lưu ý về @Optional() routes:
- * - Route có @Optional() vẫn validate token nếu có
+ * Lưu ý
  * - Nếu có token hợp lệ, req.user sẽ được set
  * - this.auth.isLogin() sẽ trả về true nếu có user, false nếu không
- * 
- * @example
- * ```typescript
- * constructor(private auth: AuthService) {}
- * 
- * // Route public - vẫn dùng được this.auth (mặc định là public, không cần khai báo)
- * @Get('posts')
- * async getPosts() {
- *   // Route public nhưng vẫn validate token nếu có
- *   if (this.auth.isLogin()) {
- *     // User đã đăng nhập (có token hợp lệ)
- *     const userId = this.auth.id();
- *     const user = this.auth.user();
- *     // Có thể trả về thông tin đặc biệt cho user đã đăng nhập
- *   } else {
- *     // User chưa đăng nhập - vẫn cho phép truy cập
- *   }
- * }
- * 
- * // Route protected - chắc chắn có user
- * @Get('profile')
- * async getProfile() {
- *   // this.auth.isLogin() = true (guard đã check)
- *   const userId = this.auth.id();
- *   const user = this.auth.user();
- * }
- * ```
  */
 @Injectable({ scope: Scope.REQUEST })
 export class AuthService {

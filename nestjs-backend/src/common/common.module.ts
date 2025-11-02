@@ -1,5 +1,7 @@
 import { Global, Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { AuthService } from './services/auth.service';
+import { CacheService } from './services/cache.service';
 
 /**
  * Common Module - Cung cấp các services dùng chung
@@ -7,8 +9,14 @@ import { AuthService } from './services/auth.service';
  */
 @Global()
 @Module({
-  providers: [AuthService],
-  exports: [AuthService],
+  imports: [
+    CacheModule.register({
+      ttl: 300000, // 5 minutes default TTL
+      max: 100, // Maximum number of items in cache
+    }),
+  ],
+  providers: [AuthService, CacheService],
+  exports: [AuthService, CacheService],
 })
 export class CommonModule {}
 

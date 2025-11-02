@@ -46,15 +46,19 @@ async function bootstrap() {
     logger.log('CORS enabled', { origins: appConfig.corsOrigins });
   }
 
-  // Suppress all native console outputs globally (use CustomLoggerService instead)
-  try {
-    const noop = () => {};
-    (console as any).log = noop;
-    ;(console as any).info = noop;
-    ;(console as any).warn = noop;
-    ;(console as any).error = noop;
-    ;(console as any).debug = noop;
-  } catch {}
+  // Suppress all native console outputs globally only in production (use CustomLoggerService instead)
+  // Keep console.error and console.warn in development for debugging
+  if (appConfig.environment === 'production') {
+    try {
+      const noop = () => {};
+      (console as any).log = noop;
+      (console as any).info = noop;
+      (console as any).warn = noop;
+      (console as any).debug = noop;
+      // Keep console.error for critical errors even in production
+      // (console as any).error = noop; // Uncomment if you want to suppress all console outputs
+    } catch {}
+  }
 
   // Set global prefix
   app.setGlobalPrefix(appConfig.globalPrefix);

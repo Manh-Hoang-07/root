@@ -57,10 +57,28 @@ export class PostService extends CrudService<Post> {
   }
 
   /**
-   * Hook trước khi tạo - xử lý slug
+   * Hook trước khi tạo - xử lý slug và quan hệ
    */
   protected async beforeCreate(entity: Post, createDto: DeepPartial<Post>): Promise<boolean> {
     await this.ensureSlug(createDto);
+    
+    // Tối ưu: Load tags và categories trước khi save để chỉ save một lần
+    const tagIds = (createDto as any).tag_ids as number[] | undefined;
+    const categoryIds = (createDto as any).category_ids as number[] | undefined;
+    const hasTagIds = tagIds != null && Array.isArray(tagIds) && tagIds.length > 0;
+    const hasCategoryIds = categoryIds != null && Array.isArray(categoryIds) && categoryIds.length > 0;
+
+    if (hasTagIds || hasCategoryIds) {
+      const [tags, categories] = await Promise.all([
+        hasTagIds ? this.tagRepo.find({ where: { id: In(tagIds!) } }) : Promise.resolve([]),
+        hasCategoryIds ? this.categoryRepo.find({ where: { id: In(categoryIds!) } }) : Promise.resolve([]),
+      ]);
+      
+      // Gán quan hệ vào createDto để entity được tạo với relations đầy đủ
+      (createDto as any).tags = tags;
+      (createDto as any).categories = categories;
+    }
+    
     // Dọn dẹp trường quan hệ dạng IDs khỏi DTO trước khi persist
     delete (createDto as any).tag_ids;
     delete (createDto as any).category_ids;
@@ -82,23 +100,10 @@ export class PostService extends CrudService<Post> {
   }
 
   /**
-   * Sau khi tạo: sync quan hệ tags/categories nếu được cung cấp
+   * Sau khi tạo: không cần làm gì vì relations đã được set trong beforeCreate
    */
   protected async afterCreate(entity: Post, createDto: DeepPartial<Post>): Promise<void> {
-    const tagIds = (createDto as any).tag_ids as number[] | undefined;
-    const categoryIds = (createDto as any).category_ids as number[] | undefined;
-    const hasTagIds = tagIds != null && Array.isArray(tagIds) && tagIds.length > 0;
-    const hasCategoryIds = categoryIds != null && Array.isArray(categoryIds) && categoryIds.length > 0;
-    if (!hasTagIds && !hasCategoryIds) return;
-
-    const [tags, categories] = await Promise.all([
-      hasTagIds ? this.tagRepo.find({ where: { id: In(tagIds!) } }) : Promise.resolve([]),
-      hasCategoryIds ? this.categoryRepo.find({ where: { id: In(categoryIds!) } }) : Promise.resolve([]),
-    ]);
-
-    entity.tags = tags;
-    entity.categories = categories;
-    await this.repository.save(entity);
+    // Relations đã được set trong beforeCreate, không cần save lại
   }
 
   /**

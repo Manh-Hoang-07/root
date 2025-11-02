@@ -1,10 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToMany, JoinTable, Index } from 'typeorm';
 import { UserStatus } from '../enums/user-status.enum';
 import { Gender } from '../enums/gender.enum';
 import { Role } from './role.entity';
 import { Permission } from './permission.entity';
 
 @Entity('users')
+@Index('idx_deleted_at', ['deleted_at']) // Index cho soft delete
 export class User {
   @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
   id: number;

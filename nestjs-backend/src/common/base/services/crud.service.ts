@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, Optional } from '@nestjs/common';
 import { DeepPartial, Repository, ObjectLiteral } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { ListService } from './list.service';
 import { ResponseUtil, ApiResponse } from '../../utils/response.util';
 import { StringUtil } from '../../../core/utils/string.util';
@@ -11,8 +12,22 @@ import { ResponseRef, handleResponseRef } from '../utils/response-ref.helper';
  */
 @Injectable()
 export abstract class CrudService<T extends ObjectLiteral> extends ListService<T> {
-  constructor(protected readonly repository: Repository<T>) {
+  constructor(
+    protected readonly repository: Repository<T>,
+    @Optional() @Inject(ConfigService) private readonly configService?: ConfigService,
+  ) {
     super(repository);
+  }
+
+  /**
+   * Sanitize error message để không lộ chi tiết ở production
+   */
+  private sanitizeErrorMessage(error: any, genericMessage: string): string {
+    const isProduction = this.configService?.get('app.environment') === 'production';
+    if (isProduction) {
+      return genericMessage;
+    }
+    return error?.message || genericMessage;
   }
 
   /**
@@ -48,7 +63,7 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
 
     } catch (error) {
       return ResponseUtil.error(
-        `Tạo mới thất bại: ${error.message}`,
+        this.sanitizeErrorMessage(error, 'Tạo mới thất bại'),
         'CREATE_FAILED',
       );
     }
@@ -90,7 +105,10 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
       return ResponseUtil.updated(updatedEntity);
 
     } catch (error) {
-      return ResponseUtil.error(`Cập nhật thất bại: ${error.message}`, 'UPDATE_FAILED');
+      return ResponseUtil.error(
+        this.sanitizeErrorMessage(error, 'Cập nhật thất bại'),
+        'UPDATE_FAILED',
+      );
     }
   }
 
@@ -118,7 +136,10 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
         }
       }
     } catch (error) {
-      result = ResponseUtil.error(`Xóa thất bại: ${error.message}`, 'DELETE_FAILED');
+      result = ResponseUtil.error(
+        this.sanitizeErrorMessage(error, 'Xóa thất bại'),
+        'DELETE_FAILED',
+      );
     }
     return result;
   }
@@ -209,7 +230,10 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
       }
       result = ResponseUtil.deleted();
     } catch (error) {
-      result = ResponseUtil.error(`Xóa thất bại: ${error.message}`, 'DELETE_FAILED');
+      result = ResponseUtil.error(
+        this.sanitizeErrorMessage(error, 'Xóa thất bại'),
+        'DELETE_FAILED',
+      );
     }
     return result;
   }
@@ -225,7 +249,10 @@ export abstract class CrudService<T extends ObjectLiteral> extends ListService<T
       await (this.repository as any).restore(id as any);
       return ResponseUtil.success(null, 'Khôi phục thành công');
     } catch (error) {
-      return ResponseUtil.error(`Khôi phục thất bại: ${error.message}`, 'RESTORE_FAILED');
+      return ResponseUtil.error(
+        this.sanitizeErrorMessage(error, 'Khôi phục thất bại'),
+        'RESTORE_FAILED',
+      );
     }
   }
 

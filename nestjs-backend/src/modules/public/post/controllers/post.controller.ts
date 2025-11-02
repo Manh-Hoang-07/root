@@ -5,7 +5,6 @@ import {
   Param,
   ValidationPipe,
 } from '@nestjs/common';
-import { Public } from '../../../../common/decorators/rbac.decorators';
 import { PostService } from '../services/post.service';
 import { prepareQuery } from '../../../../common/base/utils/list-query.helper';
 import { GetPostsDto } from '../dtos/get-posts.dto';
@@ -13,7 +12,6 @@ import { GetPostDto } from '../dtos/get-post.dto';
 import { ResponseUtil } from '../../../../common/utils/response.util';
 
 @Controller('public/posts')
-@Public()
 export class PostController {
   constructor(private readonly postService: PostService) {}
 

@@ -240,12 +240,9 @@ Nếu bạn có database mới hoàn toàn (chưa có bảng nào), làm theo c�
    ```bash
    # Copy file .env.example thành .env
    cp .env.example .env
-   
-   # Hoặc tạo file .env.local (ưu tiên hơn)
-   cp .env.example .env.local
    ```
 
-2. **Cấu hình database trong `.env` hoặc `.env.local`**
+2. **Cấu hình database trong `.env`**
    ```env
    DB_TYPE=mysql
    DB_HOST=localhost
@@ -338,7 +335,7 @@ CREATE DATABASE your_database_name CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 **Nguyên nhân**: Cấu hình database trong `.env` không đúng.
 
 **Giải pháp**:
-1. Kiểm tra file `.env` hoặc `.env.local` tồn tại
+1. Kiểm tra file `.env` tồn tại
 2. Kiểm tra các biến môi trường:
    - `DB_TYPE`
    - `DB_HOST`

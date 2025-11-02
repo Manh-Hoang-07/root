@@ -9,8 +9,8 @@ export default registerAs('mail', () => ({
     pass: process.env.MAIL_PASSWORD,
   },
   from: {
-    name: process.env.MAIL_FROM_NAME || 'Backend',
-    address: process.env.MAIL_FROM_ADDRESS || 'noreply@example.com',
+    name: process.env.MAIL_FROM_NAME || '',
+    address: process.env.MAIL_FROM_ADDRESS || '',
   },
   template: {
     dir: process.env.MAIL_TEMPLATE_DIR || './templates',

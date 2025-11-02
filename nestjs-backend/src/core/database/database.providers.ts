@@ -21,6 +21,11 @@ export const databaseProviders = [
         extra: {
           charset: configService.get<string>('database.charset'),
           timezone: configService.get<string>('database.timezone'),
+          // Connection pool configuration for mysql2
+          connectionLimit: configService.get<number>('database.connectionLimit', 10),
+          acquireTimeout: configService.get<number>('database.acquireTimeout', 60000),
+          timeout: configService.get<number>('database.timeout', 60000),
+          reconnect: configService.get<boolean>('database.reconnect', true),
         },
       });
 

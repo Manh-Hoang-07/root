@@ -16,6 +16,7 @@ import { User } from './user.entity';
 
 @Entity('permissions')
 @Index(['code'], { unique: true })
+@Index('idx_deleted_at', ['deleted_at']) // Index cho soft delete
 export class Permission {
   @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
   id: number;

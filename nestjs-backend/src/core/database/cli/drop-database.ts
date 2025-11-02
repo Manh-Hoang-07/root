@@ -7,18 +7,16 @@ import { Logger } from '@nestjs/common';
 async function bootstrap() {
   const logger = new Logger('DropDatabaseCLI');
 
-  // Load environment variables (thứ tự quan trọng: file load sau sẽ override file trước)
+  // Load environment variables từ file .env
   config({ path: path.resolve(process.cwd(), '.env') });
-  config({ path: path.resolve(process.cwd(), '.env.local') });
-  config({ path: path.resolve(process.cwd(), 'env.mysql') });
 
   const dbConfig = {
     type: (process.env.DB_TYPE || 'mysql') as any,
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '3306', 10) || 3306,
-    username: process.env.DB_USERNAME || 'root',
+    username: process.env.DB_USERNAME || '',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_DATABASE || 'base',
+    database: process.env.DB_DATABASE || '',
     charset: process.env.DB_CHARSET || 'utf8mb4',
     timezone: process.env.DB_TIMEZONE || '+07:00',
   };

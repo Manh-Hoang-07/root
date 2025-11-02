@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { ROLES_REQUIRED_KEY, PERMS_REQUIRED_KEY, IS_OPTIONAL_KEY, PUBLIC_PERMISSION } from '../decorators/rbac.decorators';
+import { PERMS_REQUIRED_KEY, PUBLIC_PERMISSION } from '../decorators/rbac.decorators';
 import { ResponseUtil } from '../utils/response.util';
 import { AuthService } from '../../modules/auth/auth.service';
 
@@ -37,16 +37,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       }
     }
 
-    const isOptional = this.reflector.getAllAndOverride<boolean>(IS_OPTIONAL_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    // Kiểm tra route có @Permission() hoặc @RolesRequired() không
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_REQUIRED_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]) || [];
+    // Kiểm tra route có @Permission() không
     const requiredPerms = this.reflector.getAllAndOverride<string[]>(PERMS_REQUIRED_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -55,13 +46,13 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     // Kiểm tra có @Permission('public') không
     const isPublicPermission = requiredPerms.includes(PUBLIC_PERMISSION);
     
-    // Nếu route không có @Permission() và @RolesRequired() → mặc định là public
-    const isPublicByDefault = (requiredRoles.length === 0 && requiredPerms.length === 0);
+    // Nếu route không có @Permission() → mặc định là public
+    const isPublicByDefault = requiredPerms.length === 0;
 
     // Route public: @Permission('public') hoặc không có @Permission() nào
     // Vẫn validate token nếu có, nhưng không bắt buộc
     // Cho phép user đăng nhập vào public route để có thêm thông tin
-    if (isPublicPermission || isOptional || isPublicByDefault) {
+    if (isPublicPermission || isPublicByDefault) {
       // Thử validate token nếu có, nhưng không bắt buộc
       // Nếu có lỗi trong quá trình validate, catch và vẫn cho phép truy cập
       const result = super.canActivate(context);
@@ -74,21 +65,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return result;
     }
 
-    // Route protected (có @Permission() hoặc @RolesRequired()): bắt buộc phải có token hợp lệ
+    // Route protected (có @Permission()): bắt buộc phải có token hợp lệ
     return super.canActivate(context);
   }
 
   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
-    const isOptional = this.reflector.getAllAndOverride<boolean>(IS_OPTIONAL_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    // Kiểm tra route có @Permission() hoặc @RolesRequired() không
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_REQUIRED_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]) || [];
+    // Kiểm tra route có @Permission() không
     const requiredPerms = this.reflector.getAllAndOverride<string[]>(PERMS_REQUIRED_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -97,12 +79,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     // Kiểm tra có @Permission('public') không
     const isPublicPermission = requiredPerms.includes(PUBLIC_PERMISSION);
     
-    // Nếu route không có @Permission() và @RolesRequired() → mặc định là public
-    const isPublicByDefault = (requiredRoles.length === 0 && requiredPerms.length === 0);
+    // Nếu route không có @Permission() → mặc định là public
+    const isPublicByDefault = requiredPerms.length === 0;
 
     // Route public: @Permission('public') hoặc không có @Permission() nào
     // Không bắt buộc authentication, nhưng nếu có user thì trả về user
-    if (isPublicPermission || isOptional || isPublicByDefault) {
+    if (isPublicPermission || isPublicByDefault) {
       // Có lỗi nhưng route public/optional - không throw, chỉ trả về null
       if (err || !user) {
         return null;
@@ -111,7 +93,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return user;
     }
 
-    // Route protected (có @Permission() hoặc @RolesRequired()): bắt buộc phải có user
+    // Route protected (có @Permission()): bắt buộc phải có user
     if (err || !user) {
       let message = 'Unauthorized';
       

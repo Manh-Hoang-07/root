@@ -5,7 +5,6 @@ import {
   Param,
   ValidationPipe,
 } from '@nestjs/common';
-import { Public } from '../../../../common/decorators/rbac.decorators';
 import { PostCategoryService } from '../services/post-category.service';
 import { GetCategoriesDto } from '../dtos/get-categories.dto';
 import { GetCategoryDto } from '../dtos/get-category.dto';
@@ -13,7 +12,6 @@ import { prepareQuery } from '../../../../common/base/utils/list-query.helper';
 import { ResponseUtil } from '../../../../common/utils/response.util';
 
 @Controller('public/post-categories')
-@Public()
 export class PostCategoryController {
   constructor(private readonly postCategoryService: PostCategoryService) {}
 

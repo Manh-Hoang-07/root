@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 
 // Core Configurations
 import appConfig from './core/config/app.config';
@@ -34,7 +32,7 @@ import { RbacGuard } from './common/guards/rbac.guard';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env', 'env.mysql'],
+      envFilePath: '.env',
       load: [
         appConfig,
         databaseConfig,
@@ -49,9 +47,8 @@ import { RbacGuard } from './common/guards/rbac.guard';
     AdminModule,
     RbacModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     CustomLoggerService,
     // Global Exception Filters
     {

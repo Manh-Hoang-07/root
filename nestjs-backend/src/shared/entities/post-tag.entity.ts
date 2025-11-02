@@ -16,6 +16,7 @@ import { Post } from './post.entity';
 @Index('idx_status', ['status'])
 @Index('idx_created_at', ['createdAt'])
 @Index('idx_status_created_at', ['status', 'createdAt'])
+@Index('idx_deleted_at', ['deletedAt']) // Index cho soft delete
 export class PostTag {
 
   @PrimaryGeneratedColumn({ unsigned: true })

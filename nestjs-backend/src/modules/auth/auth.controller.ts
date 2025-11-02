@@ -4,7 +4,6 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { Public } from '../../common/decorators/rbac.decorators';
 import { User } from '../../common/decorators/user.decorator';
 import { ResponseUtil } from '../../common/utils/response.util';
 
@@ -12,7 +11,6 @@ import { ResponseUtil } from '../../common/utils/response.util';
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
-  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
@@ -24,7 +22,6 @@ export class AuthController {
     return result;
   }
 
-  @Public()
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);

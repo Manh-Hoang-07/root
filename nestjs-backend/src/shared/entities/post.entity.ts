@@ -27,6 +27,7 @@ import { PostTag } from './post-tag.entity';
 @Index('idx_status_published_at', ['status', 'published_at'])
 @Index('idx_is_featured_status', ['is_featured', 'status'])
 @Index('idx_primary_category_status', ['primary_postcategory_id', 'status'])
+@Index('idx_deleted_at', ['deletedAt']) // Index cho soft delete
 export class Post {
 
   @PrimaryGeneratedColumn({ unsigned: true })

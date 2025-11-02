@@ -1,17 +1,55 @@
-export function applyWhereConditions(queryBuilder: any, where: any): void {
+/**
+ * Validate field name để tránh SQL injection
+ */
+function isValidFieldName(fieldName: string, repository?: any): boolean {
+  if (!repository || !fieldName || typeof fieldName !== 'string') {
+    return false;
+  }
+  // Chỉ cho phép các ký tự hợp lệ cho identifier (chữ cái, số, dấu gạch dưới)
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(fieldName)) {
+    return false;
+  }
+  // Kiểm tra field có tồn tại trong entity metadata không
+  const validColumns = repository.metadata.columns.map((c: any) => c.propertyName);
+  return validColumns.includes(fieldName);
+}
+
+export function applyWhereConditions(queryBuilder: any, where: any, repository?: any): void {
   if (Array.isArray(where)) {
     where.forEach((condition, index) => {
-      const conditions = Object.keys(condition)
+      // Validate và filter các keys hợp lệ
+      const validKeys = Object.keys(condition).filter((key) => 
+        isValidFieldName(key, repository)
+      );
+      
+      if (validKeys.length === 0) {
+        return; // Skip nếu không có key hợp lệ
+      }
+
+      const validCondition: any = {};
+      const params: any = {};
+      validKeys.forEach((key) => {
+        validCondition[key] = condition[key];
+        params[`${key}_${index}`] = condition[key];
+      });
+
+      const conditions = validKeys
         .map((key) => `entity.${key} = :${key}_${index}`)
         .join(' AND ');
+      
       if (index === 0) {
-        queryBuilder.andWhere(`(${conditions})`, condition);
+        queryBuilder.andWhere(`(${conditions})`, params);
       } else {
-        queryBuilder.orWhere(`(${conditions})`, condition);
+        queryBuilder.orWhere(`(${conditions})`, params);
       }
     });
   } else if (where && typeof where === 'object') {
-    Object.entries(where).forEach(([key, value]) => {
+    // Validate và filter các keys hợp lệ
+    const validEntries = Object.entries(where).filter(([key]) => 
+      isValidFieldName(key, repository)
+    );
+    
+    validEntries.forEach(([key, value]) => {
       queryBuilder.andWhere(`entity.${key} = :${key}`, { [key]: value });
     });
   }

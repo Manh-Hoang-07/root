@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { User } from '../../../../common/decorators/user.decorator';
 import { PermissionService } from '../services/permission.service';
 
 @Controller('admin/permissions')
@@ -16,8 +17,7 @@ export class PermissionController {
   }
 
   @Post()
-  async create(@Body() dto: any, @Req() req: any) {
-    const userId = req.user?.id || req.user?.sub;
+  async create(@Body() dto: any, @User('id') userId: number) {
     return this.service.create(dto, userId);
   }
 
@@ -25,9 +25,8 @@ export class PermissionController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: any,
-    @Req() req: any
+    @User('id') userId: number
   ) {
-    const userId = req.user?.id || req.user?.sub;
     return this.service.update(id, dto, userId);
   }
 

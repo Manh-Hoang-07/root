@@ -43,7 +43,7 @@ export abstract class ListService<T> {
       const queryBuilder = this.repository.createQueryBuilder('entity');
       const whereFilters = prepared === true ? filters : prepared;
       if (whereFilters) {
-        applyWhereConditions(queryBuilder, whereFilters);
+        applyWhereConditions(queryBuilder, whereFilters, this.repository);
       }
       applyRelations(queryBuilder, relations as any);
       // enforce final selected columns after relations
@@ -79,7 +79,7 @@ export abstract class ListService<T> {
     }
     const alias = 'entity';
     const qb = this.repository.createQueryBuilder(alias);
-    applyWhereConditions(qb, where as any);
+    applyWhereConditions(qb, where as any, this.repository);
     applyRelations(qb, (options?.relations || []) as any);
     // enforce select after relations
     applySelectColumns(qb, options?.select, this.repository);

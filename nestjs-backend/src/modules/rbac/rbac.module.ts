@@ -4,7 +4,7 @@ import { Role } from '../../shared/entities/role.entity';
 import { Permission } from '../../shared/entities/permission.entity';
 import { User } from '../../shared/entities/user.entity';
 import { RbacService } from './services/rbac.service';
-import { UserPermissionController } from './controllers/user-permission.controller';
+import { RbacController } from './controllers/rbac.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Role, Permission, User])],
@@ -12,7 +12,7 @@ import { UserPermissionController } from './controllers/user-permission.controll
     RbacService,
   ],
   controllers: [
-    UserPermissionController,
+    RbacController,
   ],
   exports: [
     RbacService,
