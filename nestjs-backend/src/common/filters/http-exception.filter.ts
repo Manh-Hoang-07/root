@@ -20,7 +20,21 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const status = exception.getStatus();
     const exceptionResponse = exception.getResponse();
 
-    // Extract error details
+    // Kiểm tra xem exceptionResponse đã có format ApiResponse chưa (từ ResponseUtil)
+    // Nếu có các trường: success, code, httpStatus, timestamp thì là ApiResponse format
+    if (
+      typeof exceptionResponse === 'object' &&
+      exceptionResponse !== null &&
+      'success' in exceptionResponse &&
+      'code' in exceptionResponse &&
+      'timestamp' in exceptionResponse
+    ) {
+      // Đã là ApiResponse format rồi, dùng luôn
+      response.status(status).json(exceptionResponse);
+      return;
+    }
+
+    // Extract error details (cho trường hợp exception thông thường)
     let message = exception.message;
     let errors: any = null;
 
@@ -54,7 +68,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     );
 
     // Create standardized error response
-    const errorResponse = ResponseUtil.error(message, errors);
+    const errorResponse = ResponseUtil.error(message, 'ERROR', status, errors);
 
     response.status(status).json(errorResponse);
   }

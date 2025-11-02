@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository, DeepPartial } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DeepPartial } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../../../../shared/entities/user.entity';
 import { Profile } from '../../../../shared/entities/profile.entity';
@@ -13,17 +14,34 @@ export class UserService extends CrudService<User> {
     return this.repository.manager.getRepository(Profile);
   }
 
-  constructor(private readonly dataSource: DataSource) {
-    super(dataSource.getRepository(User));
+  constructor(
+    @InjectRepository(User) repository: Repository<User>,
+  ) {
+    super(repository);
   }
 
-  async profile(id: number): Promise<ApiResponse<any>> {
-    const user = await this.repository.findOne({ where: { id } as any });
-    if (!user) return ResponseUtil.notFound('Không tìm thấy người dùng');
-    const profile = await this.profileRepo.findOne({ where: { userId: id } });
-    return ResponseUtil.success({ user, profile }, 'Lấy thông tin profile thành công');
+  /**
+   * Override getOne để đảm bảo load relations trong admin
+   */
+  async getOne(
+    where: any,
+    options?: any,
+  ) {
+    // Đảm bảo load relations trong admin
+    const adminOptions = {
+      ...options,
+      relations: ['roles', 'direct_permissions'],
+    };
+    const user = await super.getOne(where, adminOptions);
+    
+    // Load profile riêng vì không có relation OneToOne trong entity
+    if (user && where.id) {
+      const profile = await this.profileRepo.findOne({ where: { userId: where.id } });
+      (user as any).profile = profile || null;
+    }
+    
+    return user;
   }
-
 
   async changePassword(id: number, dto: ChangePasswordDto): Promise<ApiResponse<null>> {
     try {
@@ -35,10 +53,6 @@ export class UserService extends CrudService<User> {
     } catch (error) {
       return ResponseUtil.error('Không thể đổi mật khẩu', 'CHANGE_PASSWORD_FAILED');
     }
-  }
-
-  async assignRoles(id: number, roleIds: number[]): Promise<ApiResponse<User | null>> {
-    return ResponseUtil.error('Phân quyền chưa được cấu hình (thiếu Role entity)', 'ASSIGN_ROLES_UNSUPPORTED');
   }
 
   protected override async beforeCreate(_entity: User, createDto: DeepPartial<User>): Promise<boolean> {
@@ -53,8 +67,12 @@ export class UserService extends CrudService<User> {
   protected override async afterCreate(entity: User, createDto: DeepPartial<User>): Promise<void> {
     const profilePayload = (createDto as any).profile ?? null;
     if (profilePayload) {
-      const profile = this.profileRepo.create({ ...(profilePayload as any), userId: entity.id });
-      await this.profileRepo.save(profile);
+      // Kiểm tra xem profile đã tồn tại chưa (1 user chỉ có 1 profile)
+      const existingProfile = await this.profileRepo.findOne({ where: { userId: entity.id } });
+      if (!existingProfile) {
+        const profile = this.profileRepo.create({ ...(profilePayload as any), userId: entity.id });
+        await this.profileRepo.save(profile);
+      }
     }
   }
 
@@ -72,14 +90,30 @@ export class UserService extends CrudService<User> {
   protected override async afterUpdate(entity: User, updateDto: DeepPartial<User>): Promise<void> {
     const profilePayload = (updateDto as any).profile ?? null;
     if (profilePayload && Object.keys(profilePayload).length) {
+      // 1 user chỉ có 1 profile, tìm profile hiện tại hoặc tạo mới
       let profile = await this.profileRepo.findOne({ where: { userId: entity.id } });
       if (profile) {
+        // Cập nhật profile hiện tại
         Object.assign(profile, profilePayload as any);
         await this.profileRepo.save(profile);
       } else {
+        // Tạo profile mới nếu chưa có
         const createdProfile = this.profileRepo.create({ ...(profilePayload as any), userId: entity.id });
         await this.profileRepo.save(createdProfile);
       }
+    }
+  }
+
+  protected override async afterDelete(entity: User): Promise<void> {
+    // Xóa profile sau khi xóa user
+    try {
+      const profile = await this.profileRepo.findOne({ where: { userId: entity.id } });
+      if (profile) {
+        await this.profileRepo.remove(profile);
+      }
+    } catch (error) {
+      // Log error nhưng không throw vì user đã được xóa
+      console.error(`Failed to delete profile for user ${entity.id}:`, error);
     }
   }
 }

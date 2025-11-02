@@ -4,10 +4,9 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { Public } from '../../common/decorators/public.decorator';
+import { Public } from '../../common/decorators/rbac.decorators';
 import { User } from '../../common/decorators/user.decorator';
 import { ResponseUtil } from '../../common/utils/response.util';
-import { TokenBlacklistGuard } from '../../common/guards/token-blacklist.guard';
 
 @Controller()
 export class AuthController {
@@ -32,13 +31,11 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(TokenBlacklistGuard)
   async me(@User('id') userId: number) {
     return this.authService.me(userId);
   }
 
   @Post('logout')
-  @UseGuards(TokenBlacklistGuard)
   async logout(@User('id') userId: number, @Headers('authorization') authHeader: string, @Res({ passthrough: true }) res: Response) {
     // Extract token from authorization header
     let token = null;
@@ -53,7 +50,6 @@ export class AuthController {
   }
 
   @Post('refresh')
-  @UseGuards(TokenBlacklistGuard)
   async refresh(@User('id') userId: number, @Res({ passthrough: true }) res: Response) {
     const result: any = await this.authService.refreshToken(userId);
 

@@ -1,18 +1,49 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 export interface AuthUser {
-  id: string;
-  email: string;
-  username?: string;
-  roles: string[];
-  permissions?: string[];
-  isActive: boolean;
+  id: number;
+  username?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  status: string;
+  email_verified_at?: Date | null;
+  phone_verified_at?: Date | null;
+  last_login_at?: Date | null;
+  created_at: Date;
+  updated_at: Date;
   [key: string]: any;
 }
 
 /**
  * Decorator to extract user from request
- * Can be used to get the entire user object or specific properties
+ * Tương tự Laravel's Auth::user() và Auth::id()
+ * 
+ * @example
+ * ```typescript
+ * // Lấy toàn bộ user object
+ * @Get('profile')
+ * getProfile(@User() user: AuthUser) {
+ *   return user;
+ * }
+ * 
+ * // Lấy user ID (tương tự Auth::id())
+ * @Post('posts')
+ * createPost(@User('id') userId: number) {
+ *   return this.postService.create({ userId, ... });
+ * }
+ * 
+ * // Lấy email
+ * @Get('email')
+ * getEmail(@User('email') email: string) {
+ *   return { email };
+ * }
+ * 
+ * // Lấy bất kỳ property nào của user
+ * @Get('status')
+ * getStatus(@User('status') status: string) {
+ *   return { status };
+ * }
+ * ```
  */
 export const User = createParamDecorator(
   (data: keyof AuthUser | undefined, ctx: ExecutionContext): AuthUser | any => {
@@ -23,59 +54,4 @@ export const User = createParamDecorator(
   },
 );
 
-/**
- * Decorator to extract user ID from request
- */
-export const UserId = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): string => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.user?.id;
-  },
-);
 
-/**
- * Decorator to extract user email from request
- */
-export const UserEmail = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): string => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.user?.email;
-  },
-);
-
-/**
- * Decorator to extract user roles from request
- */
-export const UserRoles = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): string[] => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.user?.roles || [];
-  },
-);
-
-/**
- * Decorator to check if user has specific role
- */
-export const HasRole = createParamDecorator(
-  (_role: string, _ctx: ExecutionContext): boolean => {
-    return true;
-  },
-);
-
-/**
- * Decorator to check if user has any of the specified roles
- */
-export const HasAnyRole = createParamDecorator(
-  (_roles: string[], _ctx: ExecutionContext): boolean => {
-    return true;
-  },
-);
-
-/**
- * Decorator to check if user has all of the specified roles
- */
-export const HasAllRoles = createParamDecorator(
-  (_roles: string[], _ctx: ExecutionContext): boolean => {
-    return true;
-  },
-);

@@ -186,16 +186,16 @@ curl -X POST http://localhost:3000/admin/rbac/users/1/roles \
 
 ---
 
-## 5. Assign Permissions to User (Gán quyền trực tiếp cho user)
+## 5. Sync Roles to User (Đồng bộ vai trò cho user)
 
 ### Request
 
 ```bash
-curl -X POST http://localhost:3000/admin/rbac/users/1/permissions \
+curl -X PUT http://localhost:3000/admin/users/1/roles \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "permission_ids": [10, 11, 12]
+    "role_ids": [1, 2, 3]
   }'
 ```
 
@@ -203,12 +203,12 @@ curl -X POST http://localhost:3000/admin/rbac/users/1/permissions \
 
 ```json
 {
-  "permission_ids": [10, 11, 12]
+  "role_ids": [1, 2, 3]
 }
 ```
 
 **Fields:**
-- `permission_ids` (required): Mảng ID quyền
+- `role_ids` (required): Mảng ID vai trò (thay thế toàn bộ roles hiện có)
 
 ### Response
 
@@ -216,10 +216,131 @@ curl -X POST http://localhost:3000/admin/rbac/users/1/permissions \
 ```json
 {
   "success": true,
-  "data": null,
-  "message": "Gán quyền cho user thành công"
+  "data": {
+    "id": 1,
+    "email": "user@example.com",
+    "roles": [...]
+  },
+  "message": "Roles synced successfully"
 }
 ```
+
+---
+
+## 6. Add Roles to User (Thêm vai trò cho user)
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/admin/users/1/roles \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "role_ids": [4, 5]
+  }'
+```
+
+### Request Body
+
+```json
+{
+  "role_ids": [4, 5]
+}
+```
+
+**Fields:**
+- `role_ids` (required): Mảng ID vai trò (thêm vào roles hiện có)
+
+### Response
+
+**Success (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "email": "user@example.com",
+    "roles": [...]
+  },
+  "message": "Roles added successfully"
+}
+```
+
+---
+
+## 7. Remove Roles from User (Xóa vai trò khỏi user)
+
+### Request
+
+```bash
+curl -X DELETE http://localhost:3000/admin/users/1/roles \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "role_ids": [2]
+  }'
+```
+
+### Request Body
+
+```json
+{
+  "role_ids": [2]
+}
+```
+
+**Fields:**
+- `role_ids` (required): Mảng ID vai trò cần xóa
+
+### Response
+
+**Success (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "email": "user@example.com",
+    "roles": [...]
+  },
+  "message": "Roles removed successfully"
+}
+```
+
+---
+
+## 8. Get User Permissions (Lấy thông tin phân quyền của user)
+
+### Request
+
+```bash
+curl -X GET http://localhost:3000/admin/users/1/permissions \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+### Response
+
+**Success (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "user_id": 1,
+    "roles": [
+      {
+        "id": 1,
+        "code": "admin",
+        "name": "Administrator",
+        "status": "active",
+        "permissions": [...]
+      }
+    ]
+  }
+}
+```
+
+**Lưu ý:** Phân quyền chỉ được thực hiện qua roles. Không có direct permissions cho user.
 
 ---
 
@@ -242,17 +363,37 @@ curl -X POST http://localhost:3000/admin/rbac/users/1/permissions \
 
 ### Permission Inheritance
 
-Khi gán quyền cho vai trò hoặc vai trò cho user:
-1. **Role → User**: User nhận tất cả quyền của các vai trò
-2. **Permission → Role**: Tất cả user có vai trò đó nhận quyền
-3. **Permission → User**: User nhận quyền trực tiếp (riêng lẻ)
+Hệ thống phân quyền hoạt động theo mô hình Role-Based:
+1. **Permission → Role**: Gán permissions cho role
+2. **Role → User**: Gán roles cho user
+3. **User nhận quyền**: User tự động nhận tất cả permissions từ các roles được gán
+
+**Lưu ý quan trọng:**
+- **KHÔNG có phân quyền trực tiếp permissions cho user**
+- Tất cả quyền đều phải thông qua roles
+- Khi role hoặc permission có `status = 'inactive'`, user sẽ không có quyền đó
+
+### Permission Check Flow
+
+```
+User Request
+  ↓
+RolesPermissionsGuard
+  ↓
+RbacService.userHasRoles() → Chỉ kiểm tra roles có status = 'active'
+  ↓
+RbacService.userHasPermissions() → Chỉ kiểm tra permissions từ active roles
+  ↓
+Allow/Deny Access
+```
 
 ### Best Practices
 
 1. **Sử dụng Roles** cho nhóm người dùng có cùng quyền
-2. **Sử dụng Direct Permissions** cho ngoại lệ
-3. **Tạo hierarchical roles** để quản lý dễ hơn
-4. **Phân quyền module-based** để dễ maintain
+2. **Tạo hierarchical roles** để quản lý dễ hơn (parent-child relationship)
+3. **Phân quyền module-based** để dễ maintain (ví dụ: `post.*`, `user.*`)
+4. **Quản lý status** để vô hiệu hóa tạm thời roles/permissions mà không cần xóa
+5. **Không gán trực tiếp permissions cho user** - luôn thông qua roles
 
 ---
 

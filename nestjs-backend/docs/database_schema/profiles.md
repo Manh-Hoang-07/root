@@ -6,7 +6,7 @@
 
 ```sql
 id                      BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY
-user_id                 BIGINT UNSIGNED NOT NULL
+user_id                 BIGINT UNSIGNED NOT NULL UNIQUE
 name                    VARCHAR(255) NULL
 image                   VARCHAR(255) NULL
 birthday                DATE NULL
@@ -22,11 +22,15 @@ deleted_at              DATETIME NULL
 
 ## Relations
 
-- many-to-one → users
+- one-to-one → users (1 user chỉ có 1 profile)
 
 ## Foreign Keys
 
 - user_id → users.id (CASCADE)
+
+## Constraints
+
+- `user_id` có UNIQUE constraint để đảm bảo 1 user chỉ có 1 profile
 
 ## Lưu ý
 

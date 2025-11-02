@@ -5,7 +5,7 @@ import {
   Param,
   ValidationPipe,
 } from '@nestjs/common';
-import { Public } from '../../../../common/decorators/public.decorator';
+import { Public } from '../../../../common/decorators/rbac.decorators';
 import { PostCategoryService } from '../services/post-category.service';
 import { GetCategoriesDto } from '../dtos/get-categories.dto';
 import { GetCategoryDto } from '../dtos/get-category.dto';

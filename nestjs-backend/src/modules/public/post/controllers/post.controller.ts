@@ -5,7 +5,7 @@ import {
   Param,
   ValidationPipe,
 } from '@nestjs/common';
-import { Public } from '../../../../common/decorators/public.decorator';
+import { Public } from '../../../../common/decorators/rbac.decorators';
 import { PostService } from '../services/post.service';
 import { prepareQuery } from '../../../../common/base/utils/list-query.helper';
 import { GetPostsDto } from '../dtos/get-posts.dto';

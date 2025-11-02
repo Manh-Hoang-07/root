@@ -23,8 +23,23 @@ export class RoleService extends CrudService<Role> {
     const base = super.prepareOptions(queryOptions);
     return {
       ...base,
-      relations: ['parent', 'children'],
+      relations: ['parent', 'children', 'permissions'],
     } as any;
+  }
+
+  /**
+   * Override getOne để đảm bảo load relations trong admin
+   */
+  async getOne(
+    where: any,
+    options?: any,
+  ) {
+    // Đảm bảo load relations trong admin
+    const adminOptions = {
+      ...options,
+      relations: ['parent', 'children', 'permissions',],
+    };
+    return super.getOne(where, adminOptions);
   }
 
   protected async beforeCreate(

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index } from 'typeorm';
 import { User } from './user.entity';
 
 @Entity('profiles')
@@ -6,10 +6,11 @@ export class Profile {
     @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
     id: number;
 
-    @Column({ name: 'user_id' })
+    @Column({ name: 'user_id', unique: true })
+    @Index('UQ_profiles_user_id', { unique: true })
     userId: number;
 
-    @ManyToOne(() => User, { onDelete: 'CASCADE' })
+    @OneToOne(() => User, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: User;
 

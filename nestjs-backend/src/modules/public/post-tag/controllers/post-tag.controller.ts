@@ -5,7 +5,7 @@ import {
   Param,
   ValidationPipe,
 } from '@nestjs/common';
-import { Public } from '../../../../common/decorators/public.decorator';
+import { Public } from '../../../../common/decorators/rbac.decorators';
 import { PostTagService } from '../services/post-tag.service';
 import { GetTagsDto } from '../dtos/get-tags.dto';
 import { GetTagDto } from '../dtos/get-tag.dto';

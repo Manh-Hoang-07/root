@@ -12,6 +12,7 @@ import mailConfig from './core/config/mail.config';
 
 // Core Modules
 import { DatabaseModule } from './core/database/database.module';
+import { CommonModule } from './common/common.module';
 
 // Core Services
 import { CustomLoggerService } from './core/logger/logger.service';
@@ -27,8 +28,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { PublicModule } from './modules/public/public.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { RbacModule } from './modules/rbac/rbac.module';
-import { RolesPermissionsGuard } from './common/guards/roles-permissions.guard';
-// import { RolesGuard } from './common/guards/roles.guard';
+import { RbacGuard } from './common/guards/rbac.guard';
 
 @Module({
   imports: [
@@ -42,6 +42,7 @@ import { RolesPermissionsGuard } from './common/guards/roles-permissions.guard';
         mailConfig,
       ],
     }),
+    CommonModule,
     DatabaseModule,
     AuthModule,
     PublicModule,
@@ -81,7 +82,7 @@ import { RolesPermissionsGuard } from './common/guards/roles-permissions.guard';
     },
     {
       provide: APP_GUARD,
-      useClass: RolesPermissionsGuard,
+      useClass: RbacGuard,
     },
   ],
 })

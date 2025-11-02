@@ -20,6 +20,8 @@ FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
 ```
 
+**⚠️ Lưu ý:** Table này vẫn tồn tại trong database nhưng **KHÔNG được sử dụng trong logic phân quyền**. Hệ thống chỉ phân quyền qua roles (bảng `user_roles`). Permissions được kế thừa từ roles của user.
+
 ## role_has_permissions
 
 ```sql

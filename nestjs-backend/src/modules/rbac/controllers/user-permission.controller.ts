@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
-import { UserPermissionService } from '../services/user-permission.service';
+import { RbacService } from '../services/rbac.service';
 
 @Controller('admin/users')
 export class UserPermissionController {
-  constructor(private readonly service: UserPermissionService) {}
+  constructor(private readonly service: RbacService) {}
 
   /**
    * Sync roles cho user (thay thế toàn bộ)
@@ -38,38 +38,8 @@ export class UserPermissionController {
     return this.service.removeRoles(userId, body.role_ids || []);
   }
 
-  /**
-   * Sync permissions cho user (thay thế toàn bộ)
-   */
-  @Put(':id/permissions')
-  async syncPermissions(
-    @Param('id', ParseIntPipe) userId: number,
-    @Body() body: { permission_ids: number[] }
-  ) {
-    return this.service.syncPermissions(userId, body.permission_ids || []);
-  }
-
-  /**
-   * Thêm permissions cho user (append)
-   */
-  @Post(':id/permissions')
-  async addPermissions(
-    @Param('id', ParseIntPipe) userId: number,
-    @Body() body: { permission_ids: number[] }
-  ) {
-    return this.service.addPermissions(userId, body.permission_ids || []);
-  }
-
-  /**
-   * Xóa permissions khỏi user
-   */
-  @Delete(':id/permissions')
-  async removePermissions(
-    @Param('id', ParseIntPipe) userId: number,
-    @Body() body: { permission_ids: number[] }
-  ) {
-    return this.service.removePermissions(userId, body.permission_ids || []);
-  }
+  // Đã xóa các endpoint liên quan đến direct permissions
+  // Phân quyền cho user chỉ được thực hiện qua roles, không phân trực tiếp permissions
 
   /**
    * Lấy thông tin phân quyền của user

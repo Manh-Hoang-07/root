@@ -2,12 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { AuthService } from '../auth.service';
-import { Request } from 'express';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../../../shared/entities/user.entity';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private configService: ConfigService, private authService: AuthService) {
+  constructor(
+    private configService: ConfigService,
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -18,13 +22,39 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    const user = await this.authService.validateUser(payload.sub);
+    const userId = payload.sub;
+    
+    // Load thông tin user cơ bản
+    const user = await this.userRepo.findOne({
+      where: { id: Number(userId) },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        phone: true,
+        status: true,
+        email_verified_at: true,
+        phone_verified_at: true,
+        last_login_at: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
     if (!user) return null;
+
+    // Trả về thông tin user
     return {
       id: user.id,
-      email: user.email,
       username: user.username,
-      isActive: user.status === 'active',
+      email: user.email,
+      phone: user.phone,
+      status: user.status,
+      email_verified_at: user.email_verified_at,
+      phone_verified_at: user.phone_verified_at,
+      last_login_at: user.last_login_at,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
     };
   }
 }

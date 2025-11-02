@@ -21,7 +21,7 @@ deleted_at              DATETIME NULL
 
 - many-to-one → permissions (self-referencing, parent-child)
 - many-to-many → roles (via role_has_permissions)
-- many-to-many → users (via user_permissions)
+- many-to-many → users (via user_permissions) ⚠️ **Không được sử dụng** - phân quyền chỉ qua roles
 
 ## Foreign Keys
 

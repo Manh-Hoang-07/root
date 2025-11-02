@@ -77,6 +77,8 @@ curl -X GET http://localhost:3000/admin/roles/1 \
   -H "Content-Type: application/json"
 ```
 
+**Lưu ý**: Endpoint này tự động load các relations mặc định (`parent`, `children`, `permissions`).
+
 ### Response
 
 **Success (200):**
@@ -89,6 +91,20 @@ curl -X GET http://localhost:3000/admin/roles/1 \
     "name": "Admin",
     "status": "active",
     "parent_id": null,
+    "parent": null,
+    "children": [],
+    "permissions": [
+      {
+        "id": 1,
+        "code": "post.manage",
+        "name": "Quản lý bài viết"
+      },
+      {
+        "id": 2,
+        "code": "postcategory.manage",
+        "name": "Quản lý danh mục bài viết"
+      }
+    ],
     "created_at": "2025-01-11T05:00:00.000Z",
     "updated_at": "2025-01-11T05:00:00.000Z"
   },
@@ -245,48 +261,6 @@ curl -X POST http://localhost:3000/admin/roles/1/permissions \
   "success": true,
   "data": null,
   "message": "Gán quyền thành công"
-}
-```
-
----
-
-## 7. Get Permissions of Role (Lấy danh sách quyền của vai trò)
-
-### Request
-
-```bash
-curl -X GET http://localhost:3000/admin/roles/1/permissions \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json"
-```
-
-### Response
-
-**Success (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "code": "admin",
-    "name": "Admin",
-    "status": "active",
-    "permissions": [
-      {
-        "id": 1,
-        "code": "post.manage",
-        "name": "Quản lý bài viết"
-      },
-      {
-        "id": 2,
-        "code": "postcategory.manage",
-        "name": "Quản lý danh mục bài viết"
-      }
-    ],
-    "parent": null,
-    "children": []
-  },
-  "message": "Thành công"
 }
 ```
 

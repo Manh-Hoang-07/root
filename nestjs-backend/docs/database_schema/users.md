@@ -25,7 +25,7 @@ deleted_at              DATETIME NULL
 ## Relations
 
 - many-to-many → roles (via user_roles)
-- many-to-many → permissions (via user_permissions)
+- many-to-many → permissions (via user_permissions) ⚠️ **Không được sử dụng** - phân quyền chỉ qua roles
 - one-to-one → profiles
 
 ## Lưu ý

@@ -18,6 +18,7 @@ export class CreateProfilesTable1737000000100 implements MigrationInterface {
             name: 'user_id',
             type: 'bigint',
             unsigned: true,
+            isUnique: true,
           },
           {
             name: 'name',
@@ -85,12 +86,13 @@ export class CreateProfilesTable1737000000100 implements MigrationInterface {
       true,
     );
 
-    // Create indexes
+    // Create unique index for user_id (1 user chỉ có 1 profile)
     await queryRunner.createIndex(
       'profiles',
       new TableIndex({
-        name: 'IDX_profiles_user_id',
+        name: 'UQ_profiles_user_id',
         columnNames: ['user_id'],
+        isUnique: true,
       }),
     );
     await queryRunner.createIndex(

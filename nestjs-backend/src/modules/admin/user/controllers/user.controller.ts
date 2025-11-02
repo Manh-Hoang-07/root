@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UpdateUserDto } from '../dtos/update-user.dto';
@@ -18,20 +18,19 @@ export class UserController {
     return this.service.update(Number(id), dto);
   }
 
-  @Get(':id/profile')
-  profile(@Param('id') id: string) {
-    return this.service.profile(Number(id));
+  @Get(':id')
+  getOne(@Param('id') id: string) {
+    return this.service.getOne({ id: Number(id) } as any);
   }
-
 
   @Patch(':id/password')
   changePassword(@Param('id') id: string, @Body() dto: ChangePasswordDto) {
     return this.service.changePassword(Number(id), dto);
   }
 
-  @Post(':id/roles')
-  assignRoles(@Param('id') id: string, @Body('role_ids') roleIds: number[]) {
-    return this.service.assignRoles(Number(id), roleIds);
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.service.delete(Number(id));
   }
 }
 

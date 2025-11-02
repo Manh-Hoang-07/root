@@ -60,7 +60,7 @@ curl -X POST http://localhost:3000/admin/users \
 - `email` (optional): Email
 - `phone` (optional): Số điện thoại
 - `password` (required): Mật khẩu (tối thiểu 6 ký tự)
-- `role_ids` (optional): Mảng ID vai trò
+- `role_ids` (optional): Mảng ID vai trò - **Lưu ý:** Field này sẽ bị bỏ qua khi tạo user. Để gán roles cho user, vui lòng sử dụng [RBAC API](./rbac.md#4-assign-roles-to-user-gán-vai-trò-cho-user)
 - `profile` (optional): Thông tin profile
 
 ### Response
@@ -127,15 +127,17 @@ Tương tự như Create User, tất cả các fields đều optional.
 
 ---
 
-## 3. Get User Profile (Lấy thông tin profile)
+## 3. Get User by ID (Lấy thông tin người dùng)
 
 ### Request
 
 ```bash
-curl -X GET http://localhost:3000/admin/users/1/profile \
+curl -X GET http://localhost:3000/admin/users/1 \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json"
 ```
+
+**Lưu ý**: Endpoint này tự động load các relations mặc định (`roles`) và `profile`. Phân quyền chỉ được thực hiện qua roles, không có direct permissions.
 
 ### Response
 
@@ -144,13 +146,20 @@ curl -X GET http://localhost:3000/admin/users/1/profile \
 {
   "success": true,
   "data": {
-    "user": {
-      "id": 1,
-      "username": "admin",
-      "email": "admin@example.com",
-      "phone": "0901234567",
-      "status": "active"
-    },
+    "id": 1,
+    "username": "admin",
+    "email": "admin@example.com",
+    "phone": "0901234567",
+    "status": "active",
+    "roles": [
+      {
+        "id": 1,
+        "code": "admin",
+        "name": "Admin",
+        "status": "active",
+        "permissions": [...]
+      }
+    ],
     "profile": {
       "id": 1,
       "userId": 1,
@@ -160,9 +169,11 @@ curl -X GET http://localhost:3000/admin/users/1/profile \
       "gender": "male",
       "address": "123 Main Street",
       "about": "System Administrator"
-    }
+    },
+    "created_at": "2025-01-11T05:00:00.000Z",
+    "updated_at": "2025-01-11T05:00:00.000Z"
   },
-  "message": "Lấy thông tin profile thành công"
+  "message": "Thành công"
 }
 ```
 
@@ -205,29 +216,17 @@ curl -X PATCH http://localhost:3000/admin/users/1/password \
 
 ---
 
-## 5. Assign Roles (Gán vai trò)
+## 5. Delete User (Xóa người dùng)
 
 ### Request
 
 ```bash
-curl -X POST http://localhost:3000/admin/users/1/roles \
+curl -X DELETE http://localhost:3000/admin/users/1 \
   -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "role_ids": [1, 2, 3]
-  }'
+  -H "Content-Type: application/json"
 ```
 
-### Request Body
-
-```json
-{
-  "role_ids": [1, 2, 3]
-}
-```
-
-**Fields:**
-- `role_ids` (required): Mảng ID vai trò
+**Lưu ý**: Endpoint này sẽ xóa cả profile của user (nếu có). Xóa này là hard delete (xóa vĩnh viễn khỏi database).
 
 ### Response
 
@@ -236,11 +235,18 @@ curl -X POST http://localhost:3000/admin/users/1/roles \
 {
   "success": true,
   "data": null,
-  "message": "Gán vai trò thành công"
+  "message": "Xóa thành công"
 }
 ```
 
-**Note:** Hiện tại endpoint này trả về error vì chưa được implement đầy đủ.
+**Error (404):**
+```json
+{
+  "success": false,
+  "message": "Entity with ID 1 not found",
+  "data": null
+}
+```
 
 ---
 
@@ -257,8 +263,9 @@ curl -X POST http://localhost:3000/admin/users/1/roles \
 ---
 
 **Xem thêm:**
-- [Authentication API](./../auth.md)
+- [Authentication API](./../auth/auth.md)
 - [Admin Roles API](./role.md)
 - [Admin Permissions API](./permission.md)
+- [RBAC API](./rbac.md) - Để gán vai trò và quyền cho user
 
 
