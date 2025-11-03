@@ -381,13 +381,14 @@ User Request
 JwtAuthGuard (global)
   - Check token blacklist
   - Validate JWT token
-  - Set req.user
-  - Handle public routes (mặc định route không có @Permission() là public)
+  - Set req.user nếu token hợp lệ
+  - Nếu route có @Permission('public') → optional authentication (token lỗi vẫn cho qua)
+  - Nếu không → yêu cầu authentication (protected-by-default)
   ↓
 RbacGuard (global)
-  - Nếu route không có @Permission() → Allow (public)
-  - Nếu route có @Permission('public') → Allow
-  - Nếu có @Permission() khác → Check quyền
+  - Nếu route có @Permission('public') → Allow (bỏ qua check quyền)
+  - Nếu route có @Permission() khác → Check quyền
+  - Nếu không có @Permission() → Không check quyền (nhưng đã được bảo vệ bởi JwtAuthGuard)
   ↓
 RbacService.userHasRoles() → Chỉ kiểm tra roles có status = 'active'
   ↓

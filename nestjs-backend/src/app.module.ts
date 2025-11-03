@@ -19,6 +19,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { PublicModule } from './modules/public/public.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { RbacModule } from './modules/rbac/rbac.module';
+import { UserModule } from './modules/user/user/user.module';
 import { RbacGuard } from './common/guards/rbac.guard';
 import { RequestContextMiddleware } from './common/middlewares/request-context.middleware';
 
@@ -30,6 +31,7 @@ import { RequestContextMiddleware } from './common/middlewares/request-context.m
     PublicModule,
     AdminModule,
     RbacModule,
+    UserModule,
   ],
   controllers: [],
   providers: [

@@ -55,7 +55,7 @@ export class PostController {
     return this.postService.getPublicPosts();
   }
 
-  // Route mặc định là public - không cần khai báo gì
+  // Route mặc định là protected (yêu cầu xác thực)
   @Get()
   async getAll() {
     return this.postService.findAll();
@@ -126,11 +126,9 @@ export class AdminUserController {
 ## Cách hoạt động
 
 1. **Guard tự động chạy**: `RbacGuard` đã được register global, tự động check cho mọi route
-2. **Mặc định route là public**: Route không có `@Permission()` → mặc định là public (không cần authentication)
-3. **Kiểm tra authentication**: Route có `@Permission()` → User phải đã đăng nhập (JWT token hợp lệ)
-   - `JwtAuthGuard` check token blacklist trước
-   - Validate JWT token và gắn user vào `req.user`
-4. **Kiểm tra permission**: 
+2. **Mặc định route là protected**: Route không có `@Permission()` → yêu cầu authentication (JWT hợp lệ)
+3. **Public route**: Chỉ khi có `@Permission('public')` → authentication optional (nếu có token thì validate và gắn user; nếu lỗi token thì vẫn cho qua)
+4. **Kiểm tra permission**:
    - Lấy `userId` từ `req.user`
    - Gọi `RbacService.userHasPermissions(userId, requiredPermissions)`
    - Chỉ kiểm tra permissions có `status = 'active'` từ roles có `status = 'active'` của user
@@ -138,17 +136,7 @@ export class AdminUserController {
 
 ## Public Routes
 
-Route mặc định là public (không cần khai báo):
-
-```typescript
-// Route này là public, không cần authentication
-@Get('posts')
-async getPosts() {
-  return this.postService.findAll();
-}
-```
-
-Nếu muốn explicit public route:
+Explicit public route:
 
 ```typescript
 // Explicit public route
@@ -166,7 +154,7 @@ async getOldPublic() {
 }
 ```
 
-**Lưu ý:** Public route vẫn validate token nếu có, nhưng không bắt buộc. User có thể đăng nhập để có thêm thông tin.
+**Lưu ý:** Public route vẫn validate token nếu có, nhưng không bắt buộc. Nếu token lỗi, request vẫn được chấp nhận như unauthenticated.
 
 ## Error Responses
 
@@ -249,8 +237,8 @@ Kiểm tra roles thay vì permissions:
 - **Logic**:
   - Check token blacklist trước khi validate
   - Validate JWT token
-  - Route không có `@Permission()` → mặc định public (validate token nếu có, nhưng không bắt buộc)
-  - Route có `@Permission()` → bắt buộc authentication
+  - Route có `@Permission('public')` → optional authentication (validate nếu có token; lỗi token vẫn cho qua)
+  - Route khác (mặc định) → bắt buộc authentication
   - Set `req.user` nếu token hợp lệ
 
 ### RbacGuard (Global)
@@ -258,9 +246,9 @@ Kiểm tra roles thay vì permissions:
 - **Chức năng**: Kiểm tra roles và permissions
 - **Tự động chạy**: Cho tất cả routes
 - **Logic**:
-  - Route không có `@Permission()` → Allow (public)
-  - Route có `@Permission('public')` → Allow
+  - Route có `@Permission('public')` → Allow (bỏ qua kiểm tra quyền)
   - Route có `@Permission()` khác → Check quyền với `RbacService`
+  - Nếu không có `@Permission()` → Không check quyền (nhưng route vẫn protected bởi JwtAuthGuard)
   - Route có `@RolesRequired()` → Check roles với `RbacService`
 
 ## Lưu ý quan trọng
@@ -269,7 +257,7 @@ Kiểm tra roles thay vì permissions:
 2. **User phải có role** và role đó phải có permission với `status = 'active'`
 3. **Nếu role hoặc permission bị inactive** → user mất quyền ngay lập tức
 4. **KHÔNG có direct permissions** - tất cả đều phải qua roles
-5. **Route mặc định là public** - không cần khai báo `@Public()` hay `@Permission('public')`
+5. **Route mặc định là protected** - chỉ public khi có `@Permission('public')`
 6. **Token blacklist** được check tự động bởi `JwtAuthGuard`
 
 ## Ví dụ thực tế

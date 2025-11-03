@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Res, ValidationPipe, UsePipes, BadRequestException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
-import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { AuthService } from '../services/auth.service';
+import { LoginDto } from '../dto/login.dto';
+import { RegisterDto } from '../dto/register.dto';
+import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { Auth } from '../../common/utils/auth.util';
 import { ResponseUtil } from '../../common/utils/response.util';
 
@@ -27,15 +27,9 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
-  @Get('me')
-  async me() {
-    const userId = Auth.id();
-    return this.authService.me(userId as number);
-  }
-
   @Post('logout')
   async logout(@Headers('authorization') authHeader: string, @Res({ passthrough: true }) res: Response) {
-    const userId = Auth.id() as number;
+    const userId = Auth.id(undefined) as number;
     // Extract token from authorization header
     let token = null;
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -49,9 +43,8 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refresh(@Res({ passthrough: true }) res: Response) {
-    const userId = Auth.id() as number;
-    const result: any = await this.authService.refreshToken(userId);
+  async refresh(@Body() dto: RefreshTokenDto, @Res({ passthrough: true }) res: Response) {
+    const result: any = await this.authService.refreshTokenByValue(dto.refreshToken);
 
     if (result?.success && result?.data?.token) {
       const domain = (res.req.hostname === 'localhost') ? 'localhost' : undefined;
@@ -60,5 +53,3 @@ export class AuthController {
     return result;
   }
 }
-
-

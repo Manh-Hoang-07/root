@@ -14,6 +14,7 @@ import { ModuleRef } from '@nestjs/core';
 // Infrastructure modules
 import { DatabaseModule } from './database/database.module';
 import { RedisUtil } from './utils/redis.util';
+import { TokenBlacklistService } from './security/token-blacklist.service';
 
 @Global()
 @Module({
@@ -81,8 +82,8 @@ import { RedisUtil } from './utils/redis.util';
     }),
     DatabaseModule,
   ],
-  providers: [RedisUtil],
-  exports: [ConfigModule, DatabaseModule, RedisUtil],
+  providers: [RedisUtil, TokenBlacklistService],
+  exports: [ConfigModule, DatabaseModule, RedisUtil, TokenBlacklistService],
 })
 export class CoreModule {
   constructor(private readonly configService: ConfigService) {

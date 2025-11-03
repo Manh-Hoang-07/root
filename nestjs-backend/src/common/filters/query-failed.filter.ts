@@ -72,12 +72,16 @@ export class QueryFailedFilter implements ExceptionFilter {
         
       default:
         // Log unknown database errors for debugging
-        this.logger.error('Unknown database error:', {
-          code,
-          message: error.message,
-          sql: error.sql,
-          parameters: error.parameters,
-        });
+        this.logger.error(
+          'Unknown database error:',
+          JSON.stringify({
+            code,
+            message: error.message,
+            sql: error.sql,
+            parameters: error.parameters,
+          }),
+          (error && error.stack) || undefined,
+        );
         break;
     }
 
@@ -92,6 +96,7 @@ export class QueryFailedFilter implements ExceptionFilter {
         driverError: error.driverError,
         timestamp: new Date().toISOString(),
       }),
+      (error && error.stack) || undefined,
     );
 
     // Create standardized error response

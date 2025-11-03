@@ -11,27 +11,27 @@ import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { PERMS_REQUIRED_KEY, PUBLIC_PERMISSION } from '../decorators/rbac.decorators';
 import { ResponseUtil } from '../utils/response.util';
-import { AuthService } from '../../modules/auth/auth.service';
+import { TokenBlacklistService } from '../../core/security/token-blacklist.service';
 import { RequestContext } from '../utils/request-context.util';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(
     private reflector: Reflector,
-    @Optional() @Inject(forwardRef(() => AuthService)) private authService?: AuthService,
+    private tokenBlacklist: TokenBlacklistService,
   ) {
     super();
   }
 
   canActivate(context: ExecutionContext) {
     // Kiểm tra token blacklist trước khi validate JWT
-    if (this.authService) {
+    if (this.tokenBlacklist) {
       const request = context.switchToHttp().getRequest();
       const authHeader = request.headers.authorization;
       
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
-        if (token && this.authService.isTokenBlacklisted(token)) {
+        if (token && this.tokenBlacklist.isBlacklistedSync(token)) {
           // Token bị blacklist - từ chối truy cập
           return false;
         }
@@ -47,17 +47,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     // Kiểm tra có @Permission('public') không
     const isPublicPermission = requiredPerms.includes(PUBLIC_PERMISSION);
 
-    // Đổi mặc định: protected-by-default. Chỉ public khi có @Permission('public')
+    // Protect-by-default: chỉ optional khi có @Permission('public')
     if (isPublicPermission) {
       // Thử validate token nếu có, nhưng không bắt buộc
-      // Nếu có lỗi trong quá trình validate, catch và vẫn cho phép truy cập
       const result = super.canActivate(context);
-      
-      // Nếu là Promise, catch error và vẫn cho phép truy cập
+
       if (result instanceof Promise) {
         return result.catch(() => true);
       }
-      
+
       return result;
     }
 
@@ -75,20 +73,18 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     // Kiểm tra có @Permission('public') không
     const isPublicPermission = requiredPerms.includes(PUBLIC_PERMISSION);
 
-    // Route public: chỉ khi có @Permission('public')
+    // Route public/optional auth: chỉ khi có @Permission('public')
     if (isPublicPermission) {
-      // Có lỗi nhưng route public/optional - không throw, chỉ trả về null
       if (err || !user) {
-        return null;
+        return null; // optional auth
       }
-      // Có user hợp lệ - trả về user để set vào req.user
       try {
         RequestContext.set('user', user);
       } catch {}
       return user;
     }
 
-    // Route protected (mặc định): bắt buộc phải có user
+    // Route protected: bắt buộc phải có user hợp lệ
     if (err || !user) {
       let message = 'Unauthorized';
       
