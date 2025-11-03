@@ -1,5 +1,5 @@
 import { ExecutionContext } from '@nestjs/common';
-import { AuthUser } from '../decorators/user.decorator';
+import { AuthUser } from '../interfaces/auth-user.interface';
 import { RequestContext } from './request-context.util';
 
 /**

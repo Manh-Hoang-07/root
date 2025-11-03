@@ -1,5 +1,25 @@
 export class DateUtil {
   /**
+   * Lấy timezone cấu hình từ env (đã được set từ app.config.ts)
+   */
+  private static configuredTimezone: string | undefined;
+
+  static setTimezone(timezone: string | undefined) {
+    if (timezone && timezone.trim().length > 0) {
+      DateUtil.configuredTimezone = timezone;
+    }
+  }
+
+  private static getTimezone(): string {
+    return (
+      DateUtil.configuredTimezone ||
+      process.env.APP_TIMEZONE ||
+      process.env.TZ ||
+      'Asia/Ho_Chi_Minh'
+    );
+  }
+
+  /**
    * Format date to ISO string in UTC
    */
   static toISOString(date: Date | string): string {
@@ -17,7 +37,63 @@ export class DateUtil {
    * Get current date as ISO string
    */
   static nowISOString(): string {
+    // Giữ nguyên ISO UTC cho tương thích
     return new Date().toISOString();
+  }
+
+  /**
+   * Format timestamp theo timezone cấu hình (YYYY-MM-DDTHH:mm:ss)
+   */
+  static formatTimestamp(date: Date = new Date()): string {
+    const tz = this.getTimezone();
+    const datePart = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(date);
+    const timePart = new Intl.DateTimeFormat('en-GB', {
+      timeZone: tz,
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(date);
+    return `${datePart}T${timePart}`;
+  }
+
+  /**
+   * Format ngày theo pattern truyền vào và timezone cấu hình
+   * Hỗ trợ các token: Y (yyyy), m (MM), d (DD), H (HH), i (mm), s (ss)
+   * Ví dụ: formatDate(undefined, 'Ymd') -> 20251103
+   */
+  static formatDate(date: Date = new Date(), pattern = 'Y-m-d'): string {
+    const tz = this.getTimezone();
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(date);
+
+    const timeParts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: tz,
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).formatToParts(date);
+
+    const map: Record<string, string> = {
+      Y: parts.find(p => p.type === 'year')?.value || '0000',
+      m: parts.find(p => p.type === 'month')?.value || '00',
+      d: parts.find(p => p.type === 'day')?.value || '00',
+      H: timeParts.find(p => p.type === 'hour')?.value || '00',
+      i: timeParts.find(p => p.type === 'minute')?.value || '00',
+      s: timeParts.find(p => p.type === 'second')?.value || '00',
+    };
+
+    return pattern.replace(/Y|m|d|H|i|s/g, (token) => map[token]);
   }
 
   /**
@@ -85,12 +161,14 @@ export class DateUtil {
    * Format date to readable string
    */
   static formatToReadable(date: Date | string, locale = 'en-US'): string {
+    const tz = this.getTimezone();
     return new Date(date).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: tz,
     });
   }
 

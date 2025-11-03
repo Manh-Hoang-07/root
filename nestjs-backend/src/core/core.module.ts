@@ -1,4 +1,6 @@
 import { Global, Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { DateUtil } from './utils/date.util';
 import { ConfigModule } from '@nestjs/config';
 
 // Config loaders
@@ -22,6 +24,11 @@ import { DatabaseModule } from './database/database.module';
   ],
   exports: [ConfigModule, DatabaseModule],
 })
-export class CoreModule {}
+export class CoreModule {
+  constructor(private readonly configService: ConfigService) {
+    const tz = this.configService.get<string>('app.timezone') || process.env.APP_TIMEZONE || 'Asia/Ho_Chi_Minh';
+    DateUtil.setTimezone(tz);
+  }
+}
 
 

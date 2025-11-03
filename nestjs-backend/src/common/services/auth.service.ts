@@ -1,7 +1,7 @@
 import { Injectable, Inject, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
-import { AuthUser } from '../decorators/user.decorator';
+import { AuthUser } from '../interfaces/auth-user.interface';
 
 /**
  * Auth Service
