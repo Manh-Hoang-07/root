@@ -46,14 +46,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     // Kiểm tra có @Permission('public') không
     const isPublicPermission = requiredPerms.includes(PUBLIC_PERMISSION);
-    
-    // Nếu route không có @Permission() → mặc định là public
-    const isPublicByDefault = requiredPerms.length === 0;
 
-    // Route public: @Permission('public') hoặc không có @Permission() nào
-    // Vẫn validate token nếu có, nhưng không bắt buộc
-    // Cho phép user đăng nhập vào public route để có thêm thông tin
-    if (isPublicPermission || isPublicByDefault) {
+    // Đổi mặc định: protected-by-default. Chỉ public khi có @Permission('public')
+    if (isPublicPermission) {
       // Thử validate token nếu có, nhưng không bắt buộc
       // Nếu có lỗi trong quá trình validate, catch và vẫn cho phép truy cập
       const result = super.canActivate(context);
@@ -66,7 +61,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return result;
     }
 
-    // Route protected (có @Permission()): bắt buộc phải có token hợp lệ
+    // Route protected (mặc định): bắt buộc phải có token hợp lệ
     return super.canActivate(context);
   }
 
@@ -79,13 +74,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     // Kiểm tra có @Permission('public') không
     const isPublicPermission = requiredPerms.includes(PUBLIC_PERMISSION);
-    
-    // Nếu route không có @Permission() → mặc định là public
-    const isPublicByDefault = requiredPerms.length === 0;
 
-    // Route public: @Permission('public') hoặc không có @Permission() nào
-    // Không bắt buộc authentication, nhưng nếu có user thì trả về user
-    if (isPublicPermission || isPublicByDefault) {
+    // Route public: chỉ khi có @Permission('public')
+    if (isPublicPermission) {
       // Có lỗi nhưng route public/optional - không throw, chỉ trả về null
       if (err || !user) {
         return null;
@@ -97,7 +88,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return user;
     }
 
-    // Route protected (có @Permission()): bắt buộc phải có user
+    // Route protected (mặc định): bắt buộc phải có user
     if (err || !user) {
       let message = 'Unauthorized';
       

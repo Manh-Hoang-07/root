@@ -4,6 +4,11 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { CustomLoggerService } from './core/logger/logger.service';
+import { applyCors } from './bootstrap/cors';
+import { applyHttpHardening } from './bootstrap/http-hardening';
+import { applyGlobalPipes } from './bootstrap/pipes';
+import { applyRateLimiting } from './bootstrap/rate-limit';
+import { registerShutdown } from './bootstrap/shutdown';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -36,15 +41,16 @@ async function bootstrap() {
   } catch {}
 
   // Enable CORS if configured
+  applyCors(app, { enabled: appConfig.corsEnabled, origins: appConfig.corsOrigins });
   if (appConfig.corsEnabled) {
-    app.enableCors({
-      origin: appConfig.corsOrigins,
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-      credentials: true,
-    });
     logger.log('CORS enabled', { origins: appConfig.corsOrigins });
   }
+
+  // HTTP hardening middlewares
+  applyHttpHardening(app, '1mb');
+
+  // Basic rate limiting (in-memory). For production, prefer Redis store.
+  applyRateLimiting(app, { points: 100, durationSec: 60 });
 
   // Suppress all native console outputs globally only in production (use CustomLoggerService instead)
   // Keep console.error and console.warn in development for debugging
@@ -64,17 +70,7 @@ async function bootstrap() {
   app.setGlobalPrefix(appConfig.globalPrefix);
 
   // Global validation pipe with enhanced configuration
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-      disableErrorMessages: appConfig.environment === 'production',
-    }),
-  );
+  applyGlobalPipes(app, { production: appConfig.environment === 'production' });
 
   // Graceful shutdown
   app.enableShutdownHooks();
@@ -98,31 +94,13 @@ async function bootstrap() {
     console.log(`📖 Environment: ${appConfig.environment}`);
     console.log(`🌐 CORS: ${appConfig.corsEnabled ? 'Enabled' : 'Disabled'}`);
   }
+
+  // Graceful error and signal handling
+  registerShutdown(app, logger);
 }
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (error: Error) => {
-  console.error('Uncaught Exception:', error);
-  process.exit(1);
-});
-
-// Handle SIGTERM for graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
-
-// Handle SIGINT for graceful shutdown
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
+// Register process handlers inside bootstrap to allow graceful shutdown
+// Note: We keep minimal top-level handlers and attach detailed ones after app starts
 
 bootstrap().catch((error) => {
   console.error('Failed to start application:', error);

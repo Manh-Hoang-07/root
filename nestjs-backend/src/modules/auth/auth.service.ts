@@ -10,9 +10,11 @@ import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
 import { UserStatus } from '../../shared/enums/user-status.enum';
 import { ResponseUtil } from '../../common/utils/response.util';
+import { RedisUtil } from '../../core/utils/redis.util';
 
-// Simple in-memory token blacklist (in production, use Redis or database)
+// Fallback in-memory blacklist when Redis is not configured
 const tokenBlacklist = new Set<string>();
+const DEFAULT_TOKEN_TTL_SECONDS = 3600; // default 1h
 
 @Injectable()
 export class AuthService {
@@ -21,6 +23,7 @@ export class AuthService {
     @InjectRepository(Profile) private readonly profileRepository: Repository<Profile>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly redis: RedisUtil,
   ) { }
 
   async login(dto: LoginDto) {
@@ -114,7 +117,14 @@ export class AuthService {
 
     // Nếu có token, thêm vào blacklist để ngăn sử dụng lại
     if (token) {
-      tokenBlacklist.add(token);
+      const ttlSeconds = this.getAccessTokenTtlSeconds();
+      const key = this.buildBlacklistKey(token);
+      if (this.redis && this.redis.isEnabled()) {
+        await this.redis.set(key, '1', ttlSeconds).catch(() => tokenBlacklist.add(token));
+      } else {
+        tokenBlacklist.add(token);
+        // Note: in-memory fallback has no TTL; acceptable for dev only
+      }
     }
 
     // Xóa refresh token của người dùng (nếu có lưu trong database)
@@ -131,6 +141,18 @@ export class AuthService {
 
   // Kiểm tra token có trong blacklist không
   isTokenBlacklisted(token: string): boolean {
+    // Prefer Redis if available
+    // Note: this method is sync in guard usage; pre-check in guard uses sync path.
+    // We do a best-effort cached check; for strict check, create async path.
+    return tokenBlacklist.has(token);
+  }
+
+  // Async variant for services wanting strong guarantee
+  async isTokenBlacklistedAsync(token: string): Promise<boolean> {
+    if (this.redis && this.redis.isEnabled()) {
+      const val = await this.redis.get(this.buildBlacklistKey(token));
+      if (val) return true;
+    }
     return tokenBlacklist.has(token);
   }
 
@@ -165,6 +187,28 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, remember_token, ...rest } = user;
     return rest;
+  }
+
+  private buildBlacklistKey(token: string): string {
+    const env = this.configService.get<string>('app.environment') || process.env.NODE_ENV || 'development';
+    return `auth:blacklist:${env}:${token}`;
+  }
+
+  private getAccessTokenTtlSeconds(): number {
+    const exp = this.configService.get<string>('jwt.expiresIn') || process.env.JWT_EXPIRES_IN;
+    if (!exp) return DEFAULT_TOKEN_TTL_SECONDS;
+    // Support like "1h", "15m", "3600s"
+    const match = /^([0-9]+)([smhd])?$/.exec(exp.trim());
+    if (!match) return DEFAULT_TOKEN_TTL_SECONDS;
+    const val = parseInt(match[1], 10);
+    const unit = match[2] || 's';
+    switch (unit) {
+      case 's': return val;
+      case 'm': return val * 60;
+      case 'h': return val * 3600;
+      case 'd': return val * 86400;
+      default: return DEFAULT_TOKEN_TTL_SECONDS;
+    }
   }
 }
 

@@ -7,7 +7,7 @@ export default registerAs('app', () => ({
   version: process.env.APP_VERSION || '1.0.0',
   url: process.env.APP_URL || 'http://localhost:3000',
   globalPrefix: process.env.GLOBAL_PREFIX || 'api',
-  corsEnabled: process.env.CORS_ENABLED === 'true' || true,
-  corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['*'],
+  corsEnabled: (process.env.CORS_ENABLED ?? 'true') === 'true',
+  corsOrigins: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean) : [],
   timezone: process.env.APP_TIMEZONE || 'Asia/Ho_Chi_Minh',
 }));
