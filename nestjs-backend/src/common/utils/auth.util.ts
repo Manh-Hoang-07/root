@@ -1,5 +1,6 @@
 import { ExecutionContext } from '@nestjs/common';
 import { AuthUser } from '../decorators/user.decorator';
+import { RequestContext } from './request-context.util';
 
 /**
  * Auth Helper Functions
@@ -18,16 +19,21 @@ export class Auth {
    * Lấy user hiện tại từ ExecutionContext
    * Tương tự Auth::user()
    */
-  static user(context: ExecutionContext): AuthUser | null {
-    const request = context.switchToHttp().getRequest();
-    return (request as any)?.user || null;
+  static user(context?: ExecutionContext): AuthUser | null {
+    const userFromCtx = RequestContext.get<AuthUser>('user');
+    if (userFromCtx) return userFromCtx;
+    if (context) {
+      const request = context.switchToHttp().getRequest();
+      return (request as any)?.user || null;
+    }
+    return null;
   }
 
   /**
    * Lấy user ID hiện tại từ ExecutionContext
    * Tương tự Auth::id()
    */
-  static id(context: ExecutionContext): number | null {
+  static id(context?: ExecutionContext): number | null {
     const user = this.user(context);
     return user?.id || null;
   }
@@ -36,7 +42,7 @@ export class Auth {
    * Kiểm tra user có đăng nhập không
    * Tương tự Auth::check()
    */
-  static check(context: ExecutionContext): boolean {
+  static check(context?: ExecutionContext): boolean {
     return !!this.user(context);
   }
 
@@ -44,7 +50,7 @@ export class Auth {
    * Kiểm tra user có đăng nhập không
    * Tương tự Auth::isLogin()
    */
-  static isLogin(context: ExecutionContext): boolean {
+  static isLogin(context?: ExecutionContext): boolean {
     return this.check(context);
   }
 
@@ -52,7 +58,7 @@ export class Auth {
    * Kiểm tra user chưa đăng nhập
    * Tương tự Auth::guest()
    */
-  static guest(context: ExecutionContext): boolean {
+  static guest(context?: ExecutionContext): boolean {
     return !this.check(context);
   }
 
@@ -66,7 +72,7 @@ export class Auth {
    * const status = Auth.get(context, 'status');
    * ```
    */
-  static get<K extends keyof AuthUser>(context: ExecutionContext, key: K): AuthUser[K] | undefined {
+  static get<K extends keyof AuthUser>(context: ExecutionContext | undefined, key: K): AuthUser[K] | undefined {
     const user = this.user(context);
     return user?.[key];
   }

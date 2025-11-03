@@ -1,15 +1,8 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 
-// Core Configurations
-import appConfig from './core/config/app.config';
-import databaseConfig from './core/config/database.config';
-import jwtConfig from './core/config/jwt.config';
-import mailConfig from './core/config/mail.config';
-
 // Core Modules
-import { DatabaseModule } from './core/database/database.module';
+import { CoreModule } from './core/core.module';
 import { CommonModule } from './common/common.module';
 
 // Core Services
@@ -27,21 +20,12 @@ import { PublicModule } from './modules/public/public.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { RbacGuard } from './common/guards/rbac.guard';
+import { RequestContextMiddleware } from './common/middlewares/request-context.middleware';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-      load: [
-        appConfig,
-        databaseConfig,
-        jwtConfig,
-        mailConfig,
-      ],
-    }),
+    CoreModule,
     CommonModule,
-    DatabaseModule,
     AuthModule,
     PublicModule,
     AdminModule,
@@ -83,5 +67,9 @@ import { RbacGuard } from './common/guards/rbac.guard';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestContextMiddleware).forRoutes('*');
+  }
+}
 

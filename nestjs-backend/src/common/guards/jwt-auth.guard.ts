@@ -12,6 +12,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { PERMS_REQUIRED_KEY, PUBLIC_PERMISSION } from '../decorators/rbac.decorators';
 import { ResponseUtil } from '../utils/response.util';
 import { AuthService } from '../../modules/auth/auth.service';
+import { RequestContext } from '../utils/request-context.util';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -90,6 +91,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         return null;
       }
       // Có user hợp lệ - trả về user để set vào req.user
+      try {
+        RequestContext.set('user', user);
+      } catch {}
       return user;
     }
 
@@ -114,6 +118,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       throw new HttpException(response, response.httpStatus || HttpStatus.UNAUTHORIZED);
     }
 
+    try {
+      RequestContext.set('user', user);
+    } catch {}
     return user;
   }
 }

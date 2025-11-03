@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { User } from '../../common/decorators/user.decorator';
+import { Auth } from '../../common/utils/auth.util';
 import { ResponseUtil } from '../../common/utils/response.util';
 
 @Controller()
@@ -28,12 +28,14 @@ export class AuthController {
   }
 
   @Get('me')
-  async me(@User('id') userId: number) {
-    return this.authService.me(userId);
+  async me() {
+    const userId = Auth.id();
+    return this.authService.me(userId as number);
   }
 
   @Post('logout')
-  async logout(@User('id') userId: number, @Headers('authorization') authHeader: string, @Res({ passthrough: true }) res: Response) {
+  async logout(@Headers('authorization') authHeader: string, @Res({ passthrough: true }) res: Response) {
+    const userId = Auth.id() as number;
     // Extract token from authorization header
     let token = null;
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -47,7 +49,8 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refresh(@User('id') userId: number, @Res({ passthrough: true }) res: Response) {
+  async refresh(@Res({ passthrough: true }) res: Response) {
+    const userId = Auth.id() as number;
     const result: any = await this.authService.refreshToken(userId);
 
     if (result?.success && result?.data?.token) {
