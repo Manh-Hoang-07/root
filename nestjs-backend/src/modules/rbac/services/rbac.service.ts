@@ -5,6 +5,7 @@ import { Role } from '../../../shared/entities/role.entity';
 import { Permission } from '../../../shared/entities/permission.entity';
 import { User } from '../../../shared/entities/user.entity';
 import { ResponseUtil, ApiResponse } from '../../../common/utils/response.util';
+import { RbacCacheService } from './rbac-cache.service';
 
 /**
  * Service quản lý RBAC (Role-Based Access Control)
@@ -16,6 +17,7 @@ export class RbacService {
     @InjectRepository(Role) private readonly roleRepo: Repository<Role>,
     @InjectRepository(Permission) private readonly permRepo: Repository<Permission>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
+    private readonly rbacCache: RbacCacheService,
   ) {}
 
   /**
@@ -30,35 +32,32 @@ export class RbacService {
 
     const ACTIVE = 'active';
 
-    // 1️⃣ Lấy các permissions active (bao gồm parent)
-    const perms = await this.permRepo.find({
-      where: { code: In(required), status: ACTIVE },
-      relations: { parent: true },
-    });
+    // Try cache first
+    let cached = await this.rbacCache.getUserPermissions(userId);
+    if (!cached) {
+      // Build full set of active permissions (include parent if active)
+      const rows = await this.userRepo
+        .createQueryBuilder('user')
+        .select(['perm.code AS code', 'parent.code AS parent'])
+        .where('user.id = :userId', { userId })
+        .innerJoin('user.roles', 'role', 'role.status = :rstatus', { rstatus: ACTIVE })
+        .innerJoin('role.permissions', 'perm', 'perm.status = :pstatus', { pstatus: ACTIVE })
+        .leftJoin('perm.parent', 'parent')
+        .getRawMany<{ code: string; parent: string | null }>();
 
-    if (perms.length === 0) return false;
-
-    // 2️⃣ Gom danh sách code cần check (bao gồm parent nếu active)
-    const codesToCheck = new Set<string>(required);
-    for (const p of perms) {
-      if (p.parent?.status === ACTIVE) codesToCheck.add(p.parent.code);
+      const set = new Set<string>();
+      for (const r of rows) {
+        if (r.code) set.add(r.code);
+        if (r.parent) set.add(r.parent);
+      }
+      await this.rbacCache.setUserPermissions(userId, set);
+      cached = set;
     }
 
-    // 3️⃣ Kiểm tra user có ít nhất 1 permission (OR logic)
-    // innerJoin sẽ filter: chỉ trả về user nếu có role active và permission match
-    // Nếu query trả về user → user có quyền (không cần load permissions vào result)
-    const user = await this.userRepo
-      .createQueryBuilder('user')
-      .where('user.id = :userId', { userId })
-      .innerJoin('user.roles', 'role', 'role.status = :status', { status: ACTIVE })
-      .innerJoin('role.permissions', 'perm', 'perm.status = :status AND perm.code IN (:...codes)', {
-        status: ACTIVE,
-        codes: Array.from(codesToCheck),
-      })
-      .getOne();
-
-    // 4️⃣ Nếu query trả về user → user có quyền (vì innerJoin đã filter đúng)
-    return Boolean(user);
+    for (const need of required) {
+      if (cached.has(need)) return true;
+    }
+    return false;
   }
 
   /**

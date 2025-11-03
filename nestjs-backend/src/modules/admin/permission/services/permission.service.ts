@@ -4,11 +4,13 @@ import { Repository, DeepPartial } from 'typeorm';
 import { Permission } from '../../../../shared/entities/permission.entity';
 import { CrudService } from '../../../../common/base/services/crud.service';
 import { ResponseRef } from '../../../../common/base/utils/response-ref.helper';
+import { RbacCacheService } from '../../../rbac/services/rbac-cache.service';
 
 @Injectable()
 export class PermissionService extends CrudService<Permission> {
   constructor(
     @InjectRepository(Permission) repository: Repository<Permission>,
+    private readonly rbacCache: RbacCacheService,
   ) {
     super(repository);
   }
@@ -84,6 +86,8 @@ export class PermissionService extends CrudService<Permission> {
       delete (updateDto as any).parent_id;
     }
 
+    // RBAC changed (permission updated) might affect users; bump version to invalidate cache
+    await this.rbacCache.bumpVersion().catch(() => undefined);
     return true;
   }
 
@@ -101,6 +105,7 @@ export class PermissionService extends CrudService<Permission> {
       return false;
     }
 
+    await this.rbacCache.bumpVersion().catch(() => undefined);
     return true;
   }
 }

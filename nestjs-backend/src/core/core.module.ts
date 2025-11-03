@@ -36,6 +36,9 @@ import { RedisUtil } from './utils/redis.util';
           Joi.array().items(Joi.string())
         ).optional(),
 
+        // Redis (optional)
+        REDIS_URL: Joi.string().uri({ scheme: ['redis', 'rediss'] }).optional(),
+
         // JWT (required)
         JWT_SECRET: Joi.string().min(16).required(),
         JWT_EXPIRES_IN: Joi.string().default('1h'),
@@ -60,6 +63,20 @@ import { RedisUtil } from './utils/redis.util';
         DB_ACQUIRE_TIMEOUT: Joi.number().default(60000),
         DB_TIMEOUT: Joi.number().default(60000),
         DB_RECONNECT: Joi.boolean().truthy('true').falsy('false').default(true),
+
+        // Mail (optional but warn if partially provided)
+        MAIL_HOST: Joi.string().hostname().default('localhost'),
+        MAIL_PORT: Joi.number().default(587),
+        MAIL_SECURE: Joi.boolean().truthy('true').falsy('false').default(false),
+        MAIL_USERNAME: Joi.string().allow(''),
+        MAIL_PASSWORD: Joi.string().allow(''),
+        MAIL_FROM_NAME: Joi.string().allow(''),
+        MAIL_FROM_ADDRESS: Joi.string().email({ tlds: { allow: false } }).allow(''),
+        MAIL_TEMPLATE_DIR: Joi.string().default('./templates'),
+        MAIL_TEMPLATE_ADAPTER: Joi.string().valid('handlebars', 'nunjucks', 'pug').default('handlebars'),
+
+        // RBAC cache
+        RBAC_CACHE_TTL: Joi.number().min(30).max(1800).default(300),
       }),
     }),
     DatabaseModule,

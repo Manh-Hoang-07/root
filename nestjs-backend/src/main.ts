@@ -47,7 +47,7 @@ async function bootstrap() {
   }
 
   // HTTP hardening middlewares
-  applyHttpHardening(app, '1mb');
+  applyHttpHardening(app, '5mb');
 
   // Basic rate limiting (in-memory). For production, prefer Redis store.
   applyRateLimiting(app, { points: 100, durationSec: 60 });

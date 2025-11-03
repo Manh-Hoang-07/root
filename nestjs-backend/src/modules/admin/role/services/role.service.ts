@@ -6,6 +6,7 @@ import { Permission } from '../../../../shared/entities/permission.entity';
 import { CrudService } from '../../../../common/base/services/crud.service';
 import { ResponseRef, handleResponseRef } from '../../../../common/base/utils/response-ref.helper';
 import { ApiResponse, ResponseUtil } from '../../../../common/utils/response.util';
+import { RbacCacheService } from '../../../rbac/services/rbac-cache.service';
 
 @Injectable()
 export class RoleService extends CrudService<Role> {
@@ -15,6 +16,7 @@ export class RoleService extends CrudService<Role> {
 
   constructor(
     @InjectRepository(Role) repository: Repository<Role>,
+    private readonly rbacCache: RbacCacheService,
   ) {
     super(repository);
   }
@@ -163,6 +165,7 @@ export class RoleService extends CrudService<Role> {
       }
 
       const saved = await this.repository.save(role);
+      await this.rbacCache.bumpVersion().catch(() => undefined);
       return ResponseUtil.success(saved, 'Permissions assigned successfully');
     } catch (error) {
       return ResponseUtil.error(`Failed to assign permissions: ${error.message}`, 'ASSIGN_PERMISSIONS_FAILED');
