@@ -178,10 +178,9 @@ export class CustomLoggerService implements LoggerService {
   }
 
   private getDefaultContext(): LogContext {
-    const userIdNum = Auth.id();
     return {
       context: 'Application',
-      userId: (userIdNum !== undefined && userIdNum !== null) ? String(userIdNum) : null,
+      userId: Auth.id(),
       requestId: RequestContext.get('requestId') as string,
       method: RequestContext.get('method') as string,
       url: RequestContext.get('url') as string,

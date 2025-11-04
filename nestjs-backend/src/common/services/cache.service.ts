@@ -31,7 +31,7 @@ export class CacheService {
    * Xóa tất cả cache
    */
   async reset(): Promise<void> {
-    await this.cacheManager.reset();
+    await this.cacheManager.clear();
   }
 
   /**

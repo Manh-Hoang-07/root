@@ -1,7 +1,7 @@
 export interface LogContext {
   context?: string;
   trace?: string;
-  userId?: string | null;
+  userId?: number | null;
   username?: string | null;
   requestId?: string;
   method?: string;

@@ -15,6 +15,7 @@ import { ModuleRef } from '@nestjs/core';
 import { DatabaseModule } from './database/database.module';
 import { RedisUtil } from './utils/redis.util';
 import { TokenBlacklistService } from './security/token-blacklist.service';
+import { AttemptLimiterService } from './security/attempt-limiter.service';
 
 @Global()
 @Module({
@@ -78,12 +79,17 @@ import { TokenBlacklistService } from './security/token-blacklist.service';
 
         // RBAC cache
         RBAC_CACHE_TTL: Joi.number().min(30).max(1800).default(300),
+
+        // Attempt limiter (generalized)
+        SECURITY_ATTEMPT_MAX: Joi.number().min(1).max(20).default(5),
+        SECURITY_ATTEMPT_LOCKOUT_SECONDS: Joi.number().min(60).max(7200).default(1800), // 30 minutes
+        SECURITY_ATTEMPT_WINDOW_SECONDS: Joi.number().min(30).max(7200).default(900), // 15 minutes
       }),
     }),
     DatabaseModule,
   ],
-  providers: [RedisUtil, TokenBlacklistService],
-  exports: [ConfigModule, DatabaseModule, RedisUtil, TokenBlacklistService],
+  providers: [RedisUtil, TokenBlacklistService, AttemptLimiterService],
+  exports: [ConfigModule, DatabaseModule, RedisUtil, TokenBlacklistService, AttemptLimiterService],
 })
 export class CoreModule {
   constructor(private readonly configService: ConfigService) {

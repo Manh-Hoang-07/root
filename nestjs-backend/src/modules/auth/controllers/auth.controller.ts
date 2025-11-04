@@ -4,8 +4,10 @@ import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
-import { Auth } from '../../common/utils/auth.util';
-import { ResponseUtil } from '../../common/utils/response.util';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { Auth } from '../../../common/utils/auth.util';
+import { ResponseUtil } from '../../../common/utils/response.util';
 
 @Controller()
 export class AuthController {
@@ -51,5 +53,15 @@ export class AuthController {
       res.cookie('auth_token', result.data.token, { maxAge: 60 * 60 * 1000, httpOnly: false, secure: false, domain, path: '/' });
     }
     return result;
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }

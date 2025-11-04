@@ -2,7 +2,6 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as jwt from 'jsonwebtoken';
 import { RedisUtil } from '../../../core/utils/redis.util';
-import { storeRefreshToken } from './refresh-store.util';
 
 const DEFAULT_AT_TTL = 3600;
 const DEFAULT_RT_TTL = 86400;
@@ -101,7 +100,12 @@ export async function issueAndStoreNewTokens(
   email?: string,
 ) {
   const { accessToken, refreshToken, refreshJti, accessTtlSec } = generateTokens(jwtService, config, userId, email);
-  await storeRefreshToken(redis, config, userId, refreshJti, getRefreshTtlSec(config)).catch(() => undefined);
+  try {
+    if (redis && redis.isEnabled()) {
+      const key = `auth:refresh:${userId}:${refreshJti}`;
+      await redis.set(key, '1', getRefreshTtlSec(config));
+    }
+  } catch {}
   return { accessToken, refreshToken, accessTtlSec } as const;
 }
 

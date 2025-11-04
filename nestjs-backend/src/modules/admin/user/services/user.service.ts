@@ -22,21 +22,52 @@ export class UserService extends CrudService<User> {
 
   /**
    * Override getOne để đảm bảo load relations trong admin
+   * Optimize: Load profile trong cùng query để tránh N+1
    */
   async getOne(
     where: any,
     options?: any,
   ) {
-    // Đảm bảo load relations trong admin
+    // Optimize: Use QueryBuilder to load all relations in one query
+    if (where.id) {
+      const qb = this.repository.createQueryBuilder('user')
+        .where('user.id = :id', { id: where.id })
+        .leftJoinAndSelect('user.roles', 'role')
+        .leftJoinAndSelect('user.direct_permissions', 'permission')
+        .leftJoin('profiles', 'profile', 'profile.userId = user.id')
+        .addSelect([
+          'profile.id',
+          'profile.userId',
+          'profile.name',
+          'profile.avatar',
+          'profile.bio',
+          'profile.birthday',
+          'profile.gender',
+          'profile.phone',
+          'profile.address',
+          'profile.created_at',
+          'profile.updated_at',
+        ]);
+
+      const user = await qb.getOne();
+      if (user) {
+        // Load profile separately if not loaded (fallback)
+        const profile = await this.profileRepo.findOne({ where: { userId: where.id } });
+        (user as any).profile = profile || null;
+      }
+      return user;
+    }
+
+    // Fallback to parent method for non-ID queries
     const adminOptions = {
       ...options,
       relations: ['roles', 'direct_permissions'],
     };
     const user = await super.getOne(where, adminOptions);
     
-    // Load profile riêng vì không có relation OneToOne trong entity
-    if (user && where.id) {
-      const profile = await this.profileRepo.findOne({ where: { userId: where.id } });
+    // Load profile separately if needed
+    if (user && (user as any).id) {
+      const profile = await this.profileRepo.findOne({ where: { userId: (user as any).id } });
       (user as any).profile = profile || null;
     }
     
