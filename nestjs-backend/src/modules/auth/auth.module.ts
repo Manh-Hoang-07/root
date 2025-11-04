@@ -8,6 +8,7 @@ import { User } from '../../shared/entities/user.entity';
 import { Profile } from '../../shared/entities/profile.entity';
 import jwtConfig from '../../core/config/jwt.config';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { TokenService } from './services/token.service';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, TokenService],
   exports: [AuthService],
 })
 export class AuthModule { }

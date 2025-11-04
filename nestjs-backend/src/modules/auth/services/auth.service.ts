@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { UserStatus } from '../../../shared/enums/user-status.enum';
 import { ResponseUtil } from '../../../common/utils/response.util';
 import { RedisUtil } from '../../../core/utils/redis.util';
-import { generateTokens, decodeRefresh, issueAndStoreNewTokens, getAccessTtlSec, getRefreshTtlSec } from '../utils/token.util';
+import { TokenService } from './token.service';
 import { TokenBlacklistService } from '../../../core/security/token-blacklist.service';
 import { AttemptLimiterService } from '../../../core/security/attempt-limiter.service';
 import { safeUser } from '../utils/user.util';
@@ -28,6 +28,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly redis: RedisUtil,
     private readonly tokenBlacklistService: TokenBlacklistService,
+    private readonly tokenService: TokenService,
     private readonly accountLockoutService: AttemptLimiterService,
   ) { }
 
@@ -72,9 +73,9 @@ export class AuthService {
       .update({ id: user.id }, { last_login_at: new Date() })
       .catch(() => undefined);
 
-    const { accessToken, refreshToken, refreshJti, accessTtlSec } = generateTokens(this.jwtService, this.configService, user.id, user.email);
+    const { accessToken, refreshToken, refreshJti, accessTtlSec } = this.tokenService.generateTokens(user.id, user.email);
 
-    await this.redis.set(this.buildRefreshKey(user.id, refreshJti), '1', getRefreshTtlSec(this.configService)).catch(() => undefined);
+    await this.redis.set(this.buildRefreshKey(user.id, refreshJti), '1', this.tokenService.getRefreshTtlSec()).catch(() => undefined);
 
     return ResponseUtil.success(
       { token: accessToken, refreshToken: refreshToken, expiresIn: accessTtlSec, },
@@ -135,8 +136,8 @@ export class AuthService {
     }
 
     if (token) {
-      const ttlSeconds = getAccessTtlSec(this.configService);
-      await this.tokenBlacklistService.blacklist(token, ttlSeconds);
+      const ttlSeconds = this.tokenService.getAccessTtlSec();
+      await this.tokenBlacklistService.add(token, ttlSeconds);
     }
     return ResponseUtil.success(null, 'Đăng xuất thành công.');
   }
@@ -144,7 +145,7 @@ export class AuthService {
   async refreshTokenByValue(refreshToken: string) {
     try {
       let refreshError: string | null = null;
-      const decoded = decodeRefresh(refreshToken, this.configService);
+      const decoded = this.tokenService.decodeRefresh(refreshToken);
       if (!decoded) {
         refreshError = 'Invalid refresh token';
       }
@@ -172,7 +173,7 @@ export class AuthService {
 
       await this.redis.del(this.buildRefreshKey(userId!, jti!));
 
-      const { accessToken, refreshToken: newRt, accessTtlSec } = await issueAndStoreNewTokens(this.jwtService, this.configService, this.redis, userId!, (decoded as any).email as string | undefined);
+      const { accessToken, refreshToken: newRt, accessTtlSec } = await this.tokenService.issueAndStoreNewTokens(userId!, (decoded as any).email as string | undefined);
 
       return ResponseUtil.success({ token: accessToken, refreshToken: newRt, expiresIn: accessTtlSec }, 'Token refreshed successfully.');
     } catch (error) {

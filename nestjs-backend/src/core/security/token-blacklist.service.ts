@@ -12,11 +12,13 @@ export class TokenBlacklistService {
   ) {}
 
   private buildKey(token: string): string {
-    const env = this.configService.get<string>('app.environment') || process.env.NODE_ENV || 'development';
-    return `auth:blacklist:${env}:${token}`;
+    return `auth:blacklist:${token}`;
   }
 
-  async blacklist(token: string, ttlSeconds: number): Promise<void> {
+  /**
+   * Add a token to blacklist with TTL
+   */
+  async add(token: string, ttlSeconds: number): Promise<void> {
     const key = this.buildKey(token);
     if (this.redis && this.redis.isEnabled()) {
       await this.redis.set(key, '1', ttlSeconds).catch(() => this.localSet.add(token));
@@ -25,17 +27,21 @@ export class TokenBlacklistService {
     }
   }
 
-  isBlacklistedSync(token: string): boolean {
-    return this.localSet.has(token);
-  }
+  /**
+   * Check blacklist in-memory only (fast path)
+   */
+  isBlacklisted(token: string): boolean { return this.localSet.has(token); }
 
-  async isBlacklisted(token: string): Promise<boolean> {
+  /**
+   * Check blacklist with Redis (fallback to in-memory)
+   */
+  async has(token: string): Promise<boolean> {
     if (this.redis && this.redis.isEnabled()) {
       const key = this.buildKey(token);
       const val = await this.redis.get(key);
       if (val) return true;
     }
-    return this.isBlacklistedSync(token);
+    return this.isBlacklisted(token);
   }
 }
 

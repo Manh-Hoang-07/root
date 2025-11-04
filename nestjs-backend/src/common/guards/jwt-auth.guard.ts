@@ -31,7 +31,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
-        if (token && this.tokenBlacklist.isBlacklistedSync(token)) {
+        if (token && this.tokenBlacklist.isBlacklisted(token)) {
           // Token bị blacklist - từ chối truy cập
           return false;
         }
