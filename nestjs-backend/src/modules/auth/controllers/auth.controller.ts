@@ -9,11 +9,13 @@ import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { Auth } from '../../../common/utils/auth.util';
 import { ResponseUtil } from '../../../common/utils/response.util';
+import { Permission } from '@/common/decorators/rbac.decorators';
 
 @Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
+  @Permission('public')
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 attempts per minute
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -26,12 +28,14 @@ export class AuthController {
     return result;
   }
 
+  @Permission('public')
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 attempts per minute
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
+  @Permission('public')
   @Post('logout')
   async logout(@Headers('authorization') authHeader: string, @Res({ passthrough: true }) res: Response) {
     const userId = Auth.id(undefined) as number;
@@ -47,6 +51,7 @@ export class AuthController {
     return result;
   }
 
+  @Permission('public')
   @Post('refresh')
   async refresh(@Body() dto: RefreshTokenDto, @Res({ passthrough: true }) res: Response) {
     const result: any = await this.authService.refreshTokenByValue(dto.refreshToken);
@@ -58,12 +63,14 @@ export class AuthController {
     return result;
   }
 
+  @Permission('public')
   @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 attempts per minute (more restrictive for password reset)
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
   }
 
+  @Permission('public')
   @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 attempts per minute (more restrictive for password reset)
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
