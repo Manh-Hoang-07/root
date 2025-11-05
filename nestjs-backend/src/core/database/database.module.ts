@@ -28,9 +28,9 @@ import { SeedPosts } from './seeder/seed-posts';
           charset: configService.get<string>('database.charset'),
           timezone: configService.get<string>('database.timezone'),
           connectionLimit: configService.get<number>('database.connectionLimit', 10),
-          acquireTimeout: configService.get<number>('database.acquireTimeout', 60000),
-          timeout: configService.get<number>('database.timeout', 60000),
-          reconnect: configService.get<boolean>('database.reconnect', true),
+          // acquireTimeout: configService.get<number>('database.acquireTimeout', 60000),
+          // timeout: configService.get<number>('database.timeout', 60000),
+          // reconnect: configService.get<boolean>('database.reconnect', true),
         },
         autoLoadEntities: configService.get<boolean>('database.autoLoadEntities') ?? true,
         entities: [__dirname + '/../../**/*.entity{.ts,.js}'],
@@ -55,4 +55,4 @@ import { SeedPosts } from './seeder/seed-posts';
     SeedService,
   ],
 })
-export class DatabaseModule {}
+export class DatabaseModule { }

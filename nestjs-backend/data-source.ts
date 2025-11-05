@@ -18,14 +18,15 @@ export default new DataSource({
   entities: [path.join(__dirname, 'src', '**', '*.entity{.ts,.js}')],
   migrations: [path.join(__dirname, 'src', 'core', 'database', 'migrations', '*{.ts,.js}')],
   subscribers: [path.join(__dirname, 'src', 'core', 'database', 'subscribers', '*{.ts,.js}')],
-      extra: {
-        charset: process.env.DB_CHARSET || 'utf8mb4',
-        timezone: process.env.DB_TIMEZONE || '+07:00',
-        // Connection pool configuration
-        connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '10', 10),
-        acquireTimeout: parseInt(process.env.DB_ACQUIRE_TIMEOUT || '60000', 10),
-        timeout: parseInt(process.env.DB_TIMEOUT || '60000', 10),
-        reconnect: process.env.DB_RECONNECT !== 'false',
-      },
+  extra: {
+    charset: process.env.DB_CHARSET || 'utf8mb4',
+    timezone: process.env.DB_TIMEZONE || '+07:00',
+    // Connection pool configuration
+    connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '10', 10),
+    // MySQL2 doesn't support these options directly
+    // acquireTimeout: parseInt(process.env.DB_ACQUIRE_TIMEOUT || '60000', 10),
+    // timeout: parseInt(process.env.DB_TIMEOUT || '60000', 10),
+    // reconnect: process.env.DB_RECONNECT !== 'false',
+  },
 });
 

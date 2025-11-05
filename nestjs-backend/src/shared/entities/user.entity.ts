@@ -11,16 +11,16 @@ export class User {
   @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
   id: number;
 
-  @Column({ length: 50, unique: true, nullable: true })
+  @Column({ length: 50, unique: true, nullable: true, type: 'varchar' })
   username?: string | null;
 
-  @Column({ length: 255, unique: true, nullable: true })
+  @Column({ length: 255, unique: true, nullable: true, type: 'varchar' })
   email?: string | null;
 
-  @Column({ length: 20, unique: true, nullable: true })
+  @Column({ length: 20, unique: true, nullable: true, type: 'varchar' })
   phone?: string | null;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ length: 255, nullable: true, type: 'varchar' })
   password?: string | null;
 
   @Column({ type: 'varchar', length: 255, default: UserStatus.Active })

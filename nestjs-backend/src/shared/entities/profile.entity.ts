@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index } from 'typeorm';
 import { User } from './user.entity';
+import { Gender } from '../enums/gender.enum';
 
 @Entity('profiles')
 export class Profile {
@@ -14,17 +15,17 @@ export class Profile {
     @JoinColumn({ name: 'user_id' })
     user: User;
 
-    @Column({ length: 255, nullable: true })
+    @Column({ length: 255, nullable: true, type: 'varchar' })
     name?: string | null;
 
-    @Column({ length: 255, nullable: true })
+    @Column({ length: 255, nullable: true, type: 'varchar' })
     image?: string | null;
 
     @Column({ type: 'date', nullable: true })
     birthday?: Date | null;
 
-    @Column({ length: 50, nullable: true })
-    gender?: string | null;
+    @Column({ length: 50, nullable: true, type: 'varchar' })
+    gender?: Gender | null;
 
     @Column({ type: 'text', nullable: true })
     address?: string | null;

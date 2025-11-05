@@ -15,7 +15,9 @@ export default registerAs('database', () => ({
   autoLoadEntities: true,
   // Connection pool configuration
   connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '50', 10),
-  acquireTimeout: parseInt(process.env.DB_ACQUIRE_TIMEOUT || '60000', 10),
-  timeout: parseInt(process.env.DB_TIMEOUT || '60000', 10),
-  reconnect: process.env.DB_RECONNECT !== 'false',
+  connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT || '10000', 10),
+  // MySQL2 doesn't support these options directly
+  // acquireTimeout: parseInt(process.env.DB_ACQUIRE_TIMEOUT || '60000', 10),
+  // timeout: parseInt(process.env.DB_TIMEOUT || '60000', 10),
+  // reconnect: process.env.DB_RECONNECT !== 'false',
 }));

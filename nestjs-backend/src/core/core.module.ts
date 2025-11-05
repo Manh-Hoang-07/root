@@ -62,9 +62,9 @@ import { AttemptLimiterService } from './security/attempt-limiter.service';
         DB_CHARSET: Joi.string().default('utf8mb4'),
         DB_TIMEZONE: Joi.string().default('+07:00'),
         DB_CONNECTION_LIMIT: Joi.number().default(50),
-        DB_ACQUIRE_TIMEOUT: Joi.number().default(60000),
-        DB_TIMEOUT: Joi.number().default(60000),
-        DB_RECONNECT: Joi.boolean().truthy('true').falsy('false').default(true),
+        // DB_ACQUIRE_TIMEOUT: Joi.number().default(60000),
+        // DB_TIMEOUT: Joi.number().default(60000),
+        // DB_RECONNECT: Joi.boolean().truthy('true').falsy('false').default(true),
 
         // Mail (optional but warn if partially provided)
         MAIL_HOST: Joi.string().hostname().default('localhost'),
