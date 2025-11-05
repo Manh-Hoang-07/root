@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Res } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
@@ -13,6 +14,7 @@ import { ResponseUtil } from '../../../common/utils/response.util';
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 attempts per minute
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
@@ -24,6 +26,7 @@ export class AuthController {
     return result;
   }
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 attempts per minute
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -33,12 +36,12 @@ export class AuthController {
   async logout(@Headers('authorization') authHeader: string, @Res({ passthrough: true }) res: Response) {
     const userId = Auth.id(undefined) as number;
     // Extract token from authorization header
-    let token = null;
+    let token: string | null = null;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7); // Remove 'Bearer ' prefix
     }
 
-    const result = await this.authService.logout(userId, token);
+    const result = await this.authService.logout(userId, token || undefined);
     const domain = (res.req.hostname === 'localhost') ? 'localhost' : undefined;
     res.clearCookie('auth_token', { domain, path: '/' });
     return result;
@@ -55,11 +58,13 @@ export class AuthController {
     return result;
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 attempts per minute (more restrictive for password reset)
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 attempts per minute (more restrictive for password reset)
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);

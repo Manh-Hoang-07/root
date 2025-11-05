@@ -1,4 +1,4 @@
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Injectable, Logger } from '@nestjs/common';
 import { Role } from '../../../shared/entities/role.entity';
 import { Permission } from '../../../shared/entities/permission.entity';
@@ -73,8 +73,8 @@ export class SeedRoles {
   }
 
   private async assignPermissionsToRoles(
-    roleRepo: any,
-    permRepo: any,
+    roleRepo: Repository<Role>,
+    permRepo: Repository<Permission>,
     createdRoles: Map<string, Role>
   ): Promise<void> {
     // Admin gets all permissions
@@ -101,8 +101,8 @@ export class SeedRoles {
       });
       // Also get all children of these permissions
       const allPerms = await permRepo.find();
-      const managerPermIds = new Set(managerPerms.map(p => p.id));
-      const childrenPerms = allPerms.filter(p => {
+      const managerPermIds = new Set(managerPerms.map((p: Permission) => p.id));
+      const childrenPerms = allPerms.filter((p: Permission) => {
         if (managerPermIds.has(p.id)) return true;
         let current = p.parent;
         while (current) {
@@ -127,8 +127,8 @@ export class SeedRoles {
         ],
       });
       const allPerms = await permRepo.find();
-      const editorPermIds = new Set(editorPerms.map(p => p.id));
-      const childrenPerms = allPerms.filter(p => {
+      const editorPermIds = new Set(editorPerms.map((p: Permission) => p.id));
+      const childrenPerms = allPerms.filter((p: Permission) => {
         if (editorPermIds.has(p.id)) return true;
         let current = p.parent;
         while (current) {

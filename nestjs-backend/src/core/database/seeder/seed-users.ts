@@ -68,9 +68,9 @@ export class SeedUsers {
 
     for (const userData of users) {
       const role = userData.role;
-      delete userData.role;
+      const { role: _, ...userWithoutRole } = userData;
       
-      const user = userRepo.create(userData);
+      const user = userRepo.create(userWithoutRole);
       if (role) {
         user.roles = [role];
       }

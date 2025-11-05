@@ -41,6 +41,11 @@ export class RedisUtil implements OnModuleDestroy {
     await this.client.del(key);
   }
 
+  async keys(pattern: string): Promise<string[]> {
+    if (!this.client) return [];
+    return this.client.keys(pattern);
+  }
+
   async onModuleDestroy() {
     if (this.client) {
       try { await this.client.quit(); } catch {}

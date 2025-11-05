@@ -70,12 +70,12 @@ export class AuthService {
     await this.accountLockoutService.reset(scope, identifier);
 
     this.userRepository
-      .update({ id: user.id }, { last_login_at: new Date() })
+      .update({ id: user!.id }, { last_login_at: new Date() })
       .catch(() => undefined);
 
-    const { accessToken, refreshToken, refreshJti, accessTtlSec } = this.tokenService.generateTokens(user.id, user.email);
+    const { accessToken, refreshToken, refreshJti, accessTtlSec } = this.tokenService.generateTokens(user!.id, user!.email!);
 
-    await this.redis.set(this.buildRefreshKey(user.id, refreshJti), '1', this.tokenService.getRefreshTtlSec()).catch(() => undefined);
+    await this.redis.set(this.buildRefreshKey(user!.id, refreshJti), '1', this.tokenService.getRefreshTtlSec()).catch(() => undefined);
 
     return ResponseUtil.success(
       { token: accessToken, refreshToken: refreshToken, expiresIn: accessTtlSec, },

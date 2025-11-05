@@ -1,10 +1,14 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { RedisUtil } from '../../core/utils/redis.util';
 
 @Injectable()
 export class CacheService {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly redis: RedisUtil,
+  ) {}
 
   /**
    * Lấy giá trị từ cache
@@ -56,9 +60,10 @@ export class CacheService {
    * Xóa cache theo pattern (prefix)
    */
   async deletePattern(pattern: string): Promise<void> {
-    // Cache manager không hỗ trợ pattern delete trực tiếp
-    // Cần implement manual nếu cần
-    // Hoặc dùng Redis với redis-store nếu cần pattern matching
+    if (this.redis?.isEnabled()) {
+      const keys = await this.redis.keys(pattern);
+      await Promise.all(keys.map(key => this.redis.del(key)));
+    }
   }
 }
 

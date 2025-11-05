@@ -10,7 +10,7 @@ export class Profile {
     @Index('UQ_profiles_user_id', { unique: true })
     userId: number;
 
-    @OneToOne(() => User, { onDelete: 'CASCADE' })
+    @OneToOne(() => User, user => user.profile, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: User;
 

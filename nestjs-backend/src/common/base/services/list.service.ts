@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, Repository, ObjectLiteral } from 'typeorm';
 import { Filters, Options, PaginatedListResult } from '../interfaces/list.interface';
 import {
   applySelectColumns,
@@ -12,7 +12,7 @@ import {
  * List Service với các phương thức cơ bản cho việc lấy danh sách
  */
 @Injectable()
-export abstract class ListService<T> {
+export abstract class ListService<T extends ObjectLiteral> {
   constructor(protected readonly repository: Repository<T>) {}
 
   /**

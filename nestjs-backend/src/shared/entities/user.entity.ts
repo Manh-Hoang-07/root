@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToMany, JoinTable, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToMany, JoinTable, Index, OneToOne } from 'typeorm';
 import { UserStatus } from '../enums/user-status.enum';
 import { Gender } from '../enums/gender.enum';
 import { Role } from './role.entity';
 import { Permission } from './permission.entity';
+import { Profile } from './profile.entity';
 
 @Entity('users')
 @Index('idx_deleted_at', ['deleted_at']) // Index cho soft delete
@@ -67,6 +68,9 @@ export class User {
     inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
   })
   direct_permissions?: Permission[];
+
+  @OneToOne(() => Profile, profile => profile.user, { cascade: true })
+  profile?: Profile;
 }
 
 

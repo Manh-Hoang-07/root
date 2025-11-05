@@ -32,7 +32,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T
           return ResponseUtil.success(data);
         } else if (statusCode >= 400) {
           // Error responses (though these should be handled by exception filters)
-          return ResponseUtil.error('Request failed', null, data);
+          return ResponseUtil.error('Request failed', 'REQUEST_FAILED', data);
         }
 
         // Default success response

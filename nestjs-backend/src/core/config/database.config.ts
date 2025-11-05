@@ -3,7 +3,7 @@ import { registerAs } from '@nestjs/config';
 export default registerAs('database', () => ({
   type: process.env.DB_TYPE || 'mysql',
   host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT, 10) || 3306,
+  port: parseInt(process.env.DB_PORT || '3306', 10),
   username: process.env.DB_USERNAME || '',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_DATABASE || '',
@@ -14,7 +14,7 @@ export default registerAs('database', () => ({
   timezone: process.env.DB_TIMEZONE || '+07:00',
   autoLoadEntities: true,
   // Connection pool configuration
-  connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '10', 10),
+  connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '50', 10),
   acquireTimeout: parseInt(process.env.DB_ACQUIRE_TIMEOUT || '60000', 10),
   timeout: parseInt(process.env.DB_TIMEOUT || '60000', 10),
   reconnect: process.env.DB_RECONNECT !== 'false',
