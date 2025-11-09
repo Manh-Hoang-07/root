@@ -96,13 +96,7 @@ class ProductCategoryRepository extends BaseRepository
             $query->where('status', $filters['status']);
         }
         
-        if (isset($filters['price_min'])) {
-            $query->where('price', '>=', $filters['price_min']);
-        }
-        
-        if (isset($filters['price_max'])) {
-            $query->where('price', '<=', $filters['price_max']);
-        }
+        // Price filters removed - prices are now in variants only
         
         if (isset($filters['sort_by'])) {
             $sortOrder = $filters['sort_order'] ?? 'asc';

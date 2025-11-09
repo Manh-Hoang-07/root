@@ -21,13 +21,7 @@ class Product extends Model
         'sku',
         'description',
         'short_description',
-        'price',
-        'sale_price',
-        'cost_price',
-        'stock_quantity',
         'min_stock_level',
-        'weight',
-        'dimensions',
         'image',
         'gallery',
         'status',
@@ -46,11 +40,6 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
-        'sale_price' => 'decimal:2',
-        'cost_price' => 'decimal:2',
-        'weight' => 'decimal:2',
-        'dimensions' => 'array',
         'gallery' => 'array',
         'status' => ProductStatus::class,
         'is_featured' => 'boolean',
@@ -111,33 +100,4 @@ class Product extends Model
         return $query->where('is_digital', true);
     }
 
-    public function scopeInStock($query)
-    {
-        return $query->where('stock_quantity', '>', 0);
-    }
-
-    public function scopeLowStock($query)
-    {
-        return $query->whereRaw('stock_quantity <= min_stock_level');
-    }
-
-    // Accessors & Mutators
-    public function getFinalPriceAttribute()
-    {
-        return $this->sale_price ?? $this->price;
-    }
-
-    public function getIsOnSaleAttribute()
-    {
-        return $this->sale_price && $this->sale_price < $this->price;
-    }
-
-    public function getDiscountPercentageAttribute()
-    {
-        if (!$this->is_on_sale) {
-            return 0;
-        }
-
-        return round((($this->price - $this->sale_price) / $this->price) * 100);
-    }
 }

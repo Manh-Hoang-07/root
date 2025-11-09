@@ -194,23 +194,8 @@ class OrderRepository extends BaseRepository
             $qtyChange = $multiplier * (int) $item->quantity;
             if ($item->product_variant_id) {
                 $this->changeVariantStock((int) $item->product_variant_id, $qtyChange);
-            } elseif ($item->product_id) {
-                $this->changeProductStock((int) $item->product_id, $qtyChange);
             }
         }
-    }
-
-    protected function changeProductStock(int $productId, int $delta): void
-    {
-        $product = Product::query()->find($productId);
-        if (!$product) return;
-        $current = (int) ($product->stock_quantity ?? 0);
-        $new = $current + $delta;
-        if ($new < 0) {
-            $new = 0;
-        }
-        $product->stock_quantity = $new;
-        $product->save();
     }
 
     protected function changeVariantStock(int $variantId, int $delta): void

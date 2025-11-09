@@ -20,7 +20,7 @@ class ProductVariantRepository extends BaseRepository
     {
         return $this->model->where('id', $id)
             ->where('status', ProductStatus::ACTIVE)
-            ->with('product:id,name,price,sale_price')
+            ->with('product:id,name')
             ->first()
             ?->toArray();
     }

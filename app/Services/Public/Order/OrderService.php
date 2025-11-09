@@ -92,12 +92,10 @@ class OrderService extends BaseService
             // Process cart items to add unit_price
             $items = [];
             foreach ($cart['items'] as $item) {
-                // Calculate unit price from product or variant
+                // Calculate unit price from variant (variant is required)
                 $unitPrice = 0;
                 if (isset($item['variant']) && $item['variant']) {
                     $unitPrice = $item['variant']['sale_price'] ?? $item['variant']['price'] ?? 0;
-                } elseif (isset($item['product']) && $item['product']) {
-                    $unitPrice = $item['product']['sale_price'] ?? $item['product']['price'] ?? 0;
                 }
 
                 // Add unit_price to item
@@ -122,32 +120,28 @@ class OrderService extends BaseService
             }
         }
 
-        // Validate stock
+        // Validate stock (variant is required)
         foreach ($items as $item) {
-            $productId = $item['product_id'] ?? null;
             $variantId = $item['product_variant_id'] ?? null;
             $quantity = $item['quantity'];
 
-            if ($variantId) {
-                $variant = $this->variantRepo->find($variantId);
-                if (!$variant || $variant['stock_quantity'] < $quantity) {
-                    $productName = $item['product_name'] ?? 'N/A';
-                    return [
-                        'success' => false,
-                        'message' => "Sản phẩm {$productName} không đủ hàng trong kho",
-                        'error_code' => 'INSUFFICIENT_STOCK'
-                    ];
-                }
-            } else {
-                $product = $this->productRepo->find($productId);
-                if (!$product || $product['stock_quantity'] < $quantity) {
-                    $productName = $item['product_name'] ?? 'N/A';
-                    return [
-                        'success' => false,
-                        'message' => "Sản phẩm {$productName} không đủ hàng trong kho",
-                        'error_code' => 'INSUFFICIENT_STOCK'
-                    ];
-                }
+            if (!$variantId) {
+                $productName = $item['product_name'] ?? 'N/A';
+                return [
+                    'success' => false,
+                    'message' => "Sản phẩm {$productName} cần chọn biến thể",
+                    'error_code' => 'VARIANT_REQUIRED'
+                ];
+            }
+
+            $variant = $this->variantRepo->find($variantId);
+            if (!$variant || $variant['stock_quantity'] < $quantity) {
+                $productName = $item['product_name'] ?? 'N/A';
+                return [
+                    'success' => false,
+                    'message' => "Sản phẩm {$productName} không đủ hàng trong kho",
+                    'error_code' => 'INSUFFICIENT_STOCK'
+                ];
             }
         }
 
@@ -500,26 +494,12 @@ class OrderService extends BaseService
         foreach ($items as $item) {
             $qtyChange = $multiplier * (int) $item['quantity'];
 
-            if ($item['product_variant_id']) {
-                $this->changeVariantStock((int) $item['product_variant_id'], $qtyChange);
-            } else {
-                $this->changeProductStock((int) $item['product_id'], $qtyChange);
+            if (!$item['product_variant_id']) {
+                continue; // Skip if no variant (should not happen)
             }
+
+            $this->changeVariantStock((int) $item['product_variant_id'], $qtyChange);
         }
-    }
-
-    /**
-     * Change product stock
-     */
-    private function changeProductStock(int $productId, int $delta): void
-    {
-        $product = $this->productRepo->find($productId);
-        if (!$product) return;
-
-        $current = (int) ($product['stock_quantity'] ?? 0);
-        $new = max(0, $current + $delta);
-
-        $this->productRepo->update($productId, ['stock_quantity' => $new]);
     }
 
     /**

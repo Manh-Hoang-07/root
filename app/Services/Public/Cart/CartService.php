@@ -152,30 +152,25 @@ class CartService extends BaseService
             $variantId = $itemData['product_variant_id'] ?? null;
             $quantity = $itemData['quantity'];
 
-            // Validate product/variant exists and is active
-            if ($variantId) {
-                $variant = $this->variantRepo->findActive($variantId);
-                if (!$variant || $variant['product_id'] != $productId) {
-                    return [
-                        'success' => false,
-                        'message' => 'Biến thể sản phẩm không hợp lệ',
-                        'data' => null
-                    ];
-                }
-                $stock = $variant['stock_quantity'];
-            } else {
-                $product = $this->productRepo->findActive($productId);
-                if (!$product) {
-                    return [
-                        'success' => false,
-                        'message' => 'Sản phẩm không tồn tại hoặc không hoạt động',
-                        'data' => null
-                    ];
-                }
-                $stock = $product['stock_quantity'];
+            // Validate variant exists and is active (variant is required)
+            if (!$variantId) {
+                return [
+                    'success' => false,
+                    'message' => 'Biến thể sản phẩm là bắt buộc',
+                    'data' => null
+                ];
             }
 
-            if ($stock < $quantity) {
+            $variant = $this->variantRepo->findActive($variantId);
+            if (!$variant || $variant['product_id'] != $productId) {
+                return [
+                    'success' => false,
+                    'message' => 'Biến thể sản phẩm không hợp lệ',
+                    'data' => null
+                ];
+            }
+
+            if ($variant['stock_quantity'] < $quantity) {
                 return [
                     'success' => false,
                     'message' => 'Số lượng sản phẩm trong kho không đủ',
@@ -224,25 +219,22 @@ class CartService extends BaseService
 
             $quantity = $data['quantity'];
 
-            // Check stock
-            if ($item['product_variant_id']) {
-                $variant = $this->variantRepo->findActive($item['product_variant_id']);
-                if (!$variant || $variant['stock_quantity'] < $quantity) {
-                    return [
-                        'success' => false,
-                        'message' => 'Số lượng sản phẩm trong kho không đủ',
-                        'data' => null
-                    ];
-                }
-            } else {
-                $product = $this->productRepo->findActive($item['product_id']);
-                if (!$product || $product['stock_quantity'] < $quantity) {
-                    return [
-                        'success' => false,
-                        'message' => 'Số lượng sản phẩm trong kho không đủ',
-                        'data' => null
-                    ];
-                }
+            // Check stock (variant is required)
+            if (!$item['product_variant_id']) {
+                return [
+                    'success' => false,
+                    'message' => 'Biến thể sản phẩm là bắt buộc',
+                    'data' => null
+                ];
+            }
+
+            $variant = $this->variantRepo->findActive($item['product_variant_id']);
+            if (!$variant || $variant['stock_quantity'] < $quantity) {
+                return [
+                    'success' => false,
+                    'message' => 'Số lượng sản phẩm trong kho không đủ',
+                    'data' => null
+                ];
             }
 
             $this->repo->updateItem($itemId, ['quantity' => $quantity]);

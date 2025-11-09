@@ -51,13 +51,7 @@ class ProductRequest extends FormRequest
             'sku' => ['required', 'string', 'max:100', $skuRule],
             'description' => 'nullable|string',
             'short_description' => 'nullable|string|max:500',
-            'price' => 'required|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0|lt:price',
-            'cost_price' => 'nullable|numeric|min:0',
-            'stock_quantity' => 'required|integer|min:0',
             'min_stock_level' => 'nullable|integer|min:0',
-            'weight' => 'nullable|numeric|min:0',
-            'dimensions' => 'nullable|array',
             'image' => 'nullable|string|max:500',
             'gallery' => 'nullable|array',
             'gallery.*' => 'string|max:500',
@@ -80,8 +74,6 @@ class ProductRequest extends FormRequest
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
             $rules['name'] = 'sometimes|required|string|max:255';
             $rules['sku'] = ['sometimes', 'required', 'string', 'max:100', $skuRule];
-            $rules['price'] = 'sometimes|required|numeric|min:0';
-            $rules['stock_quantity'] = 'sometimes|required|integer|min:0';
             $rules['status'] = 'sometimes|required|in:active,inactive,draft';
         }
 
@@ -99,13 +91,6 @@ class ProductRequest extends FormRequest
             'slug.unique' => 'Slug đã tồn tại',
             'sku.required' => 'Mã SKU là bắt buộc',
             'sku.unique' => 'Mã SKU đã tồn tại',
-            'price.required' => 'Giá sản phẩm là bắt buộc',
-            'price.numeric' => 'Giá sản phẩm phải là số',
-            'price.min' => 'Giá sản phẩm phải lớn hơn hoặc bằng 0',
-            'sale_price.lt' => 'Giá khuyến mãi phải nhỏ hơn giá gốc',
-            'stock_quantity.required' => 'Số lượng tồn kho là bắt buộc',
-            'stock_quantity.integer' => 'Số lượng tồn kho phải là số nguyên',
-            'stock_quantity.min' => 'Số lượng tồn kho phải lớn hơn hoặc bằng 0',
             'status.required' => 'Trạng thái là bắt buộc',
             'status.in' => 'Trạng thái không hợp lệ',
             'category_ids.array' => 'Danh mục phải là mảng',

@@ -25,7 +25,7 @@ class CartRepository extends BaseRepository
         }
 
         // Get cart items
-        $items = Cart::with(['product:id,name,sku,price,sale_price', 'variant:id,name,sku,price,sale_price'])
+        $items = Cart::with(['product:id,name,sku', 'variant:id,name,sku,price,sale_price'])
             ->where('cart_header_id', $cartHeaderId)
             ->get();
 
@@ -164,8 +164,8 @@ class CartRepository extends BaseRepository
             }
         }
 
-        // Determine price
-        $unitPrice = $variant ? ($variant->sale_price ?? $variant->price) : ($product->sale_price ?? $product->price);
+        // Determine price (variant is required)
+        $unitPrice = $variant ? ($variant->sale_price ?? $variant->price) : 0;
         $totalPrice = $unitPrice * $quantity;
 
         // Check if item already exists
@@ -309,7 +309,7 @@ class CartRepository extends BaseRepository
         }
         
         // Fallback to calculation if cart header totals are not set
-        $items = Cart::with(['product:id,name,price,sale_price', 'variant:id,name,price,sale_price'])
+        $items = Cart::with(['product:id,name', 'variant:id,name,price,sale_price'])
             ->where('cart_header_id', $cartHeaderId)
             ->get();
 
