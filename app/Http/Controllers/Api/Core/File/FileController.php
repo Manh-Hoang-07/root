@@ -10,7 +10,6 @@ use App\Http\Requests\Core\File\ListFilesRequest;
 use App\Http\Requests\Core\File\UploadFileRequest;
 use App\Http\Requests\Core\File\UploadMultipleFilesRequest;
 use App\Services\Core\File\FileService;
-use Exception;
 use Illuminate\Http\JsonResponse;
 
 class FileController extends Controller
@@ -30,13 +29,15 @@ class FileController extends Controller
      */
     public function upload(UploadFileRequest $request): JsonResponse
     {
-        try {
-            $file = $request->file('file');
-            $result = $this->fileService->uploadFile($file);
-            return $this->apiResponse(true, $result, 'Upload file thành công');
-        } catch (Exception $e) {
-            return $this->apiResponse(false, null, 'Upload file thất bại: ' . $e->getMessage(), 500);
+        $file = $request->file('file');
+        $result = $this->fileService->uploadFile($file);
+        
+        // Kiểm tra nếu có lỗi (có key 'success' và = false)
+        if (isset($result['success']) && !$result['success']) {
+            return $this->apiResponse(false, null, $result['message'] ?? 'Upload file thất bại', 400);
         }
+        
+        return $this->apiResponse(true, $result, 'Upload file thành công');
     }
 
     /**
@@ -44,13 +45,19 @@ class FileController extends Controller
      */
     public function uploadMultiple(UploadMultipleFilesRequest $request): JsonResponse
     {
-        try {
-            $files = $request->file('files');
-            $results = $this->fileService->uploadMultipleFiles($files);
-            return $this->apiResponse(true, $results, 'Upload ' . count($results) . ' file thành công');
-        } catch (Exception $e) {
-            return $this->apiResponse(false, null, 'Upload files thất bại: ' . $e->getMessage(), 500);
-        }
+        $files = $request->file('files');
+        $result = $this->fileService->uploadMultipleFiles($files);
+        
+        // Service đã trả về format đầy đủ với success, message, data, errors
+        // Sử dụng apiResponse với errors parameter
+        $statusCode = $result['success'] ? 200 : 400;
+        return $this->apiResponse(
+            $result['success'],
+            $result['data'] ?? null,
+            $result['message'],
+            $statusCode,
+            $result['errors'] ?? []
+        );
     }
 
     /**
@@ -58,20 +65,15 @@ class FileController extends Controller
      */
     public function delete(DeleteFileRequest $request): JsonResponse
     {
-        $result = null;
+        $path = $request->get('path');
+        $result = $this->fileService->deleteFile($path);
         
-        try {
-            $path = $request->get('path');
-            $success = $this->fileService->deleteFile($path);
-            if (!$success) {
-                $result = $this->apiResponse(false, null, 'Không thể xóa file hoặc file không tồn tại', 404);
-            } else {
-                $result = $this->apiResponse(true, null, 'Xóa file thành công');
-            }
-        } catch (Exception $e) {
-            $result = $this->apiResponse(false, null, 'Không thể xóa file', 500);
+        // Kiểm tra nếu có lỗi
+        if (!$result['success']) {
+            $statusCode = str_contains($result['message'], 'không tồn tại') ? 404 : 500;
+            return $this->apiResponse(false, null, $result['message'], $statusCode);
         }
         
-        return $result;
+        return $this->apiResponse(true, null, 'Xóa file thành công');
     }
 }
