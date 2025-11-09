@@ -48,20 +48,30 @@ class FileService
         // Tạo thư mục nếu chưa tồn tại
         $this->ensureDirectoryExists($path);
         
-        $storedPath = $file->storeAs($path, $fileName, 'public');
+        try {
+            $storedPath = $file->storeAs($path, $fileName, 'public');
+            
+            if (!$storedPath) {
+                return [
+                    'success' => false,
+                    'message' => 'Không thể lưu file'
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Lỗi khi lưu file: ' . $e->getMessage()
+            ];
+        }
         
         return [
-            'success' => true,
-            'message' => 'Tải file lên thành công',
-            'data' => [
-                'url' => '/storage/' . $storedPath,
-                'path' => $storedPath,
-                'filename' => $fileName,
-                'original_name' => $file->getClientOriginalName(),
-                'size' => $file->getSize(),
-                'mime_type' => $file->getMimeType(),
-                'type' => $fileType
-            ]
+            'url' => '/storage/' . $storedPath,
+            'path' => $storedPath,
+            'filename' => $fileName,
+            'original_name' => $file->getClientOriginalName(),
+            'size' => $file->getSize(),
+            'mime_type' => $file->getMimeType(),
+            'type' => $fileType
         ];
     }
 
@@ -79,10 +89,10 @@ class FileService
         foreach ($files as $index => $file) {
             if ($file instanceof UploadedFile) {
                 $result = $this->uploadFile($file);
-                if ($result['success']) {
-                    $results[] = $result;
+                if (isset($result['success']) && !$result['success']) {
+                    $errors[] = "File " . ($index + 1) . ": " . ($result['message'] ?? 'Upload thất bại');
                 } else {
-                    $errors[] = "File {$index}: " . $result['message'];
+                    $results[] = $result;
                 }
             }
         }
@@ -122,8 +132,7 @@ class FileService
         if ($fileType !== 'general' && !in_array($extension, $this->allowedTypes[$fileType])) {
             return [
                 'success' => false,
-                'message' => "Định dạng file không được hỗ trợ cho loại {$fileType}",
-                'data' => null
+                'message' => "Định dạng file không được hỗ trợ cho loại {$fileType}"
             ];
         }
         
@@ -134,15 +143,12 @@ class FileService
         if ($file->getSize() > $maxSizeBytes) {
             return [
                 'success' => false,
-                'message' => "Kích thước file không được vượt quá {$maxSize}MB",
-                'data' => null
+                'message' => "Kích thước file không được vượt quá {$maxSize}MB"
             ];
         }
         
         return [
-            'success' => true,
-            'message' => 'File hợp lệ',
-            'data' => null
+            'success' => true
         ];
     }
 
@@ -197,19 +203,24 @@ class FileService
      */
     public function deleteFile(string $path): array
     {
-        if (Storage::disk('public')->exists($path)) {
-            $deleted = Storage::disk('public')->delete($path);
+        if (!Storage::disk('public')->exists($path)) {
             return [
-                'success' => $deleted,
-                'message' => $deleted ? 'Xóa file thành công' : 'Xóa file thất bại',
-                'data' => null
+                'success' => false,
+                'message' => 'File không tồn tại'
+            ];
+        }
+        
+        $deleted = Storage::disk('public')->delete($path);
+        
+        if (!$deleted) {
+            return [
+                'success' => false,
+                'message' => 'Xóa file thất bại'
             ];
         }
         
         return [
-            'success' => false,
-            'message' => 'File không tồn tại',
-            'data' => null
+            'success' => true
         ];
     }
 }
